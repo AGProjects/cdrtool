@@ -54,11 +54,12 @@ $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
 if ($action == "edit" && $id) {
-    print "<center><table width=100%><tr><td>";
 
-    print "<h3>Edit account</h3>";
-    print "<p><a href=accounts.phtml>Accounts</a>";
-    print "</td></tr></table></center>";
+    print "<ul class=\"breadcrumb\">
+        <li><a href=accounts.phtml>Accounts</a> <span class=\"divider\">/</span> </li>
+        <li class='active'>Edit account</li>
+        </ul>";
+
 
     $uid=$auth->auth["uid"];
     if (!$perm->have_perm("admin")) {
@@ -66,9 +67,9 @@ if ($action == "edit" && $id) {
     }
     if ($check || $delete) {
         if ($err = $f->validate()) {
-            print "<p>
-            <font color=red>$err</font>
-            <p>";
+            print "<div class=\"alert alert-error\">
+            $err
+            </div>";
             $perms = implode($perms,",");
             $sources = implode($sources,",");
 
@@ -113,7 +114,7 @@ if ($action == "edit" && $id) {
                 if ($perm->have_perm("admin")) {
                     if (strlen($impersonate)) {
                         if (!preg_match("/^[0-9]*\.[0-9]*$/",$impersonate)) {
-                            printf ("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
+                            printf ("<div class=\"alert\"><strong>Warning!</strong> Impersonate must be formated as CustomerId.ResellerId</div>");
                             unset($impersonate);
                         }
                     }
@@ -215,10 +216,12 @@ if ($action == "edit" && $id) {
 
 
 } elseif ($action=="insert" && $perm->have_perm("admin")) {
-    print "<center><table width=100%><tr><td>";
 
-    print "<h3>Add account</h3>";
-    print "<p><a href=accounts.phtml>Accounts</a>";
+    print "<ul class=\"breadcrumb\">
+        <li><a href=accounts.phtml>Accounts</a> <span class=\"divider\">/</span> </li>
+        <li class='active'>Add account</li>
+        </ul>";
+
     $uid=$auth->auth["uid"];
 
  	if (!$password) $password=random_passwd_gen();
@@ -371,11 +374,11 @@ if ($action == "edit" && $id) {
             } else {
                 print "<p>User <b>$name</b> created";
                 if ($mailsettings) {
-                	if ($_SERVER['HTTPS']=="on") {
-			            $protocolURL="https://";
-        			} else {
-            			$protocolURL="http://";
-        			}
+                    if ($_SERVER['HTTPS']=="on") {
+                        $protocolURL="https://";
+                    } else {
+                        $protocolURL="http://";
+                    }
 
                     $body.=sprintf("The following login account for CDRTool has been created for you:\n\n");
                     $body.=sprintf("Username: %s\n",$username);
@@ -397,15 +400,11 @@ if ($action == "edit" && $id) {
 
 
 } else {
-        print "<center>
-        <table width=100%>
-        <tr><td>";
         print "<h3>Account list</h3>";
         if ($perm->have_perm("admin")) {
-        print "<p><a href=$PHP_SELF?action=insert>Add account</a>";
+        print "<center><a class=btn href=$PHP_SELF?action=insert>Add account</a></center>";
         }
-        print "</td></tr></table></center>";
-		accountList();
+        accountList();
 }
 
 $layout->showFooter();

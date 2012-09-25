@@ -630,14 +630,14 @@ class CDRS {
 
         if (!$this->export) {
             print "
-            <form action=log.phtml method=post>
-            <table border=0 align=center>
-            <tr>
-            <td><a href=\"$this->url_edit\" >Refine search</a>
-            | <a href=\"$this->url_run\">Refresh</a>
-            </td>
-            ";
+                <form class='form-inline' action=log.phtml method=post>
+                <div class='row-fluid'>
+                <div class='span6'>";
+            print "
+                <div class=\"btn-group pull-right\">
+                    <a class=\"btn\" href=\"$this->url_edit\" ><i class=icon-search></i> Refine search</a><a class=\"btn\" href=\"$this->url_run\"><i class=\"icon-refresh\"></i> Refresh</a>";
 
+            
             $log_query=sprintf("insert into log
             (date,login,ip,url,results,rerun,reedit,datasource,reseller_id)
             values
@@ -657,26 +657,27 @@ class CDRS {
                 $this->cdrtool->next_record();
                 $current_log=$this->cdrtool->f('lid');
             }
-
+           
             if ($this->rows) {
-                print "<td> | <a href=\"$this->url_export\" target=_new>Export results to file</a></td>";
+                print "<a class=\"btn\" href=\"$this->url_export\" target=_new><i class=\"icon-file\"></i> Export results to file</a>
+                </div></div>";
+            } else {
+            print "
+                </div></div>";
             }
             print "
-            <td valign=middle>
-            | <font color=blue>Want to share the results with others? </font>Give this query a name:
-            </td>
-            <td valign=middle>
-            <input type=text name=log_description value=\"$old_description\">
+                <div class='span6'>
+                <div class='input-append'>
+                    <input class='input-medium' rel='popover' data-placement=\"bottom\" data-content=\"Want to share the results with others? Enter a name and press Save \" data-original-title=\"Save Query\" placeholder='Query name' type=text name=log_description value=\"$old_description\"><button class='btn' type=submit value=Save>Save</button>
+                </div>
             <input type=hidden name=current_log value=$current_log>
             <input type=hidden name=task value=edit>
-            <input type=submit value=Save>
-            </td>
+            </div>
+            </div>
             </form>
             ";
 
             print "
-            </tr>
-            </table>
             ";
             if (!$hide_rows) {
                 print "
@@ -785,11 +786,11 @@ class CDRS {
             ";
             print "Date: ";
             $f->show_element("begin_year","");
-            print "-";
+            print "<div class=\"input-prepend\"><div class=\"input-prepend input-append\"><span class=add-on>-</span>";
             $f->show_element("begin_month","");
-            print "-";
+            print "<span class=add-on>-<span></div>";
             $f->show_element("begin_day","");
-            print " Time: ";
+            print "</div> Time: ";
             $f->show_element("begin_hour","");
             print ":";
             $f->show_element("begin_min","");
@@ -806,11 +807,11 @@ class CDRS {
              ";
              print "Date: ";
              $f->show_element("end_year","");
-             print "-";
+            print "<div class=\"input-prepend\"><div class=\"input-prepend input-append\"><span class=add-on>-</span>";
              $f->show_element("end_month","");
-             print "-";
+            print "<span class=add-on>-<span></div>";
              $f->show_element("end_day","");
-             print " Time: ";
+             print "</div> Time: ";
              $f->show_element("end_hour","");
              print ":";
              $f->show_element("end_min","");
@@ -848,10 +849,7 @@ class CDRS {
 
         if (!$this->export) {
             print "
-            <p>
-            <table border=0 align=center>
-            <tr>
-            <td>
+                <ul class=\"pager\">
             ";
             if  ($next!=0  ) {
                 $show_next=$this->maxrowsperpage-$next;
@@ -859,7 +857,7 @@ class CDRS {
                     $mod_show_next  =  $show_next-2*$show_next;
                 }
                 $url_prev=$PHP_SELF.$this->url."&action=search&next=$mod_show_next";
-                print "<a href=\"$url_prev\">Previous</a> ";
+                print "<li><a href=\"$url_prev\"> &larr; Previous</a></li>";
             }
             
             print "
@@ -869,12 +867,10 @@ class CDRS {
             if ($this->rows>$this->maxrowsperpage && $this->rows!=$maxrows)  {
                 $show_next = $this->maxrowsperpage + $this->next;
                 $url_next  = $PHP_SELF.$this->url."&action=search&next=$show_next";
-                print "<a href=\"$url_next\">Next</a>";
+                print "<li><a href=\"$url_next\">Next  &rarr;</a></li>";
             }
             print "
-            </td>
-            </tr>
-            </table>
+            </ul>
             ";
         }
     }

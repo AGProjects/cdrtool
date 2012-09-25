@@ -125,7 +125,7 @@ $f->add_element(array("type"=>"select",
 $f->add_element(
             array("type"=>"submit",
 		      "name"=>"submit",
-		      "extrahtml"=>"border=0",
+		      "extrahtml"=>"class=btn",
                "value"=>"Submit")
 		);
 
@@ -158,7 +158,7 @@ function showForm($id="") {
     }
 
     $f->load_defaults();
-    $f->start("","POST","","", "");
+    $f->start("","GET","","", "","form-horizontal");
     
     print "<input type=hidden name=check value=yes>";
     print "<input type=hidden name=action value=\"$action\">";
@@ -182,21 +182,15 @@ function showForm($id="") {
 
     
     print "
-    <p>
-    <table class=border width=100%>
-    <tr>
-    <td valign=top width=50%>
+    <div class=\"row-fluid\">
+    <div class=\"span6\">
     <h3>Contact details</h3>
     <p>";
     print _("The fields marked with ");
     print " <font color=orange>*</font> ";
     print _("are mandatory");
     print ":</font>
-    <p>
-    ";
-    
-    print "
-    <table border=0>
+    </p>
     ";
     
     $f->show_element("action","");
@@ -209,162 +203,149 @@ function showForm($id="") {
     }
     
     print "
-    <tr>
-    <td valign=top><font color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     print _("Name");
-    print ":<font color=orange>*</font>
+    print "<font color=orange> *</font></label>
     ";
     print "
-    </td>
-    <td colspan=2 valign=top><font color=$formelcolor>
+    <div class='controls'>
+    <font color=$formelcolor>
     ";
     $f->show_element("name","");
     print "
     </font>
-    </td>
-    </tr>
+    </div>
+    </div>
     ";
     
     print "
-    <tr>
-    <td valign=top><font color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     print _("Organization");
-    print ":
-    </td>
-    <td colspan=2 valign=top><font color=$formelcolor>
+    print "</label>
+    <div class='controls'>
+      <font color=$formelcolor>
     ";
     $f->show_element("organization","");
     print "
-    </font>
-    </td>
-    </tr>
+    </div>
+    </div>
     ";
     
     print "
-    <tr>	
-    <td valign=top>
-    <font  color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     print _("E-mail");
-    print ":<font color=orange>*</font>
-    </font>
-    </td>
-    <td colspan=2 valign=top><font color=$formelcolor>
+    print "<font color=orange> *</font></label>
+      <div class='controls'>
+      <font color=$formelcolor>
     ";
     $f->show_element("email",""); 
     print "
-    </font>
-    </td>
-    </tr>
+    </div>
+    </div>
     ";
     
     
     print "
-    <tr>
-    <td valign=top><font color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     print _("Telephone");
-    print "
-    </td>
-    <td colspan=2 valign=top><font color=$labelcolor>
+    print "</label>
+      <div class='controls'>
+      <font color=$labelcolor>
     ";
     $f->show_element("tel","");        
     print "
-    </font>
-    </td>
-    </tr>
+    </div>
+    </div>
     ";
     print "
-    <tr>
-    <td valign=top><font color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     
     print _("Username");
-    print ":<font color=orange>*</font>
-    </font>
-    </td>
-    <td colspan=2 valign=top><font color=$labelcolor>
+    print " <font color=orange>*</font></label>
+      <div class='controls'><font color=$labelcolor>
     ";
     
     $f->show_element("username",""); 
     
     print "
-    </font>
-    </td>
-    </tr>
+    </div>
+    </div>
     ";
     
     print "
-    <tr>
-    <td valign=top><font color=$labelcolor>
+      <div class=\"control-group\">
+      <label class='control-label'>
     ";
     print _("Password");
-    print ":<font color=orange>*</font>
-    </td>
-    <td colspan=2 valign=top><font color=$labelcolor>
+    print " <font color=orange>*</font></label>
+      <div class='controls'><font color=$labelcolor>
     ";
     $f->show_element("password","");
-    print "</td>
-    </tr>
+    print "</div>
+    </div>
     ";
-           print "
-           <tr>   
-           <td valign=top><font color=$labelcolor>
-           E-mail settings:</td>
-           <td colspan=2 valign=top><font color=$labelcolor>
+
+    print "
+          <div class=\"control-group\">
+            <label class='control-label'>
+              <font color=$labelcolor>
+           E-mail settings</label>
+            <div class='controls'><font color=$labelcolor>
            ";
            print "<input type=checkbox name=mailsettings value=1> ";
            print "
-           </font>
-           </td>  
-           </tr>  
+           </div>
+           </div>    
            ";
 
     if ($perm->have_perm("admin")) {
-           print "
-           <tr>
-           <td colspan=3>
-           <hr noshade size=1 width=100%>
-           </td>
-           </tr>
-           ";
-           print "
-           <tr>   
-           <td valign=top><font color=$labelcolor>
-           Expire date </td>
-           <td colspan=2 valign=top><font color=$labelcolor>
-           ";
-           $f->show_element("expire","");
-           print "
-           </font>
-           </td>  
-           </tr>  
-           ";
-           print "
-           <tr>   
-           <td valign=top><font color=$labelcolor>
-           Impersonate </td>
-           <td colspan=2 valign=top><font color=$labelcolor>
+        print "<hr>
+               <div class=\"control-group\">
+               <label class='control-label'>
+               <font color=$labelcolor>
+               Expire date </label>
+               <div class='controls'>
+               <font color=$labelcolor>
+        ";
+        $f->show_element("expire","");
+        print "
+           </div>
+           </div>  
+        ";
+
+        print "
+              <div class=\"control-group\">
+              <label class='control-label'><font color=$labelcolor>
+              Impersonate </label>
+               <div class='controls'><font color=$labelcolor>
            ";
            $f->show_element("impersonate","");
            print "
            </font>
-           </td>  
-           </tr>  
+           </div>  
+           </div>  
            ";
            print "
-           <tr>   
-           <td valign=top><font color=$labelcolor>
-           Delete </td>
-           <td colspan=2 valign=top><font color=$labelcolor>
+              <div class=\"control-group\">
+              <label class='control-label'><font color=$labelcolor>
+           Delete </label>
+           <div class='controls'><font color=$labelcolor>
            ";
            print "<input type=checkbox name=delete value=1>";
            print "
            </font>
-           </td>  
-           </tr>  
+           </div>  
+           </div>  
            ";
 
            /*
@@ -382,76 +363,57 @@ function showForm($id="") {
            ";
            */
            print "
-           <tr>   
-           <td colspan=2><hr noshade size=1>
-           </tr>
+            <hr> 
            ";
     }
     
     print "
-    </table>";
+    </div>";
 
-    print "</td>
-    <td valign=top>
+    print "<div class=span6>
     ";
 
      print "
-     <h3>Permissions</h3>";
-     print "<table border=0>";
-     print "<tr>
-     <td valign=top colspan=2 align=left>
-     ";
- 
-     print "<table width=100% border=0>
-     <tr>
-     ";
+     <h3>Permissions</h3>
+     <div class='row-fluid'>";
      if ($perm->have_perm("admin")) {
-        print "<td valign=top>
-        <b>Functions</b><br>";
+        print "<div class='span6'>
+        <p><b>Functions</b></p>";
         print $perm->perm_sel("perms", $perms);
+        print "</div>";
      }
-     print "<td valign=top><b>Data sources</b><br>";
+     print "<div class='span6'><p><strong>Data sources</strong></p>";
      $f->show_element("sources","");
      print "
-     </td>
-     </tr>
-     </table>";
+     </div></div>";
  
      print "
-     </tr>
-     <tr>   
-     <td colspan=2><hr noshade size=1>
-     <b>Filters</b>
-     </tr>
+      <hr noshade size=1>
+      <p>
+      <strong>Filters</strong></p>
      ";
-     print "<tr><td>Trusted peers</td><td>";
+     print "<div class=\"control-group\">
+            <label class='control-label'>Trusted peers</label><div class='controls'>";
      $f->show_element("gatewayFilter","");
-     print "</td></tr>";
-     print "<tr><td>Domains</td><td>";
+     print "</div></div>";
+     print "<div class=\"control-group\">
+            <label class='control-label'>Domains</label><div class='controls'>";
      $f->show_element("domainFilter","");
-     print "</td></tr>";
-     print "<tr><td>Subscribers</td><td>";
+     print "</div></div>";
+     print "<div class=\"control-group\">
+            <label class='control-label'>Subscribers</label><div class='controls'>";
      $f->show_element("aNumberFilter","");
-     print "</td></tr>";
-     print "</td></tr>";
-     print "<tr><td>After date</td><td>";
+     print "</div></div>";
+     print "<div class=\"control-group\">
+            <label class='control-label'>After date</label><div class='controls'>";
      $f->show_element("afterDateFilter","");
-     print "</td></tr>";
-     print "
-     </table>";
-    print "</td>
-    </tr>
-    <tr>
-    <td>";
+     print "</div></div></div></div>";
+
     if (!$frzall) {
-        $f->show_element("submit","");
+        print "<div class='form-actions'>";
+        $f->show_element("submit","","btn");
+        print "</div>";
     }
-    print "</td>
-    <td>
-    </td>
-    </tr>
-    </table>
-    ";
     $f->finish();                     // Finish form
 }
 
@@ -472,25 +434,26 @@ function accountList() {
     print "
     <p>
     <center>
-    <table width=100% cellpadding=1 cellspacing=1 border=6 bgcolor=lightgrey>
-    <tr bgcolor=#CCCCCC>
+    <table class='table table-hover table-condensed table-striped' width=100%>
+    <thead>
+    <tr>
      ";
-     print "<td class=h><b>";
+     print "<th class=h>";
      print _("Name");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("Organization");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("Username");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("E-mail");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("Tel");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("Sources");
-     print "<td class=h><b>";
+     print "</th><th class=h>";
      print _("Expire");
-     print "
-     </tr>
+     print "</th>
+     </tr></thead>
      ";
     while($db->next_record()) {
         $id_db          =$db->f('user_id');
@@ -506,13 +469,13 @@ function accountList() {
         $sources	    =preg_replace ("/,/",", ",$db->f('sources'));
 
         if (date('Y-m-d') > $expire) {
-        	$bgcolor="orange";
+        	$bgcolor="error";
         } else {
-        	$bgcolor="white";
+        	$bgcolor="";
         }
 
         print "
-        <tr bgcolor=$bgcolor>
+        <tr class=$bgcolor>
         <td> <a href=$PHPSELF?id=$id_db&action=edit>$name</a>
         <td> $organization
         <td> $username

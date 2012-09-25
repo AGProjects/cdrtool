@@ -39,21 +39,6 @@ if ($thisMonth) {
 	$checked_thisMonth='';
 }
 
-print "
-<form method=post action=$PHP_SELF>
-<table border=0 align=right>
-<tr>
-<td>
-This month:
-<input type=checkbox name=thisMonth value=1 $checked_thisMonth>
-<input type=text size=30 name=search_text value=\"$search_text\">
-<input type=submit value=Search>
-</td>
-</tr>
-</table>
-</form>
-";
-
 $where = " (1=1) ";
 
 if ($CDRTool['filter']['reseller']) {
@@ -150,6 +135,26 @@ if (!$next) {
 $j=0;
 $z=0;
 
+print "
+<form method=post action=$PHP_SELF>
+<table border=0 align=center>
+<tr>
+<td>
+Found $rows records.
+</td>
+<td>
+<div class='input-append'>
+<input class=span2 type=text size=30 name=search_text value=\"$search_text\"><button class='btn btn-primary' type=submit value=Search>Search</button></div>
+</td>
+<td>
+<input type=checkbox name=thisMonth value=1 $checked_thisMonth>
+Only this month?
+</td>
+</tr>
+</table>
+</form>
+";
+
 if  ($rows>0)  {
     if ($rows  >  $maxrowsperpage)  {
         $maxrows=$maxrowsperpage+$next;
@@ -165,21 +170,22 @@ if  ($rows>0)  {
 
     $db->query($query);
 
-    print "<br>
-    <center><p>Found $rows records. </center>
-           <table class=border cellspacing=1 width=100% align=center>
-           <tr bgcolor=lightgrey>
-           <td class=cdr> </td>
-           <td class=cdr> <b>Log id</td>
-           <td class=cdr> <b>Reseller</td>
-           <td class=cdr> <b>Date and time</td>
-           <td class=cdr> <b>Account</td>
-           <td class=cdr> <b>IP address</td>
-           <td class=cdr> <b>Data source</td>
-           <td class=cdr> <b>Rows</td>
-           <td class=cdr> <b>Description  </td>
-           <td class=cdr> <b>Actions</td>
+    print "<br/>
+           <table id='log' class='table table-striped table-condensed' width=100% align=center>
+           <thead>
+           <tr>
+           <th> </th>
+           <th> <b>Log id</th>
+           <th> <b>Reseller</th>
+           <th> <b>Date and time</th>
+           <th> <b>Account</th>
+           <th> <b>IP address</th>
+           <th> <b>Data source</th>
+           <th> <b>Rows</th>
+           <th> <b>Description  </th>
+           <th> <b>Actions</th>
            </tr>
+           </thead>
 	";
 
 	while  ($i<$maxrows)  {
@@ -223,21 +229,21 @@ if  ($rows>0)  {
             }
         } else {
             $display_form=1;
-        	$url_run="<a href=\"$rerun\">Run</a>";
-            $url_edit="<a href=\"$reedit\">Edit</a>";
+        	$url_run="<a class='btn' href=\"$rerun\">Run</a>";
+            $url_edit="<a class='btn btn-info' href=\"$reedit\">Edit</a>";
         }
 
         $rr=floor($found/2);
         $mod=$found-$rr*2;
     
         if ($mod ==0) {
-            $bgcolor="lightgrey";
+            //$bgcolor="lightgrey";
         } else {
-            $bgcolor="white";
+            //$bgcolor="white";
         }
 
     	print  "
-		<tr bgcolor = $bgcolor>
+		<tr>
 		<td class=cdr><b>$found.</b></td>
 		<td class=cdr>$current_log</td>
         <td class=cdr>$reseller_id</td>
@@ -246,34 +252,33 @@ if  ($rows>0)  {
 		<td class=cdr>$ip</td>
         <td class=cdr>$datasource_print</td>
 		<td class=cdr>$results</td>
-        <form method=post>
-        <td class=cdr>";
+        <td class=cdr><form class='cform form-inline' method=post>";
 
 		if ($display_form == 1) {
             print "
-            <input type=text size=25 name=log_description value=\"$description\">
             <input type=hidden name=current_log value=\"$current_log\">
             <input type=hidden name=task value=edit>
             <input type=hidden name=next value=$next>
             <input type=hidden name=search_text value=\"$search_text\">
-            <input type=submit value=Save>
+            <div class='input-append'>
+            <input type=text class=span2 size=25 name=log_description value=\"$description\"><button class=btn type=submit value=Save>Save</button>
+            </div>
             ";
 		} else {
 			print "$description";
 		}
 
-        print "
-        </td>
-		</form>
-        <form method=post>
-
-        <td class=cdr>$url_run $url_edit
+        print "</form>
+        </td>        <td class=cdr>
+        <form class='cform form-inline' method=post>
+            <div class='btn-group'>
+            $url_run $url_edit
         ";
 
         if (strlen($description) && $rerun) {
             print "
-            <input type=submit value=Notify>
-            <select name=recipient>
+            <button class='btn' type=submit value=Notify>Notify</button>
+            <select class=span3 name=recipient>
             ";
                 foreach(array_keys($Collegues) as $col) {
                     print "<option value=\"$col\">$Collegues[$col]";
@@ -286,10 +291,9 @@ if  ($rows>0)  {
             <input type=hidden name=next value=$next>
             <input type=hidden name=search_text value=\"$search_text\">
             ";
-        }
-        print "
+        } 
+        print "</div></form>
         </td>
-        </form>
 		</tr>
 
 		";
@@ -301,11 +305,7 @@ if  ($rows>0)  {
 }
 
 print "
-<p>
-<center>
-<table  border=0>
-<tr>
-<td>
+<ul class=\"pager\">
 ";
 
 if  ($next!=0  ) {
@@ -314,23 +314,17 @@ if  ($next!=0  ) {
         $mod_show_next  =  $show_next-2*$show_next;
     }
     $url_prev	=$PHP_SELF."?".$url_log."&action=search&next=$mod_show_next";
-    print "<a href=\"$url_prev\">Previous</a> ";
+    print "<li><a href=\"$url_prev\">&larr; Previous</a></li>";
 }
 
-print "
-</td>
-<td>
-";
 if ($rows>$maxrowsperpage && $rows!=$maxrows)  {
     $show_next  =$maxrowsperpage+$next;
     $url_next	=$PHP_SELF."?".$url_log."&action=search&next=$show_next";
-    print "<a href=\"$url_next\">Next</a>";
+    print "<li><a href=\"$url_next\">Next &rarr;</a></li>";
 }
 
 print "
-</td>
-</tr>
-</table>
+</div>
 ";
 
 $layout->showFooter();

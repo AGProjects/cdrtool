@@ -155,7 +155,7 @@ class form {
   var $isfile;
   var $n;
 
-  function get_start($jvs_name="",$method="",$action="",$target="",$form_name="") {
+  function get_start($jvs_name="",$method="",$action="",$target="",$form_name="",$class="form-inline") {
     $PHP_SELF = $_SERVER["PHP_SELF"];
     
     $str = "";
@@ -174,6 +174,7 @@ class form {
     $str .= " method='$method'";
     $str .= " action='$action'";
     $str .= " target='$target'";
+    $str .= " class='$class'";
     if ($jvs_name) {
       $this->jvs_name = $jvs_name;
       $str .= " onsubmit=\"return ${jvs_name}_Validator(this)\"";
@@ -184,8 +185,8 @@ class form {
     return $str;
   }
 
-  function start($jvs_name="",$method="",$action="",$target="",$form_name="") {
-    print $this->get_start($jvs_name,$method,$action,$target,$form_name);
+  function start($jvs_name="",$method="",$action="",$target="",$form_name="",$class="form-inline") {
+    print $this->get_start($jvs_name,$method,$action,$target,$form_name,$class);
   }
 
   function get_finish($after="",$before="") {

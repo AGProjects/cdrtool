@@ -195,8 +195,8 @@ class MediaSessions {
 
     function showSearch() {
         printf ("<form method=post action=%s>
-        <input type=text name=user value='%s'>
-        <input type=submit value='Search callers'>
+            <div class='input-append'>
+        <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'><input class=btn type=submit value='Search'></div>
         <p>
         ",
         $_SERVER['PHP_SELF'],
@@ -216,7 +216,7 @@ class MediaSessions {
         <!--
         
         .border {
-            border: 1px solid #999999;
+            /*border: 1px solid #999999;*/
             border-collapse: collapse;
         }
         
@@ -227,36 +227,13 @@ class MediaSessions {
         }
         
         body {
-            font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
-            font-size: 10pt;
-            color: gray;
-        }
-        
-        p {
-            font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
+            background-color: #FFFFFF;
+            /*font-family: Luxino Sans, Verdana, Arial, Helvetica, sans-serif;*/
             font-size: 8pt;
-            color: gray;
+            /*font-style: normal; */
+            /*padding-top: 60px; *//* 60px to make the container go all the way to the bottom of the topbar */
         }
-        
-        pre {
-            font-family: Lucida Console, Courier;
-            font-size: 10pt;
-            color: black;
-        }
-        
-        td {
-            font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
-            font-size: 8pt;
-            vertical-align: top;
-            color: #444444;
-        }
-        
-        th {
-            font-family: Verdana, Sans, Arial, Helvetica, sans-serif;
-            font-size: 8pt;
-            vertical-align: bottom;
-            color: black;
-        }
+
         
         -->
         </style>
@@ -287,41 +264,43 @@ class MediaSessions {
 
         if (count($this->allowedDomains)) {
 
-            print "
-            <table border=0 class=border cellpadding=2 cellspacing=0>
-              <tr bgcolor=#c0c0c0 class=border align=right>
-                <th class=bordertb width=10px></th>
-                <th class=bordertb width=10px></th>
-                <td><b>Address</b></td>
-                <th class=bordertb width=10px></b></td>
-                <td><b>Relayed traffic</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Sessions</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Streams</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Status</b></td>
-              </tr>";
+            print "<div class=row>
+            <table class='span10 table table-striped table-condesed'>
+              <thead>
+              <tr>
+                <th width=10px></th>
+                <th>
+                Address</td>
+                <th>
+                Relayed traffic</th>
+                <th>
+                Sessions</th>
+                <th>
+                Streams</th>
+                <th>
+                Status</th>
+              </tr></thead>";
         } else {
-            print "
-            <table border=0 class=border cellpadding=2 cellspacing=0>
-              <tr bgcolor=#c0c0c0 class=border align=right>
-                <th class=bordertb width=10px></th>
-                <th class=bordertb width=10px></th>
-                <td><b>Address</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Version</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Uptime</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Relayed traffic</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Sessions</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Streams</b></td>
-                <th class=bordertb width=10px></th>
-                <td><b>Status</b></td>
-              </tr>";
+            print "<div class=row>
+            <table class='span10 table table-striped table-condensed'>
+            <thead>
+              <tr>
+                <th width=10px></th>
+                <th>
+                Address</td>
+                <th>
+                Version</td>
+                <th>
+                 Uptime</th>
+                <th>
+                Relayed traffic</th>
+                <th>
+                Sessions</th>
+                <th>
+                Streams</th>
+                <th>
+                Status</th>
+              </tr></thead>";
         }
         $i = 1;
 
@@ -333,13 +312,13 @@ class MediaSessions {
 			$media_types=count($relay['stream_count']);
 
             if ($media_types > 1) {
-                $streams = "<table border=0>";
-    
+                //$streams = "<table border=0>";
+                
                 foreach (array_keys($relay['stream_count']) as $key) {
-                    $streams .= sprintf("<tr><td>%s</td><td>%s</td></tr>",$key,$relay['stream_count'][$key]);
+                    $streams .= sprintf("%s %s, ",$key,$relay['stream_count'][$key]);
                 }
-    
-                $streams .= "</table>";
+                $streams=chop($streams,', ');
+                //$streams .= "</tab"
             } else {
                 foreach (array_keys($relay['stream_count']) as $key) {
                     $streams=sprintf("%s %s",$key,$relay['stream_count'][$key]);
@@ -349,18 +328,13 @@ class MediaSessions {
         	if (count($this->allowedDomains)) {
                 
                 printf ("
-                  <tr class=border align=right>
-                    <td class=border>%d</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%d</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb valign=top>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
+                  <tr>
+                    <td>%d</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%d</td>
+                    <td valign=top>%s</td>
+                    <td>%s</td>
                   </tr>",
                   $i,
                   $this->ip2host($relay['ip']),
@@ -371,22 +345,15 @@ class MediaSessions {
                   );
             } else {
                 printf ("
-                  <tr class=border align=right>
-                    <td class=border>%d</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%d</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb valign=top>%s</td>
-                    <td class=bordertb width=10px></td>
-                    <td class=bordertb>%s</td>
+                  <tr>
+                    <td>%d</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%s</td>
+                    <td>%d</td>
+                    <td valign=top>%s</td>
+                    <td>%s</td>
                   </tr>",
                   $i,
                   $this->ip2host($relay['ip']),
@@ -402,33 +369,33 @@ class MediaSessions {
         }
 
         print "
-        </table>
-        <br />
+        </table><div class=span4></div></div>
         ";
     }
 
     function showSessions () {
         if (!count($this->sessions)) return;
            print "
-           <table border=0 cellpadding=2 cellspacing=0 class=border>
-            <tr valign=bottom bgcolor=black>
+           <table id='sessions' class='table-bordered table-condensed table'>
+           <thead>
+            <tr valign=bottom>
              <th rowspan=2>&nbsp;</th>
-             <th rowspan=2><font color=white>Callers</font></th>
-             <th rowspan=2 colspan=2><font color=white>Phones</font></th>
-             <th colspan=10 bgcolor=#393939><font color=white>Media Streams</font></th>
+             <th rowspan=2>Callers</th>
+             <th rowspan=2 colspan=2>Phones</th>
+             <th colspan=10>Media Streams</th>
             </tr>
-            <tr valign=bottom bgcolor=#afafaf>
-             <th class=border><nobr>Caller address</nobr></th>
-             <th class=border>Relay caller</th>
-             <th class=border>Relay callee</th>
-             <th class=border><nobr>Callee address</nobr></th>
-             <th class=border>Status</th>
-             <th class=border>Codec</th>
-             <th class=border>Type</th>
-             <th class=border>Duration</th>
-             <th class=border>Bytes<br>Caller</th>
-             <th class=border>Bytes<br>Called</th>
-            </tr>";
+            <tr valign=bottom>
+             <th><nobr>Caller address</nobr></th>
+             <th>Relay caller</th>
+             <th>Relay callee</th>
+             <th><nobr>Callee address</nobr></th>
+             <th>Status</th>
+             <th>Codec</th>
+             <th>Type</th>
+             <th>Duration</th>
+             <th>Bytes<br>Caller</th>
+             <th>Bytes<br>Called</th>
+            </tr></thead>";
     
             $i = 1;
             foreach ($this->sessions as $session) {
@@ -441,13 +408,13 @@ class MediaSessions {
                 $sc = count($session->streams);
 
                 print "
-                <tr valign=top class=border>
-                 <td class=border rowspan=$sc>$i</td>
+                <tr valign=top>
+                 <td class=border height='37px' rowspan=$sc>$i</td>
                  <td class=border rowspan=$sc>
                    <nobr><b>From:</b> $from</nobr><br>
                    <nobr><b>To:</b> $to</nobr><br>
                  </td>
-                 <td class=border rowspan=$sc align=center>
+                 <td class=border rowspan=$sc style='text-align:center'>
                    <img src=\"images/30/$fromImage\"
                         alt=\"$fromAgent\"
                         title=\"$fromAgent\"
@@ -456,7 +423,7 @@ class MediaSessions {
                         border=0
                    />
                  </td>
-                 <td class=border rowspan=$sc align=center>
+                 <td class=border rowspan=$sc style='text-align:center'>
                    <img src=\"images/30/$toImage\"
                         alt=\"$toAgent\"
                         title=\"$toAgent\"

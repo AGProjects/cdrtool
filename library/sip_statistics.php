@@ -149,12 +149,12 @@ class NetworkStatistics {
     function showStatus() {
         $this->getStatus();
 
-        print "<table border=0>";
-        print "<tr bgcolor=lightgrey>";
+        print "<div class=row><table class=\"span12 table table-condensed table-striped\">";
+        print "<thead><tr>";
         if (count($this->allowedDomains)) {
-        	print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td></tr>";
+        	print "<th>Role</th><th>Address</th><th>Version</th></tr>";
         } else {
-        	print "<td><b>Role</b></td><td><b>Address</b></td><td><b>Version</b></td><td><b>Attributes</b></td></tr>";
+        	print "<th>Role</th><th>Address</th><th>Version</th><th>Attributes</th></tr></thead>";
         }
 
         foreach (array_keys($this->roles) as $_role) {
@@ -170,7 +170,7 @@ class NetworkStatistics {
 
             	if (count($this->allowedDomains)) {
 
-            		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td></tr>",
+            		printf ("<tr><td><b>%s</b></td><td class=span4>%s</td><td>%s</td></tr>",
             		ucfirst($_role_print),$this->ip2host($_entity['ip']),$_entity['version']);
 				} else {
                 	$a_print='';
@@ -190,7 +190,7 @@ class NetworkStatistics {
                         }
                     }
 
-            		printf ("<tr><td><b>%s</b></td><td class=border>%s</td><td class=border>%s</td><td class=border>%s</td></tr>",
+            		printf ("<tr><td class=span3><b>%s</b></td><td class=span2>%s</td><td class=span2>%s</td><td>%s</td></tr>",
             		ucfirst($_role_print),$this->ip2host($_entity['ip']),$_entity['version'],$a_print);
                 }
                 $print_role[$_role]++;
@@ -204,18 +204,18 @@ class NetworkStatistics {
     function showStatistics() {
         $this->getStatistics();
 
-        print "<table border=0>";
-        print "<tr bgcolor=lightgrey>";
+        print "<div class=row><table class='span12 table table-condensed table-striped'>";
+        print "<thead><tr>";
         foreach (array_keys($this->sip_summary) as $_section) {
         	$_section_print=preg_replace("/_/"," ",$_section);
-            printf ("<td class=border><b>%s</b></td>",ucfirst($_section_print));
+            printf ("<th>%s</th>",ucfirst($_section_print));
         }
-        print "<tr>";
+        print "</tr></thead><tr>";
         foreach (array_keys($this->sip_summary) as $_section) {
-            printf ("<td class=border>%s</td>",$this->sip_summary[$_section]);
+            printf ("<td style='text-align:center'>%s</td>",$this->sip_summary[$_section]);
         }
         print "</tr>";
-        print "<table>";
+        print "</table></div>";
 
 	}
 

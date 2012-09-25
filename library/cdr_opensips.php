@@ -157,26 +157,25 @@ class CDRS_opensips extends CDRS {
         }
 
         print "
-        <table border=1 cellspacing=2 width=100% align=center>
+        <table class='table table-hover table-condensed' width=100%>
+        <thead>
         <tr>
-        <td>
-        <table border=0 cellspacing=2 width=100%>
-        <tr bgcolor=lightgrey>
-        <td>Id</td>
-        <td><b>Start Time</b></td>
-        <td><b>Flow</b></td>
-        <td><b>SIP Caller</b></td>
-        <td><b>Caller Location</b></td>
-        <td><b>Sip Proxy</b></td>
-        <td><b>Media</b></td>
-        <td><b>SIP Destination</b></td>
-        <td><b>Dur</b></td>
-        <td><b>Price</b></td>
-        <td align=right><b>KBIn</b></td>
-        <td align=right><b>KBOut</b></td>
-        <td align=right><b>Status</b></td>
-        <td align=right><b>Codecs</b></td>
+        <th>Id</th>
+        <th>Start Time</th>
+        <th>Flow</th>
+        <th>SIP Caller</th>
+        <th>Caller Location</th>
+        <th>Sip Proxy</th>
+        <th>Media</th>
+        <th>SIP Destination</th>
+        <th>Dur</th>
+        <th>Price</th>
+        <th align=right>KBIn</th>
+        <th align=right>KBOut</th>
+        <th align=right>Status</th>
+        <th align=right>Codecs</th>
         </tr>
+        </thead>
         ";
     }
 
@@ -291,7 +290,7 @@ class CDRS_opensips extends CDRS {
                                     "type"=>"select",
                                     "options"=>$cdr_source_els,
                                     "size"=>"1",
-                                    "extrahtml"=>"onChange=\"document.datasource.submit.disabled = true; location.href = 'callsearch.phtml?cdr_source=' + this.options[this.selectedIndex].value\"",
+                                    "extrahtml"=>"class=span2 onChange=\"document.datasource.submit.disabled = true; location.href = 'callsearch.phtml?cdr_source=' + this.options[this.selectedIndex].value\"",
                                     "value"=>"$cdr_source"
                               )
                        );
@@ -309,7 +308,9 @@ class CDRS_opensips extends CDRS {
                                 "type"=>"select",
                                 "options"=>$cdr_table_els,
                                 "size"=>"1",
-                                "value"=>$cdr_table
+                                "class"=>"span2",
+                                "value"=>$cdr_table,
+                                "extrahtml"=>"class=span2"
                                 ));
 
         if ($begin_datetime) {
@@ -330,7 +331,7 @@ class CDRS_opensips extends CDRS {
         if ($end_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
             $end_year    =date(Y,$end_datetime);
-            $end_month     =date(m,$end_datetime);
+            $end_month   =date(m,$end_datetime);
             $end_day     =date(d,$end_datetime);
             $end_hour    =date(H,$end_datetime);
             $end_min     =date(i,$end_datetime);
@@ -383,13 +384,15 @@ class CDRS_opensips extends CDRS {
                     "name"=>"begin_hour",
                     "type"=>"select",
                     "options"=>$hours_els,
-                    "size"=>"1"
+                    "size"=>"1",
+                    "extrahtml"=>"class=span1"
                     ));
         $this->f->add_element(array(    "name"=>"end_hour",
                     "type"=>"select",
                     "options"=>$hours_els,
                     "size"=>"1",
-                    "value"=>"23"
+                    "value"=>"23",
+                    "extrahtml"=>"class=span1"
                     ));
         $m=0;
         while ($m<60) {
@@ -400,13 +403,15 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(    "name"=>"begin_min",
                     "type"=>"select",
                     "options"=>$min_els,
-                    "size"=>"1"
+                    "size"=>"1",
+                    "extrahtml"=>"class=span1"
                     ));
         $this->f->add_element(array(
                     "name"=>"end_min",
                     "type"=>"select",
                     "options"=>$min_els,
-                    "size"=>"1"
+                    "size"=>"1",
+                    "extrahtml"=>"class=span1"
                     ));
         $m=1;
         while ($m<32) {
@@ -417,14 +422,15 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(    "name"=>"begin_day",
                                 "type"=>"select",
                                 "options"=>$days_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span1"
         
                     ));
         $this->f->add_element(array(    "name"=>"end_day",
                                 "type"=>"select",
                                 "options"=>$days_els,
-                                "size"=>"1"
-        
+                                "size"=>"1",
+                                "extrahtml"=>"class=span1"
                     ));
 
         $m=1;
@@ -437,12 +443,14 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(    "name"=>"begin_month",
                                 "type"=>"select",
                                 "options"=>$month_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span1"
                     ));
         $this->f->add_element(array(    "name"=>"end_month",
                                 "type"=>"select",
                                 "options"=>$month_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span1"
                     ));
         $thisYear=date("Y",time());
         $y=$thisYear;
@@ -453,51 +461,60 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(    "name"=>"begin_year",
                                 "type"=>"select",
                                 "options"=>$year_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
         
                     ));
         $this->f->add_element(array(    "name"=>"end_year",
                                 "type"=>"select",
                                 "options"=>$year_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"call_id",
                                 "type"=>"text",
                                 "size"=>"50",
-                                "maxlength"=>"100"
+                                "maxlength"=>"100",
+                                "extrahtml"=>"class=span4"
                     ));
 
         $this->f->add_element(array(    "name"=>"UserName",
                                 "type"=>"text",
                                 "size"=>"25",
-                                "maxlength"=>"255"
+                                "maxlength"=>"255",
+                                "extrahtml"=>"class=span2"
                     ));
 
         $this->f->add_element(array(    "name"=>"a_number",
                                 "type"=>"text",
                                 "size"=>"25",
-                                "maxlength"=>"255"
+                                "maxlength"=>"255",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"BillingId",
                                 "type"=>"text",
                                 "size"=>"25",
-                                "maxlength"=>"255"
+                                "maxlength"=>"255",
+                                "extra_html"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"c_number",
                                 "type"=>"text",
                                 "size"=>"25",
-                                "maxlength"=>"255"
+                                "maxlength"=>"255",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(  "name"=>"sip_status",
                                 "type"=>"select",
                                 "options"=>$this->disconnectCodesElements,
                                 "size"=>"1",
                                 "value"=>$sip_status,
+                                "extrahtml"=>"class=span3"
                                 ));
         $this->f->add_element(array(  "name"=>"sip_status_class",
                                 "type"=>"select",
                                 "options"=>$this->disconnectCodesClassElements,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span3"
                                 ));
 
         if (!$this->CDRTool['filter']['aNumber']) {
@@ -559,14 +576,16 @@ class CDRS_opensips extends CDRS {
                                 "type"=>"select",
                                 "options"=>$flow_els,
                                 "value"=>"",
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span3"
                     ));
 
         $this->f->add_element(array(    "name"=>"duration",
                                 "type"=>"select",
                                 "options"=>$durations_els,
                                 "value"=>"All",
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span3"
                     ));
         $comp_ops_els = array(
                 array("label"=>"Begins with","value"=>"begin"),
@@ -578,24 +597,28 @@ class CDRS_opensips extends CDRS {
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"c_number_comp",
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"UserName_comp",
                                 "type"=>"select",
                                 "options"=>$comp_ops_els,
                                 "value"=>"begin",
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array(    "name"=>"Realm",
                                 "type"=>"text",
                                 "size"=>"25",
-                                "maxlength"=>"25"
+                                "maxlength"=>"25",
+                                "extrahtml"=>"class=span2"
                     ));
 
         $media_info_els=array(
@@ -608,12 +631,13 @@ class CDRS_opensips extends CDRS {
                                 "type"=>"select",
                                 "options"=>$media_info_els,
                                 "size"=>"1",
-                                "value"=>""
+                                "value"=>"",
+                                "extrahtml"=>"class=span2"
                     ));
 
         $this->f->add_element(array("type"=>"submit",
                               "name"=>"submit",
-                              "value"=>"Search"
+                              "value"=>"Search","extrahtml"=>"class=btn"
                     ));
         $max_els=array(
                 array("label"=>"5","value"=>"5"),
@@ -628,7 +652,8 @@ class CDRS_opensips extends CDRS {
                                 "type"=>"select",
                                 "options"=>$max_els,
                                 "size"=>"1",
-                                "value"=>"25"
+                                "value"=>"25",
+                                "extrahtml"=>"class=span2"
                     ));
         $order_type_els=array(
                         array("label"=>"Descending","value"=>"DESC"),
@@ -637,11 +662,12 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(    "name"=>"order_type",
                                 "type"=>"select",
                                 "options"=>$order_type_els,
-                                "size"=>"1"
+                                "size"=>"1",
+                                "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array("type"=>"hidden",
                               "name"=>"action",
-                              "value"=>$action,
+                              "value"=>$action
                 ));
 
         $order_by_els=array(array("label"=>"Id","value"=>"RadAcctId"),
@@ -669,13 +695,15 @@ class CDRS_opensips extends CDRS {
                                     "type"=>"select",
                                     "options"=>$order_by_els,
                                     "value"=>$order_by,
-                                    "size"=>"1"
+                                    "size"=>"1",
+                                    "extrahtml"=>"class=span3"
                                 ));
         $this->f->add_element(array("name"=>"group_by",
                                     "type"=>"select",
                                     "options"=>$group_by_els,
                                     "value"=>$group_by,
-                                    "size"=>"1"
+                                    "size"=>"1",
+                                    "extrahtml"=>"class=span3"
                                 ));
         $application_els=array(
                                array("label"=>"Any Application",          "value"=>""),
@@ -691,40 +719,47 @@ class CDRS_opensips extends CDRS {
                                     "type"=>"select",
                                     "options"=>$application_els,
                                     "value"=>$application,
-                                    "size"=>"1"
+                                    "size"=>"1",
+                                    "extrahtml"=>"class=span2"
                                 ));
         $this->f->add_element(array("name"=>"UserAgent",
                                     "type"=>"text",
                                     "size"=>"25",
                                     "maxlength"=>"50",
-                                    "value"=>$UserAgent
+                                    "value"=>$UserAgent,
+                                    "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array("name"=>"SipCodec",
                                     "type"=>"text",
                                     "size"=>"10",
                                     "maxlength"=>"50",
-                                    "value"=>$SipCodec
+                                    "value"=>$SipCodec,
+                                    "extrahtml"=>"class=span2"
                     ));
         $this->f->add_element(array("name"=>"sip_proxy",
                                     "type"=>"text",
                                     "size"=>"25",
                                     "maxlength"=>"255",
-                                    "value"=>$sip_proxy
+                                    "value"=>$sip_proxy,
+                                    "extrahtml"=>"class=span2"
                                     ));
         $this->f->add_element(array("name"=>"gateway",
                                     "type"=>"text",
                                     "size"=>"25",
                                     "maxlength"=>"255",
-                                    "value"=>$gateway
+                                    "value"=>$gateway,
+                                    "extrahtml"=>"class=span2"
                                     ));
         $this->f->add_element(array("name"=>"DestinationId",
                                     "type"=>"text",
-                                    "size"=>"10"
+                                    "size"=>"10",
+                                    "extrahtml"=>"class=span3"
                                 ));
         $this->f->add_element(array(    "name"=>"ExcludeDestinations",
                                 "type"=>"text",
                                 "size"=>"20",
-                                "maxlength"=>"255"
+                                "maxlength"=>"255",
+                                "extrahtml"=>"class=span3"
                     ));
         $this->f->load_defaults();
 
@@ -736,7 +771,7 @@ class CDRS_opensips extends CDRS {
         $this->initForm();
         $this->f->start("","POST","","","datasource");
 
-        print "<table cellpadding=5 CELLSPACING=0 border=6 width=100% align=center>";
+        print "<table id='search' class='table table-bordered table-condensed' cellpadding=5 width=100% align=center>";
 
         $this->showDataSources ($this->f);
         $this->showDateTimeElements ($this->f);
@@ -768,12 +803,13 @@ class CDRS_opensips extends CDRS {
             <td align=left>
             <b>SIP Call Id / Source IP</b>
             </td>
-            <td valign=top>
-            ";
+            <td>
+            <div class=\"input-prepend\">
+            <div class=\"input-append\">";
             $this->f->show_element("call_id","");
-            print " / ";
+            print "<span class=\"add-on\">/</span></div>";
             $this->f->show_element("gateway","");
-            print "
+            print "</div>
             Sip Proxy ";
 
             $this->f->show_element("sip_proxy","");
@@ -789,7 +825,7 @@ class CDRS_opensips extends CDRS {
             <td align=left>
             <b>User Agent / Media Codecs</b>
             </td>
-            <td valign=top>
+            <td >
             ";
             $this->f->show_element("UserAgent","");
             print " Codec: ";
@@ -806,15 +842,19 @@ class CDRS_opensips extends CDRS {
             <td align=left>
             <b>SIP Billing Party (Username)</b>
             </td>
-            <td valign=top> 
+            <td>
             ";
             $this->f->show_element("UserName_comp","");
-            $this->f->show_element("UserName","");
-            print "@";
-            $this->f->show_element("Realm","");
-            print " Tech prefix: ";
-            $this->f->show_element("BillingId","");
             print "
+                <div class=\"input-prepend\">
+                <div class=\"input-append\">
+            ";
+            $this->f->show_element("UserName","");
+            print "<span class=\"add-on\">@</span></div>";
+            $this->f->show_element("Realm","");
+            print "</div> Tech prefix: ";
+            $this->f->show_element("BillingId","");
+            print "</div>
             </td>
         </tr>
         <tr>
@@ -831,6 +871,7 @@ class CDRS_opensips extends CDRS {
             <td valign=top>
             ";
             $this->f->show_element("a_number_comp","");
+            print "&nbsp;";
             $this->f->show_element("a_number");
             print "
             </td>
@@ -847,6 +888,8 @@ class CDRS_opensips extends CDRS {
             </td>
             <td valign=top>   ";
             $this->f->show_element("c_number_comp","");
+            print "&nbsp;";
+
             $this->f->show_element("c_number","");
             print " Exclude: ";
             $this->f->show_element("ExcludeDestinations_comp");
@@ -880,6 +923,7 @@ class CDRS_opensips extends CDRS {
             </td>
             <td valign=top>   ";
             $this->f->show_element("duration","");
+            print "&nbsp;";
             $this->f->show_element("sip_status","");
             $this->f->show_element("sip_status_class","");
             print "
@@ -907,7 +951,7 @@ class CDRS_opensips extends CDRS {
             print "</nobr>&nbsp";
 
             if (!$perm->have_perm('readonly')) {
-                print ";&nbsp;&nbsp; <nobr>ReNormalize";
+                print ";&nbsp;&nbsp; <nobr>ReNormalize ";
                 print "<input type=checkbox name=ReNormalize value=1>
                 </nobr>";
             }
@@ -1456,7 +1500,7 @@ class CDRS_opensips extends CDRS {
         $j=0;
         $z=0;
 
-        if (!$this->export) print "<p>";
+        if (!$this->export) print "<div class=\"alert alert-info\">";
         
         if ($rows>0)  {
             
@@ -1478,10 +1522,10 @@ class CDRS_opensips extends CDRS {
                     if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
                         $this->NormalizeCDRS($where,$cdr_table);
                         if (!$this->export && $this->status['normalized'] ) {
-                            printf ("%d CDRs normalized. ",$this->status['normalized']);
+                            printf ("<b><span class=\"alert-heading\">%d</span></b> CDRs normalized. ",$this->status['normalized']);
                             if ($this->status['cached_keys']['saved_keys']) {
-                                printf ("Quota usage updated for %d accounts. ",$this->status['cached_keys']['saved_keys']);
-                            }
+                                printf ("Quota usage updated for <b><span class=\"alert-heading\">%d</span></b> accounts. ",$this->status['cached_keys']['saved_keys']);
+                            } 
                         }
                     }
                 }
@@ -1759,7 +1803,7 @@ class CDRS_opensips extends CDRS {
         
             } else {
                 if (!$this->export) {
-                    printf ("For more information about each call click on its Id column. ");
+                    printf ("For more information about each call click on its Id column.</div> ");
                 }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
@@ -2809,20 +2853,15 @@ class CDR_opensips extends CDR {
         $this->geo_location=$this->lookupGeoLocation($this->SourceIP);
 
         $this->cdr_details="
-        <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
-        <tr>
-        <td valign=top>
-        <table border=0 cellpadding=0 cellspacing=0>
-        <tr>
-            <td colspan=3><b>SIP Signalling</b></td>
-        </tr>
+        <div class=\"alert alert-info\">
+          <div class='row-fluid'>
+            <div class='span4'>
+                <h5>SIP Signalling</h5>
+
         ";
 
         $this->cdr_details.= sprintf("
-        <tr>
-            <td width=10></td>
-            <td colspan=2><a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a></td>
-        </tr>
+                <a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a>
         ",
         $this->CDRS->url_run,
         urlencode($this->callId)
@@ -2835,169 +2874,153 @@ class CDR_opensips extends CDR {
             $totag_enc        = urlencode(quoted_printable_decode($this->SipToTag));
 
             $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red>Click here for the SIP trace</font></a> &nbsp;";
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1300px,height=600')\"><font color=red>Click here for the SIP trace</font></a> &nbsp;";
 
             $this->cdr_details.= "
-            <tr>
-                <td width=10></td>
-                <td>Call id: </td>
-                <td>$this->callId</td>
-            </tr>
+                <div class=\"row-fluid\">
+                <div class=\"span3\">Call id:</div>
+                <div class=\"span9\">$this->callId </div>
+            </div>
             ";
         }
 
         $this->cdr_details.= sprintf("
-        <tr>
-            <td width=10></td>
-            <td colspan=2>%s</td>
-        </tr>
+            <div class=\"row-fluid\">
+                <div class=\"span12\">%s</div>
+            </div>
         ", $this->traceLink);
 
         $this->cdr_details.= "
-        <tr>
-            <td width=10></td>
-            <td>From/to tags: </td>
-            <td>$this->SipFromTag/$this->SipToTag</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Start Time: </td>
-            <td>$this->startTime $providerTimezone</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Stop Time: </td>
-            <td>$this->stopTime</td>
-        </tr>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">From tag: </div>
+            <div class=\"span9\">$this->SipFromTag</div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">To tag: </div>
+            <div class=\"span9\">$this->SipToTag</div>
+        </div>                 
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Start Time:</div>
+            <div class=\"span9\">$this->startTime $providerTimezone</div>
+        </div>            
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Stop Time:</div>
+            <div class=\"span9\">$this->stopTime</div>
+        </div>
         ";
 
         $this->cdr_details.= sprintf("
-        <tr>
-            <td></td>
-            <td>Country:</td>
-            <td>%s</i>
-            </td>
-        </tr>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Country:</div>
+            <div class=\"span9\">%s</div>
+        </div>
         ",$this->geo_location);
 
         $this->cdr_details.= "
-        <tr>
-            <td></td>
-            <td>Method:</td>
-            <td>$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i>
-            </td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>From:</td>
-            <td>$this->aNumberPrint</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>From Header:</td>
-            <td>$this->FromHeaderPrint</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>User Agent:</td>
-            <td>$this->UserAgentPrint</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Domain:</td>
-            <td>$this->domain</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>To (dialed URI):</td>
-            <td>$this->cNumberPrint</td>
-        </tr>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Method:</div>
+            <div class=\"span9\">$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i></div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">From:</div>
+            <div class=\"span9\">$this->aNumberPrint</div>
+        </div>
+
+        <div class=\"row-fluid\">
+            <div class=\"span3\">From Header:</div>
+            <div class=\"span9\">$this->FromHeaderPrint</div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">User Agent:</div>
+            <div class=\"span9\">$this->UserAgentPrint</div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Domain:</div>
+            <div class=\"span9\">$this->domain</div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">To (dialed URI):</div>
+            <div class=\"span9\">$this->cNumberPrint</div>
+        </div>
         ";
 
         if ($this->CanonicalURI) {
         $this->cdr_details.= sprintf("
-        <tr>
-            <td></td>
-            <td>Canonical URI:   </td>
-            <td>%s</td>
-        </tr>
+        <div class=\"row-fluid\">
+            
+            <div class=\"span3\">Canonical URI:   </div>
+            <div class=\"span9\">%s</div>
+        </div>
         ",htmlentities($this->CanonicalURI));
         }
 
         $this->cdr_details.= sprintf("
-        <tr>
-            <td></td>
-            <td>Next Hop URI:</td>
-            <td>%s</td>
-        </tr>
+        <div class=\"row-fluid\">
+            
+            <div class=\"span3\">Next Hop URI:</div>
+            <div class=\"span9\">%s</div>
+        </div>
         ",htmlentities($this->RemoteAddress));
 
         if ($this->DestinationId) {
             $this->cdr_details.= "
-            <tr>
-                <td></td>
-                <td>Destination: </td>
-                <td>$this->destinationName ($this->DestinationId)</td>
-            </tr>
+            <div class=\"row-fluid\">
+                
+                <div class=\"span3\">Destination: </div>
+                <div class=\"span9\">$this->destinationName ($this->DestinationId)</div>
+            </div>
             ";
         }
 
         if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
             $this->cdr_details.= "
-            <tr>
-                <td></td>
-                <td>ENUM TLD: </td>
-                <td>$this->ENUMtld</td>
-            </tr>
+            <div class=\"row-fluid\">
+                
+                <div class=\"span3\">ENUM TLD: </div>
+                <div class=\"span9\">$this->ENUMtld</div>
+            </div>
             ";
         }
 
         if ($this->SipRPID) {
             $this->cdr_details .= "
-            <tr>
-            <td></td>
-            <td>Caller ID:  </td>
-            <td>$this->SipRPIDPrint</td>
-            </tr>
+            <div class=\"row-fluid\">
+            
+            <div class=\"span3\">Caller ID:  </div>
+            <div class=\"span9\">$this->SipRPIDPrint</div>
+            </div>
             ";
         }
 
         if ($this->CalleeCallerId) {
             $this->cdr_details .= "
-            <tr>
-            <td></td>
-            <td>Called ID:  </td>
-            <td>$this->CalleeCallerId</td>
-            </tr>
+            <div class=\"row-fluid\">
+            
+            <div class=\"span3\">Called ID:  </div>
+            <div class=\"span9\">$this->CalleeCallerId</div>
+            </div>
             ";
         }
 
         $this->cdr_details.= "
-        <tr>
-            <td></td>
-            <td>Billing Party:</td>
-            <td><font color=brown>$this->BillingPartyIdPrint</font></td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Reseller:</td>
-            <td><font color=brown>$this->ResellerId</font></td>
-        </tr>
-        </table>
-        </td>
-        <td width=30>
-        <td valign=top>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Billing Party:</div>
+            <div class=\"span9\"><font color=brown>$this->BillingPartyIdPrint</font></div>
+        </div>
+        <div class=\"row-fluid\">
+            <div class=\"span3\">Reseller:</div>
+            <div class=\"span9\"><font color=brown>$this->ResellerId</font></div>
+        </div>
+        </div>
         ";
 
         $this->cdr_details.= "
-        <table border=0 cellpadding=0 cellspacing=0>
+        <div class='span3'>
         ";
 
         if ($this->application != 'message') {
             $this->cdr_details.= "
-            <tr>
-                <td colspan=3><b>Media Streams</b></td>
-            </tr>
+                <h5>Media Streams</h5>
             ";
     
             if ($this->CDRS->mediaTrace) {
@@ -3007,10 +3030,9 @@ class CDR_opensips extends CDR {
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for media information</a> &nbsp;";
     
                 $this->cdr_details.= sprintf("
-                <tr>
-                    <td width=10></td>
-                    <td colspan=2>%s</td>
-                </tr>
+                <div class=\"row-fluid\">
+                    <div class='span12'>%s</div>
+                </div>
                 ", $this->mediaTraceLink);
     
             }
@@ -3019,43 +3041,40 @@ class CDR_opensips extends CDR {
     
             if ($this->SipCodec) {
                 $this->cdr_details.= "
-                <tr>
-                    <td></td>
-                    <td>Codecs: </td>
-                    <td>$this->SipCodec</td>
-                </tr>
+                <div class=\"row-fluid\">
+                    <div class=\"span5\">Codecs: </div>
+                    <div class=\"span7\">$this->SipCodec</div>
+                </div>
                 ";
             }
     
             $this->cdr_details.= "
-            <tr>
-                <td></td>
-                <td>Caller RTP: </td>
-                <td>$this->inputTrafficPrint KB</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Called RTP: </td>
-                <td>$this->outputTrafficPrint KB</td>
-            </tr>
+            <div class=\"row-fluid\">
+                
+                <div class=\"span5\">Caller RTP: </div>
+                <div class=\"span7\">$this->inputTrafficPrint KB</div>
+            </div>
+            <div class=\"row-fluid\">
+                
+                <div class=\"span5\">Called RTP: </div>
+                <div class=\"span7\">$this->outputTrafficPrint KB</div>
+            </div>
             ";
     
             if ($this->MediaInfo) {
                 $this->cdr_details.= "
-                <tr>
-                <td></td>
-                <td>Media Info:</td>
-                <td><font color=red>$this->MediaInfo</font></td>
-                </tr>
+                <div class=\"row-fluid\">
+                <div class=\"span5\">Media Info:</div>
+                <div class=\"span7\"><font color=red>$this->MediaInfo</font></div>
+                </div>
                 ";
             }
 
             $this->cdr_details.= "
-            <tr>
-                <td></td>
-                <td>Applications: </td>
-                <td>$this->application_print</td>
-            </tr>
+            <div class=\"row-fluid\">
+                <div class=\"span5\">Applications: </div>
+                <div class=\"span7\">$this->application_print</div>
+            </div>
             ";
 
         }
@@ -3069,65 +3088,52 @@ class CDR_opensips extends CDR {
             $calledUA=htmlentities($callerAgents[1]);
 
             $this->cdr_details.= "
-            <tr>
-                <td></td>
-                <td>Caller SIP UA: </td>
-                <td>$callerUA</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>Called SIP UA: </td>
-                <td>$calledUA</td>
-            </tr>
+            <div class=\"row-fluid\">
+                <div class=\"span5\">Caller SIP UA: </div>
+                <div class=\"span7\">$callerUA</div>
+            </div>
+            <div class=\"row-fluid\">
+                <div class=\"span5\">Called SIP UA: </div>
+                <div class=\"span7\">$calledUA</div>
+            </div>
             ";
         }
 
         $this->cdr_details.= "
-        </table>";
+        </div>";
  
-        $this->cdr_details.=  "
-        </td>
-        <td width=30></td>
-        <td valign=top>
-        ";
  
         if ($perm->have_perm("showPrice") && $this->normalized) {
             $this->cdr_details.= "
-            <table border=0 cellpadding=0 cellspacing=0>
-    
-                <tr>
-                    <td colspan=3><b>Rating</b></td>
-    
-                </tr>
+            <div class=\"span3\">
+                    <h5>Rating</h5>
             ";
  
             if ($this->price > 0 || $this->rate) {
                 $this->ratePrint=nl2br($this->rate);
                 $this->cdr_details.= "
-                <tr>
-                <td></td>
-                <td colspan=2>$this->ratePrint</td>
-                </tr>
+                <div class=\"row-fluid\">
+                $this->ratePrint
+                </div>
                 ";
  
             } else {
                 $this->cdr_details.= "
-                <tr>
-                <td></td>
-                <td colspan=2>Free call</td>
-                </tr>
+                <div class=\"row-fluid\">
+                Free call
+                </div>
                 ";
             }
  
             $this->cdr_details.= "
-            </table>
+            </div>
             ";
         }
 
         $this->cdr_details.=  "
-        </td>
-        </tr>
-        </table>";
+        </div>
+        </div>
+        ";
     }
 
     function traceIn () {
@@ -3196,7 +3202,7 @@ class CDR_opensips extends CDR {
         $mod=$found-$rr*2;
 
         if ($mod ==0) {
-            $inout_color="lightgrey";
+            $inout_color="#F9F9F9";
         } else {
             $inout_color="white";
         }
@@ -3255,26 +3261,26 @@ class CDR_opensips extends CDR {
         $SIPclass=substr($this->disconnect,0,1);
 
         if ($SIPclass=="6") {
-            $status_color="<font color=red>";
+            $status_color="<span class=\"pull-right label label-important\">";
         } else if ($SIPclass=="5" ) {
-            $status_color="<font color=red>";
+            $status_color="<span class=\"pull-right label label-important\">";
         } else if ($SIPclass=="4" ) {
-            $status_color="<font color=blue>";
+            $status_color="<span class=\"pull-right label label-info\">";
         } else if ($SIPclass=="3" ) {
-            $status_color="<font color=green>";
+            $status_color="<span class=\"pull-right label label-success\">";
         } else if ($SIPclass=="2" ) {
-            $status_color="<font color=green>";
+            $status_color="<span class=\"pull-right label label-success\">";
         } else  {
-            $status_color="<font color=black>";
+            $status_color="<span class=\"pull-right label\">";
         }
 
         print "
-        <td valign=top align=right>$status_color $this->disconnectPrint</font></td>
+        <td valign=top align=right>$status_color $this->disconnectPrint</span></td>
         <td valign=top align=right>$this->SipCodec</td>
         </tr>
-        <tr>
+        <tr class=extrainfo id='row$found'>
         <td></td>
-        <td colspan=11>$this->cdr_details</td>
+        <td colspan=13>$this->cdr_details</th>
         </tr>
 
         ";
@@ -3832,13 +3838,13 @@ class SIP_trace {
             return;
         }
 
-        print "
-        <h1>CDRTool SIP trace</h1>
-        <h2>SIP session $callid $authorize</h2>
+        print "<div class=container-fluid><div id=trace class=main>
+        <h1 class='page-header'>CDRTool SIP trace
+        <small>SIP session $callid $authorizei</small></h1>
 
-        <table border=0 width=100%>
-        <tr>
-        <form method=post name=visibility>
+        <div class=row-fluid>
+        <div class=span9>
+        <form class=form-inline method=post name=visibility>
         ";
         if ($this->isAuthorized) {
             $key="callid-".trim($callid).trim($fromtag);
@@ -3858,11 +3864,10 @@ class SIP_trace {
             }
 
             print "
-            <td align=left bgcolor=$color2>
 
             This SIP trace is visible
 
-            <select name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
+            <select class=span3 name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
             <option $selected_toggleVisibility[public] value=1>without authorization
             <option $selected_toggleVisibility[private] value=0>only to authorized users
             </select>
@@ -3871,12 +3876,12 @@ class SIP_trace {
             
             print "URLs for this trace: <a href=$fullURL>HTML</a> | <a href=$fullURL&format=text>TEXT</a></td>";
         } else {
-            print "<td align=left>";
+            print "";
         }
 
         if ($this->mediaTrace) {
-            $this->mediaTraceLink=sprintf("<p><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
-            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for RTP media information</a>",
+            $this->mediaTraceLink=sprintf("<p class=pull-right><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
+            'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for RTP media information</a></p>",
             $this->mediaTrace,
             urlencode($callid),
             urlencode($fromtag),
@@ -3885,15 +3890,15 @@ class SIP_trace {
             );
         }
 
-        print "</td>
-        </form>
-        <td align=right>
-        Click on each packet to expand its body content.
+        print "
+            </form>
+            </div>
+            <div class='span3'>
+            <p class='pull-right'>
+        Click on each packet to expand its body content</p>
         $this->mediaTraceLink
-
-        </td>
-        </tr>
-        </table>
+        </div>
+        </div>
         ";
 
         foreach (array_keys($this->trace_array) as $key) {
@@ -3944,12 +3949,13 @@ class SIP_trace {
         print "
         <p>
         <a name=#top>
-        <table cellpadding=2 cellspacing=0 border=0 width=100%>
-        <tr bgcolor=lightgrey>
-        <td></td>
-        <td align=center><b>Packet</b></td>
-        <td align=center><b>Size</b></td>
-        <td align=center><b>Time</b></td>
+        <table class='table table-condensed table-hover' cellpadding=2 cellspacing=0 border=0 width=100%>
+        <thead>
+        <tr>
+        <th></th>
+        <th align=center><b>Packet</b></th>
+        <th align=center><b>Size</b></th>
+        <th align=center><b>Time</b></th>
         ";
 
         foreach (array_keys($this->column) as $_key) {
@@ -3961,7 +3967,7 @@ class SIP_trace {
                 $_hostname=$_key;
             }
 
-            print "<td align=center class=border>";
+            print "<th align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
                 $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'Trace',
                 'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s:%s (Trace) </b></font></a>",
@@ -3977,10 +3983,11 @@ class SIP_trace {
             } else {
                 printf ("<b>%s</b>",$_hostname);
             }
-            print "</td>";
+            print "</th>";
         }
 
-        print "</tr>";
+        print "</tr>
+            </thead>";
 
         $i=0;
 
@@ -4187,7 +4194,7 @@ class SIP_trace {
                     }
 
                     print "<br>";
-                    if ($transport == 'tls') print "<img src=images/lock15.gif border=0> ";
+                    if ($transport == 'tls') print "<span style='font-size:16px'><i class='icon-lock'></i></span> ";
                     if ($direction == 'in') {
                         printf ("%s port %d",strtoupper($transport),$this->trace_array[$key]['fromport']);
                     } else {
@@ -4234,16 +4241,13 @@ class SIP_trace {
             $trace_span=count($this->column)+2;
 
             print "
-            <tr>
+            <tr class=extrainfo id=row$i >
             <td></td>
             <td colspan=$trace_span>
             ";
 
-            print "
-            <table class=extrainfo id=row$i width=100%>
-            <tr>
-            <td valign=top align=center class=border>
-            ";
+            print "<div class='alert alert-info'>
+                <div class=row-fluid><div class='span2'><div class='row-fluid'><div class='span12'>";
 
             if ($direction == "out") {
                 print "
@@ -4251,25 +4255,23 @@ class SIP_trace {
                 <h1>SIP Proxy</h1></nobr>
                 ";
             } else {
-                if ($sip_phone_img) print "<img src=images/$sip_phone_img border=0>";
+                if ($sip_phone_img) print "<img style='max-width:none' src=images/$sip_phone_img>";
             }
-
+            print "</div></div><div class=row-fluid><div class='span12'>";
             if ($timeline > 0) {
                 printf ("<p>+%s s<br>(%s)",$timeline,sec2hms($timeline));
             }
-        
+            print "</div></div></div><div class=span10>";
             $msg=nl2br(htmlentities($msg));
 
             print "
-            </td>
-            <td valign=top class=border colspan=2 width=100%>$status_color $msg </font></td>
-            </td>
-            </tr>
-            </table>
-            ";
+                $status_color $msg 
+            
+            </div></div></div>";
 
             print "
-            </td>
+                </td>
+                <td></td>
             </tr>
             ";
         }
@@ -4569,6 +4571,7 @@ class Media_trace {
         }
 
         $this->getTrace($proxyIP,$callid,$fromtag,$totag);
+        print "<div class=container-fluid'><div id=trace class='main'>";
 
         if (!is_object($this->info)) {
             print "<p>No information available.";
@@ -4582,8 +4585,8 @@ class Media_trace {
         }
 
         print "
-        <h1>CDRTool Media Trace</h1>
-        <h2>Media Session $callid</h2>
+        <h1 class=page-header>CDRTool Media Trace
+        <small>Media Session $callid</small></h1>
         ";
 
         foreach (array_values($this->info->streams) as $_val) {
@@ -4594,7 +4597,7 @@ class Media_trace {
             $media_types[]=$_val->media_type;
         }
 
-        print "<h3>Media Information</h3>";
+        print "<h2>Media Information</h2>";
 
         print "<table border=0>";
         printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
@@ -4602,16 +4605,16 @@ class Media_trace {
         printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
         print "</table>";
 
-        print "<h3>Media Streams</h3>";
+        print "<h2>Media Streams</h2>";
 
-        print "<table border=0>";
-        print "<th></th>";
+        print "<table class='table table-condensed table-striped' style='width:300px' border=0>";
+        print "<thead><tr><th></th>";
 
         foreach (array_values($media_types) as $_type) {
             printf ("<th>%s</th>",ucfirst($_type));
         }
 
-        print "</tr>";
+        print "</tr></thead>";
 
         foreach ($this->info->streams[0]  as $_val => $_value) {
             printf ("<tr><td class=border>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
@@ -4626,7 +4629,7 @@ class Media_trace {
 
         print "</table>";
 
-        print "<h3>Stream Succession</h3>";
+        print "<br><h2>Stream Succession</h2>";
 
         $w_legend_bar=500;
         $w_text=30;
@@ -4668,26 +4671,30 @@ class Media_trace {
 
             $w_start_time = intval($_index*$w_legend_bar/$this->info->duration);
             $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
+            $w_duration_p = ($w_legend_bar/$w_duration) * 100;
+            $w_timeout_p  = ($w_legend_bar/$w_timeout)* 100;
+            $w_start_p  = ($w_legend_bar/$w_start)* 100;
 
-            //printf ("%s, %s, %s, %s<br>\n",$w_start_time,$w_duration,$w_timeout,$w_rest);
+            printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
             
             if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
 
                 print "<tr><td width=$w_text class=border>$_val->media_type</td>";
 
                 print "<td width=$w_legend_bar>\n";
-                print "<table width=100% border=0 cellpadding=0 cellspacing=0><tr>\n";
-                print "<td width=$w_start_time bgcolor=white></td>\n";
-                print "<td width=$w_duration bgcolor=green align=center><font color=white>$duration_print</font></td>\n";
+                //print "<table width=100% border=0 cellpadding=0 cellspacing=0><tr>\n";
+                print "<div class='progress progress-striped'>";
+                print "<div class=bar style='width:$w_start_p%'></div>\n";
+                print "<div class='bar bar-success'  style='width:$w_duration_p% ; text-align:center'><font color=white>$duration_print</font></div>\n";
 
                 if ($_val->timeout_wait) {
-                    print "<td width=$w_timeout bgcolor=red align=center><font color=white>$_timeout</font></td>\n";
+                    print "<div class='bar bar-danger' style='width:$w_timeout%; text-align:center'><font color=white>$_timeout</font></div>\n";
                 } else {
-                    print "<td width=$w_timeout bgcolor=white></td>\n";
+                    print "<div class='bar bar-warning' style='width:$w_timeout%; text-align:center'></div>\n";
                 }
-                print "<td width=$w_rest bgcolor=white align=center></td>\n";
+                //print "<td width=$w_rest bgcolor=white align=center></td>\n";
 
-                print "</table>\n";
+                //print "</table>\n";
 
                 print "</td></tr>";
             } elseif ( $_val->status == 'unselected ICE candidate')  {
@@ -4699,11 +4706,11 @@ class Media_trace {
 
         print "</table>";
 
-        print "<h4>Legend</h4>";
-        print "<table border=0>
-        <tr><td bgcolor=green width=50>&nbsp;</td><td>Session data</td></tr>
-        <tr><td bgcolor=red width=50>&nbsp;</td><td>Timeout period</td></tr>
-        </table>
+        print "<br><strong>Legend</strong>";
+        print "<p><table border=0>
+        <tr><td width=50><div class='progress progress-striped progress-success'><div class='bar' style='width:100%'></div></div></td><td>Session data</td></tr>
+        <tr><td><div class='progress progress-striped progress-danger'><div class='bar' style='width:100%'></div></div></td><td>Timeout period</td></tr>
+        </table></p></div></div>
         ";
     }
 }

@@ -19,59 +19,55 @@ if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-print "<table border=0>";
+print "<div class='row-fluid'>";
 foreach (array_keys($DATASOURCES) as $datasource) {
 
     if (in_array($datasource,$CDRTool['dataSourcesAllowed']) && !$DATASOURCES[$datasource]['invisible']) {
-        print "<tr>";
-        print "<td valign=top>";
+        print "<div class='span6'>";
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
-	      	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+	      	printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
             printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",
             $DATASOURCES[$datasource]['networkStatus']);
 
         } else if ($DATASOURCES[$datasource]['db_registrar']){
-	      	printf ("<h1>%s</h1>",$DATASOURCES[$datasource]['name']);
+	      	printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
 			require_once("cdr_generic.php");
 			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_registrar']);
             $online->showAll();
         }
 
-        print "</td>";
-        print "<td valign=top>";
+        print "</div>";
+        print "<div class='span6'>";
 
         if ($DATASOURCES[$datasource]['mediaSessions']) {
            	$MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
             $MediaSessions->getSessions();
             $MediaSessions->getSummary();
-            print "<h2>Media relays</h2>";
+            print "<div class=row><h2>Media relays</h2></div>";
             $MediaSessions->showSummary();
 
         } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
            	$MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'],$allowedDomains);
             $MediaSessions->getSessions();
             $MediaSessions->getSummary();
-            print "<h2>Media relays</h2>";
+            print "<div class=row><h2>Media relays</h2></div>";
             $MediaSessions->showSummary();
         }
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
         	$NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus'],$allowedDomains);
-            print "<h2>SIP accounts</h2>";
+            print "<div class=row><h2>SIP accounts</h2></div>";
             $NetworkStatistics->showStatistics();
-
-            print "<p>";
-            print "<h2>Network topology</h2>";
+            print "<div class=row><h2>Network topology</h2></div>";
             $NetworkStatistics->showStatus();
         }
 
-        print "</td>";
-        print "</tr>";
+        print "</div>";
     }
 }
 
-print "</table>";
+print "</div>";
 
 $layout->showFooter();
 

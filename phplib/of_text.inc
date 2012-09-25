@@ -19,6 +19,7 @@ class of_text extends of_element {
   var $valid_e2_error;
   var $pass;
   var $size;
+  var $class;
 
   // Constructor
   function of_text($a) {
@@ -37,6 +38,7 @@ class of_text extends of_element {
     $n = $this->name . ($this->multiple ? "[]" : "");
     $str .= "<input name='$n' value=\"$v\"";
     $str .= ($this->pass)? " type='password'" : " type='text'";
+    //$str .= " class=$class";
     if ($this->maxlength)
       $str .= " maxlength='$this->maxlength'";
     if ($this->size) 

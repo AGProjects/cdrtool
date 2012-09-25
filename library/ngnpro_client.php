@@ -733,18 +733,9 @@ class Records {
     function showEngineSelection() {
         $selected_soapEngine[$this->SoapEngine->service]=' selected';
 
-        printf("
-        <script type=\"text/JavaScript\">
-        function jumpMenu(){
-            location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
-        }
-        </script>",
-        $this->url
-        );
-
         $pstn_access=$this->getCustomerProperty('pstn_access');
 
-        printf("<select name='service' onChange=\"jumpMenu('this.form')\">\n");
+        printf("<select class=span3 name='service' onChange=\"jumpMenu('this.form')\">\n");
 
         $j=1;
         foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
@@ -775,7 +766,14 @@ class Records {
             $j++;
         }
         printf ("</select>");
-
+        printf("
+        <script type=\"text/JavaScript\">
+        function jumpMenu(){
+            location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
+        }
+        </script>",
+        $this->url
+        );
     }
 
     function showAfterEngineSelection () {
@@ -803,10 +801,7 @@ class Records {
         );
 
         print "
-        <p>
-        <table border=0 align=center>
-        <tr>
-        <td>
+          <ul class='pager'>
         ";
 
         if ($this->next != 0  ) {
@@ -816,27 +811,19 @@ class Records {
             }
             if (!$mod_show_next) $mod_show_next=0;
 
+            printf ("<li><a href='%s&next=%s'>&larr;  Previous</a></li>",$url,$mod_show_next);
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
-                printf ("<a href='%s&next=0'>Begin</a> ",$url);
+                printf ("<li><a href='%s&next=0'>Begin</a></li> ",$url);
             }
-
-            printf ("<a href='%s&next=%s'>Previous</a> ",$url,$mod_show_next);
         }
-        
-        print "
-        </td>
-        <td>
-        ";
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-            printf ("<a href='%s&next=%s'>Next</a> ",$url,$show_next);
+            printf ("<li><a href='%s&next=%s'>Next &rarr; </a></li> ",$url,$show_next);
         }
 
         print "
-        </td>
-        </tr>
-        </table>
+        </ul>
         ";
     }
 
@@ -848,50 +835,35 @@ class Records {
     	printf ("<p><b>%s</b>",
         $this->SoapEngine->ports[$this->SoapEngine->port]['description']);
 
-        print "
-        <p>
-        <table border=0 bgcolor=lightgreen class=border width=100%>
-        <tr>
-
-        ";
-        printf ("<form method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
-        print "
-        <td align=left>
-        ";
-        print "
-        <input type=submit name=action value=Search>
-        ";
+        printf ("<form class=\"form-inline\" method=post name=engines action=%s><div class='well well-small'>",$_SERVER['PHP_SELF']);
+        //print "
+        //<td align=left>
+        //";
+        print "<div class=input-prepend><input class='btn btn-primary' type=submit name=action value=Search>";
 
         $this->showEngineSelection();
-
+        print "</div>";
         $this->showAfterEngineSelection();
 
-        print "
-        </td>
-
-        <td align=right>
-		Order by";
+        print "<div class=pull-right>
+          Order by";
         $this->showSortForm();
-
+        print "</div>";
         $this->printHiddenFormElements('skipServiceElement');
 
-        print "
-        </td>
-        </tr>
-        <tr>
-        <td colspan=2>
-        ";
+        print "<div style=\"clear:both\"><br /></div>";
 
-    	$this->showTextBeforeCustomerSelection();
+        print "<div class=input-prepend><span class=add-on>";
+        $this->showTextBeforeCustomerSelection();
+        print "</span>";
+
         $this->showCustomerSelection();
         $this->showResellerSelection();
+        print "</div>";
 
         $this->showSeachFormCustom();
-        print "
-        </td>
-		</tr>
+        print "</div>
         </form>
-        </table>
         ";
 
         if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
@@ -944,14 +916,14 @@ class Records {
 
         $selected_sortBy[$this->sorting['sortBy']]='selected';
 
-        print "<select name=sortBy>";
+        print "<select class=span2 name=sortBy>";
         foreach (array_keys($this->sortElements) as $key) {
             printf ("<option value='%s' %s>%s",$key,$selected_sortBy[$key],$this->sortElements[$key]);
         }
         print "</select>";
 
         $selected_sortOrder[$this->sorting['sortOrder']]='selected';
-        print "<select name=sortOrder>";
+        print "<select class=span2 name=sortOrder>";
         printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
         printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
         print "</select>";
@@ -1230,14 +1202,14 @@ class Records {
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
-                printf ("<select name=%s>",$name);
+                printf ("<select class=span1 name=%s>",$name);
                 print "<option>";
                 foreach (array_keys($this->customers) as $_res) {
                     printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
                 }
                 print "</select>";
             } else {
-                printf ("<input type=text size=7 name=%s value='%s'>",$name,$this->filters['customer']);
+                printf ("<input class=span1 type=text size=7 name=%s value='%s'>",$name,$this->filters['customer']);
             }
         }
     }
@@ -1249,14 +1221,14 @@ class Records {
         } else {
             if (count($this->resellers)) {
                 $select_reseller[$this->filters['reseller']]='selected';
-                printf ("<select name=%s>",$name);
+                printf ("<select class=span1 name=%s>",$name);
                 print "<option>";
                 foreach (array_keys($this->resellers) as $_res) {
                     printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$_res],$_res,$this->resellers[$_res]);
                 }
                 print "</select>";
             } else {
-                printf ("<input type=text size=7 name=%s value='%s'>",$name,$this->filters['reseller']);
+                printf ("<input class=span1 type=text size=7 name=%s value='%s'>",$name,$this->filters['reseller']);
             }
         }
     }
@@ -1400,10 +1372,10 @@ class Records {
     }
 
     function showCustomerTextBox () {
-        print "Customer";
+        print "<div class='input-prepend'><span class='add-on'>Customer</span>";
         if ($this->adminonly) {
             $this->showCustomerForm('customer');
-            print ".";
+            print "<div class='input-prepend'><span class=add-on>.</span></div>";
             $this->showResellerForm('reseller');
         } else {
             $this->showCustomerForm('customer');
@@ -1411,25 +1383,21 @@ class Records {
     }
 
     function makebar($w) {
+        $return = "<div style='width:150px' class=\"progress\">"; 
         if ($w < 0) $w = 0;
         if ($w > 100) $w = 100;
         $width = $w;
         $extra = 100 - $w;
-        if ($width < 50)
+        if ($width < 50) {
             $color = "black";
-        else if ($width < 70)
-            $color = "darkred";
-        else
-            $color = "red";
-        return "
-        <table class=bar cellspacing=0>
-        <tr>
-        <td class=$color width=$width></td>
-        <td class=white width=$extra>
-        </td>
-        </tr>
-        </table>
-        ";
+            $return .= "<div style='width:150px' class=\"progress progress-info progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
+        } else if ($width < 70) {
+            $return .= "<div style='width:150px' class=\"progress progress-warning progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
+        } else {       
+            $return .= "<div style='width:150px' class=\"progress progress-danger progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
+        }
+        $return .="</div>";
+        return $return;
     }
 
     function customerFromLogin($dictionary=array()) {
@@ -1656,14 +1624,16 @@ class SipDomains extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Customer</b></td>
-                <td colspan=3><b>Domain</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+            <table class='table table-striped table-condensed' width=100%>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Customer</th>
+                <th colspan=3>Domain</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -1689,9 +1659,9 @@ class SipDomains extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
@@ -1735,7 +1705,7 @@ class SipDomains extends Records {
                     <td><a href=%s>Sip accounts</a></td>
                     <td><a href=%s>Sip aliases</a></td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -1768,7 +1738,7 @@ class SipDomains extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" SIP domain<input type=text size=20 name=domain_filter value='%s'>",$this->filters['domain']);
+        printf (" <div class='input-prepend'><span class=add-on>SIP domain</span><input class=span2 type=text size=20 name=domain_filter value='%s'></div>",$this->filters['domain']);
     }
 
     function deleteRecord($dictionary=array()) {
@@ -1800,38 +1770,23 @@ class SipDomains extends Records {
 
     function showAddForm() {
         if ($this->selectionActive) return;
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
             print "
-            <td align=left>
+            <div class='well well-small'>
             ";
 
             print "
-            <input type=submit name=action value=Add>
+            <input type=submit class='btn btn-warning' name=action value=Add>
             ";
 
             $this->showCustomerTextBox();
 
-            printf (" SIP domain<input type=text size=20 name=domain>");
-
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
+            printf (" </div><div class='input-prepend'><span class='add-on'>SIP domain</span><input type=text size=20 name=domain></div>");
 
             $this->printHiddenFormElements();
 
-            print "
+            print "</div>
             </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -2123,7 +2078,7 @@ class SipAccounts extends Records {
             $this->platform_call_limit;
         }
 
-		$this->getTimezones();
+        $this->getTimezones();
     }
 
     function getRecordKeys() {
@@ -2258,20 +2213,22 @@ class SipAccounts extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Account</b></td>
-                <td><b>Full name</b></td>
-                <td><b>Email address</b></td>
-                <td><b>Timezone</b></td>
-                <td align=right><b>Call limit</b></td>
-                <td align=right><b>Quota</b></td>
-                <td align=right><b>Balance</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+            <table class='table table-condensed table-striped'width=100%>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Account</th>
+                <th>Full name</th>
+                <th>Email address</th>
+                <th>Timezone</th>
+                <th align=right>Call limit</th>
+                <th align=right>Quota</th>
+                <th align=right>Balance</th>
+                <th>Owner</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -2285,7 +2242,7 @@ class SipAccounts extends Records {
 
 
             if ($this->rows) {
-            	$i=0;
+                $i=0;
 
                 $_prepaid_accounts=array();
                 while ($i < $maxrows)  {
@@ -2316,7 +2273,7 @@ class SipAccounts extends Records {
                     }
                 }
 
-            	$i=0;
+                $i=0;
 
                 while ($i < $maxrows)  {
     
@@ -2330,9 +2287,9 @@ class SipAccounts extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
 			        $_url = $this->url.'&'.$this->addFiltersToURL().sprintf("&service=%s&action=Delete",
@@ -2440,7 +2397,7 @@ class SipAccounts extends Records {
                     <td align=right>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>
                     ",
                     $bgcolor,
@@ -2474,32 +2431,34 @@ class SipAccounts extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Account<input type=text size=12 name=username_filter value='%s'>",$this->filters['username']);
+        printf ("
+            <div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text size=12 name=username_filter value='%s'></div>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
             if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
-                printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+                printf ("<input class=span1 type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
             } else {
                 $selected_domain[$this->filters['domain']]='selected';
-                printf ("<select name=domain_filter>
-                <option>");
+                printf ("<select class=span2 name=domain_filter>
+                    <option>
+                 ");
                 foreach ($this->allowedDomains as $_domain) {
-                    printf ("<option value='$_domain' %s>$_domain",$selected_domain[$_domain]);
+                    printf ("<option value='$_domain' %s>$_domain\n",$selected_domain[$_domain]);
                 }
-                printf ("</select>");
+                printf ("</select>\n");
             }
         } else {
-            printf ("<input type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+            printf ("<input class=span1 type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        printf (" FN<input type=text size=10 name=firstname_filter value='%s'>",$this->filters['firstname']);
-        printf (" LN<input type=text size=10 name=lastname_filter value='%s'>",$this->filters['lastname']);
-        printf (" Email<input type=text size=15 name=email_filter value='%s'>",$this->filters['email']);
-        printf (" Owner<input type=text size=7 name=owner_filter value='%s'> ",$this->filters['owner']);
+        printf (" <div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text size=10 name=firstname_filter value='%s'></div>\n",$this->filters['firstname']);
+        printf (" <div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text size=10 name=lastname_filter value='%s'></div>\n",$this->filters['lastname']);
+        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span1 type=text size=15 name=email_filter value='%s'></div>\n",$this->filters['email']);
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner_filter value='%s'></div>\n",$this->filters['owner']);
 
         $selected_group[$this->filters['group']]='selected';
-        print "<select name=group_filter><option value=''>Feature...";
+        print "<select class=span2 name=group_filter><option value=''>Feature...";
         foreach (array_keys($this->group_filter_list) as $key) {
             printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
         }
@@ -2555,23 +2514,17 @@ class SipAccounts extends Records {
         if ($this->filters['username']) return;
 
         if (!count($this->allowedDomains)) {
-            print "<p><font color=red>You must create at least one SIP domain before adding SIP accounts</font>";
+            print "<div class=\"alert alert-error\">You must create at least one SIP domain before adding SIP accounts</div>";
             return false;
         }
 
+        printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-        ";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        <div class='well well-small'>
+         ";
         print "
-        <td align=left>
-        ";
-
-        print "
-        <input type=submit name=action value=Add>
+        <input class='btn btn-warning' type=submit name=action value=Add>
         ";
 
         if ($_REQUEST['account']) {
@@ -2580,7 +2533,7 @@ class SipAccounts extends Records {
             $_account=$this->getCustomerProperty('sip_accounts_last_username');
         }
 
-        printf ("Account<input type=text size=15 name=account value='%s'>",$_account);
+        printf ("<div class=input-prepend><span class='add-on'>Account</span><input class=span2 type=text size=15 name=account value='%s'></div>",$_account);
 
         if ($_REQUEST['domain']) {
             $_domain=$_REQUEST['domain'];
@@ -2593,7 +2546,7 @@ class SipAccounts extends Records {
         }
 
         if (count($this->allowedDomains) > 0) {
-            print "@<select name=domain>";
+            print "@<select class=span2 name=domain>";
             foreach ($this->allowedDomains as $_domain) {
                 printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
             }
@@ -2623,33 +2576,23 @@ class SipAccounts extends Records {
             $checked_pstn='';
         }
 
-        printf (" Pass<input type=password size=10 name=password value='%s'>",$_REQUEST['password']);
-        printf (" Name<input type=text size=15 name=fullname value='%s'>",$_REQUEST['fullname']);
-        printf (" Email<input type=text size=20 name=email value='%s'>",$_REQUEST['email']);
-        printf ("<nobr>Owner<input type=text size=7 name=owner value='%s'></nobr> ",$_REQUEST['owner']);
-        printf ("<nobr>PSTN<input type=checkbox name=pstn value=1 %s></nobr> ",$checked_pstn);
-        printf ("<nobr>Quota<input type=text size=5 name=quota value='%s'></nobr> ",$_quota);
+        printf (" <div class=input-prepend><span class='add-on'>Pass</span><input class=span1 type=password size=10 name=password value='%s'></div>",$_REQUEST['password']);
+        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span1 type=text size=15 name=fullname value='%s'></div>",$_REQUEST['fullname']);
+        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span1 type=text size=20 name=email value='%s'></div>",$_REQUEST['email']);
+        printf (" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
+        printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
+        printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
 
-		if ($this->prepaidChangesAllowed()) {
-            printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
+        if ($this->prepaidChangesAllowed()) {
+            printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
         } else {
-            printf ("<nobr>Prepaid<input type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
+            printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
         }
-
-        print "
-        </td>
-        <td align=right>
-        ";
-        print "
-        </td>
-        ";
 
         $this->printHiddenFormElements();
 
-        print "
-        </form>
-        </tr>
-        </table>
+    print "</div>
+            </form>
         ";
     }
 
@@ -3305,15 +3248,17 @@ class SipAliases extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Alias</b></td>
-                <td><b>Target</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+            <table class='table table-condensed table-striped' width=100%>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Alias</th>
+                <th>Target</th>
+                <th>Owner</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -3340,9 +3285,9 @@ class SipAliases extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
@@ -3392,7 +3337,7 @@ class SipAliases extends Records {
                     <td><a href=%s>%s@%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>
                     ",
                     $bgcolor,
@@ -3479,7 +3424,7 @@ class SipAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Alias<input type=text size=12 name=alias_username_filter value='%s'>",$this->filters['alias_username']);
+        printf (" <div class='input-prepend'><span class='add-on'>Alias</span><input type=text size=12 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -3500,8 +3445,8 @@ class SipAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
-        printf (" Target<input type=text size=35 name=target_username_filter value='%s'>",trim($_REQUEST['target_username_filter']));
-        printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
+        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input type=text size=35 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 name=owner_filter value='%s'></div>",$this->filters['owner']);
 
     }
 
@@ -3513,58 +3458,40 @@ class SipAliases extends Records {
             return false;
         }
 
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
-            print "
-            <input type=submit name=action value=Add>
-            ";
-
-            printf (" Alias<input type=text size=15 name=alias>");
-
-            if ($_REQUEST['domain']) {
-                $_domain=$_REQUEST['domain'];
-                $selected_domain[$_REQUEST['domain']]='selected';
-            } else if ($_domain=$this->getCustomerProperty('sip_aliases_last_domain')) {
-                $selected_domain[$_domain]='selected';
-            }
-    
-            if (count($this->allowedDomains) > 0) {
-                print "@<select name=domain>";
-                foreach ($this->allowedDomains as $_domain) {
-                    printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
-                }
-                print "</select>";
-    
-            } else {
-                printf (" <input type=text name=domain size=15 value='%s'>",$_domain);
-            }
-
-            printf (" Target<input type=text size=35 name=target>");
-
-            printf (" Owner<input type=text size=7 name=owner>");
-
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
-        </tr>
-        </table>
+        print "<div class='well well-small'>
+        <input class='btn btn-warning' type=submit name=action value=Add>
         ";
+
+        printf (" <div class='input-prepend'><span class='add-on'>Alias</span><input class=span2 type=text size=15 name=alias></div>");
+
+        if ($_REQUEST['domain']) {
+            $_domain=$_REQUEST['domain'];
+            $selected_domain[$_REQUEST['domain']]='selected';
+        } else if ($_domain=$this->getCustomerProperty('sip_aliases_last_domain')) {
+            $selected_domain[$_domain]='selected';
+        }
+
+        if (count($this->allowedDomains) > 0) {
+            print "@<select name=domain>";
+            foreach ($this->allowedDomains as $_domain) {
+                printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
+            }
+            print "</select>";
+
+        } else {
+            printf (" <input type=text name=domain size=15 value='%s'>",$_domain);
+        }
+
+        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input class=span2 type=text size=35 name=target></div>");
+
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner></div>");
+
+        $this->printHiddenFormElements();
+
+        print "</div>
+        </form>";
     }
 
     function addRecord($dictionary=array()) {
@@ -3823,22 +3750,23 @@ class EnumRanges extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-            <td><b>Id</b></th>
-            <td><b>Customer</b></td>
-            <td><b>Prefix </b></td>
-            <td><b>TLD</b></td>
-            <td><b>Serial</b></td>
-            <td><b>TTL</b></td>
-            <td><b>Info</b></td>
-            <td><b>Min</b></td>
-            <td><b>Max</b></td>
-            <td><b>Size</b></td>
-            <td colspan=2><b>Used</b></td>
-            <td><b>Change date</b></td>
-            <td><b>Actions</b></td>
-            </tr>
+            <table class='table table-striped table-condensed' width=100%>
+            <thead>
+            <tr>
+            <th>Id</th>
+            <th>Customer</th>
+            <th>Prefix </th>
+            <th>TLD</th>
+            <th>Serial</th>
+            <th>TTL</th>
+            <th>Info</th>
+            <th>Min</th>
+            <th>Max</th>
+            <th>Size</th>
+            <th colspan=2>Used</th>
+            <th>Change date</th>
+            <th>Actions</th>
+            </tr></thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -3864,9 +3792,9 @@ class EnumRanges extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&tld_filter=%s",
@@ -3894,7 +3822,7 @@ class EnumRanges extends Records {
                     }
 
                     if ($this->record_generator) {
-                        $generator_url=sprintf('<a href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                        $generator_url=sprintf('<a class="btn-small btn-primary" href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
                     } else {
                         $generator_url='';
                     }
@@ -3930,7 +3858,7 @@ class EnumRanges extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a> %s</td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a>%s</td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -4010,53 +3938,40 @@ class EnumRanges extends Records {
     function showAddForm() {
         if ($this->selectionActive) return;
 
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+
             print "
-            <td align=left>
+            <div class='well well-small'>
             ";
 
             print "
-            <input type=submit name=action value=Add>
+            <input type=submit class='btn btn-warning' name=action value=Add>
             ";
             $this->showCustomerTextBox();
 
-            printf ("Prefix +<input type=text size=15 name=prefix value='%s'> ",$_REQUEST['prefix']);
-            printf (" TLD");
+            printf ("</div> <div class='input-prepend'><span class='add-on'>Prefix +</span><input type=text class=input-medium size=15 name=prefix value='%s'></div>",$_REQUEST['prefix']);
+            printf (" <div class='input-prepend'><span class='add-on'>TLD</span>");
 
             if ($_REQUEST['tld']) {
-                printf ("<input type=text size=15 name=tld value='%s'>",$_REQUEST['tld']);
+                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_REQUEST['tld']);
             } else if ($this->filters['tld']) {
-                printf ("<input type=text size=15 name=tld value='%s'>",$this->filters['tld']);
+                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$this->filters['tld']);
             } else if ($_tld=$this->getCustomerProperty('enum_ranges_last_tld')) {
-                printf ("<input type=text size=15 name=tld value='%s'>",$_tld);
+                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_tld);
             } else {
-                printf ("<input type=text size=15 name=tld>");
+                printf ("<input class=span2 type=text size=15 name=tld></div>");
             }
 
-            printf ("TTL<input type=text size=5 name=ttl value=3600> ");
-            printf ("Min Digits<input type=text size=3 name=minDigits value=11> ");
-            printf ("Max Digits<input type=text size=3 name=maxDigits value=11> ");
-            printf (" Info<input type=text size=15 name=info value='%s'> ",$_REQUEST['info']);
-
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
+            printf (" <div class='input-prepend'><span class='add-on'>TTL</span><input class=span1 type=text size=5 name=ttl value=3600></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Min Digits</span><input class=span1 type=text size=3 name=minDigits value=11></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Max Digits</span><input class=span1 type=text size=3 name=maxDigits value=11></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Info</span><input type=text size=15 name=info class=span2 value='%s'></div>",$_REQUEST['info']);
 
             $this->printHiddenFormElements();
 
             print "
+                </div>
             </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -4136,23 +4051,23 @@ class EnumRanges extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
-        printf (" TLD");
+        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input class=span2 type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
+        printf (" <div class='input-prepend'><span class='add-on'>TLD</span>");
 
         if (count($this->allowedDomains) > 0) {
             $selected_tld[$this->filters['tld']]='selected';
-            printf ("<select name=tld_filter>
+            printf ("<select class=span2 name=tld_filter>
             <option>");
 
             foreach ($this->allowedDomains as $_tld) {
                 printf ("<option value='%s' %s>%s",$_tld,$selected_tld[$_tld],$_tld);
             }
 
-            printf ("</select>");
+            printf ("</select></div>");
         } else {
-            printf ("<input type=text size=20 name=tld_filter value='%s'>",$this->filters['tld']);
+            printf ("<input class=span2 type=text size=20 name=tld_filter value='%s'></div>",$this->filters['tld']);
         }
-        printf (" Info<input type=text size=10 name=info_filter value='%s'>",$this->filters['info']);
+        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span2 type=text size=10 name=info_filter value='%s'></div>",$this->filters['info']);
     }
 
     function getAllowedDomains() {
@@ -4631,26 +4546,27 @@ class EnumMappings extends Records {
             }
 
             print "
-            <p>
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-                <td></th>
-                <td><b>Customer</b></td>
-                <td><b>Phone number</b></td>
-                <td><b>TLD</b></td>
-                <td><b>Info</b></td>
-                <td><b>Owner</b></td>
-                <td><b>Type</b></td>
-                <td><b>Id</b></td>
-                <td><b>Map to</b></td>
-                <td><b>TTL</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+            <table class='table table-condensed' width=100%>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Customer</th>
+                <th>Phone number</th>
+                <th>TLD</th>
+                <th>Info</th>
+                <th>Owner</th>
+                <th>Type</th>
+                <th>Id</th>
+                <th>Map to</th>
+                <th>TTL</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -4676,9 +4592,9 @@ class EnumMappings extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="#F9F9F9";
                     }
 
                     $j=1;
@@ -4992,10 +4908,10 @@ class EnumMappings extends Records {
         print "</select>";
         */
 
-        printf (" Number <input type=text size=15 name=number_filter value='%s'>",$_REQUEST['number_filter']);
+        printf (" <div class='input-prepend'><span class='add-on'>Number</span><input class=span2 type=text size=15 name=number_filter value='%s'></div>",$_REQUEST['number_filter']);
 
-        printf (" <nobr>Map to");
-        print "<select name=type_filter>
+        printf (" <div class='input-prepend'><span class='add-on'><nobr>Map to</span>");
+        print "<select class=span2 name=type_filter>
         <option>
         ";
         reset($this->NAPTR_services);
@@ -5008,8 +4924,8 @@ class EnumMappings extends Records {
         </select>
         ";
 
-        printf ("<input type=text size=20 name=mapto_filter value='%s'></nobr>",$this->filters['mapto']);
-        printf (" Owner<input type=text size=7 name=owner_filter value='%s'>",$this->filters['owner']);
+        printf ("<input class=span2 type=text size=20 name=mapto_filter value='%s'></nobr></div>",$this->filters['mapto']);
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
 
     }
 
@@ -5126,28 +5042,22 @@ class EnumMappings extends Records {
             return false;
         }
 
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
+        <div class='well well-small'>
         ";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-
+       
         if ($this->adminonly) {
         	printf (" <input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
         }
 
         print "
-        <td align=left>
-        ";
-
-        print "
-        <input type=submit name=action value=Add>
-        ";
+        <input type=submit name=action class='btn btn-warning' value=Add>
+        <div class='input-prepend'><span class='add-on'>";
         printf (" Number");
 
-        print "<select name=range>";
+        print "</span><select class=span2 name=range>";
 
         if ($_REQUEST['range']) {
             $selected_range[$_REQUEST['range']]='selected';
@@ -5163,17 +5073,19 @@ class EnumMappings extends Records {
         print "</select>";
 
         if ($_REQUEST['number']) {
-            printf ("<input type=text size=15 name=number value='%s'>",$_REQUEST['number']);
+            printf ("<input class=span2 type=text size=15 name=number value='%s'>",$_REQUEST['number']);
         } else if ($_number=$this->getCustomerProperty('enum_numbers_last_number')) {
             $_prefix=$_range['prefix'];
             preg_match("/^$_prefix(.*)/",$_number,$m);
-            printf ("<input type=text size=15 name=number value='%s'>",$m[1]);
+            printf ("<input class=span2 type=text size=15 name=number value='%s'>",$m[1]);
         } else {
-            printf ("<input type=text size=15 name=number>");
+            printf ("<input class=span2 type=text size=15 name=number>");
         }
 
-        printf (" Map to");
-        print "<select name=type>";
+        print "</div> <div class='input-prepend'><span class='add-on'>";
+
+        printf ("Map to");
+        print "</span><select class=span2 name=type>";
 
         if ($_REQUEST['type']) {
             $selected_naptr_service[$_REQUEST['type']]='selected';
@@ -5196,33 +5108,27 @@ class EnumMappings extends Records {
             $selected_naptr_service[$_type]='selected';
         }
 
-        printf (" <input type=text size=25 name=mapto value='%s'>",$_REQUEST['mapto']);
+        printf (" <input class=span2 type=text size=25 name=mapto value='%s'>",$_REQUEST['mapto']);
 
-        print" TTL";
+        print "</div> <div class='input-prepend'><span class='add-on'>";
+        print "TTL";
+        print "</span>";
+
         if ($_REQUEST['ttl']) {
-            printf ("<input type=text size=5 name=ttl value='%s'>",$_REQUEST['ttl']);
+            printf ("<input class=span1 type=text size=5 name=ttl value='%s'></div>",$_REQUEST['ttl']);
         } else if ($_ttl=$this->getCustomerProperty('enum_numbers_last_ttl')) {
-            printf ("<input type=text size=5 name=ttl value='%s'>",$_ttl);
+            printf ("<input class=span1 type=text size=5 name=ttl value='%s'></div>",$_ttl);
         } else {
-            printf ("<input type=text size=5 name=ttl value='3600'>");
+            printf ("<input class=span1 type=text size=5 name=ttl value='3600'></div>");
         }
-        printf (" Owner<input type=text size=7 name=owner value='%s'>",$_REQUEST['owner']);
-        printf (" Info<input type=text size=10 name=info value='%s'>",$_REQUEST['info']);
-
-        print "
-        </td>
-        <td align=right>
-        ";
-        print "
-        </td>
-        ";
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></div>",$_REQUEST['owner']);
+        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span2 type=text size=10 name=info value='%s'></div>",$_REQUEST['info']);
 
         $this->printHiddenFormElements();
 
         print "
+            </div>
         </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -5925,19 +5831,21 @@ class DnsZones extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
-            <td><b>Id</b></th>
-            <td><b>Customer</b></td>
-            <td><b>Zone</b></td>
-            <td><b>Administrator</b></td>
-            <td><b>Info</b></td>
-            <td><b></b></td>
-            <td><b>Serial</b></td>
-            <td><b>Default TTL</b></td>
-            <td><b>Change date</b></td>
-            <td><b>Actions</b></td>
-            </tr>
+            <table class='table table-striped table-condensed' width=100%>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Customer</th>
+                <th>Zone</th>
+                <th>Administrator</th>
+                <th>Info</th>
+                <th></th>
+                <th>Serial</th>
+                <th>Default TTL</th>
+                <th>Change date</th>
+                <th>Actions</th>
+                </tr>
+                </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -5963,9 +5871,9 @@ class DnsZones extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
@@ -6004,7 +5912,8 @@ class DnsZones extends Records {
 
                     sort($zone->nameservers);
 
-					$ns_text='';
+                    $ns_text='';
+
                     foreach ($zone->nameservers as $ns) {
                         $ns_text.= $ns." ";
                     }
@@ -6020,7 +5929,7 @@ class DnsZones extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -6100,37 +6009,23 @@ class DnsZones extends Records {
     function showAddForm() {
         if ($this->selectionActive) return;
 
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
+        <div class='well well-small'>
+        ";
 
-            print "
-            <input type=submit name=action value=Add>
-            ";
-            $this->showCustomerTextBox();
+        print "
+        <input class='btn btn-warning' type=submit name=action value=Add>
+        ";
+        $this->showCustomerTextBox();
 
-            printf (" DNS zone <input type=text size=25 name=name value='%s'> ",$_REQUEST['name']);
+        printf ("</div> <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text size=25 name=name value='%s'></div>",$_REQUEST['name']);
 
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
+        $this->printHiddenFormElements();
 
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
-        </tr>
-        </table>
+        print "
+            </div>
+        </form>
         ";
     }
 
@@ -6198,8 +6093,8 @@ class DnsZones extends Records {
     }
 
     function showSeachFormCustom() {
-    	printf (" DNS zone<input type=text size=25 name=name_filter value='%s'>",$this->filters['name']);
-    	printf (" Info<input type=text size=25 name=info_filter value='%s'>",$this->filters['info']);
+        printf (" <div class='input-prepend'><span class='add-on'>DNS zone</span><input type=text class=span2 size=25 name=name_filter value='%s'></div>",$this->filters['name']);
+        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span2 type=text size=25 name=info_filter value='%s'></div>",$this->filters['info']);
     }
 
     function showRecord($zone) {
@@ -6488,8 +6383,8 @@ class DnsZones extends Records {
 }
 
 class DnsRecords extends Records {
-	var $max_zones_selection = 50;
-	var $typeFilter          = false;
+    var $max_zones_selection = 50;
+    var $typeFilter          = false;
     var $default_ttl         = 3600;
     var $fancy               = false;
     var $default_sip_proxy   = "proxy.sipthor.net";
@@ -6525,7 +6420,7 @@ class DnsRecords extends Records {
 
     var $havePriority         = array('MX','SRV','NAPTR');
 
-	var $addRecordFunction    = 'addRecord';
+    var $addRecordFunction    = 'addRecord';
     var $deleteRecordFunction = 'deleteRecord';
     var $updateRecordFunction = 'updateRecord';
     var $getRecordsFunction   = 'getRecords';
@@ -6718,11 +6613,11 @@ class DnsRecords extends Records {
 
         dprint("init DnsRecords");
 
-		$_name=trim($_REQUEST['name_filter']);
+        $_name=trim($_REQUEST['name_filter']);
 
         if (strlen($_name) && !strstr($_name,'.') && !strstr($_name,'%')) $_name.='%';
 
-		if ($this->typeFilter) {
+        if ($this->typeFilter) {
             $this->filters   = array(
                                      'id'           => trim($_REQUEST['id_filter']),
                                      'zone'         => trim($_REQUEST['zone_filter']),
@@ -6819,39 +6714,42 @@ class DnsRecords extends Records {
             <tr><td>$this->rows records found. Click on record id to edit the values.</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
+            <table class='table table-striped table-condensed' width=100%>
             ";
             if ($this->fancy) {
                 print "
-                <tr bgcolor=lightgrey>
-                    <td></th>
-                    <td><b>Customer</b></td>
-                    <td><b>Zone</b></td>
-                    <td><b>Id</b></td>
-                    <td><b>Name</b></td>
-                    <td><b>Type</b></td>
-                    <td><b>Value</b></td>
-                    <td><b>Owner</b></td>
-                    <td><b>Change date</b></td>
-                    <td><b>Actions</b></td>
+                <thead>
+                <tr>
+                    <th></th>
+                    <th>Customer</th>
+                    <th>Zone</th>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Owner</th>
+                    <th>Change date</th>
+                    <th>Actions</th>
                 </tr>
+                </thead>
                 ";
             } else {
                 print "
-                <tr bgcolor=lightgrey>
-                    <td></th>
-                    <td><b>Customer</b></td>
-                    <td><b>Zone</b></td>
-                    <td><b>Id</b></td>
-                    <td><b>Name</b></td>
-                    <td><b>Type</b></td>
-                    <td align=right><b>Priority</b></td>
-                    <td><b>Value</b></td>
-                    <td><b>TTL</b></td>
-                    <td><b>Change date</b></td>
-                    <td><b>Actions</b></td>
+                <thead>
+                <tr>
+                    <th></th>
+                    <th><b>Customer</b></th>
+                    <th><b>Zone</b></th>
+                    <th><b>Id</b></th>
+                    <th><b>Name</b></th>
+                    <th><b>Type</b></th>
+                    <th align=right><b>Priority</b></th>
+                    <th><b>Value</b></th>
+                    <th><b>TTL</b></th>
+                    <th><b>Change date</b></th>
+                    <th><b>Actions</b></th>
                 </tr>
-                ";
+                </thead>";
             }
 
             if (!$this->next)  $this->next=0;
@@ -6877,9 +6775,9 @@ class DnsRecords extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
@@ -6944,7 +6842,7 @@ class DnsRecords extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td><a href=%s>%s</a></td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                         </tr>",
     
                         $bgcolor,
@@ -6977,7 +6875,7 @@ class DnsRecords extends Records {
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td><a href=%s>%s</a></td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                         </tr>",
     
                         $bgcolor,
@@ -7020,22 +6918,22 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Record Id<input type=text size=7 name=id_filter value='%s'>",$this->filters['id']);
-        printf (" Name<input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" <div class='input-prepend'><span class='add-on'>Record Id</span><input class=span1 type=text size=7 name=id_filter value='%s'></div>",$this->filters['id']);
+        printf (" <div class='input-prepend'><span class='add-on'>Name</span><input class=span2 type=text size=20 name=name_filter value='%s'></div>",$this->filters['name']);
 
         if (count($this->allowedDomains) > 0) {
             $selected_zone[$this->filters['zone']]='selected';
-            print "<select name=zone_filter><option value=''>Zone";
+            print "<select class=span2 name=zone_filter><option value=''>Zone";
             foreach ($this->allowedDomains as $_zone) {
                 printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
             }
             print "</select>";
         } else {
-        	printf (" Zone<input type=text size=20 name=zone_filter value='%s'>",$this->filters['zone']);
+        	printf (" <div class='input-prepend'><span class='add-on'>Zone</span><input class=span2 type=text size=20 name=zone_filter value='%s'></div>",$this->filters['zone']);
         }
 
         if ($this->typeFilter) {
-            printf (" Type %s <input type=hidden name=%s_filter>",$this->typeFilter,$this->typeFilter);
+            printf ("<input type=hidden name=%s_filter> Type %s",$this->typeFilter,$this->typeFilter);
         } else {
             $selected_type[$this->filters['type']]='selected';
             printf (" <select name=type_filter><option value=''>Type");
@@ -7044,7 +6942,7 @@ class DnsRecords extends Records {
             }
             print "</select>";
         }
-        printf (" Value <input type=text size=35 name=value_filter value='%s'>",$this->filters['value']);
+        printf (" <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value_filter value='%s'></div>",$this->filters['value']);
 
     }
 
@@ -7101,29 +6999,21 @@ class DnsRecords extends Records {
         }
         */
 
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-        ";
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<div class='well well-small'>";
 
         if ($this->adminonly) {
         	printf (" <input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
         }
 
         print "
-        <td align=left>
+        <input class='btn btn-warning' type=submit name=action value=Add>
         ";
 
-        print "
-        <input type=submit name=action value=Add>
-        ";
+        printf (" <div class='input-prepend'><span class='add-on'>Name</span>");
 
-        printf (" Name");
-
-        printf (" <input type=text size=20 name=name value='%s'>",trim($_REQUEST['name']));
+        printf ("<input type=text class=span2 size=20 name=name value='%s'></div>",trim($_REQUEST['name']));
 
         if (count($this->allowedDomains) > 0) {
 
@@ -7148,13 +7038,13 @@ class DnsRecords extends Records {
             } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
                 $_zone_selected=$_zone;
             }
-        	printf (" Zone <input type=text size=20 name=zone value='%s'>",$_zone_selected);
+        	printf (" <div class='input-prepend'><span class='add-on'>Zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>",$_zone_selected);
         }
 
         if ($this->typeFilter) {
             printf ("Type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
         } else {
-            print "Type <select name=type>
+            print " <div class='input-prepend'><span class='add-on'>Type</span><select name=type>
             ";
     
             if ($_REQUEST['type']) {
@@ -7172,30 +7062,20 @@ class DnsRecords extends Records {
             }
     
             print "
-            </select>
+            </select></div>
             ";
         }
 
-        printf (" Value<input type=text size=35 name=value value='%s'>",trim($_REQUEST['value']));
+        printf (" <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value value='%s'></div>",trim($_REQUEST['value']));
 
         if (!$this->fancy)  {
-        	printf (" Priority<input type=text size=5 name=priority value='%s'>",trim($_REQUEST['priority']));
+        	printf (" <div class='input-prepend'><span class='add-on'>Priority</span><input class=span1 type=text size=5 name=priority value='%s'></div>",trim($_REQUEST['priority']));
         }
-
-        print "
-        </td>
-        <td align=right>
-        ";
-        print "
-        </td>
-        ";
 
         $this->printHiddenFormElements();
 
-        print "
+        print "</div>
         </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -7232,7 +7112,7 @@ class DnsRecords extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-        	if ($result->total  > $this->max_zones_selection) return false;
+            if ($result->total  > $this->max_zones_selection) return false;
             foreach($result->zones as $zone) {
                 if (in_array($zone->name,$this->allowedDomains)) continue;
                 $this->allowedDomains[]=$zone->name;
@@ -7243,7 +7123,7 @@ class DnsRecords extends Records {
 
     function addRecord($dictionary=array()) {
 
-    	if ($this->typeFilter) {
+        if ($this->typeFilter) {
             $type = $this->typeFilter;
         } else if ($dictionary['type']) {
             $type = $dictionary['type'];
@@ -7371,7 +7251,7 @@ class DnsRecords extends Records {
                             );
          
             $result = $this->SoapEngine->execute($function,$this->html);
-	        dprint_r($result);
+            dprint_r($result);
 
             if (PEAR::isError($result)) {
                 $error_msg  = $result->getMessage();
@@ -7905,35 +7785,22 @@ class TrustedPeers extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
             print "
-            <td align=left>
+            <div class='well well-small'>
             ";
 
             print "
-            <input type=submit name=action value=Add>
+            <input class='btn btn-warning' type=submit name=action value=Add>
             ";
             $this->showCustomerTextBox();
 
-            printf (" IP address<input type=text size=20 name=ipaddress>");
-            printf (" Description<input type=text size=30 name=description>");
-
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
+            printf (" <div class='input-prepend'><span class='add-on'>IP address</span><input class=span2 type=text size=20 name=ipaddress></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
 
             $this->printHiddenFormElements();
 
-            print "
+            print "</div>
             </form>
         </tr>
         </table>
@@ -8005,14 +7872,15 @@ class TrustedPeers extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" IP address<input type=text size=20 name=ip_filter value='%s'>",$this->filters['ip']);
-        printf (" Description<input type=text size=30 name=description_filter value='%s'>",$this->filters['description']);
+        printf (" <div class='input-prepend'><span class='add-on'>IP address</span><input class=span2 type=text size=20 name=ip_filter value='%s'></div>",$this->filters['ip']);
+        printf (" <div class='input-prepend'><span class='add-on'>Description</span><input type=text size=30 name=description_filter value='%s'></div>",$this->filters['description']);
 
     }
 
     function showCustomerTextBox () {
-        print "Reseller";
+        print "<div class='input-prepend'><span class='add-on'>Reseller</span>";
         $this->showResellerForm('reseller');
+        print "</div>";
     }
 
     function showTextBeforeCustomerSelection() {
@@ -8047,7 +7915,9 @@ class Carriers extends Records {
 
     function showCustomerTextBox () {
         print "Reseller";
+        print "</span>";
         $this->showResellerForm('reseller');
+        print "</div>";
     }
 
     function listRecords() {
@@ -8102,19 +7972,21 @@ class Carriers extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
+            <table class='table table-condensed table-striped' width=100%>
             ";
 
             print "
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Reseller</b></td>
-                <td><b>Carrier</b></th>
-                <td><b>Name</b></th>
-                <td><b>Gateways</b></th>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Reseller</th>
+                <th>Carrier</th>
+                <th>Name</th>
+                <th>Gateways</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -8141,9 +8013,9 @@ class Carriers extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
@@ -8184,7 +8056,7 @@ class Carriers extends Records {
                     <td>%s</td>
                     <td><a href=%s>Gateways</a></td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -8222,38 +8094,23 @@ class Carriers extends Records {
 
     function showAddForm() {
         //if ($this->selectionActive) return;
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
+        <div class='well well-small'>
+        ";
 
-            print "
-            <input type=submit name=action value=Add>
-            ";
+        print "
+        <input class='btn btn-warning' type=submit name=action value=Add>
+        ";
+        print "<div class='input-prepend'><span class='add-on'>";
+        $this->showCustomerTextBox();
 
-            $this->showCustomerTextBox();
+        printf (" <div class='input-prepend'><span class='add-on'>Name</span><input type=text size=20 name=name></div>");
 
-            printf (" Name <input type=text size=20 name=name>");
+        $this->printHiddenFormElements();
 
-            print "
-            </td>
-            <td align=right>
-            ";
-
-            print "
-            </td>
-            ";
-            $this->printHiddenFormElements();
-
-            print "
-            </form>
-        </tr>
-        </table>
+        print "</div>
+        </form>
         ";
     }
 
@@ -8312,8 +8169,8 @@ class Carriers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Carrier <input type=text size=10 name=id_filter value='%s'>",$this->filters['id']);
-        printf (" Name <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" <div class='input-prepend'><span class='add-on'>Carrier</span><input type=text size=10 name=id_filter value='%s'></div>",$this->filters['id']);
+        printf (" <div class='input-prepend'><span class='add-on'>Name</span><input type=text size=20 name=name_filter value='%s'></div>",$this->filters['name']);
     }
 
     function showCustomerForm() {
@@ -8371,19 +8228,10 @@ class Carriers extends Records {
 
     function showRecord($carrier) {
 
-        print "<table border=0>";
-        print "<tr>";
-        print "<td>";
         print "<h3>Carrier</h3>";
-        print "</td>";
-        print "</tr>";
 
-        print "<tr>";
-        print "<td valign=top>";
 
-        print "<table border=0>";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
         foreach (array_keys($this->Fields) as $item) {
@@ -8393,26 +8241,25 @@ class Carriers extends Records {
                 $item_name=ucfirst($item);
             }
 
-            printf ("<tr>
-            <td class=border valign=top>%s</td>
+            printf ("<div class=control-group><label class=control-label>%s</label>
             <td class=border>",
             $item_name
             );
 
             if ($this->Fields[$item]['readonly']) {
-                printf ("<input name=%s_form type=hidden value='%s'>%s</td>",
+                printf ("<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
                 $item,
                 $carrier->$item,
                 $carrier->$item
                 );
             } else {
-                printf ("<input name=%s_form type=text value='%s'></td>",
+                printf ("<div class=controls><input class=span2 name=%s_form type=text value='%s'></div>",
                 $item,
                 $carrier->$item
                 );
             }
             print "
-            </tr>";
+            </div>";
         }
 
         printf ("<input type=hidden name=id_filter value='%s'>",$carier->id);
@@ -8421,21 +8268,11 @@ class Carriers extends Records {
         $this->printHiddenFormElements();
 
         print "
-        </table>
-        ";
-
-        print "</td>";
-        print "</tr>";
-
-        print "
-        <tr>
-        <td>
-        <input type=submit value=Update>
-        </td>
-        </tr>
+        <div class='from-actions'>
+        <input class='btn btn-warning' type=submit value=Update>
+        </div>
         ";
         print "</form>";
-        print "</table>";
 
     }
 
@@ -8473,7 +8310,7 @@ class Carriers extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-        	return true;
+            return true;
         }
     }
 }
@@ -8517,7 +8354,7 @@ class Gateways extends Records {
     }
 
     function listRecords() {
-    	$this->getCarriers();
+        $this->getCarriers();
 
         $this->showSeachForm();
 
@@ -8570,21 +8407,23 @@ class Gateways extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
+            <table class='table tables-striped table-condensed' width=100%>
             ";
 
             print "
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Reseller</b></td>
-                <td><b>Gateway</b></th>
-                <td><b>Carrier</b></td>
-                <td><b>Name</b></th>
-                <td><b>Address</b></td>
-                <td><b>Rules</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
-            </tr>
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Reseller</th>
+                <th>Gateway</th>
+                <th>Carrier</th>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Rules</th>
+                <th>Change date</th>
+                <th>Actions</th>
+                </tr>
+               </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -8611,9 +8450,9 @@ class Gateways extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
@@ -8663,7 +8502,7 @@ class Gateways extends Records {
                     <td valign=top>%s:%s:%s</td>
                     <td valign=top><a href=%s>Rules</a></td>
                     <td valign=top>%s</td>
-                    <td valign=top><a href=%s>%s</a></td>
+                    <td valign=top><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -8715,55 +8554,42 @@ class Gateways extends Records {
             return false;
         }
 
+        printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
+            <div class='well well-small'>
             ";
 
-            print "
-            <input type=submit name=action value=Add>
+        print "
+            <input class='btn btn-warning' type=submit name=action value=Add>
             ";
 
-            printf (" Carrier ");
+        printf (" Carrier ");
 
-            print "<select name=carrier_id> ";
-            foreach (array_keys($this->carriers) as $_carrier) {
-                printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
-            }
-            printf (" </select>");
+        print "<select name=carrier_id> ";
+        foreach (array_keys($this->carriers) as $_carrier) {
+            printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
+        }
+        
+        printf (" </select>");
 
-            printf (" Name <input type=text size=20 name=name>");
+        printf ("  <div class=input-prepend><span class=\"add-on\">Name</span><input class=span2 type=text size=20 name=name></div>");
 
-            printf (" Transport ");
+        printf ("  <div class=input-prepend><span class=\"add-on\">Transport</span>");
 
-            print "<select name=transport> ";
+        print "<select class=span1 name=transport> ";
 
-            foreach ($this->transports as $_transport) {
-                printf ("<option value='%s'>%s",$_transport,$_transport);
-            }
+        foreach ($this->transports as $_transport) {
+            printf ("<option value='%s'>%s",$_transport,$_transport);
+        }
 
-            printf (" </select>");
+        printf (" </select></div>");
 
-            printf (" Address<input type=text size=25 name=address>");
+        printf ("  <div class=input-prepend><span class=\"add-on\">Address</span><input class=span2 type=text size=25 name=address></div>");
 
-            print "
-            </td>
-            <td align=right>
-            ";
-            print "
-            </td>
-            ";
-            $this->printHiddenFormElements();
+        $this->printHiddenFormElements();
 
-            print "
+        print "</div>
             </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -8810,7 +8636,7 @@ class Gateways extends Records {
         if (!$port) $port = 5060;
 
         if (!in_array($transport,$this->transports)) {
-        	$transport=$this->transports[0];
+            $transport=$this->transports[0];
         }
 
         $gateway=array(
@@ -8857,7 +8683,7 @@ class Gateways extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Gateway <input type=text size=10 name=id_filter value='%s'>",$this->filters['id']);
+        printf ("  <div class=input-prepend><span class=\"add-on\">Gateway</span><input class=2 type=text size=10 name=id_filter value='%s'></div>",$this->filters['id']);
 
         print "
         <select name=carrier_id_filter>
@@ -8870,7 +8696,7 @@ class Gateways extends Records {
         }
 
         printf (" </select>");
-        printf (" Name <input type=text size=20 name=name_filter value='%s'>",$this->filters['name']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Name</span><input type=text size=20 name=name_filter value='%s'></div>",$this->filters['name']);
 
     }
 
@@ -8883,19 +8709,9 @@ class Gateways extends Records {
 
     function showRecord($gateway) {
 
-        print "<table border=0>";
-        print "<tr>";
-        print "<td>";
         print "<h3>Gateway</h3>";
-        print "</td>";
-        print "</tr>";
 
-        print "<tr>";
-        print "<td valign=top>";
-
-        print "<table border=0>";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
         foreach (array_keys($this->Fields) as $item) {
@@ -8905,47 +8721,45 @@ class Gateways extends Records {
                 $item_name=ucfirst($item);
             }
 
-            printf ("<tr>
-            <td class=border valign=top>%s</td>
-            <td class=border>",
+            printf ("<div class=control-group>
+            <label class=control-label>%s</label>
+            ",
             $item_name
             );
 
             if ($this->Fields[$item]['readonly']) {
-                printf ("<input name=%s_form type=hidden value='%s'>%s</td>",
+                printf ("<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
                 $item,
                 $gateway->$item,
                 $gateway->$item
                 );
             } else {
                 if ($item == 'carrier_id') {
-                    printf ("<select name=%s_form>",$item);
+                    printf ("<div class=controls><select class=span2 name=%s_form>",$item);
                     $selected_carrier[$gateway->$item]='selected';
                     foreach (array_keys($this->carriers) as $_carrier) {
                         printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
                     }
-                    printf (" </select>");
+                    printf (" </select></div>");
 
                 } else if ($item == 'transport') {
-                    printf ("<select name=%s_form>",$item);
+                    printf ("<div class=controls><select class=span2 name=%s_form>",$item);
                     $selected_transport[$gateway->$item]='selected';
                     foreach ($this->transports as $_transport) {
                         printf ("<option value='%s' %s>%s",$_transport,$selected_transport[$_transport],$_transport);
                     }
     
-                    print "</select>";
+                    print "</select></div>";
     
                 } else {
-                    printf ("<input name=%s_form size=30 type=text value='%s'></td>",
+                    printf ("<div class=controls><input class=span2 name=%s_form size=30 type=text value='%s'></div>",
                     $item,
                     $gateway->$item
                     );
                 }
             }
             print "
-            </tr>";
-
-
+            </div>";
         }
 
         printf ("<input type=hidden name=id_filter value='%s'>",$gateway->id);
@@ -8954,21 +8768,11 @@ class Gateways extends Records {
         $this->printHiddenFormElements();
 
         print "
-        </table>
-        ";
-
-        print "</td>";
-        print "</tr>";
-
-        print "
-        <tr>
-        <td>
-        <input type=submit value=Update>
-        </td>
-        </tr>
+        <div class=form-actions>
+        <input class='btn btn-warning' type=submit value=Update>
+        </div>
         ";
         print "</form>";
-        print "</table>";
 
     }
 
@@ -9011,7 +8815,7 @@ class Gateways extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-        	return true;
+            return true;
         }
     }
 
@@ -9095,7 +8899,7 @@ class GatewayRules extends Records {
     }
 
     function listRecords() {
-    	$this->getCarriers();
+        $this->getCarriers();
 
         $this->showSeachForm();
 
@@ -9148,24 +8952,26 @@ class GatewayRules extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
+            <table class='table table-striped table-condensed' width=100%>
             ";
 
             print "
-            <tr bgcolor=lightgrey>
-                <td><b></b></th>
-                <td><b>Reseller</b></td>
-                <td><b>Rule</b></th>
-                <td><b>Carrier</b></td>
-                <td><b>Gateway</b></td>
-                <td><b>Prefix</b></td>
-                <td><b>Strip</b></td>
-                <td><b>Prepend</b></td>
-                <td><b>MinLength</b></td>
-                <td><b>MaxLength</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
+                <thead>
+            <tr>
+                <th></th>
+                <th>Reseller</th>
+                <th>Rule</th>
+                <th>Carrier</th>
+                <th>Gateway</th>
+                <th>Prefix</th>
+                <th>Strip</th>
+                <th>Prepend</th>
+                <th>MinLength</th>
+                <th>MaxLength</th>
+                <th>Change date</th>
+                <th>Actions</th>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -9192,9 +8998,9 @@ class GatewayRules extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s&reseller_filter=%s",
@@ -9247,7 +9053,7 @@ class GatewayRules extends Records {
                     <td valign=top>%s</td>
                     <td valign=top>%s</td>
                     <td valign=top>%s</td>
-                    <td valign=top><a href=%s>%s</a></td>
+                    <td valign=top><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -9297,42 +9103,32 @@ class GatewayRules extends Records {
             return false;
         }
 
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-            ";
-            printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <td align=left>
-            ";
+        <div class='well well-small'>
+        ";
 
-            print "
-            <input type=submit name=action value=Add>
-            <input type=hidden name=sortBy value=changeDate>
-            ";
+        print "
+        <input class='btn btn-warning' type=submit name=action value=Add>
+        <input type=hidden name=sortBy value=changeDate>
+        ";
 
-            print "Gateway <select name=gateway_id> ";
-            foreach (array_keys($this->gateways) as $_gateway) {
-                printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
-            }
-            printf (" </select>");
+        print "<div class='input-prepend'><span class='add-on'>Gateway</span><select class=span2 name=gateway_id>";
+        foreach (array_keys($this->gateways) as $_gateway) {
+            printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
+        }
+        printf (" </select></div>");
 
-            printf (" Prefix <input type=text size=15 name=prefix>");
-            printf (" Strip <input type=text size=5 name=strip>");
-            printf (" Prepend <input type=text size=15 name=prepend>");
-            printf (" Min length <input type=text size=5 name=minLength>");
-            printf (" Max length <input type=text size=5 name=maxLength>");
+        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input class=span1 type=text size=15 name=prefix></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Strip</span><input class=span1 type=text size=5 name=strip></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Prepend</span><input class=span1 type=text size=15 name=prepend></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Min length</span><input class=span1 type=text size=5 name=minLength></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Max length</span><input class=span1 type=text size=5 name=maxLength></div>");
 
-            print "
-            </td>
-            ";
-            $this->printHiddenFormElements();
+        $this->printHiddenFormElements();
 
-            print "
-            </form>
-        </tr>
-        </table>
+        print "</div>
+        </form>
         ";
     }
 
@@ -9423,9 +9219,9 @@ class GatewayRules extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Rule <input type=text size=15 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" <div class='input-prepend'><span class='add-on'>Rule</span><input class=span2 type=text size=15 name=id_filter value='%s'></div>",$this->filters['id']);
         print "
-        <select name=carrier_id_filter>
+        <select class=span2 name=carrier_id_filter>
         <option value=''>Carrier";
 
         $selected_carrier[$this->filters['carrier_id']]='selected';
@@ -9435,8 +9231,8 @@ class GatewayRules extends Records {
         }
 
         printf (" </select>");
-        printf (" Gateway <input type=text size=15 name=gateway_id_filter value='%s'>",$this->filters['gateway_id']);
-        printf (" Prefix <input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        printf (" <div class='input-prepend'><span class='add-on'>Gateway</span><input class=span2 type=text size=15 name=gateway_id_filter value='%s'></div>",$this->filters['gateway_id']);
+        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input class=span1 type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
     }
 
     function showCustomerForm() {
@@ -9449,19 +9245,9 @@ class GatewayRules extends Records {
 
         $this->getGateways();
 
-        print "<table border=0>";
-        print "<tr>";
-        print "<td>";
         print "<h3>Rule</h3>";
-        print "</td>";
-        print "</tr>";
 
-        print "<tr>";
-        print "<td valign=top>";
-
-        print "<table border=0>";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
         foreach (array_keys($this->Fields) as $item) {
@@ -9471,38 +9257,39 @@ class GatewayRules extends Records {
                 $item_name=ucfirst($item);
             }
 
-            printf ("<tr>
-            <td class=border valign=top>%s</td>
-            <td class=border>",
+            printf ("<div class='control-group'>
+                <label class=control-label>
+                %s</label>
+            ",
             $item_name
             );
 
             if ($this->Fields[$item]['readonly']) {
-                printf ("<input name=%s_form type=hidden value='%s'>%s</td>",
+                printf ("<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
                 $item,
                 $rule->$item,
                 $rule->$item
                 );
             } else {
                 if ($item == 'gateway_id') {
-                    printf ("<select name=%s_form>",$item);
+                    printf ("<div class=controls><select class=span2 name=%s_form>",$item);
                     $selected_gateway[$rule->$item]='selected';
 
                     foreach (array_keys($this->gateways) as $_gateway) {
                         printf ("<option value='%s' %s>%s",$_gateway,$selected_gateway[$_gateway],$this->gateways[$_gateway]);
                     }
 
-                    print "</select>";
+                    print "</select></div>";
     
                 } else {
-                    printf ("<input name=%s_form size=30 type=text value='%s'></td>",
+                    printf ("<div class=controls><input class=span2 name=%s_form size=30 type=text value='%s'></div>",
                     $item,
                     $rule->$item
                     );
                 }
             }
             print "
-            </tr>";
+            </div>";
 
 
         }
@@ -9513,30 +9300,18 @@ class GatewayRules extends Records {
         $this->printHiddenFormElements();
 
         print "
-        </table>
-        ";
-
-
-        print "</td>";
-        print "</tr>";
-
-        print "
-        <tr>
-        <td>
-        <input type=submit value=Update>
-        </td>
-        </tr>
+        <div class=form-actions>
+        <input class='btn btn-warning' type=submit value=Update>
+        </div>
         ";
         print "</form>";
-        print "</table>";
-
     }
 
     function updateRecord () {
         //print "<p>Updating rule ...";
 
         if (!$_REQUEST['id_form'] || !strlen($_REQUEST['reseller_filter'])) {
-        	return;
+            return;
         }
 
         if (!$rule = $this->getRecord($_REQUEST['id_form'])) {
@@ -9568,7 +9343,7 @@ class GatewayRules extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-        	return true;
+            return true;
         }
     }
 
@@ -9701,22 +9476,23 @@ class Routes extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table border=0 cellpadding=2 width=100%>
+            <table class='table table-condensed table-striped'width=100%>
             ";
 
-            print "
-            <tr bgcolor=lightgrey>
-                <td><b>Id</b></th>
-                <td><b>Reseller</b></td>
-                <td><b>Route</b></th>
-                <td><b>Carrier</b></td>
-                <td><b>Gateways</b></td>
-                <td><b>Prefix</b></th>
-                <td><b>Originator</b></td>
-                <td><b>Priority</b></td>
-                <td><b>Change date</b></td>
-                <td><b>Actions</b></td>
-            </tr>
+            print "<thead>
+            <tr>
+                <th><b>Id</b></th>
+                <th><b>Reseller</b></th>
+                <th><b>Route</b></th>
+                <th><b>Carrier</b></th>
+                <th><b>Gateways</b></th>
+                <th><b>Prefix</b></th>
+                <th><b>Originator</b></th>
+                <th><b>Priority</b></th>
+                <th><b>Change date</b></th>
+                <th><b>Actions</b></th>
+                </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -9743,9 +9519,9 @@ class Routes extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%d",
@@ -9793,7 +9569,7 @@ class Routes extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a></td>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
                     $bgcolor,
                     $index,
@@ -9841,46 +9617,29 @@ class Routes extends Records {
             return false;
         }
 
-        print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightblue>
-        <tr>
-        ";
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "
-        <td align=left>
-        ";
+        printf ("<form class=form-inline method=post name=addform action=%s><div class='well well-small'>",$_SERVER['PHP_SELF']);
 
         print "
-        <input type=submit name=action value=Add>
+        <input class='btn btn-warning' type=submit name=action value=Add>
         ";
+        print "<div class='input-prepend'><span class='add-on'>";
+        printf (" Carrier ");
+        print "</span>";
 
-        printf (" Carrier: ");
-
-        print "<select name=carrier_id> ";
+        print "<select class=span2 name=carrier_id> ";
         foreach (array_keys($this->carriers) as $_carrier) {
             printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
         }
-        printf (" </select>");
+        printf (" </select></div>");
 
-        printf (" Prefix <input type=text size=20 name=prefix>");
-        printf (" Originator <input type=text size=20 name=originator>");
-        printf (" Priority <input type=text size=5 name=priority>");
-
-        print "
-        </td>
-        <td align=right>
-        ";
-        print "
-        </td>
-        ";
+        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input type=text size=20 name=prefix></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Originator</span><input type=text size=20 name=originator></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Priority</span><input type=text size=5 name=priority></div>");
 
         $this->printHiddenFormElements();
 
-        print "
+        print "</div>
         </form>
-        </tr>
-        </table>
         ";
     }
 
@@ -9965,7 +9724,7 @@ class Routes extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" Route <input type=text size=10 name=id_filter value='%s'>",$this->filters['id']);
+        printf (" <div class='input-prepend'><span class='add-on'>Route</span><input type=text size=10 name=id_filter value='%s'></div>",$this->filters['id']);
         print "
         <select name=carrier_id_filter>
         <option value=''>Carrier";
@@ -9977,7 +9736,7 @@ class Routes extends Records {
         }
 
         print "</select>";
-        printf (" Prefix<input type=text size=15 name=prefix_filter value='%s'>",$this->filters['prefix']);
+        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
 
     }
 
@@ -10041,19 +9800,9 @@ class Routes extends Records {
 
     function showRecord($route) {
 
-        print "<table border=0>";
-        print "<tr>";
-        print "<td>";
         print "<h3>Route</h3>";
-        print "</td>";
-        print "</tr>";
 
-        print "<tr>";
-        print "<td valign=top>";
-
-        print "<table border=0>";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
         foreach (array_keys($this->Fields) as $item) {
@@ -10063,36 +9812,35 @@ class Routes extends Records {
                 $item_name=ucfirst($item);
             }
 
-            printf ("<tr>
-            <td class=border valign=top>%s</td>
-            <td class=border>",
+            printf ("<div class=control-group>
+            <label class=control-label>%s</label>
+            ",
             $item_name
             );
 
             if ($this->Fields[$item]['readonly']) {
-                printf ("<input name=%s_form type=hidden value='%s'>%s</td>",
+                printf ("<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
                 $item,
                 $route->$item,
                 $route->$item
                 );
             } else {
                 if ($item == 'carrier_id') {
-                    printf ("<select name=%s_form>",$item);
+                    printf ("<div class=controls><select name=%s_form>",$item);
                     $selected_carrier[$route->$item]='selected';
                     foreach (array_keys($this->carriers) as $_carrier) {
                         printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
                     }
-                    printf (" </select>");
+                    printf (" </select></div>");
 
                 } else {
-                    printf ("<input name=%s_form type=text value='%s'></td>",
+                    printf ("<div class=controls><input name=%s_form type=text value='%s'></div>",
                     $item,
                     $route->$item
                     );
                 }
             }
-            print "
-            </tr>";
+            print "</div>";
         }
 
         printf ("<input type=hidden name=id_filter value='%s'>",$carier->id);
@@ -10101,21 +9849,11 @@ class Routes extends Records {
         $this->printHiddenFormElements();
 
         print "
-        </table>
-        ";
-
-        print "</td>";
-        print "</tr>";
-
-        print "
-        <tr>
-        <td>
-        <input type=submit value=Update>
-        </td>
-        </tr>
+        <div class='form-actions'>
+        <input class='btn btn-warning' type=submit value=Update>
+        </div>
         ";
         print "</form>";
-        print "</table>";
 
     }
 
@@ -10153,7 +9891,7 @@ class Routes extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-        	return true;
+            return true;
         }
     }
 }
@@ -10754,46 +10492,37 @@ class Customers extends Records {
         '%'
         );
 
-         print "
-        <p>
-        <table border=0 class=border width=100% bgcolor=lightgreen>
-        <tr>
-        ";
-
-        printf ("<form method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
+         printf ("<form class=form-inline method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <td align=left>
+        <div class='well well-small'>
         ";
         print "
-        <input type=submit name=action value=Search>
         ";
+        print "<div class='input-prepend pull-left'>
+        <button class='btn btn-primary' type=submit name=action value=Search>Search</button>";
 
         $this->showEngineSelection();
 
-        print "
-        </td>
-        <td align=right>
+        print "</div>
+        <div class='pull-right'>
         ";
         $this->showSortForm();
 
         print "
-        </td>
-        </tr>
-        <tr>
-        <td colspan=2>Id";
+        </div><div style='clear:both' /><br/><div class=input-prepend><span class=\"add-on\">Id</span>";
 
 
         $this->showCustomerSelection();
         $this->showResellerSelection();
+        print "</div>
+        ";
 
         $this->showSeachFormCustom();
-        print "</td>
-        </tr>
-        ";
+
         $this->printHiddenFormElements('skipServiceElement');
-        print "
+        print "</div>
+            </div>
         </form>
-        </table>
         ";
     }
 
@@ -10898,20 +10627,22 @@ class Customers extends Records {
             if ($this->rows > 1) {
 
                 print "
-                <table border=0 cellpadding=2 width=100%>
-                <tr bgcolor=lightgrey>
-                    <td><b>Id</b></th>
-                    <td><b>Customer</b></td>
-                    <td><b>Alias of</b></td>
-                    <td><b>Username</b></td>
-                    <td><b>Name</b></td>
-                    <td><b>Organization</b></td>
-                    <td><b>Country</b></td>
-                    <td><b>E-mail</b></td>
-                    <td><b>Phone number</b></td>
-                    <td><b>Change date</b></td>
-                    <td><b>Actions</b></td>
+                <table class='table table-striped table-condensed' border=0 cellpadding=2 width=100%>
+                <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Customer</th>
+                    <th>Alias of</th>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Country</th>
+                    <th>E-mail</th>
+                    <th>Phone number</th>
+                    <th>Change date</th>
+                    <th>Actions</th>
                 </tr>
+                </thead>
                 ";
             }
 
@@ -10939,9 +10670,9 @@ class Customers extends Records {
                     $mod=$index-$rr*2;
             
                     if ($mod ==0) {
-                        $bgcolor="lightgrey";
+                        $bgcolor="";
                     } else {
-                        $bgcolor="white";
+                        $bgcolor="";
                     }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&reseller_filter=%s&customer_filter=%s",
@@ -10976,7 +10707,7 @@ class Customers extends Records {
                     <td><a href=mailto:%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
-                    <td><a href=%s>%s</a>
+                    <td><a class='btn-small btn-danger' href=%s>%s</a>
                     ",
                     $bgcolor,
                     $index,
@@ -11021,15 +10752,15 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" Username<input type=text size=10 name=username_filter value='%s'>",$this->filters['username']);
-        printf (" FN<input type=text size=10 name=firstName_filter value='%s'>",$this->filters['firstName']);
-        printf (" LN<input type=text size=15 name=lastName_filter value='%s'>",$this->filters['lastName']);
-        printf (" Organization<input type=text size=15 name=organization_filter value='%s'>",$this->filters['organization']);
-        printf (" Email<input type=text size=25 name=email_filter value='%s'>",$this->filters['email']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text size=10 name=username_filter value='%s'></div>",$this->filters['username']);
+        printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span1' type=text size=10 name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
+        printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span1' type=text size=15 name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text size=25 name=email_filter value='%s'></div>\n",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
-            printf (" Resellers<input type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
+            printf (" Resellers <input class=checkbox type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
         }
     }
 
@@ -11105,7 +10836,7 @@ class Customers extends Records {
         <td align=left>";
         if ($_REQUEST['action'] != 'Delete' && $_REQUEST['action'] != 'Copy') {
             print "<input type=submit name=action value=Update>";
-            printf (" E-mail <input type=checkbox name=notify value='1'> account information");
+            printf (" E-mail <input class=checkbox type=checkbox name=notify value='1'> account information");
         }
 
         print "</td>
@@ -11441,7 +11172,7 @@ class Customers extends Records {
                             printf ("<tr>
                             <td class=border>%s</td>
                             <td class=border>%s</td>
-                            <td class=border>%s </td>
+                            <td class=border>%s</td>
                             </tr>",
                             ucfirst($this->allProperties[$item]['permission']),
                             $this->allProperties[$item]['name'],
@@ -11848,20 +11579,13 @@ class Customers extends Records {
 
     function showAddForm($confirmPassword=false) {
 
-        print "<h3>Register new customer</h3>";
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "
-        <p>
-        <input type=submit name=action value=Add>
-        <p>
-        ";
+        print "<div class='row-fluid'>
+        <h3>Register new customer</h3>";
+        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
-        if ($_REQUEST['notify']) $checked_notify='checked';
-        printf ("Send notification by email <input type=checkbox name=notify value='1' %s>",$checked_notify);
         print "
         <p>
         <input type=hidden name=showAddForm value=1>
-        <table border=0>
         ";
 
         if ($this->adminonly && $this->filters['reseller']) {
@@ -11894,23 +11618,29 @@ class Customers extends Records {
                     }
                 }
 
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
+                printf ("
+                  <div class=\"control-group\">
+                    <label class=\"control-label\">%s",
                 $item_name
                 );
-                print "<td class=border>";
+                print "</label>
+                  <div class=\"controls\">";
 
                 $this->showTimezones($_value);
 
-                print "</td>
-                </tr>
+                print "</div>
+                </div>
                 ";
             } else if ($item=='state') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
+                printf ("
+                  <div class=\"control-group\">
+                    <label class=\"control-label\">
+                    %s
+                  </label>
+                  <div class=\"controls\">",
                 $item_name
                 );
-                print "<td class=border>
+                print "
                 <select name=state_form>";
 
                 $selected_state[$_REQUEST[$item_form]]='selected';
@@ -11921,15 +11651,18 @@ class Customers extends Records {
 
                 print "
                 </select>
-                </td>
-                </tr>
+                </div>
+                </div>
                 ";
             } else if ($item=='country') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
+                printf ("<div class=\"control-group\">
+                    <label class=\"control-label\">
+                  %s
+                  </label>
+                  <div class=\"controls\">",
                 $item_name
                 );
-                print "<td class=border>
+                print "
                 <select name=country_form>";
 
 		        if (!$_REQUEST[$item_form]) {
@@ -11950,17 +11683,21 @@ class Customers extends Records {
 
                 print "
                 </select>
-                </td>
-                </tr>
+                </div>
+                </div>
                 ";
 
             } else {
                 if ($this->addFields[$item]['type'] == 'textarea') {
                     printf ("
-                    <tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
-                    </tr>
+                    <div class=\"control-group\">
+                    <label class=\"control-label\">
+                    %s
+                    </label>
+                    <div class=\"controls\">
+                    <textarea cols=30 name=%s_form rows=4>%s</textarea>
+                    </div>
+                    </div>
                     ",
                     $item_name,
                     $item,
@@ -11991,10 +11728,14 @@ class Customers extends Records {
                     if (strstr($item,'password')) $type='password';
 
                     printf ("
-                    <tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border><input name=%s_form size=30 type=%s value='%s'></td>
-                    </tr>
+                    <div class=\"control-group\">
+                    <label class=\"control-label\">
+                    %s
+                    </label>
+                    <div class=\"controls\">
+                    <input name=%s_form size=30 type=%s value='%s'>
+                    </div>
+                    </div>
                     ",
                     $item_name,
                     $item,
@@ -12015,11 +11756,17 @@ class Customers extends Records {
                 }
             }
         }
+        if ($_REQUEST['notify']) $checked_notify='checked';
+        printf ("
+                            <div class=\"control-group\">
+                    <label class=\"control-label\">Send notification by email</label>
+                  <div class=\"controls\">
+          <input class=checkbox type=checkbox name=notify value='1' %s></div></div>",$checked_notify);
 
         $this->printHiddenFormElements();
-        print "</form>";
+        print "<tr><td colspan=2><div class=form-actions><input class='btn' type=submit name=action value=Add></div></td></tr></form>";
         print "
-        </table>
+        </div>
         ";
     }
 
@@ -12913,7 +12660,7 @@ class recordGenerator extends SoapEngine {
                 $checked_create_sip='';
             }
             printf ("
-            <td align=right><input type=checkbox name=create_sip value=1 %s>
+            <td align=right><input class=checkbox type=checkbox name=create_sip value=1 %s>
             </td>
             </tr>
             ",$checked_create_sip);
@@ -12929,7 +12676,7 @@ class recordGenerator extends SoapEngine {
             <td>";
             print _("PSTN access");
             printf ("
-            <td align=right><input type=checkbox name=pstn value=1 %s>
+            <td align=right><input class=checkbox type=checkbox name=pstn value=1 %s>
             </td>
             </tr>
             ",$checked_pstn);
@@ -13413,19 +13160,13 @@ class Actions {
     function showActionsForm($filters,$sorting,$hideParameter=false) {
         if (!count($this->actions)) return;
 
+        printf ("<form class=form-inline method=post name=actionform action=%s>",$_SERVER['PHP_SELF']);
         print "
-        <p>
-        <table border=0 class=border width=100%>
-        <tr>
-        ";
-
-        printf ("<form method=post name=actionform action=%s>",$_SERVER['PHP_SELF']);
-        print "
-        <td align=left>
+        <div class='well well-small'>
         ";
 
         print "
-        <input type=submit value='Perform this action on the selection:'>
+        <input class='btn btn-warning' type=submit value='Perform this action on the selection:'>
         <input type=hidden name=action value=PerformActions>
         ";
         if ($this->adminonly) {
@@ -13445,15 +13186,14 @@ class Actions {
 
         if (!$hideParameter) {
             printf ("
-            <input type=text size=%d name=sub_action_parameter>
+            <input type=text class=span2 size=%d name=sub_action_parameter>
             ",$this->sub_action_parameter_size);
         }
         print "
-        </td>
-        <td align=right>
+        <p class=pull-right>
         ";
         print " Maximum of 500 records
-        </td>
+        </p>
         ";
 
         foreach (array_keys($filters) as $_filter) {
@@ -13470,10 +13210,8 @@ class Actions {
             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
             printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SoapEngine->extraFormElements[$element]);
         }
-            print "
+            print "</div>
             </form>
-        </tr>
-        </table>
         ";
 
     }

@@ -1521,7 +1521,7 @@ class RatingTables {
                                                                                   "name"=>"Subscriber"
                                                                                  ),
                                                                  "dest_id"=>array("size"=>12,
-                                                                                  "name"=>"Destination"
+                                                                                  "name"=>"Destination",
                                                                                  ),
                                                                  "region"=>array("size"=>10,
                                                                                   "name"=>"Region"
@@ -4771,7 +4771,7 @@ class RatingTables {
         if (!$export) {
             print "
             <table border=0 align=center>
-            <tr><td>
+            <tr><td colspan=\"2\">
             ";
             
             if ($rows == 0) {
@@ -4795,9 +4795,9 @@ class RatingTables {
                 $engineAddress=$this->settings['socketIPforClients'].":".$this->settings['socketPort'];
 
                 if ($this->checkRatingEngineConnection()) {
-                    print " | <font color=green>Rating engine running at $engineAddress</font>";
+                    print " | <span class=\"label label-success\">Rating engine running at $engineAddress</span>";
                 } else {
-                    print " | <font color=red>Cannot connect to rating engine $engineAddress</font>";
+                    print " | <span class=\"label label-important\">Cannot connect to rating engine $engineAddress</span>";
                 }
             }
         
@@ -4805,6 +4805,62 @@ class RatingTables {
         
             print "
             </td>
+            </tr> ";
+            if ($this->csv_import[$this->table]) {
+                print "<td style='text-align: center; padding-top:5px'> 
+                <form class='form-inline' action=$PHP_SELF method='post' enctype='multipart/form-data'>
+                <input type=hidden name=import value=1>
+                ";
+                printf ("
+                <input type='hidden' name=table value=%s>
+                <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
+                <div class='fileupload fileupload-new' style='display: inline-block; margin-bottom:0px' data-provides='fileupload'>
+                    <div class='input-append'>
+                        <div class='uneditable-input input-small'>
+                            <span class='fileupload-preview'></span>
+                        </div>
+                        <span class='btn btn-file'>
+                        <span class='fileupload-new'>Select file</span>
+                        <span class='fileupload-exists'>Change</span>
+                        <input type='file' name='%s'/></span>
+                        <a href='#' class='btn fileupload-exists' data-dismiss='fileupload'>Remove</a>
+                        <button type='submit' class='btn fileupload-exists' value=\"Import\"><i class='icon-upload'></i> Import</button>
+                    </div>
+                </div>
+                ",$this->table,$this->table
+                );
+            
+                print "</form><td style='padding-top:5px'>
+                ";
+            } else {
+                print "<td style='padding-top:5px; text-align: center' colspan=\"2\">";
+            }
+            print "<form class='form-inline' action=$PHP_SELF method=post target=export>
+            <input type=hidden name=export value=1>
+            ";
+
+            $j=0;
+            while ($j < $cc ) {
+                $Fname=$metadata[$j]['name'];
+                $size=$metadata[$j]['len'];
+                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                    $SEARCH_NAME="search_".$Fname;
+                    $value=$_REQUEST[$SEARCH_NAME];
+                    print "<input type=hidden name=search_$Fname value=\"$value\">";
+                }
+            
+                $j++;    
+            }
+        
+            if ($this->table!=='prepaid_cards' ) {
+                printf ("
+                <input type=hidden name=table value=%s>
+                <button class=btn type=submit value=\"Export %s\"><i class=icon-file></i> Export %s</button>
+                ",$this->table,$this->csv_export[$this->table],$this->csv_export[$this->table]);
+            }
+        
+            print "
+            </form></td>
             </tr>
             </table>
             ";
@@ -4850,11 +4906,20 @@ class RatingTables {
         $k=0;
         
         if (!$export) {
-            print "
-            <table border=0 class=border align=center width=100%>
-            <tr bgcolor=lightgrey>
-            <td></td>
+            if ($this->table=='prepaid') {
+                print "
+            <table class='table-hover table table-condensed' id='rates_table' align=center width=100%>
+            <thead>
+            <tr>
+            <th></th>";
+            } else { 
+                print "
+            <table class='table-hover table table-condensed table-striped' id='rates_table' align=center width=100%>
+            <thead>
+            <tr>
+            <th></th>
             ";
+            }
         }
         
         while ($k < $cc) {
@@ -4866,7 +4931,7 @@ class RatingTables {
                     $th=ucfirst($th);
                 }
                 if (!$export) {
-                    print "<td class=border><b>$th</b></td>";
+                    print "<th>$th</th>";
                 } else {
                     if ($k) {
                         printf ("%s%s",$delimiter,$th);
@@ -4886,14 +4951,14 @@ class RatingTables {
         if (!$export) {
             
             print "
-            <td class=border><b>Action</b></td>
+                <th>Action</th>
             </tr>";
             $t_columns=$t_columns+2;
             
             // SEARCH FORM
             print "
             <tr>
-            <td class=border colspan=$t_columns>
+            <td colspan=$t_columns>
                 Use _ to match one character and % to match any. Use > or < 
                 to find greater or smaller values.</td>    
             </tr>
@@ -4901,10 +4966,10 @@ class RatingTables {
             
             // Search form
             print "
-            <form action=$PHP_SELF method=post name=rating>
+            <form class='form-inline' style='display:none' action=$PHP_SELF method=post name=rating>
             <input type=hidden name=web_task value=Search>
             <tr>
-            <td>&nbsp; </td>";
+            <td>&nbsp;</td>";
             $j=0;
             
             while ($j < $cc ) {
@@ -4926,7 +4991,12 @@ class RatingTables {
                     }
             
                     if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                        print "<td><input type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
+                        $class="span1";
+                        if ( $Fname == 'e164_regexp' ||
+                             $Fname == 'account') {
+                            $class="span2";
+                        }
+                        print "<td><input class=$class type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
         
                     } else {
                         print "<td></td>";
@@ -4948,7 +5018,7 @@ class RatingTables {
             print "
             <td>
             ";
-            printf("<select name='table' onChange=\"jumpMenu('this.form')\">\n");
+            printf("<div class='input-append'><select class='span3' name='table' onChange=\"jumpMenu('this.form')\">\n");
 
             $selected_table[$this->table]="selected";
             foreach (array_keys($this->tables) as $tb) {
@@ -4957,70 +5027,24 @@ class RatingTables {
             }
 
             print "
-            </select>
-            <input type=submit name=subweb_task value=Search>
-            </form>
-
-            <form action=$PHP_SELF method=post target=export>
-            <input type=hidden name=export value=1>
-            ";
-            $j=0;
-            while ($j < $cc ) {
-                $Fname=$metadata[$j]['name'];
-                $size=$metadata[$j]['len'];
-                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                    $SEARCH_NAME="search_".$Fname;
-                    $value=$_REQUEST[$SEARCH_NAME];
-                    print "<input type=hidden name=search_$Fname value=\"$value\">";
-                }
-            
-                $j++;    
-            }
-        
-            if ($this->table!=='prepaid_cards' ) {
-                printf ("
-                <input type=hidden name=table value=%s>
-                <input type=submit value=\"Export %s\">
-                ",$this->table,$this->csv_export[$this->table]);
-            }
-        
-            print "
-            </form>
-            ";
-
-            if ($this->csv_import[$this->table]) {
-                print "
-                <form action=$PHP_SELF method='post' enctype='multipart/form-data'>
-                <input type=hidden name=import value=1>
-                ";
-                printf ("
-                <input type='hidden' name=table value=%s>
-                <input type='submit' value=\"Import\">
-                <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
-                <input type='file'   name='%s'>
-                ",$this->table,$this->table
-                );
-            
-                print "
-                </form>
-                ";
-            }
+            </select><input class='btn btn-primary' type=submit name=subweb_task value=Search></div>
+            </form>";
 
             print "
             </td>
-            </tr>
+            </tr></thead>
             ";
             
-            print "
-            <tr>
-            <td colspan=$t_columns><hr noshade size=2></td>
-            </tr>
-            ";
+            //print "
+            //<tr>
+            //<td colspan=$t_columns><hr noshade size=2></td>
+            //</tr>
+            //";
             
             if ($selection_made && !$this->tables[$this->table]['readonly']) {
                 // Update all form
                 print "
-                <tr><td class=border colspan=$t_columns>
+                <tr><td colspan=$t_columns>
                 Use + or - to add/substract from curent values.
                 Use * or / to multiply/divide curent values.</td>
                 </tr>";
@@ -5028,7 +5052,7 @@ class RatingTables {
                 $j=0;
             
                 print "
-                <form action=$PHP_SELF method=post>
+                <form class='form-inline' action=$PHP_SELF method=post>
                 <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <tr>
@@ -5046,7 +5070,12 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            $class="span1";
+                            if ( $Fname == 'dest_name' ||
+                                 $Fname == 'account') {
+                                $class="span1";
+                            }
+                            print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                         }
@@ -5069,22 +5098,23 @@ class RatingTables {
                 }
         
                 if ($subweb_task=="Delete selection" && !$confirmDelete) {
-                    print "<td bgcolor=lightgrey>";
+                    print "<td>";
                     print "<input type=hidden name=confirmDelete value=1>";
-                    print "<input type=submit name=subweb_task value=\"Delete selection\">";
+                    print "<input class='btn btn-danger' type=submit name=subweb_task value=\"Delete selection\">";
                     print " ($rows records)";
                 } else if (!$this->tables[$this->table]['readonly']){
         
                     if ($this->table == "billing_rates" && strlen($_REQUEST['search_name'])) {
                         if ($subweb_task=="Copy rate" && !$confirmCopy) {
-                        print "<td bgcolor=lightgrey>";
+                        print "<td>";
                             print "<input type=hidden name=confirmCopy value=1>";
                         } else {
                             print "<td>";
-                            print "
-                            <input type=submit name=subweb_task value=\"Update selection\">
-                            <input type=submit name=subweb_task value=\"Delete selection\">
-                            <br>";
+                            print "<div class=\"btn-group\">
+                            <input class='btn' type=submit name=subweb_task value=\"Update selection\">
+                            <input class='btn btn-danger' type=submit name=subweb_task value=\"Delete selection\">
+                            </div>
+                            ";
                         }
                         print "
                         <input type=submit name=subweb_task value=\"Copy rate\">";
@@ -5122,10 +5152,10 @@ class RatingTables {
         
                     } else {
                         print "<td>";
-                        print "
-                        <input type=submit name=subweb_task value=\"Update selection\">
-                        <input type=submit name=subweb_task value=\"Delete selection\">
-                        <br>";
+                        print "<div class=\"btn-group\">
+                        <input class='btn' type=submit name=subweb_task value=\"Update selection\">
+                        <input class='btn btn-danger' type=submit name=subweb_task value=\"Delete selection\">
+                        </div>";
         
                     }
                 }
@@ -5135,7 +5165,7 @@ class RatingTables {
                     <input type=hidden name=table value=$this->table>
                     <input type=hidden name=search_text value=\"$search_text\">
                     </td>
-                </tr>
+                </tr></thead>
                 </form>
                 ";
             
@@ -5143,7 +5173,7 @@ class RatingTables {
                 // Insert form
                 $j=0;
                 print "
-                <form action=$PHP_SELF method=post>
+                <form style='display:none' action=$PHP_SELF method=post>
                 <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <tr>
@@ -5162,7 +5192,12 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            print "<td><input type=text size=$field_size maxlength=$size name=$Fname></td>";
+                            $class="span1";
+                            if ( $Fname == 'e164_regexp' ||
+                                 $Fname == 'account') {
+                                $class="span2";
+                            }
+                            print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
                 
@@ -5185,19 +5220,19 @@ class RatingTables {
                 }
                 
                 print "
-                    <td class=border>
+                    <td>
                     <input type=hidden name=table value=\"$this->table\">
                     <input type=hidden name=search_text value=\"$search_text\">
-                    <input type=submit name=subweb_task value=Insert>
+                    <input class='btn' type=submit name=subweb_task value=Insert>
                     </td>
-                </tr>
+                </tr></thead>
                 </form>
                 ";
-                print "
-                <tr>
-                <td colspan=$t_columns><hr noshade size=2></td>
-                </tr>
-                ";
+                //print "
+                //<tr>
+                //<td colspan=$t_columns><hr noshade size=2></td>
+                //</tr>
+                //";
 
             }
             
@@ -5211,7 +5246,7 @@ class RatingTables {
 
             if (!$export) {
                 print "
-                <form action=$PHP_SELF method=post>
+                <form style='display:none' action=$PHP_SELF method=post>
                 <input type=hidden name=web_task value=update>
                 <input type=hidden name=next value=$next>
                 <input type=hidden name=id value=$id>
@@ -5224,7 +5259,7 @@ class RatingTables {
                     $account=$this->db->f('account');
 
                     $extraInfo="
-                    <table border=0 bgcolor=#CCDDFF class=extrainfo id=row$found cellpadding=0 cellspacing=0>
+                    <table border=0 bgcolor=#CCDDFF cellpadding=0 cellspacing=0>
                     <form action=$PHP_SELF method=post>
                     <input type=hidden name=web_task value=update>
                     <input type=hidden name=next value=$next>
@@ -5308,8 +5343,13 @@ class RatingTables {
                                 printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
 
                             } else {
+                                $class="span1";
+                                if ( $Fname == 'e164_regexp' ||
+                                     $Fname == 'account') {
+                                    $class="span2";
+                                }
                                 print "<td>
-                                <input type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
+                                <input class='$class' type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
                                 </td>";
                             }
         
@@ -5370,8 +5410,9 @@ class RatingTables {
                     } else {
                         print "
                         <td class=border>
-                        <input type=submit name=subweb_task value=Update>
-                        <input type=submit name=subweb_task value=Delete>
+                        <div class=\"btn-group\">
+                        <input class='btn' type=submit name=subweb_task value=Update>
+                        <input class='btn btn-danger' type=submit name=subweb_task value=Delete></div>
                         ";
                         print "<input type=hidden name=confirmDelete value=1>";
                     }
@@ -5382,16 +5423,19 @@ class RatingTables {
                     <input type=hidden name=search_text value=\"$search_text\">
                     </td>
                     </tr>
-                    </form>
-
-                        <td></td>
-                        <td colspan=$t_columns>$extraInfo</td>
-                        </tr>
-                    ";
+                    </form>";
+                    if ($extraInfo!='') {
+                        print "
+                            <tr style='display:none' id='row$found'>
+                            <td></td>
+                            <td colspan=$t_columns>$extraInfo</td>
+                            </tr>
+                        ";
+                    }
                 } else {
                     if ($this->table=='prepaid') {
                         print "
-                        <tr>
+                        <tr style='display:none' id='row$found'>
                         <td></td>
                         <td colspan=$t_columns>$extraInfo</td>
                         </tr>
@@ -5405,16 +5449,10 @@ class RatingTables {
         if (!$export) {
             print "
             </table>
-            <p>
             ";
             
             print "
-            <center>
-            <table border=0>
-            <tr>
-            <form method=post>
-
-            <td>
+            <form class=form-inline id=prev method=post>
             ";
             if ($next!= 0 ) {
                 $show_next=$this->maxrowsperpage-$next;
@@ -5424,7 +5462,7 @@ class RatingTables {
                 }
             
                 print "
-                <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
+                <input style=\"display:none\" type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
                 <input type=hidden name=next           value=$mod_show_next>
                 <input type=hidden name=web_task         value=Search>
                 <input type=hidden name=table          value=$this->table>
@@ -5445,15 +5483,12 @@ class RatingTables {
                 
                     $j++;    
                 }
-            
-                print "    
-                <input type=submit value=\"Previous\">
-                ";
             }
-            print "</td>
+            print "
             </form>
-            <form method=post>
-            <td>
+
+            <form class=form-inline id=next method=post>
+
             ";
             
             if  ($rows>$this->maxrowsperpage &&  $rows!=$maxrows)  {  
@@ -5481,15 +5516,21 @@ class RatingTables {
             
                 print "
                 <input type=hidden name=search_text value=\"$search_text\">
-                <input type=submit value=\"Next\">
                 ";
             }
             
             print "
             </form>
-            </td>
-            </tr>
-            </table>";
+            <ul class=\"pager\">";
+            if ($next!= 0 ) {
+                print "
+                    <li><a href=\"javascript:document.forms['prev'].submit()\">&larr; Previous</a></li>";
+            }
+            if  ($rows>$this->maxrowsperpage &&  $rows!=$maxrows)  {
+                print "
+                    <li><a href=\"javascript:document.forms['next'].submit()\">Next &rarr;</a></li>";
+            }
+            print "</ul>";
             
             
             print "

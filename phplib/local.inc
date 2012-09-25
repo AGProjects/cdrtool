@@ -711,20 +711,15 @@ class pageLayout {
         
         $url=$auth->url();
         print "
-        <center>
+            <div id=wrapper2>
         <br>
     	";
 	$this->hasAGProjectslogo=1;
 	$logo=$CDRTool['tld']."/images/CDRTool.png";
-        print "<a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a>";
+        print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a></center><br>";
         print "
-        <form action=\"$url\" method=post name=login>
+        <form  class=form-horizontal action=\"$url\" method=post name=login>
         <p>
-        <table align=center cellspacing=0 cellpadding=2 width=400 border=5>
-        <tr>
-        <td colspan=2>
-        <p>
-        Please identify yourself with username and password.
         ";
         if ($CDRTool[provider][sampleLoginSubscriber]) {
             $sampleLoginSubscriber    = $CDRTool[provider][sampleLoginSubscriber];
@@ -739,59 +734,54 @@ class pageLayout {
         
         $web_username=$auth->auth["uname"];
         print "
-        <p>
-        <ul>
-        <li>Subscriber account (e.g. $sampleLoginSubscriber)</li>
-        <li>Domain account (e.g. $sampleLoginDomain)</li>
+        <div class=control-group>
+            <label class=control-label>
+            Username
+            </label>
+            <div class=controls>
+            <input rel='popover' 
+            placeholder='Please identify yourself'
+            data-original-title='User name types supported' 
+            data-content='        <ul>
+        <li>Subscriber account<br>(e.g. $sampleLoginSubscriber)</li>
+        <li>Domain account<br>(e.g. $sampleLoginDomain)</li>
         <li>Administrator account
         </ul>
-        </td>
-        </tr>
-        <tr valign=middle align=left>
-        
-          <td>Username</td>
-          <td>
-            <input type=text name=username value=\"$web_username\" size=40 maxlength=255></td>
-         </tr>
-         <tr valign=middle align=left>
-          <td>Password</td>
-          <td>
-            <input type=password name=password size=40 maxlength=32></td>
-         </tr>
-        
-        <tr>
-          <td valign=center align=center>
-            &nbsp;
-          </td>
-          <td align=left>
-          <input onClick=\"doChallengeResponse(); return false;\" type=submit name=submitbtn value=\"Login now\">
-        </td>
-        
-         </tr>
+            '
+            type=text name=username value=\"$web_username\" size=40 maxlength=255>
+            </div>
+        </div>
+        <div class=control-group>
+            <label class=control-label>
+            Password</label>
+          <div class=controls>
+            <input type=password name=password size=40 maxlength=32>
+            </div>
+         </div>
+          <div class='controls'>
+            <input onClick=\"doChallengeResponse(); return false;\" type=submit name=submitbtn class='btn btn-primary' value=\"Login\">
+            </div>
+            <br>
         ";
         
         print "
-        <tr>
-        <td colspan=2>
-            <p>
-        
+            <div class='well well-small'>
+            <div class=row-fluid>
+            <div class=pull-left>
         If you make use of <b>O</b>ne <b>T</b>ime <b>P</b>asswords:
-        
         <ul class=s>
             <li>Fill in your username
             <li>Press the Send OTP button
             <li>Collect the password
             <li>Fill it in the password field
             <li>Press the Login Now button to login
-        </ul>
-        <input type=submit name=sendotp value=\"Send OTP\">
-        </td>
-        </tr>
+            </ul></div><div class=pull-right style='height:100px; vertical-align:bottom'>
+        <input class='btn' type=submit name=sendotp style='position:relative; top:60px;' value=\"Send OTP\">
+        </div></div></div>
+        </div>
         ";
         
-        print "
-        </table>
-        ";
+       
         
         if ( isset($username)) {
             if (!$sendotp || $username) {
@@ -847,90 +837,181 @@ class pageLayout {
     function showTopMenu($title='') {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
         $version=trim(file_get_contents('version'));
-        print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
-        <tr>
-        ";
-
-        if (is_readable($CDRTool['Path']."/images/logo.gif")) {
-        	printf ("<td valign=middle><img src=\"%s/images/logo.gif\"></td>",$CDRTool['tld']);
-        } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
-        	printf ("<td valign=middle><img src=\"%s/images/logo.jpg\"></td>",$CDRTool['tld']);
-        } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
-        	printf ("<td valign=middle><img src=\"%s/images/logo.png\"></td>",$CDRTool['tld']);
-        } else {
-            $this->hasAGProjectslogo=1;
-            print "<td>";
-            printf ("<a href=http://cdrtool.ag-projects.com target=agprojects><img src='%s/images/CDRTool.png' border=0></a>",$CDRTool['tld']);
-            print "</td>";
-        }
-
-        print "
-        <td width=100%>
-            <table width=100%>
-            </tr>
-            <td>";
-            print "<h1>$title";
-            print " ";
-            print $DATASOURCES[$cdr_source]['name'];
-            print "</h1><p>";
-            print "<td align=right>";
-            print "</td></tr>
-            </table>
-            "; 
-        
-        print "<table width=100%>
-        <tr>
-        <td align=left>
-        <table border=0 width=100%>
-        <tr>
-        "; 
-
-        if ($perm->have_perm("callsearch")) {  
-            print " <td class=tab><a href=callsearch.phtml>CDRs</a></td> ";
-        }
-        
-        if ($perm->have_perm("rates")) {
-            print " <td class=tab><a href=rating_tables.phtml>Rating</a></td>";
-            print " <td class=tab><a href=rating_tables.phtml?table=prepaid>Prepaid</a></td>";
-            print " <td class=tab><a href=rating_tables.phtml?table=quota_usage>Quota</a></td>";
-        }
-
-        if ($perm->have_perm("statistics")) {
-            print " <td class=tab><a href=network_status.phtml>Network</a></td>";
-            print " <td class=tab><a href=media_sessions.phtml>Sessions</a></td>";
-            print " <td class=tab><a href=status/usage/index.phtml target=usage>Usage</a></td>";
-        }
-        
-        if ($perm->have_perm("admin")) {
-            print " <td class=tab><a href=mysql_replication_status.phtml>Replication</a></td>";
-        }
-
-        if ($perm->have_perm("provisioning")) {
-            print " <td class=tab><a href=provisioning.phtml>Provisioning</a></td>";
-        }
-        
-        print " <td class=tab><a href=accounts.phtml>Accounts</a></td>";
-        print " <td class=tab><a href=log.phtml>Logs</a></td>";
+        print '
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                   </a>
+                        ';
         
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
-        //print " <td>$now_print | <a href=doc/changelog target=changelog>v. $version</a></td>";
-        print " <td><a href=doc/changelog target=changelog>v. $version</a></td>";
-        print "
-        </tr>
-        </table>
-        </td>
-        <td align=right>
-        ";
-        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$CDRTool['loginName']);
-        print "
-        </tr>
-        </table>
-        </td>
-        </tr>
-        </table>
-        <p>
-        ";
+        
+        if (is_readable($CDRTool['Path']."/images/logo.gif")) {
+            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
+        } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
+            printf ("span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
+        } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
+            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\"src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
+        } else {
+            $this->hasAGProjectslogo=1;
+            print '<a class="brand" href=http://cdrtool.ag-projects.com target=agprojects>CDRTool</a>';
+        }
+        print'
+            <div id="menu" class="btn-group pull-right">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon-user"></i> ';
+        print $CDRTool['loginName'];
+        print '
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li>
+                    <a style="font-size: 11px" href="http://cdrtool.ag-projects.com" target=changelog>About v. ';
+        print "$version";
+        print '     </a></li>
+                    <li class="divider"></li>
+                    <li><a href=logout.phtml target=_top>Logout</a></li>
+                </ul>
+            </div>
+            <div class="nav-collapse">
+                <ul class="nav">';
+
+        if ($perm->have_perm("callsearch")) {  
+            print "
+                    <li><a href=callsearch.phtml>CDRs</a></li>";
+        }
+
+        if ($perm->have_perm("rates")) {
+            print "
+                    <li><a href=rating_tables.phtml>Rating</a></li>";
+            print "
+                    <li><a href=rating_tables.phtml?table=prepaid>Prepaid</a></li>";
+            print "
+                    <li><a href=rating_tables.phtml?table=quota_usage>Quota</a></li>";
+        }
+
+        if ($perm->have_perm("statistics")) {
+            print "
+                    <li><a href=network_status.phtml>Network</a></li>";
+            print "
+                    <li><a href=media_sessions.phtml>Sessions</a></li>";
+            print "
+                    <li><a href=sip_usage.phtml>Usage</a></li>";
+        }
+        
+        if ($perm->have_perm("admin")) {
+            print "<li><a href=mysql_replication_status.phtml>Replication</a></li>";
+        }
+
+        if ($perm->have_perm("provisioning")) {
+            print "<li><a href=provisioning.phtml>Provisioning</a></li>";
+        }
+        
+        print "<li><a href=accounts.phtml>Accounts</a></li>";
+        print "<li><a href=log.phtml>Logs</a></li>";
+        print '
+                </ul>
+              </div><!--/.nav-collapse -->
+            </div>
+          </div>
+        </div>';
+
+
+        print "<div class='container-fluid' ><div class='main'>";
+        print "<div class=\"page-header\">";
+        print "<h1>";
+        print "$title";
+        print $DATASOURCES[$cdr_source]['name'];
+        print "</h1></div>";
+        // print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
+        // <tr>
+        // ";
+
+        // if (is_readable($CDRTool['Path']."/images/logo.gif")) {
+        // 	printf ("<td valign=middle><img src=\"%s/images/logo.gif\"></td>",$CDRTool['tld']);
+        // } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
+        // 	printf ("<td valign=middle><img src=\"%s/images/logo.jpg\"></td>",$CDRTool['tld']);
+        // } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
+        // 	printf ("<td valign=middle><img src=\"%s/images/logo.png\"></td>",$CDRTool['tld']);
+        // } else {
+        //     $this->hasAGProjectslogo=1;
+        //     print "<td>";
+        //     printf ("<a href=http://cdrtool.ag-projects.com target=agprojects><img src='%s/images/CDRTool.png' border=0></a>",$CDRTool['tld']);
+        //     print "</td>";
+        // }
+
+        // print "
+        // <td width=100%>
+        //     <table width=100%>
+        //     </tr>
+        //     <td>";
+        //     print "<h1>$title";
+        //     print " ";
+        //     print $DATASOURCES[$cdr_source]['name'];
+        //     print "</h1><p>";
+        //     print "<td align=right>";
+        //     print "</td></tr>
+        //     </table>
+        //     "; 
+        
+        // print "<table width=100%>
+        // <tr>
+        // <td align=left>
+        // <table border=0 width=100%>
+        // <tr>
+        // "; 
+
+        // if ($perm->have_perm("callsearch")) {  
+        //     print " <td class=tab><a href=callsearch.phtml>CDRs</a></td> ";
+        // }
+        
+        // if ($perm->have_perm("rates")) {
+        //     print " <td class=tab><a href=rating_tables.phtml>Rating</a></td>";
+        //     print " <td class=tab><a href=rating_tables.phtml?table=prepaid>Prepaid</a></td>";
+        //     print " <td class=tab><a href=rating_tables.phtml?table=quota_usage>Quota</a></td>";
+        // }
+
+        // if ($perm->have_perm("statistics")) {
+        //     print " <td class=tab><a href=network_status.phtml>Network</a></td>";
+        //     print " <td class=tab><a href=media_sessions.phtml>Sessions</a></td>";
+        //     print " <td class=tab><a href=status/usage/index.phtml target=usage>Usage</a></td>";
+        // }
+        
+        // if ($perm->have_perm("admin")) {
+        //     print " <td class=tab><a href=mysql_replication_status.phtml>Replication</a></td>";
+        // }
+
+        // if ($perm->have_perm("provisioning")) {
+        //     print " <td class=tab><a href=provisioning.phtml>Provisioning</a></td>";
+        // }
+        
+        // print " <td class=tab><a href=accounts.phtml>Accounts</a></td>";
+        // print " <td class=tab><a href=log.phtml>Logs</a></td>";
+        
+        // $now_print=Date("Y-m-d H:i:s",time());
+        // $tz=$CDRTool['provider']['timezone'];
+        // //print " <td>$now_print | <a href=doc/changelog target=changelog>v. $version</a></td>";
+        // print " <td><a href=doc/changelog target=changelog>v. $version</a></td>";
+        // print "
+        // </tr>
+        // </table>
+        // </td>
+        // <td align=right>
+        // ";
+        // printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$CDRTool['loginName']);
+        // print "
+        // </tr>
+        // </table>
+        // </td>
+        // </tr>
+        // </table>
+        // <p>
+        //";
     }
 
     function showTopMenuSubscriber($title="") {
@@ -1011,29 +1092,27 @@ class pageLayout {
 		$this->hasAGProjectslogo=1;
 
         print "
-        <table border=0 align=center>
-        <tr>
-        <td>
-        <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/CDRTool.png border=0></a>
+            <div id=wrapper2>
+            <center>
+            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/CDRTool.png border=0></a>
+            </center>
+        <h2 class=page-header>Terms and conditions</h2>
+        <div class='row-fluid'>
+        <form class='form-horizontal' action=callsearch.phtml method=post>
+        <textarea class=span12 name=legal rows=20 cols=60 wrap=virtual readonly=yes>$legalNotice</textarea>
         <p>
-        <h2>Terms and conditions</h2>
-        <p>
-        <form action=callsearch.phtml method=post>
-        <textarea name=legal rows=20 cols=60 wrap=virtual readonly=yes>$legalNotice</textarea>
-        <p>
-        You are logged in as $loginname
+        You are currently logged in as $loginname
 
+        <center>
         <p>
         If you agree with the Terms and Conditions, <br>
-        press on <b>I agree</b> button to continue.
-        <p>
-        <input type=submit value=\"I agree\">
+        press on <b>I agree</b> button to continue.</p>
+        <input type=submit class=btn value=\"I agree\">
+        </center>
         <input type=hidden name=previous_page value=license_page>
+        </div>
         </form>
-        </td>
-        </tr>
-        </table>
-
+        </div>
         ";
     }   
  

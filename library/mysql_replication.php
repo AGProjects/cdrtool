@@ -123,9 +123,10 @@ class ReplicationOverview {
 
         printf ("
         <table border=0>
+        <thead>
         <tr>
         <td></td>
-        <td colspan=%s class=border align=center><h1>%s</h1></td>
+        <td colspan=%s class=border align=left style='border-bottom: solid 1px rgb(238, 238, 238);'><h2>%s</h2></td>
         </tr>
         <tr>
         <th></th>
@@ -135,7 +136,7 @@ class ReplicationOverview {
         );
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            printf ("<th class=border>%s (%s)",$key,$this->clusters[$this->cluster][$key]['ip']);
+            printf ("<th style='padding-top:5px' align='left'><span class=\"label\">%s</span> (%s)",$key,$this->clusters[$this->cluster][$key]['ip']);
             if ($this->repair['server_to_repair'] != $key) {
             	printf ("<br><a href=%s?server=%s&cluster=%s>How to repair me</a></th>",$_SERVER['PHP_SELF'],urlencode($key),urlencode($this->cluster));
             } else {
@@ -143,16 +144,16 @@ class ReplicationOverview {
             }
         }
         
-        print "</tr>
+        print "</tr></thead>
         ";
 
         print "<tr>
         <td></td>";
         
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            print "<td class=border valign=top>";
+            print "<td>";
         
-            print "<table border=1>";
+            print "<table class='table table-bordered table-condensed'>";
 
             if ($this->status[$key]->slave_sql_running == 'No') {
                 $sql_color="red";
@@ -205,23 +206,24 @@ class ReplicationOverview {
 
     function printStep ($hostname,$instructions='',$downtime=false) {
         $this->step++;
-        print "<tr>
+        print "
+            <tr>
         <td>$this->step
         </td>";
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
             if ($downtime && $key==$this->repair['master_server']) {
-                $bgcolor="red";
+                $bgcolor="alert alert-error";
             } else {
                 $bgcolor="white";
             }
             if ($key==$hostname) {
-                print "<td class=border bgcolor=$bgcolor><pre>$instructions</pre></td>";
+                print "<td><pre>$instructions</pre></td>";
             } else {
             	if ($downtime && $key==$this->repair['master_server']) {
-                	print "<td class=border bgcolor=$bgcolor valign=middle align=center><b><font color=white>Downtime</font></b></td>";
+                	print "<td valign=middle align=center class='$bgcolor'><strong style='height:100%'>Downtime</strong></td>";
                 } else {
-                	print "<td class=border></td>";
+                	print "<td></td>";
                 }
             }
         }
@@ -249,7 +251,7 @@ flush tables with read lock;
 show master status;
 
 # note file & possition %s.file %s.pos
-<font color=red># do not exit the mysql console</font>
+# do not exit the mysql console
 
 ",$this->repair['master_server'],$this->repair['master_server']);
 

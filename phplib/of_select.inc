@@ -31,6 +31,8 @@ class of_select extends of_element {
     $str .= "<$t name='$n'";
     if ($this->size) 
       $str .= " size='$this->size'";
+    if ($this->multiple)
+      $str .= "multiple='multiple'";
     if ($this->extrahtml) 
       $str .= " $this->extrahtml";
     $str .= ">";

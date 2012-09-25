@@ -6,15 +6,21 @@ header("ETag: ",randomstring());
 
 global $CDRTool; 
 
+print "<!DOCTYPE html>\n";
+
 printf("<HTML>
 <HEAD>
   <TITLE>CDRTool - $title</TITLE>
   <META NAME=Description CONTENT=
   \"CDR mediation and rating engine for OpenSER\">
   <META NAME=Keywords CONTENT=\"OpenSER, Asterisk, SIP Express router, Cisco\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
   <LINK REL=\"SHORTCUT ICON\" HREF=\"images/cdrtool.ico\">
   <LINK REL=\"icon\" HREF=\"images/cdrtool.ico\" TYPE=\"image/ico\">
+  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/> 
   <SCRIPT language=\"JavaScript1.2\" src=\"main.js\" type=\"text/javascript\"></SCRIPT>
+  <link href=\"bootstrap/css/bootstrap.css\" rel=\"stylesheet\">
+  <link href=\"bootstrap/css/bootstrap-responsive.css\" rel=\"stylesheet\">
   <link rel=\"stylesheet\" type=\"text/css\" href=\"%s/style.css\">
 ",$CDRTool['tld']);
 
@@ -24,19 +30,31 @@ if ($refreshURL) {
 }
 
 printf ("</HEAD>
-<body marginwidth=10 leftmargin=10 link=#000066 vlink=#006666 text=black background=\"images/macbg.gif\">
+<body data-offset=\"50\" data-spy=\"scroll\" background=\"images/gradient_texture.png\" >
 ");
 ?>
+
+    <script src="bootstrap/js-used/jquery.js"></script>
+    <script src="bootstrap/js-used/bootstrap-transition.js"></script>
+    <script src="bootstrap/js-used/bootstrap-scrollspy.js"></script>
+    <script src="bootstrap/js-used/bootstrap-tooltip.js"></script>
+    <script src="bootstrap/js-used/bootstrap-popover.js"></script>
+    <script src="bootstrap/js-used/bootstrap-dropdown.js"></script>
+    <script src="bootstrap/js-used/bootstrap-collapse.js"></script>
+    <script src="bootstrap/js-used/bootstrap-button.js"></script>
+    <script src="bootstrap/js-used/bootstrap-fileupload.js"></script>
+    <script src="bootstrap/js-used/application.js"></script>
+
 <DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100"></DIV>
 <SCRIPT language="JavaScript1.2" src="style.js" type="text/javascript"></SCRIPT>
 <SCRIPT>
     function toggleVisibility(rowid) {
         if (document.getElementById) {
             row = document.getElementById(rowid);
-            if (row.style.display == "block") {
+            if (row.style.display == "table-row") {
                 row.style.display = "none";
             } else {
-                row.style.display = "block";
+                row.style.display = "table-row";
             }
             return false;
         } else {
