@@ -11585,7 +11585,9 @@ class Customers extends Records {
     function showAddForm($confirmPassword=false) {
 
         print "<div class='row-fluid'>
-        <h3>Register new account</h3>";
+        <h1 class=page-header>Register new account</h1>";
+        print "<p>";
+        print _("Account are used for login and to assign ownership to data created in the platform");
         printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
         print "
