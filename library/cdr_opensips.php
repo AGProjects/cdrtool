@@ -2853,7 +2853,7 @@ class CDR_opensips extends CDR {
         $this->geo_location=$this->lookupGeoLocation($this->SourceIP);
 
         $this->cdr_details="
-        <div class=\"alert alert-info\">
+        <div class=\"alert alert-info\" style='color: black'>
           <div class='row-fluid'>
             <div class='span4'>
                 <h5>SIP Signalling</h5>
@@ -4675,7 +4675,7 @@ class Media_trace {
             $w_timeout_p  = ($w_legend_bar/$w_timeout)* 100;
             $w_start_p  = ($w_legend_bar/$w_start)* 100;
 
-            printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
+            //printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
             
             if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
 
