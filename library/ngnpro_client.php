@@ -11580,7 +11580,7 @@ class Customers extends Records {
     function showAddForm($confirmPassword=false) {
 
         print "<div class='row-fluid'>
-        <h3>Register new customer</h3>";
+        <h3>Register new account</h3>";
         printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
         print "
@@ -11745,9 +11745,14 @@ class Customers extends Records {
 
                     if ($item=='password' && $confirmPassword) {
                         printf ("
-                        <tr>
-                        <td class=border valign=top><font color=red>Confirm password</font></td>
-                        <td class=border><input name=confirm_password_form size=30 type=password value='%s'></td>
+                        <div class=\"control-group error\">
+                        <label class=\"control-label\">
+                        Confirm password
+                        </label>
+                        <div class=\"controls\">
+                        <input name=confirm_password_form size=30 type=password value='%s'>
+                        </div>
+                        </div>
                         </tr>
                         ",
                         $_REQUEST[confirm_password_form]
@@ -11759,7 +11764,7 @@ class Customers extends Records {
         if ($_REQUEST['notify']) $checked_notify='checked';
         printf ("
                             <div class=\"control-group\">
-                    <label class=\"control-label\">Send notification by email</label>
+                    <label class=\"control-label\">Email notification</label>
                   <div class=\"controls\">
           <input class=checkbox type=checkbox name=notify value='1' %s></div></div>",$checked_notify);
 
