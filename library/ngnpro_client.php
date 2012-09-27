@@ -10878,7 +10878,7 @@ class Customers extends Records {
         ";
 
         printf ("<tr bgcolor=lightgrey>
-        <td class=border>Field</td>
+        <td class=border>Property</td>
         <td class=border>Value</td>
         </tr>");
         foreach (array_keys($this->FieldsReadOnly) as $item) {
@@ -11114,14 +11114,14 @@ class Customers extends Records {
         if ($this->login_credentials['login_type'] == 'admin') {
             printf ("<tr bgcolor=lightgrey>
             <td class=border>Category</td>
-            <td class=border>Permission</td>
+            <td class=border>Level</td>
             <td class=border>Property</td>
             <td class=border>Value</td>
             <td class=border>Description</td>
             </tr>");
         } else if ($this->login_credentials['login_type'] == 'reseller') {
             printf ("<tr bgcolor=lightgrey>
-            <td class=border>Permission</td>
+            <td class=border>Level</td>
             <td class=border>Property</td>
             <td class=border>Value</td>
             </tr>"
