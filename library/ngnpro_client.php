@@ -631,13 +631,18 @@ class SoapEngine {
 
             $this->exception   = $this->error_fault->detail->exception;
 
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SOAPurl,
+            $this->error_msg,
+            $this->error_fault->detail->exception->errorcode,
+            $this->error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
+
             if ($html) {
-                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SOAPurl,
+                $log=sprintf("Failed to add account: %s (%s): %s",
                 $this->error_msg,
                 $this->error_fault->detail->exception->errorcode,
                 $this->error_fault->detail->exception->errorstring);
-                syslog(LOG_NOTICE, $log);
-                return false;
+                print "<font color=red>$log</font>";
             }
             return false;
 
