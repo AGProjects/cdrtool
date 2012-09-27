@@ -1250,4 +1250,23 @@ function sec2hms ($duration) {
     $duration_print="$duration_print"."$duration_sec";		
     return $duration_print;
 }
+
+function get_location($ip) {
+    $geo_location=array();
+    $geo_location['country'] = '';
+    $geo_location['city'] = '' ;
+    $geo_location['code'] = '';
+    $geo_location['region'] = '';
+    
+    if ($_loc=geoip_record_by_name($ip)) {
+        if ($_loc['city']) {
+            $geo_location['city'] = $_loc['city']; 
+        }    
+        $geo_location['country'] = $_loc['country_name']; 
+        $geo_location['code']    = $_loc['country_code'];
+        $geo_location['region']  = $_loc['region'];
+    }
+    return json_encode($geo_location);
+}
+
 ?>

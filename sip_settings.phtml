@@ -15,6 +15,12 @@ require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
 require('sip_settings.php');
 
+if ($_REQUEST['action'] == 'get_location') {
+    $location = get_location($_SERVER['REMOTE_ADDR']);
+    print $location;
+    exit;
+}
+
 if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     page_open(
             array("sess" => "CDRTool_Session",
