@@ -103,7 +103,7 @@ class Session {
           $id = isset($_COOKIE[$this->name]) ? $_COOKIE[$this->name] : "";
         break;
         default:
-          die("This has not been coded yet.");
+          die("Your browser has cookies disabled");
         break;
       }
     }
@@ -147,11 +147,11 @@ class Session {
  
     switch ($this->mode) {
       case "inline":
-        die("This has not been coded yet.");
+        die("Your browser has cookies disabled");
       break;
  
       case "get":
-        die("This has not been coded yet.");
+        die("Your browser has cookies disabled");
       break;
  
       default:
