@@ -166,10 +166,10 @@ class SoapEngine {
                                            ),
                          'customers'      => array(
                                            'records_class' => 'Customers',
-                                           'name'          => 'Customers',
+                                           'name'          => 'Accounts',
                                            'soap_class'    => 'WebService_NGNPro_CustomerPort',
                                            'category'      => 'general',
-                                           'description'   => 'Manage customers, address information and properties. SIP domains and ENUM ranges can be assigned to customers. Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
                                            ),
                          'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
@@ -10604,7 +10604,7 @@ class Customers extends Records {
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a href=%s>New customer</a> ",$_add_url);
+            printf ("<a href=%s>New account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -10613,7 +10613,7 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" | <a href=%s>New customer under reseller %s</a> ",$_add_url,$this->filters['reseller']);
+                    printf (" | <a href=%s>New account under reseller %s</a> ",$_add_url,$this->filters['reseller']);
                 }
             }
 
@@ -10630,8 +10630,8 @@ class Customers extends Records {
                 <table class='table table-striped table-condensed' border=0 cellpadding=2 width=100%>
                 <thead>
                 <tr>
+                    <th></th>
                     <th>Id</th>
-                    <th>Customer</th>
                     <th>Alias of</th>
                     <th>Username</th>
                     <th>Name</th>
