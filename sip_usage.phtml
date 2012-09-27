@@ -1,0 +1,111 @@
+<?
+require("/etc/cdrtool/global.inc");
+
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"));
+
+$loginname=$auth->auth["uname"];
+
+$perm->check("statistics");
+
+require("sip_statistics.php");
+$title           = "Platform status/Usage";
+
+if (is_readable("/etc/cdrtool/local/header.phtml")) {
+	include("/etc/cdrtool/local/header.phtml");
+} else {
+	include("header.phtml");
+}
+
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+
+$SIPstatistics=new SIPstatistics();
+
+//global $CDRTool;
+
+if (strlen($CDRTool['filter']['domain'])) {
+    $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+}
+
+    //$layout= $this->newPageLayout();
+    //showTopMenu($title);
+?>
+
+<h2>Platform usage</h2>
+
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
+
+<? if ($perm->have_perm('admin')) { ?>
+
+<TR>
+<TD><DIV align='center'><B> Total SIP accounts</B></DIV>
+<DIV><A HREF='status/usage/total_users.html' target='Usage'><IMG BORDER=0 ALT='total_users Traffic Graph' SRC='status/usage/total_users-day.png'></A>
+<SMALL><!--#flastmod file='total_users.html' --></SMALL></DIV>
+</TD><TD><DIV align='center'><B> Total RTP media sessions</B></DIV>
+<DIV><A HREF='status/usage/total_sessions.html' target='Usage'><IMG><IMG BORDER=0 ALT='total_sessions Traffic Graph' SRC='status/usage/total_sessions-day.png'></A>
+<SMALL><!--#flastmod file='total_sessions.html' --></SMALL></DIV>
+</TD><TD><DIV align='center'><B> Total relayed RTP traffic </B></DIV>
+<DIV><A HREF='status/usage/total_traffic.html' target='Usage'><IMG><IMG BORDER=0 ALT='total_traffic Traffic Graph' SRC='status/usage/total_traffic-day.png'></A>
+<SMALL><!--#flastmod file='total_traffic.html' --></SMALL></DIV>
+</TD></TR>
+<TR>
+
+<?
+}
+
+if (is_array($allowedDomains))  {
+	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
+} else {
+    $domains=array_keys($SIPstatistics->domains);
+}
+
+foreach ($domains as $key) {
+    if ($key == 'total') continue;
+    printf ("
+    <TR>
+    <TD><DIV align='center'><B> SIP accounts on %s </B></DIV>
+    <DIV><A HREF='status/usage/%s_users.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='status/usage/%s_users-day.png'></A>
+    <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
+    </TD><TD><DIV align='center'><B> RTP media sessions for %s </B></DIV>
+    <DIV><A HREF='status/usage/%s_sessions.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='status/usage/%s_sessions-day.png'></A>
+    <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
+    </TD><TD><DIV align='center'><B> Relayed RTP traffic for %s </B></DIV>
+    <DIV><A HREF='status/usage/%s_traffic.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='status/usage/%s_traffic-day.png'></A>
+    <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
+    </TD></TR>
+    <TR>
+    ",
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key,
+    $key
+    );
+}
+
+?>
+
+</TABLE>
+</BODY>
+</HTML>
+<?
+
+page_close();
+?>
