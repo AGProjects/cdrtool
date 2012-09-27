@@ -284,7 +284,7 @@ ul.dropdown-menu  li{
   padding: 55px 10px 5px 10px;
   background-color:#FFFFFF;
   margin-bottom:5px;
-  overflow: scroll;
+  overflow: auto;
   -webkit-border-radius: 6px;
      -moz-border-radius: 6px;
           border-radius: 6px;
