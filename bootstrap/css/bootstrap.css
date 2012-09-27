@@ -612,7 +612,7 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini{*padding-top:1px;*padding-
 .nav>li>a{display:block;}
 .nav>li>a:hover{text-decoration:none;background-color:#eeeeee;}
 .nav>.pull-right{float:right;}
-.nav .nav-header{display:block;padding:3px 15px;font-size:11px;font-weight:bold;line-height:14px;color:#999999;text-shadow:0 1px 0 rgba(255, 255, 255, 0.5);text-transform:uppercase;}
+.nav-header{display:block;padding:3px 15px;font-size:11px;font-weight:bold;line-height:14px;color:#999999;text-shadow:0 1px 0 rgba(255, 255, 255, 0.5);text-transform:uppercase;}
 .nav li+.nav-header{margin-top:9px;}
 .nav-list{padding-left:15px;padding-right:15px;margin-bottom:0;}
 .nav-list>li>a,.nav-list .nav-header{margin-left:-15px;margin-right:-15px;text-shadow:0 1px 0 rgba(255, 255, 255, 0.5);}
@@ -623,7 +623,7 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini{*padding-top:1px;*padding-
 .nav-tabs,.nav-pills{*zoom:1;}.nav-tabs:before,.nav-pills:before,.nav-tabs:after,.nav-pills:after{display:table;content:"";line-height:0;}
 .nav-tabs:after,.nav-pills:after{clear:both;}
 .nav-tabs>li,.nav-pills>li{float:left;}
-.nav-tabs>li>a,.nav-pills>li>a{padding-right:6px;padding-left:6px;margin-right:2px;line-height:14px;}
+.nav-tabs>li>a,.nav-pills>li>a{padding-right:12px;padding-left:12px;margin-right:2px;line-height:14px;}
 .nav-tabs{border-bottom:1px solid #ddd;}
 .nav-tabs>li{margin-bottom:-1px;}
 .nav-tabs>li>a{padding-top:8px;padding-bottom:8px;line-height:14px;border:1px solid transparent;-webkit-border-radius:4px 4px 0 0;-moz-border-radius:4px 4px 0 0;border-radius:4px 4px 0 0;}.nav-tabs>li>a:hover{border-color:#eeeeee #eeeeee #dddddd;}
@@ -634,17 +634,19 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini{*padding-top:1px;*padding-
 .nav-stacked>li>a{margin-right:0;}
 .nav-tabs.nav-stacked{border-bottom:0;}
 .nav-tabs.nav-stacked>li>a{border:1px solid #ddd;-webkit-border-radius:0;-moz-border-radius:0;border-radius:0;}
-.nav-tabs.nav-stacked>li:first-child>a{-webkit-border-radius:4px 4px 0 0;-moz-border-radius:4px 4px 0 0;border-radius:4px 4px 0 0;}
-.nav-tabs.nav-stacked>li:last-child>a{-webkit-border-radius:0 0 4px 4px;-moz-border-radius:0 0 4px 4px;border-radius:0 0 4px 4px;}
+.nav-tabs.nav-stacked>li:first-child>a{-webkit-border-top-right-radius:4px;-moz-border-radius-topright:4px;border-top-right-radius:4px;-webkit-border-top-left-radius:4px;-moz-border-radius-topleft:4px;border-top-left-radius:4px;}
+.nav-tabs.nav-stacked>li:last-child>a{-webkit-border-bottom-right-radius:4px;-moz-border-radius-bottomright:4px;border-bottom-right-radius:4px;-webkit-border-bottom-left-radius:4px;-moz-border-radius-bottomleft:4px;border-bottom-left-radius:4px;}
 .nav-tabs.nav-stacked>li>a:hover{border-color:#ddd;z-index:2;}
 .nav-pills.nav-stacked>li>a{margin-bottom:3px;}
 .nav-pills.nav-stacked>li:last-child>a{margin-bottom:1px;}
-.nav-tabs .dropdown-menu{-webkit-border-radius:0 0 5px 5px;-moz-border-radius:0 0 5px 5px;border-radius:0 0 5px 5px;}
-.nav-pills .dropdown-menu{-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;}
-.nav-tabs .dropdown-toggle .caret,.nav-pills .dropdown-toggle .caret{border-top-color:#0088cc;border-bottom-color:#0088cc;margin-top:6px;}
-.nav-tabs .dropdown-toggle:hover .caret,.nav-pills .dropdown-toggle:hover .caret{border-top-color:#005580;border-bottom-color:#005580;}
-.nav-tabs .active .dropdown-toggle .caret,.nav-pills .active .dropdown-toggle .caret{border-top-color:#333333;border-bottom-color:#333333;}
-.nav>.dropdown.active>a:hover{color:#000000;cursor:pointer;}
+.nav-tabs .dropdown-menu{-webkit-border-radius:0 0 6px 6px;-moz-border-radius:0 0 6px 6px;border-radius:0 0 6px 6px;}
+.nav-pills .dropdown-menu{-webkit-border-radius:6px;-moz-border-radius:6px;border-radius:6px;}
+.nav .dropdown-toggle .caret{border-top-color:#0088cc;border-bottom-color:#0088cc;margin-top:6px;}
+.nav .dropdown-toggle:hover .caret{border-top-color:#005580;border-bottom-color:#005580;}
+.nav-tabs .dropdown-toggle .caret{margin-top:8px;}
+.nav .active .dropdown-toggle .caret{border-top-color:#fff;border-bottom-color:#fff;}
+.nav-tabs .active .dropdown-toggle .caret{border-top-color:#555555;border-bottom-color:#555555;}
+.nav>.dropdown.active>a:hover{cursor:pointer;}
 .nav-tabs .open .dropdown-toggle,.nav-pills .open .dropdown-toggle,.nav>li.dropdown.open.active>a:hover{color:#ffffff;background-color:#999999;border-color:#999999;}
 .nav li.dropdown.open .caret,.nav li.dropdown.open.active .caret,.nav li.dropdown.open a:hover .caret{border-top-color:#ffffff;border-bottom-color:#ffffff;opacity:1;filter:alpha(opacity=100);}
 .tabs-stacked .open>a:hover{border-color:#999999;}
@@ -668,6 +670,8 @@ button.btn.btn-mini,input[type="submit"].btn.btn-mini{*padding-top:1px;*padding-
 .tabs-right>.nav-tabs>li>a{margin-left:-1px;-webkit-border-radius:0 4px 4px 0;-moz-border-radius:0 4px 4px 0;border-radius:0 4px 4px 0;}
 .tabs-right>.nav-tabs>li>a:hover{border-color:#eeeeee #eeeeee #eeeeee #dddddd;}
 .tabs-right>.nav-tabs .active>a,.tabs-right>.nav-tabs .active>a:hover{border-color:#ddd #ddd #ddd transparent;*border-left-color:#ffffff;}
+.nav>.disabled>a{color:#999999;}
+.nav>.disabled>a:hover{text-decoration:none;background-color:transparent;cursor:default;}
 .navbar{*position:relative;*z-index:2;overflow:visible;margin-bottom:14px;}
 .navbar-inner{min-height:40px;padding-left:20px;padding-right:20px;background-color:#4c6fb1;background-image:-moz-linear-gradient(top, #5177bd, #44649f);background-image:-webkit-gradient(linear, 0 0, 0 100%, from(#5177bd), to(#44649f));background-image:-webkit-linear-gradient(top, #5177bd, #44649f);background-image:-o-linear-gradient(top, #5177bd, #44649f);background-image:linear-gradient(to bottom, #5177bd, #44649f);background-repeat:repeat-x;filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5177bd', endColorstr='#ff44649f', GradientType=0);-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;-webkit-box-shadow:0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1);-moz-box-shadow:0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1);box-shadow:0 1px 3px rgba(0,0,0,.25), inset 0 -1px 0 rgba(0,0,0,.1);}
 .navbar .container{width:auto;}
