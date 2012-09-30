@@ -928,7 +928,7 @@ class Records {
         print "</select>";
 
         $selected_sortOrder[$this->sorting['sortOrder']]='selected';
-        print "<select class=span2 name=sortOrder>";
+        print "<select class=span1 name=sortOrder>";
         printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
         printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
         print "</select>";
@@ -1214,7 +1214,7 @@ class Records {
                 }
                 print "</select>";
             } else {
-                printf ("<input class=span1 type=text size=7 name=%s value='%s'>",$name,$this->filters['customer']);
+                printf ("<input class=span1 type=text name=%s value='%s'>",$name,$this->filters['customer']);
             }
         }
     }
@@ -1237,8 +1237,9 @@ class Records {
             }
         }
     }
+
     function showTextBeforeCustomerSelection() {
-        print "Customer";
+        print _("Owner");
     }
 
     function addFiltersToURL() {
@@ -1377,10 +1378,10 @@ class Records {
     }
 
     function showCustomerTextBox () {
-        print "<div class='input-prepend'><span class='add-on'>Customer</span>";
+        print "<div class='input-prepend'><span class='add-on'>Owner</span>";
         if ($this->adminonly) {
             $this->showCustomerForm('customer');
-            print "<div class='input-prepend'><span class=add-on>.</span></div>";
+            print "<div class='input-prepend'>";
             $this->showResellerForm('reseller');
         } else {
             $this->showCustomerForm('customer');
@@ -1633,8 +1634,8 @@ class SipDomains extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Customer</th>
-                <th colspan=3>Domain</th>
+                <th>Owner</th>
+                <th colspan=3>SIP domain</th>
                 <th>Change date</th>
                 <th>Actions</th>
             </tr>
@@ -2222,7 +2223,7 @@ class SipAccounts extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Account</th>
+                <th>SIP Account</th>
                 <th>Full name</th>
                 <th>Email address</th>
                 <th>Timezone</th>
@@ -2437,12 +2438,12 @@ class SipAccounts extends Records {
 
     function showSeachFormCustom() {
         printf ("
-            <div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text size=12 name=username_filter value='%s'></div>",$this->filters['username']);
+            <div class='input-prepend'><span class='add-on'>Account</span><input class=span1 type=text name=username_filter value='%s'></div>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
             if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
-                printf ("<input class=span1 type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+                printf ("<input class=span2 type=text name=domain_filter value='%s'>",$this->filters['domain']);
             } else {
                 $selected_domain[$this->filters['domain']]='selected';
                 printf ("<select class=span2 name=domain_filter>
@@ -2457,10 +2458,10 @@ class SipAccounts extends Records {
             printf ("<input class=span1 type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text size=10 name=firstname_filter value='%s'></div>\n",$this->filters['firstname']);
-        printf (" <div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text size=10 name=lastname_filter value='%s'></div>\n",$this->filters['lastname']);
-        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span1 type=text size=15 name=email_filter value='%s'></div>\n",$this->filters['email']);
-        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner_filter value='%s'></div>\n",$this->filters['owner']);
+        printf (" <div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text name=firstname_filter value='%s'></div>\n",$this->filters['firstname']);
+        printf (" <div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text name=lastname_filter value='%s'></div>\n",$this->filters['lastname']);
+        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span1 type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner_filter value='%s'></div>\n",$this->filters['owner']);
 
         $selected_group[$this->filters['group']]='selected';
         print "<select class=span2 name=group_filter><option value=''>Feature...";
@@ -3100,6 +3101,11 @@ class SipAccounts extends Records {
         }
         fclose($fp);
     }
+
+    function showTextBeforeCustomerSelection() {
+        print _("Domain owner");
+    }
+
 }
 
 class SipAliases extends Records {
@@ -3257,7 +3263,7 @@ class SipAliases extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Alias</th>
+                <th>SIP alias</th>
                 <th>Target</th>
                 <th>Owner</th>
                 <th>Change date</th>
@@ -3429,7 +3435,7 @@ class SipAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" <div class='input-prepend'><span class='add-on'>Alias</span><input type=text size=12 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
+        printf (" <div class='input-prepend'><span class='add-on'>SIP alias</span><input type=text size=12 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -3450,8 +3456,8 @@ class SipAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input type=text size=35 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
-        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 name=owner_filter value='%s'></div>",$this->filters['owner']);
+        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input type=text class=span2 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
 
     }
 
@@ -3469,7 +3475,7 @@ class SipAliases extends Records {
         <input class='btn btn-warning' type=submit name=action value=Add>
         ";
 
-        printf (" <div class='input-prepend'><span class='add-on'>Alias</span><input class=span2 type=text size=15 name=alias></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>SIP alias</span><input class=span2 type=text name=alias></div>");
 
         if ($_REQUEST['domain']) {
             $_domain=$_REQUEST['domain'];
@@ -3486,12 +3492,12 @@ class SipAliases extends Records {
             print "</select>";
 
         } else {
-            printf (" <input type=text name=domain size=15 value='%s'>",$_domain);
+            printf (" <input type=text name=domain class=span2 value='%s'>",$_domain);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input class=span2 type=text size=35 name=target></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input class=span2 type=text name=target></div>");
 
-        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner></div>");
 
         $this->printHiddenFormElements();
 
@@ -3627,6 +3633,12 @@ class SipAliases extends Records {
             }
         }
     }
+
+    function showTextBeforeCustomerSelection() {
+        print _("Domain owner");
+    }
+
+
 }
 
 class EnumRanges extends Records {
@@ -3759,7 +3771,7 @@ class EnumRanges extends Records {
             <thead>
             <tr>
             <th>Id</th>
-            <th>Customer</th>
+            <th>Owner</th>
             <th>Prefix </th>
             <th>TLD</th>
             <th>Serial</th>
@@ -4559,7 +4571,7 @@ class EnumMappings extends Records {
             <thead>
             <tr>
                 <th></th>
-                <th>Customer</th>
+                <th>Range Owner</th>
                 <th>Phone number</th>
                 <th>TLD</th>
                 <th>Info</th>
@@ -5078,13 +5090,13 @@ class EnumMappings extends Records {
         print "</select>";
 
         if ($_REQUEST['number']) {
-            printf ("<input class=span2 type=text size=15 name=number value='%s'>",$_REQUEST['number']);
+            printf ("<input class=span1 type=text name=number value='%s'>",$_REQUEST['number']);
         } else if ($_number=$this->getCustomerProperty('enum_numbers_last_number')) {
             $_prefix=$_range['prefix'];
             preg_match("/^$_prefix(.*)/",$_number,$m);
-            printf ("<input class=span2 type=text size=15 name=number value='%s'>",$m[1]);
+            printf ("<input class=span1 type=text name=number value='%s'>",$m[1]);
         } else {
-            printf ("<input class=span2 type=text size=15 name=number>");
+            printf ("<input class=span1 type=text name=number>");
         }
 
         print "</div> <div class='input-prepend'><span class='add-on'>";
@@ -5127,7 +5139,7 @@ class EnumMappings extends Records {
             printf ("<input class=span1 type=text size=5 name=ttl value='3600'></div>");
         }
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></div>",$_REQUEST['owner']);
-        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span2 type=text size=10 name=info value='%s'></div>",$_REQUEST['info']);
+        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span1 type=text size=10 name=info value='%s'></div>",$_REQUEST['info']);
 
         $this->printHiddenFormElements();
 
@@ -5721,6 +5733,11 @@ class EnumMappings extends Records {
             return true;
         }
     }
+
+    function showTextBeforeCustomerSelection() {
+        print _("Range owner");
+    }
+
 }
 
 class DnsZones extends Records {
@@ -5840,7 +5857,7 @@ class DnsZones extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Customer</th>
+                <th>Owner</th>
                 <th>Zone</th>
                 <th>Administrator</th>
                 <th>Info</th>
@@ -6726,7 +6743,7 @@ class DnsRecords extends Records {
                 <thead>
                 <tr>
                     <th></th>
-                    <th>Customer</th>
+                    <th>Zone owner</th>
                     <th>Zone</th>
                     <th>Id</th>
                     <th>Name</th>
@@ -6743,7 +6760,7 @@ class DnsRecords extends Records {
                 <thead>
                 <tr>
                     <th></th>
-                    <th><b>Customer</b></th>
+                    <th><b>Zone owner</b></th>
                     <th><b>Zone</b></th>
                     <th><b>Id</b></th>
                     <th><b>Name</b></th>
@@ -6934,14 +6951,14 @@ class DnsRecords extends Records {
             }
             print "</select>";
         } else {
-        	printf (" <div class='input-prepend'><span class='add-on'>Zone</span><input class=span2 type=text size=20 name=zone_filter value='%s'></div>",$this->filters['zone']);
+        	printf (" <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text name=zone_filter value='%s'></div>",$this->filters['zone']);
         }
 
         if ($this->typeFilter) {
             printf ("<input type=hidden name=%s_filter> Type %s",$this->typeFilter,$this->typeFilter);
         } else {
             $selected_type[$this->filters['type']]='selected';
-            printf (" <select name=type_filter><option value=''>Type");
+            printf (" <select name=type_filter class=span1><option value=''>Type");
             foreach (array_keys($this->recordTypes) as $_type) {
                 printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
             }
@@ -7043,7 +7060,7 @@ class DnsRecords extends Records {
             } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
                 $_zone_selected=$_zone;
             }
-        	printf (" <div class='input-prepend'><span class='add-on'>Zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>",$_zone_selected);
+        	printf (" <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>",$_zone_selected);
         }
 
         if ($this->typeFilter) {
@@ -7592,6 +7609,11 @@ class DnsRecords extends Records {
             return true;
         }
     }
+
+    function showTextBeforeCustomerSelection() {
+        print _("Zone owner");
+    }
+
 }
 
 class FancyRecords extends DnsRecords {
@@ -7697,7 +7719,7 @@ class TrustedPeers extends Records {
             <table border=0 cellpadding=2 width=100%>
             <tr bgcolor=lightgrey>
                 <td><b>Id</b></th>
-                <td><b>Reseller</b></td>
+                <td><b>Owner</b></td>
                 <td><b>IP address</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>Description</b></td>
@@ -7883,13 +7905,13 @@ class TrustedPeers extends Records {
     }
 
     function showCustomerTextBox () {
-        print "<div class='input-prepend'><span class='add-on'>Reseller</span>";
+        print "<div class='input-prepend'><span class='add-on'>Owner</span>";
         $this->showResellerForm('reseller');
         print "</div>";
     }
 
     function showTextBeforeCustomerSelection() {
-        print "Reseller";
+        print "Owner";
     }
 
     function showCustomerForm() {
@@ -7984,7 +8006,7 @@ class Carriers extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Reseller</th>
+                <th>Owner</th>
                 <th>Carrier</th>
                 <th>Name</th>
                 <th>Gateways</th>
@@ -8182,7 +8204,7 @@ class Carriers extends Records {
     }
 
     function showTextBeforeCustomerSelection() {
-        print "Reseller";
+        print "Owner";
     }
 
     function getRecord($id) {
@@ -8419,7 +8441,7 @@ class Gateways extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>Reseller</th>
+                <th>Owner</th>
                 <th>Gateway</th>
                 <th>Carrier</th>
                 <th>Name</th>
@@ -8709,7 +8731,7 @@ class Gateways extends Records {
     }
 
     function showTextBeforeCustomerSelection() {
-        print "Reseller";
+        print "Owner";
     }
 
     function showRecord($gateway) {
@@ -8964,7 +8986,7 @@ class GatewayRules extends Records {
                 <thead>
             <tr>
                 <th></th>
-                <th>Reseller</th>
+                <th>Owner</th>
                 <th>Rule</th>
                 <th>Carrier</th>
                 <th>Gateway</th>
@@ -9118,7 +9140,7 @@ class GatewayRules extends Records {
         <input type=hidden name=sortBy value=changeDate>
         ";
 
-        print "<div class='input-prepend'><span class='add-on'>Gateway</span><select class=span2 name=gateway_id>";
+        print "<div class='input-prepend'><span class='add-on'>Gateway</span><select class=span3 name=gateway_id>";
         foreach (array_keys($this->gateways) as $_gateway) {
             printf ("<option value='%s'>%s",$_gateway,$this->gateways[$_gateway]);
         }
@@ -9242,8 +9264,9 @@ class GatewayRules extends Records {
 
     function showCustomerForm() {
     }
+
     function showTextBeforeCustomerSelection() {
-        print "Reseller";
+        print "Owner";
     }
 
     function showRecord($rule) {
@@ -9487,7 +9510,7 @@ class Routes extends Records {
             print "<thead>
             <tr>
                 <th><b>Id</b></th>
-                <th><b>Reseller</b></th>
+                <th><b>Owner</b></th>
                 <th><b>Route</b></th>
                 <th><b>Carrier</b></th>
                 <th><b>Gateways</b></th>
@@ -9746,7 +9769,7 @@ class Routes extends Records {
     }
 
     function showCustomerTextBox () {
-        print "Reseller";
+        print "Owner";
         $this->showResellerForm('reseller');
     }
 
@@ -9754,7 +9777,7 @@ class Routes extends Records {
     }
 
     function showTextBeforeCustomerSelection() {
-        print "Reseller";
+        print "Owner";
     }
 
     function getRecord($id) {
@@ -10757,11 +10780,11 @@ class Customers extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text size=10 name=username_filter value='%s'></div>",$this->filters['username']);
-        printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span1' type=text size=10 name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span1' type=text size=15 name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text size=25 name=email_filter value='%s'></div>\n",$this->filters['email']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text name=username_filter value='%s'></div>",$this->filters['username']);
+        printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span2' type=text name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
+        printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span2' type=text name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span1'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
@@ -11587,7 +11610,7 @@ class Customers extends Records {
         print "<div class='row-fluid'>
         <h1 class=page-header>Register new account</h1>";
         print "<p>";
-        print _("Account are used for login and to assign ownership to data created in the platform");
+        print _("Accounts are used for login and to assign ownership to data created in the platform");
         printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
         print "
