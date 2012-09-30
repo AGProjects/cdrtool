@@ -143,6 +143,13 @@ class SoapEngine {
     var $default_timezone  =  'Europe/Amsterdam';
 
     var $ports=array(
+                         'customers'      => array(
+                                           'records_class' => 'Customers',
+                                           'name'          => 'Accounts',
+                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
+                                           'category'      => 'general',
+                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
+                                           ),
                          'sip_accounts'   => array(
                                            'records_class' => 'SipAccounts',
                                            'name'          => 'SIP accounts',
@@ -157,19 +164,13 @@ class SoapEngine {
                                            'category'      => 'sip',
                                            'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use _ or % to match one or more characters. '
                                            ),
-                         'sip_aliases'    => array(
-                                           'records_class' => 'SipAliases',
-                                           'name'          => 'SIP aliases',
+                         'trusted_peers'   => array(
+                                           'records_class' => 'TrustedPeers',
+                                           'name'          => 'SIP trusted peers',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
-                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use _ or % to match one or more characters. '
-                                           ),
-                         'customers'      => array(
-                                           'records_class' => 'Customers',
-                                           'name'          => 'Accounts',
-                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
-                                           'category'      => 'general',
-                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
+                                           'resellers_only'=> true
                                            ),
                          'enum_numbers'   => array(
                                            'records_class' => 'EnumMappings',
@@ -199,29 +200,6 @@ class SoapEngine {
                                            'category'      => 'dns',
                                            'description'   => 'Manage DNS records. Use _ or % to match one or more characters. '
                                            ),
-                         'email_aliases'    => array(
-                                           'records_class' => 'EmailAliases',
-                                           'name'          => 'Email aliases',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage email aliases. Use _ or % to match one or more characters. '
-                                           ),
-                         'url_redirect'    => array(
-                                           'records_class' => 'UrlRedirect',
-                                           'name'          => 'URL redirect',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage URL redirections. Use _ or % to match one or more characters. '
-                                           ),
-                         'trusted_peers'   => array(
-                                           'records_class' => 'TrustedPeers',
-                                           'name'          => 'Trusted peers',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
-                                           'resellers_only'=> true
-                                           ),
-
                          'pstn_carriers'  => array(
                                            'records_class' => 'Carriers',
                                            'name'          => 'PSTN carriers',
@@ -253,6 +231,27 @@ class SoapEngine {
                                            'category'      => 'pstn',
                                            'description'   => 'Manage translation rules for PSTN gateways. Rules are applied against 00+E164 prefix. Click on Rule to edit its attributes. ',
                                            'resellers_only'=> true
+                                           ),
+                         'email_aliases'    => array(
+                                           'records_class' => 'EmailAliases',
+                                           'name'          => 'Email aliases',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage email aliases. Use _ or % to match one or more characters. '
+                                           ),
+                         'url_redirect'    => array(
+                                           'records_class' => 'UrlRedirect',
+                                           'name'          => 'URL redirect',
+                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
+                                           'category'      => 'dns',
+                                           'description'   => 'Manage URL redirections. Use _ or % to match one or more characters. '
+                                           ),
+                         'sip_aliases'    => array(
+                                           'records_class' => 'SipAliases',
+                                           'name'          => 'SIP aliases',
+                                           'soap_class'    => 'WebService_NGNPro_SipPort',
+                                           'category'      => 'sip',
+                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use _ or % to match one or more characters. '
                                            )
 
                         );
