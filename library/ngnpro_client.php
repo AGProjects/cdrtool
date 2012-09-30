@@ -1660,15 +1660,6 @@ class SipDomains extends Records {
                     $domain = $result->domains[$i];
 
                     $index = $this->next+$i+1;
-    
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
 
                     $_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SoapEngine->service),
@@ -1704,7 +1695,7 @@ class SipDomains extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td><a href=%s>%s</a></td>
@@ -1713,7 +1704,6 @@ class SipDomains extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $domain->customer,
@@ -2289,15 +2279,6 @@ class SipAccounts extends Records {
     
                     $index=$this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
 			        $_url = $this->url.'&'.$this->addFiltersToURL().sprintf("&service=%s&action=Delete",
                     urlencode($this->SoapEngine->service)
                     );
@@ -2392,7 +2373,7 @@ class SipAccounts extends Records {
                     }
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s %s</td>
@@ -2406,7 +2387,6 @@ class SipAccounts extends Records {
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>
                     ",
-                    $bgcolor,
                     $index,
                     $sip_account,
                     $account->firstName,
@@ -3292,15 +3272,6 @@ class SipAliases extends Records {
     
                     $index=$this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($alias->id->username),
@@ -3342,7 +3313,7 @@ class SipAliases extends Records {
                     }          
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td>%s@%s</td>
                     <td><a href=%s>%s@%s</a></td>
@@ -3351,7 +3322,6 @@ class SipAliases extends Records {
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>
                     ",
-                    $bgcolor,
                     $index,
                     $alias->id->username,
                     $alias->id->domain,
@@ -3805,15 +3775,6 @@ class EnumRanges extends Records {
 
                     $index=$this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&tld_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($range->id->prefix),
@@ -3861,7 +3822,7 @@ class EnumRanges extends Records {
                         $_nameservers.= $_ns.' ';
                     }
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>+%s</td>
@@ -3877,7 +3838,6 @@ class EnumRanges extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a>%s</td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $range->customer,
@@ -4567,7 +4527,7 @@ class EnumMappings extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table class='table table-condensed' width=100%>
+            <table class='table table-condensed table-striped' width=100%>
             <thead>
             <tr>
                 <th></th>
@@ -4605,15 +4565,6 @@ class EnumMappings extends Records {
                     $number = $result->numbers[$i];
                     $index=$this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="#F9F9F9";
-                    }
-
                     $j=1;
 
                     foreach ($number->mappings as $_mapping) {
@@ -4701,7 +4652,7 @@ class EnumMappings extends Records {
                             }          
 
                             printf("
-                            <tr bgcolor=%s>
+                            <tr>
                             <td>%s</td>
                             <td><a href=%s>%s.%s</a></td>
                             <td><a href=%s>+%s</a></td>
@@ -4715,7 +4666,6 @@ class EnumMappings extends Records {
                             <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
-                            $bgcolor,
                             $index,
                             $_customer_url,
                             $number->customer,
@@ -4735,7 +4685,7 @@ class EnumMappings extends Records {
                             );
                         } else {
                             printf("
-                            <tr bgcolor=%s>
+                            <tr>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -4749,7 +4699,6 @@ class EnumMappings extends Records {
                             <td>%s</td>
                             <td><a href=%s>%s</a></td>
                             </tr>",
-                            $bgcolor,
                             ucfirst($_mapping->type),
                             $_mapping->id,
                             $mapto,
@@ -4808,7 +4757,7 @@ class EnumMappings extends Records {
                         }          
 
                         printf("
-                        <tr bgcolor=%s>
+                        <tr>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td><a href=%s>+%s</a></td>
@@ -4821,7 +4770,6 @@ class EnumMappings extends Records {
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>",
-                        $bgcolor,
                         $index,
                         $_customer_url,
                         $number->customer,
@@ -5889,15 +5837,6 @@ class DnsZones extends Records {
 
                     $index=$this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($zone->name)
@@ -5941,7 +5880,7 @@ class DnsZones extends Records {
                     }
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td><a href=%s>%s</a></td>
@@ -5953,7 +5892,6 @@ class DnsZones extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $customer_url,
                     $zone->customer,
@@ -6793,15 +6731,6 @@ class DnsRecords extends Records {
                     $record = $result->records[$i];
                     $index=$this->next+$i+1;
 
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($record->name),
@@ -6854,7 +6783,7 @@ class DnsRecords extends Records {
 
 		            if ($this->fancy) {
                         printf("
-                        <tr bgcolor=%s>
+                        <tr>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td><a href=%s>%s</a></td>
@@ -6866,8 +6795,6 @@ class DnsRecords extends Records {
                         <td>%s</td>
                         <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                         </tr>",
-    
-                        $bgcolor,
                         $index,
                         $_customer_url,
                         $record->customer,
@@ -6886,7 +6813,7 @@ class DnsRecords extends Records {
                         );
                     } else {
                         printf("
-                        <tr bgcolor=%s>
+                        <tr>
                         <td>%s</td>
                         <td><a href=%s>%s.%s</a></td>
                         <td><a href=%s>%s</a></td>
@@ -6899,8 +6826,6 @@ class DnsRecords extends Records {
                         <td>%s</td>
                         <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                         </tr>",
-    
-                        $bgcolor,
                         $index,
                         $_customer_url,
                         $record->customer,
@@ -7750,15 +7675,6 @@ class TrustedPeers extends Records {
     
                     $index=$this->next+$i+1;
 
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="lightgrey";
-                    } else {
-                        $bgcolor="white";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($peer->ip)
@@ -7778,7 +7694,7 @@ class TrustedPeers extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     <td>%s</td>
@@ -7787,7 +7703,6 @@ class TrustedPeers extends Records {
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $peer->reseller,
@@ -8038,15 +7953,6 @@ class Carriers extends Records {
 
                     $index=$this->next+$i+1;
 
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($carrier->id)
@@ -8078,7 +7984,7 @@ class Carriers extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     <td><a href=%s>%s</a></td>
@@ -8087,7 +7993,6 @@ class Carriers extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $carrier->reseller,
@@ -8436,7 +8341,7 @@ class Gateways extends Records {
             <tr><td>$this->rows records found</td></tr>
             </table>
             <p>
-            <table class='table tables-striped table-condensed' width=100%>
+            <table class='table table-striped table-condensed' width=100%>
             ";
 
             print "
@@ -8474,15 +8379,6 @@ class Gateways extends Records {
                     $gateway = $result->gateways[$i];
     
                     $index=$this->next+$i+1;
-
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
 
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s",
                     urlencode($this->SoapEngine->service),
@@ -8522,7 +8418,7 @@ class Gateways extends Records {
                     $_r=0;
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td valign=top>%s</td>
                     <td valign=top><a href=%s>%s</a></td>
                     <td valign=top><a href=%s>%s</a></td>
@@ -8533,7 +8429,6 @@ class Gateways extends Records {
                     <td valign=top>%s</td>
                     <td valign=top><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $gateway->reseller,
@@ -9023,15 +8918,6 @@ class GatewayRules extends Records {
 
                     $index=$this->next+$i+1;
 
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%s&reseller_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($gateway_rule->id),
@@ -9070,7 +8956,7 @@ class GatewayRules extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td valign=top>%s</td>
                     <td valign=top><a href=%s>%s</a></td>
                     <td valign=top><a href=%s>%s</a></td>
@@ -9084,7 +8970,6 @@ class GatewayRules extends Records {
                     <td valign=top>%s</td>
                     <td valign=top><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url, $gateway_rule->reseller,
                     $_url,     $gateway_rule->id,
@@ -9545,15 +9430,6 @@ class Routes extends Records {
     
                     $index=$this->next+$i+1;
 
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%d",
                     urlencode($this->SoapEngine->service),
                     urlencode($route->id)
@@ -9589,7 +9465,7 @@ class Routes extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     <td><a href=%s>%s</a></td>
@@ -9601,7 +9477,6 @@ class Routes extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a></td>
                     </tr>",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $route->reseller,
@@ -10696,15 +10571,6 @@ class Customers extends Records {
 
                     $index = $this->next+$i+1;
     
-                    $rr=floor($index/2);
-                    $mod=$index-$rr*2;
-            
-                    if ($mod ==0) {
-                        $bgcolor="";
-                    } else {
-                        $bgcolor="";
-                    }
-
                     $_url = $this->url.sprintf("&service=%s&action=Delete&reseller_filter=%s&customer_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($customer->reseller),
@@ -10726,7 +10592,7 @@ class Customers extends Records {
                     );
 
                     printf("
-                    <tr bgcolor=%s>
+                    <tr>
                     <td>%s</td>
                     <td><a href=%s>%s.%s</a></td>
                     <td>%s</td>
@@ -10739,7 +10605,6 @@ class Customers extends Records {
                     <td>%s</td>
                     <td><a class='btn-small btn-danger' href=%s>%s</a>
                     ",
-                    $bgcolor,
                     $index,
                     $_customer_url,
                     $customer->id,
