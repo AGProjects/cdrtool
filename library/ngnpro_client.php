@@ -1382,6 +1382,7 @@ class Records {
             $this->showCustomerForm('customer');
             print "<div class='input-prepend'>";
             $this->showResellerForm('reseller');
+            print "</div>";
         } else {
             $this->showCustomerForm('customer');
         }
@@ -7714,9 +7715,10 @@ class TrustedPeers extends Records {
             <table border=0 align=center>
             <tr><td>$this->rows records found</td></tr>
             </table>
-            <p>
-            <table border=0 cellpadding=2 width=100%>
-            <tr bgcolor=lightgrey>
+
+            <table class='table table-striped table-condensed' width=100%>
+            <thead>
+            <tr>
                 <td><b>Id</b></th>
                 <td><b>Owner</b></td>
                 <td><b>IP address</b></td>
@@ -7725,6 +7727,7 @@ class TrustedPeers extends Records {
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
             </tr>
+            </thead>
             ";
 
             if (!$this->next)  $this->next=0;
@@ -10782,7 +10785,7 @@ class Customers extends Records {
         printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text name=username_filter value='%s'></div>",$this->filters['username']);
         printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span2' type=text name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
         printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span2' type=text name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2' type=text name=organization_filter value='%s'></div>\n",$this->filters['organization']);
         printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
 
         if ($this->adminonly) {
