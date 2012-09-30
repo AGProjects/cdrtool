@@ -2222,7 +2222,7 @@ class SipAccounts extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>SIP Account</th>
+                <th>SIP account</th>
                 <th>Full name</th>
                 <th>Email address</th>
                 <th>Timezone</th>
@@ -10645,7 +10645,7 @@ class Customers extends Records {
             }
 
             print "
-            <td align=center width=33%>$this->rows records found</td>
+            <td align=center width=33%>$this->rows records found. Click on the id to edit the account.</td>
             <td>
             </td></tr>
             </table>
