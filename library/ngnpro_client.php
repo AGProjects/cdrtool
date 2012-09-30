@@ -244,14 +244,14 @@ class SoapEngine {
                                            'name'          => 'URL redirect',
                                            'soap_class'    => 'WebService_NGNPro_DnsPort',
                                            'category'      => 'dns',
-                                           'description'   => 'Manage URL redirections. Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage WEB URL redirections. Use _ or % to match one or more characters. '
                                            ),
                          'sip_aliases'    => array(
                                            'records_class' => 'SipAliases',
                                            'name'          => 'SIP aliases',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
-                                           'description'   => 'Manage aliases for SIP destinations (e.g. user1@example1.com alias to user2@example2.com). Use _ or % to match one or more characters. '
+                                           'description'   => 'Manage redirections for SIP addresses e.g. redirect user1@example1.com (alias) to user2@example2.com (target). Use _ or % to match one or more characters. '
                                            )
 
                         );
@@ -2437,7 +2437,7 @@ class SipAccounts extends Records {
 
     function showSeachFormCustom() {
         printf ("
-            <div class='input-prepend'><span class='add-on'>Account</span><input class=span1 type=text name=username_filter value='%s'></div>",$this->filters['username']);
+            <div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text name=username_filter value='%s'></div>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -2459,7 +2459,7 @@ class SipAccounts extends Records {
 
         printf (" <div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text name=firstname_filter value='%s'></div>\n",$this->filters['firstname']);
         printf (" <div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text name=lastname_filter value='%s'></div>\n",$this->filters['lastname']);
-        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span1 type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
+        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span2 type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner_filter value='%s'></div>\n",$this->filters['owner']);
 
         $selected_group[$this->filters['group']]='selected';
@@ -2558,7 +2558,7 @@ class SipAccounts extends Records {
             print "</select>";
 
         } else {
-            printf (" <input type=text name=domain size=15 value='%s'>",$_domain);
+            printf (" <input type=text name=domain class=span2value='%s'>",$_domain);
         }
 
         if ($_REQUEST['quota']) {
@@ -2581,9 +2581,9 @@ class SipAccounts extends Records {
             $checked_pstn='';
         }
 
-        printf (" <div class=input-prepend><span class='add-on'>Pass</span><input class=span1 type=password size=10 name=password value='%s'></div>",$_REQUEST['password']);
-        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span1 type=text size=15 name=fullname value='%s'></div>",$_REQUEST['fullname']);
-        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span1 type=text size=20 name=email value='%s'></div>",$_REQUEST['email']);
+        printf (" <div class=input-prepend><span class='add-on'>Password</span><input class=span1 type=password size=10 name=password value='%s'></div>",$_REQUEST['password']);
+        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s'></div>",$_REQUEST['fullname']);
+        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s'></div>",$_REQUEST['email']);
         printf (" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
         printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
         printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
@@ -3263,7 +3263,7 @@ class SipAliases extends Records {
             <tr>
                 <th>Id</th>
                 <th>SIP alias</th>
-                <th>Target</th>
+                <th>Redirect target</th>
                 <th>Owner</th>
                 <th>Change date</th>
                 <th>Actions</th>
@@ -3434,7 +3434,7 @@ class SipAliases extends Records {
     }
 
     function showSeachFormCustom() {
-        printf (" <div class='input-prepend'><span class='add-on'>SIP alias</span><input type=text size=12 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
+        printf (" <div class='input-prepend'><span class='add-on'>SIP alias</span><input type=text class=span1 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
@@ -3455,7 +3455,7 @@ class SipAliases extends Records {
             printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input type=text class=span2 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
+        printf (" <div class='input-prepend'><span class='add-on'>Redirect target</span><input type=text class=span2 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
 
     }
@@ -3494,7 +3494,7 @@ class SipAliases extends Records {
             printf (" <input type=text name=domain class=span2 value='%s'>",$_domain);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>Target</span><input class=span2 type=text name=target></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Redirect target</span><input class=span2 type=text name=target></div>");
 
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner></div>");
 
@@ -10631,7 +10631,7 @@ class Customers extends Records {
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a href=%s>New account</a> ",$_add_url);
+            printf ("<a href=%s>Create new account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -10640,7 +10640,7 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" | <a href=%s>New account under reseller %s</a> ",$_add_url,$this->filters['reseller']);
+                    printf (" | <a href=%s>Create a new account belonging to reseller %s</a> ",$_add_url,$this->filters['reseller']);
                 }
             }
 
@@ -10782,7 +10782,7 @@ class Customers extends Records {
         printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text name=username_filter value='%s'></div>",$this->filters['username']);
         printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span2' type=text name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
         printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span2' type=text name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span1'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
+        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2'type=text size=15 name=organization_filter value='%s'></div>\n",$this->filters['organization']);
         printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
 
         if ($this->adminonly) {
