@@ -5074,7 +5074,7 @@ class EnumMappings extends Records {
         <div class='input-prepend'><span class='add-on'>";
         printf (" Number");
 
-        print "</span><select class=span2 name=range>";
+        print "</span><select class=span3 name=range>";
 
         if ($_REQUEST['range']) {
             $selected_range[$_REQUEST['range']]='selected';
@@ -5090,13 +5090,13 @@ class EnumMappings extends Records {
         print "</select>";
 
         if ($_REQUEST['number']) {
-            printf ("<input class=span1 type=text name=number value='%s'>",$_REQUEST['number']);
+            printf ("<input class=span2 type=text name=number value='%s'>",$_REQUEST['number']);
         } else if ($_number=$this->getCustomerProperty('enum_numbers_last_number')) {
             $_prefix=$_range['prefix'];
             preg_match("/^$_prefix(.*)/",$_number,$m);
-            printf ("<input class=span1 type=text name=number value='%s'>",$m[1]);
+            printf ("<input class=span2 type=text name=number value='%s'>",$m[1]);
         } else {
-            printf ("<input class=span1 type=text name=number>");
+            printf ("<input class=span2 type=text name=number>");
         }
 
         print "</div> <div class='input-prepend'><span class='add-on'>";
