@@ -3114,7 +3114,7 @@ class SipSettings {
                 </label>
                 <div class='controls'><div class='input-prepend'>";
     
-                printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'><span class=help-inline>",$this->currency,$this->quota);
+                printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'></div><span class='help-inline muted'>",$this->currency,$this->quota);
                 //print "<div class=span10>";
                 if ($this->quota || in_array("quota",$this->groups)) {
                     $this->getCallStatistics();
@@ -3125,18 +3125,18 @@ class SipSettings {
                     }
                 }
 
-                //print "</div>";
+                print "</span> ";
      
 
                 if ($this->pstn_changes_allowed) {
                     print "<label class='checkbox inline'>";
                     print "
-                        <input type=checkbox name=quota_deblock value=1>";
+                        <input type=checkbox name=quota_deblock value=1> ";
                     print _("Un-block");
                     print "</label>";
                 }
     
-                print "</span></div></div></div>
+                print "</div></div>
                 </div>
                 ";
             } else if ($this->quota) {

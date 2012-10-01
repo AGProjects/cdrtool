@@ -37,5 +37,12 @@ label, input, button, select, textarea {
 }
 .evenc           { background-color: #f9f9f9;}
 
+input[type="checkbox"] {
+        margin-top: 1px;
+    }
+
+.checkbox.inline {
+        padding-top: 0px;
+    }
 -->
 </style>
