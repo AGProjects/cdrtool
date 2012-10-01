@@ -3129,10 +3129,11 @@ class SipSettings {
      
 
                 if ($this->pstn_changes_allowed) {
-                    print _("Un-block");
+                    print "<label class='checkbox inline'>";
                     print "
-                    <input class=inline type=checkbox name=quota_deblock value=1>
-                    ";
+                        <input type=checkbox name=quota_deblock value=1>";
+                    print _("Un-block");
+                    print "</label>";
                 }
     
                 print "</span></div></div></div>
