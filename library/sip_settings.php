@@ -11464,12 +11464,20 @@ class Enrollment {
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
 
+        var $languages=array("en","ro","nl","es","de");
+
+        if (isset($_REQUEST['lang'])){
+            if (in_array($_REQUEST['lang'])) {
+                $sip_properties[]=array('name'=> 'language',           'value' => $_REQUEST['lang']);
+            }
+        }
+
         if (strlen($timezone)) {
-        	$sip_properties[]=array('name'=> 'timezone', 'value' => $timezone);
+            $sip_properties[]=array('name'=> 'timezone', 'value' => $timezone);
         }
 
         if (strlen($user_agent)) {
-        	$sip_properties[]=array('name'=> 'user_agent', 'value' => trim(urldecode($user_agent)));
+            $sip_properties[]=array('name'=> 'user_agent', 'value' => trim(urldecode($user_agent)));
         }
 
         $sipAccount = array('account'   => $sip_address,
