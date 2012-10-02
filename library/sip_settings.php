@@ -11464,7 +11464,7 @@ class Enrollment {
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
 
-        var $languages=array("en","ro","nl","es","de");
+        $languages=array("en","ro","nl","es","de");
 
         if (isset($_REQUEST['lang'])){
             if (in_array($_REQUEST['lang'])) {
