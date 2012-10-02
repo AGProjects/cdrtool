@@ -11467,7 +11467,7 @@ class Enrollment {
         $languages=array("en","ro","nl","es","de");
 
         if (isset($_REQUEST['lang'])){
-            if (in_array($_REQUEST['lang'])) {
+            if (in_array($_REQUEST['lang'],$languages)) {
                 $sip_properties[]=array('name'=> 'language',           'value' => $_REQUEST['lang']);
             }
         }
