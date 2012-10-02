@@ -153,7 +153,7 @@ class CDRS_opensips extends CDRS {
     function showTableHeader($begin_datetime,$end_datetime) {
 
         if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-            print "<p>From $begin_datetime to $end_datetime";
+            print "From $begin_datetime to $end_datetime";
         }
 
         print "
@@ -186,17 +186,15 @@ class CDRS_opensips extends CDRS {
     function showTableHeaderSubscriber($begin_datetime,$end_datetime) {
         if (!$this->export) {
             if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-                print "<p>
+                print "
                 From $begin_datetime to $end_datetime
                 ";
             }
 
             print  "
-            <table border=1 cellspacing=2 width=100% align=center>
+            <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
+            <thead>
             <tr>
-            <td>
-            <table border=0 cellspacing=2 width=100%>
-            <tr bgcolor=lightgrey>
             <td>Id</td>
             <td><b>Start Time</b>
             <td><b>SIP Caller</b></td>
@@ -208,6 +206,7 @@ class CDRS_opensips extends CDRS {
             <td align=right><b>KBIn</b></td>
             <td align=right><b>KBOut</b></td>
             </tr>
+            </thead>
             ";
         } else {
             print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,RemotePartyId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Applications,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
@@ -219,17 +218,15 @@ class CDRS_opensips extends CDRS {
 
         if (!$this->export) {
             if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-                print "<p>
+                print "
                 From $begin_datetime to $end_datetime
                 ";
             }
 
             print "
-            <table border=1 cellspacing=2 width=100% align=center>
-            <tr>
-            <td>
-            <table border=0 cellspacing=2 width=100%>
-            <tr bgcolor=lightgrey>
+            <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
+            <thead>
+                <tr>
                 <td></td>
                 <td>            <b>Calls</b></td>
                 <td align=right><b>Seconds</b></td>
@@ -244,6 +241,7 @@ class CDRS_opensips extends CDRS {
                 <td>            <b>Description</b></td>
                 <td>            <b>Action</b></td>
             </tr>
+            </thead>
             ";
         } else {
             print "id,Calls,Seconds,Minutes,Hours,Price,TrafficIn(MB),TrafficOut(MB),Success(%),Success(calls),Failure(%),Failure(calls),$group_byPrint,Description\n";
@@ -1500,7 +1498,6 @@ class CDRS_opensips extends CDRS {
         $j=0;
         $z=0;
 
-        if (!$this->export) print "<div class=\"alert alert-info\">";
         
         if ($rows>0)  {
             
@@ -1522,10 +1519,11 @@ class CDRS_opensips extends CDRS {
                     if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
                         $this->NormalizeCDRS($where,$cdr_table);
                         if (!$this->export && $this->status['normalized'] ) {
+                            print "<div class=\"alert alert-info\">";
                             printf ("<b><span class=\"alert-heading\">%d</span></b> CDRs normalized. ",$this->status['normalized']);
                             if ($this->status['cached_keys']['saved_keys']) {
                                 printf ("Quota usage updated for <b><span class=\"alert-heading\">%d</span></b> accounts. ",$this->status['cached_keys']['saved_keys']);
-                            } 
+                            }
                         }
                     }
                 }
@@ -1546,7 +1544,7 @@ class CDRS_opensips extends CDRS {
                 // the amount of calls normalized above
                 $maxrows=$maxrows-$this->status['normalized'];
             }
-        
+            
             if ($group_by) {
                 if ($order_by=="group_by") {
                     $order_by1=$group_by;
@@ -1602,9 +1600,8 @@ class CDRS_opensips extends CDRS {
                 ";
 
                 $this->CDRdb->query($query);
-
+                
                 $this->showTableHeaderStatistics($begin_datetime,$end_datetime);
-
                 while ($i<$maxrows)  {
                 
                     $found=$i+1;
@@ -1666,7 +1663,7 @@ class CDRS_opensips extends CDRS {
                         } else {
                             $traceValue="empty";
                         }
-
+                        
                     } else if ($this->group_byOrig==$this->aNumberField) {
                         # Normalize Called Station Id
                         $N=$this->NormalizeNumber($mygroup);
@@ -1740,72 +1737,69 @@ class CDRS_opensips extends CDRS {
 
                     if (!$this->export) {
                         print "
-                        <tr bgcolor=$inout_color>
-                        <td><b>$found</b></td>
-                        <td align=right>$calls</td>
-                        <td align=right>$seconds_print</td>
-                        <td align=right>$minutes_print</td>
-                        <td align=right>$hours</td>
-                        ";
-                        if ($perm->have_perm("showPrice")) {
-                            $pricePrint=number_format($price,4,".","");
+                            <tr>
+                            <td><b>$found</b></td>
+                            <td align=right>$calls</td>
+                            <td align=right>$seconds_print</td>
+                            <td align=right>$minutes_print</td>
+                            <td align=right>$hours</td>
+                            ";
+                            if ($perm->have_perm("showPrice")) {
+                                $pricePrint=number_format($price,4,".","");
+                            } else {
+                                $pricePrint='x.xxx';
+                            }
+                            print "
+                            <td align=right>$pricePrint</td>
+                            <td align=right>$AcctInputOctets</td>
+                            <td align=right>$AcctOutputOctets</td>
+                            <td align=right>$success%</td>
+                            <td align=right>($nonzero calls)</td>
+                            <td align=right>$failure%</td>
+                            <td align=right>($zero calls)</td>
+                            <td>$mygroup_print</td>
+                            <td>$description</td>
+                            <td>";
+                            printf("<a href=%s&%s=%s&%s_comp=%s target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField,$comp_type);
+                            print "
+                            </tr>
+                            ";
                         } else {
-                            $pricePrint='x.xxx';
+                             print "$found,";
+                             print "$calls,";
+                             print "$seconds,";
+                             print "$minutes,";
+                             print "$hours,";
+                             if ($perm->have_perm("showPrice")) {
+                                 $pricePrint=$price;
+                             } else {
+                                 $pricePrint='x.xxx';
+                             }
+                             print "$pricePrint,";
+                             print "$AcctInputOctets,";
+                             print "$AcctOutputOctets,";
+                             print "$success,";
+                             print "$nonzero,";
+                             print "$failure,";
+                             print "$zero,";
+                             print "$mygroup_print,";
+                             print "$description";
+                             print "\n";
                         }
+                        $i++;
+                     }
+
+                     if (!$this->export) {
                         print "
-                        <td align=right>$pricePrint</td>
-                        <td align=right>$AcctInputOctets</td>
-                        <td align=right>$AcctOutputOctets</td>
-                        <td align=right>$success%</td>
-                        <td align=right>($nonzero calls)</td>
-                        <td align=right>$failure%</td>
-                        <td align=right>($zero calls)</td>
-                        <td>$mygroup_print</td>
-                        <td>$description</td>
-                        <td>";
-                        printf("<a href=%s&%s=%s&%s_comp=%s target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField,$comp_type);
-                        print "
-                        </tr>
+                        </table>
                         ";
-                    } else {
-                         print "$found,";
-                         print "$calls,";
-                         print "$seconds,";
-                         print "$minutes,";
-                         print "$hours,";
-                         if ($perm->have_perm("showPrice")) {
-                             $pricePrint=$price;
-                         } else {
-                             $pricePrint='x.xxx';
-                         }
-                         print "$pricePrint,";
-                         print "$AcctInputOctets,";
-                         print "$AcctOutputOctets,";
-                         print "$success,";
-                         print "$nonzero,";
-                         print "$failure,";
-                         print "$zero,";
-                         print "$mygroup_print,";
-                         print "$description";
-                         print "\n";
-                    }
-                    $i++;
-                 }
-
-                 if (!$this->export) {
-                    print "
-                    </table>
-                    </td>
-                    </tr>
-                    </table>
-                    ";
-                 }
-        
-            } else {
-                if (!$this->export) {
-                    printf ("For more information about each call click on its Id column.</div> ");
+                     }
+            
+                } else {
+                    if (!$this->export) {
+                        printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
                 }
-
+                
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
@@ -1855,9 +1849,6 @@ class CDRS_opensips extends CDRS {
 
                  if (!$this->export) {
                     print "
-                    </table>
-                    </td>
-                    </tr>
                     </table>
                     ";
                  }
