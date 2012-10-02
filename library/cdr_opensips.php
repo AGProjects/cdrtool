@@ -1524,6 +1524,7 @@ class CDRS_opensips extends CDRS {
                             if ($this->status['cached_keys']['saved_keys']) {
                                 printf ("Quota usage updated for <b><span class=\"alert-heading\">%d</span></b> accounts. ",$this->status['cached_keys']['saved_keys']);
                             }
+                            print "</div>";
                         }
                     }
                 }
