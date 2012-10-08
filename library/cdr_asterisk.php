@@ -71,15 +71,10 @@ class CDRS_asterisk extends CDRS {
     function LoadDisconnectCodes() {
     }
 
-    function showTableHeaderStatistics($begin_datetime,$end_datetime) {
+    function showTableHeaderStatistics() {
         $group_byPrint=$this->GROUPBY[$this->group_by];
 
         if (!$this->export) {
-            if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-                print "<p>
-                From $begin_datetime to $end_datetime
-                ";
-            }
             print "
             <table border=1 cellspacing=2 width=100% align=center>
             <tr>
@@ -108,16 +103,11 @@ class CDRS_asterisk extends CDRS {
 
     }
 
-    function showTableHeaderSubscriber($begin_datetime,$end_datetime) {
-        $this->showTableHeader($begin_datetime,$end_datetime);
+    function showTableHeaderSubscriber() {
+        $this->showTableHeader();
     }
 
-    function showTableHeader($begin_datetime,$end_datetime) {
-        if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-            print "<p>
-            From $begin_datetime to $end_datetime
-            ";
-        }
+    function showTableHeader() {
         print  "
         <table border=1 cellspacing=2 width=100% align=center>
         <tr>
@@ -399,9 +389,9 @@ class CDRS_asterisk extends CDRS {
 
         $this->rows=$rows;
         if ($this->CDRTool['filter']['aNumber']) {
-            $this->showResultsMenuSubscriber();
+            $this->showResultsMenuSubscriber('0',$begin_datetime,$end_datetime);
         } else {
-            $this->showResultsMenu();
+            $this->showResultsMenu('0',$begin_datetime,$end_datetime);
         }
 
         if  (!$this->next)   {
@@ -479,7 +469,7 @@ class CDRS_asterisk extends CDRS {
 
                 $this->CDRdb->query($query);
             
-                $this->showTableHeaderStatistics($begin_datetime,$end_datetime);
+                $this->showTableHeaderStatistics();
 
                 while ($i<$maxrows)  {
                 
@@ -611,7 +601,7 @@ class CDRS_asterisk extends CDRS {
                 $this->CDRdb->query($query);
 
                 if (!$this->export) {
-                	$this->showTableHeader($begin_datetime,$end_datetime);
+                	$this->showTableHeader();
                 } else {
                     $this->showExportHeader();
                 }

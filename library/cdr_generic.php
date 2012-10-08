@@ -619,15 +619,14 @@ class CDRS {
     function searchForm() {
     }
 
-    function showTableHeader($begin_datetime,$end_datetime) {
+    function showTableHeader() {
     }
 
-    function showTableHeaderStatistics($begin_datetime,$end_datetime) {
+    function showTableHeaderStatistics() {
     }
 
-    function showResultsMenu($hide_rows="") {
+    function showResultsMenu($hide_rows="", $begin_datetime='', $end_datetime='') {
         global $loginname;
-
         if (!$this->export) {
             print "
                 <form class='form-inline' action=log.phtml method=post>
@@ -677,8 +676,6 @@ class CDRS {
             </form>
             ";
 
-            print "
-            ";
             if (!$hide_rows) {
                 print "
                 <div class=\"alert alert-success\"><center>";
@@ -686,14 +683,19 @@ class CDRS {
                     print "No records found";
                 } else {
                     print "$this->rows records found";
-                }         
+                }
+                
+                if ($begin_datetime && $end_datetime) {
+                    printf(" between %s and %s",$begin_datetime,$end_datetime);
+                }
+
                 print "</center></div>
                 ";
             }
         }
     }
 
-    function showResultsMenuSubscriber($hide_rows="") {
+    function showResultsMenuSubscriber($hide_rows="", $begin_datetime='', $end_datetime='') {
         global $loginname;
 
         if (!$this->export) {
@@ -753,13 +755,16 @@ class CDRS {
             </table>
             ";
             if (!$hide_rows) {
-                print "
-                <div class=\"alert alert-success\"><center>";
+                print "<div class=\"alert alert-success\"><center>";
                 if ($this->rows == 0) {
                     print "No records found";
                 } else {
                     print "$this->rows records found";
-                }         
+                }
+                if ($begin_datetime && $end_datetime) {
+                    printf(" between %s and %s",$begin_datetime,$end_datetime);
+                }
+
                 print "</center>
                 </div>
                 ";

@@ -150,12 +150,7 @@ class CDRS_opensips extends CDRS {
         }
     }
 
-    function showTableHeader($begin_datetime,$end_datetime) {
-
-        if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-            print "<p>From $begin_datetime to $end_datetime</p>";
-        }
-
+    function showTableHeader() {
         print "
         <table class='table table-hover table-condensed' width=100%>
         <thead>
@@ -183,13 +178,8 @@ class CDRS_opensips extends CDRS {
         print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Media\n";
     }
 
-    function showTableHeaderSubscriber($begin_datetime,$end_datetime) {
+    function showTableHeaderSubscriber() {
         if (!$this->export) {
-            if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-                print "
-                From $begin_datetime to $end_datetime
-                ";
-            }
 
             print  "
             <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
@@ -213,15 +203,10 @@ class CDRS_opensips extends CDRS {
         }
     }
 
-    function showTableHeaderStatistics($begin_datetime,$end_datetime) {
+    function showTableHeaderStatistics() {
         $group_byPrint=$this->GROUPBY[$this->group_byOrig];
 
         if (!$this->export) {
-            if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-                print "
-                From $begin_datetime to $end_datetime
-                ";
-            }
 
             print "
             <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
@@ -1484,9 +1469,9 @@ class CDRS_opensips extends CDRS {
         $this->rows=$rows;
 
         if ($this->CDRTool['filter']['aNumber']) {
-            $this->showResultsMenuSubscriber();
+            $this->showResultsMenuSubscriber('0',$begin_datetime,$end_datetime);
         } else {
-            $this->showResultsMenu();
+            $this->showResultsMenu('0',$begin_datetime,$end_datetime);
         }
 
         if (!$this->next)   {
@@ -1602,7 +1587,7 @@ class CDRS_opensips extends CDRS {
 
                 $this->CDRdb->query($query);
                 
-                $this->showTableHeaderStatistics($begin_datetime,$end_datetime);
+                $this->showTableHeaderStatistics();
                 while ($i<$maxrows)  {
                 
                     $found=$i+1;
@@ -1817,10 +1802,10 @@ class CDRS_opensips extends CDRS {
                 $this->CDRdb->query($query);
 
                 if ($this->CDRTool['filter']['aNumber']) {
-                    $this->showTableHeaderSubscriber($begin_datetime,$end_datetime);
+                    $this->showTableHeaderSubscriber();
                 } else {
                     if (!$this->export) {
-                        $this->showTableHeader($begin_datetime,$end_datetime);
+                        $this->showTableHeader();
                     } else {
                         $this->showExportHeader();
                     }
