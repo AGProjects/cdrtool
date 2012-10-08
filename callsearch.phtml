@@ -53,19 +53,19 @@ if (isset($CDRTool['dataSourcesAllowed'])) {
 
 $CDR_class=$DATASOURCES[$cdr_source]["class"];
 
+if (!$export && !$trace) {
+    $layout = new pageLayoutLocal();
+    if ($CDRTool['filter']['aNumber']) {
+        $layout->showHeader();
+        $layout->showTopMenuSubscriber();
+    } else {
+        $layout->showTopMenu();
+    }
+}
+
 if (is_array($DATASOURCES[$cdr_source])) {
     if (class_exists($CDR_class)) {
         $CDRS = new $CDR_class($cdr_source);
-    
-        if (!$export && !$trace) {
-            $layout = new pageLayoutLocal();
-            if ($CDRTool['filter']['aNumber']) {
-                $layout->showHeader();
-                $layout->showTopMenuSubscriber();
-            } else {
-                $layout->showTopMenu();
-            }
-        }
     
         if ($action=='edit' || !$action ) {
             if ($CDRTool['filter']['aNumber']) {
