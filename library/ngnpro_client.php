@@ -843,10 +843,9 @@ class Records {
         //print "
         //<td align=left>
         //";
-        print "<div class=input-prepend><input class='btn btn-primary' type=submit name=action value=Search>";
+        print "<input class='btn btn-primary' type=submit name=action value=Search>";
 
         $this->showEngineSelection();
-        print "</div>";
         $this->showAfterEngineSelection();
 
         print "<div class=pull-right>
@@ -10376,12 +10375,12 @@ class Customers extends Records {
         ";
         print "
         ";
-        print "<div class='input-prepend pull-left'>
+        print "
         <button class='btn btn-primary' type=submit name=action value=Search>Search</button>";
 
         $this->showEngineSelection();
 
-        print "</div>
+        print "
         <div class='pull-right'>
         ";
         $this->showSortForm();
