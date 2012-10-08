@@ -10478,14 +10478,14 @@ class Customers extends Records {
             ";
 
             print "
-            <div class=\"row-fluid\">
+                <div class=\"btn-group\">
             ";
 
             $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a href=%s>Create new account</a> ",$_add_url);
+            printf ("<a class='btn btn-warning' href=%s>Create new account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -10494,10 +10494,10 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" | <a href=%s>Create a new account belonging to reseller %s</a></div>",$_add_url,$this->filters['reseller']);
+                    printf (" <a class='btn btn-warning' href=%s>Create a new account belonging to reseller %s</a>",$_add_url,$this->filters['reseller']);
                 }
             }
-
+            print "</div>";
             if ($this->rows > 1) {
 
                 print "
