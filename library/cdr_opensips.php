@@ -153,7 +153,7 @@ class CDRS_opensips extends CDRS {
     function showTableHeader($begin_datetime,$end_datetime) {
 
         if (preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$begin_datetime) && preg_match("/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/",$end_datetime)) {
-            print "From $begin_datetime to $end_datetime";
+            print "<p>From $begin_datetime to $end_datetime</p>";
         }
 
         print "
