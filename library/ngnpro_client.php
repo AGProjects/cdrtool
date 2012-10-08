@@ -10485,7 +10485,7 @@ class Customers extends Records {
             urlencode($this->SoapEngine->service)
             );
 
-            printf ("<a class='btn btn-warning' href=%s>Create new account</a> ",$_add_url);
+            printf ("<a class='btn btn-warning' href=%s>Add new account</a> ",$_add_url);
 
 
             if ($this->adminonly) {
@@ -10494,7 +10494,7 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" <a class='btn btn-warning' href=%s>Create a new account belonging to reseller %s</a>",$_add_url,$this->filters['reseller']);
+                    printf (" <a class='btn btn-warning' href=%s>Add a new account for reseller %s</a>",$_add_url,$this->filters['reseller']);
                 }
             }
             print "</div>";
@@ -11444,7 +11444,7 @@ class Customers extends Records {
     function showAddForm($confirmPassword=false) {
 
         print "<div class='row-fluid'>
-        <h1 class=page-header>Create new account</h1>";
+        <h1 class=page-header>Add new account</h1>";
         print "<p>";
         print _("Accounts are used for login and to assign ownership to data created in the platform. ");
         printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
