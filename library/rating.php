@@ -1514,11 +1514,13 @@ class RatingTables {
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "name"=>"Domain",
-                                                                                  "checkType"=>'domain'
+                                                                                  "checkType"=>'domain',
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>15,
                                                                                   "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber"
+                                                                                  "name"=>"Subscriber",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "dest_id"=>array("size"=>12,
                                                                                   "name"=>"Destination",
@@ -1527,7 +1529,8 @@ class RatingTables {
                                                                                   "name"=>"Region"
                                                                                  ),
                                                                  "dest_name"=>array("size"=>20,
-                                                                                  "name"=>"Description"
+                                                                                  "name"=>"Description",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
                                                                                "checkType"=>'numeric',
@@ -1562,11 +1565,13 @@ class RatingTables {
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
+                                                                                  "name"=>"Domain",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
                                                                                "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "profile_name1"=>array("size"=>10,
                                                                                   "name"=>"Profile WD"
@@ -1581,7 +1586,8 @@ class RatingTables {
                                                                                   "name"=>"Fallback"
                                                                                  ),
                                                                  "timezone"     =>array("size"=>16,
-                                                                                  "name"=>"Timezone"
+                                                                                  "name"=>"Timezone",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "increment"     =>array("size"=>3,
                                                                                "checkType"=>'numeric',
@@ -1608,11 +1614,13 @@ class RatingTables {
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
                                                                                   "checkType"=>'domain',
-                                                                                  "name"=>"Domain"
+                                                                                  "name"=>"Domain",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "subscriber"=>array("size"=>25,
                                                                                "checkType"=>'sip_account',
                                                                                   "name"=>"Subscriber",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "application"=>array("size"=>6,
                                                                                   "name"=>"App"
@@ -1644,7 +1652,8 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                   "name"=>array("size"=>12,
-                                                                                  "name"=>"Profile"
+                                                                                  "name"=>"Profile",
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "rate_name1"=>array("size"=>12,
                                                                                   "name"=>"Rate 1"
@@ -1689,7 +1698,8 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>12,
-                                                                               "name"=>"Rate"
+                                                                               "name"=>"Rate",
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
@@ -1725,7 +1735,8 @@ class RatingTables {
                                                                                   "name"=>"Reseller"
                                                                                  ),
                                                                  "name"=>array("size"=>10,
-                                                                               "name"=>"Rate"
+                                                                               "name"=>"Rate",
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "destination"=>array("size"=>12,
                                                                                   "name"=>"Destination"
@@ -1750,10 +1761,12 @@ class RatingTables {
                                                                                   "name"=>"Price In"
                                                                                  ),
                                                                  "startDate"=>array("size"=>11,
-                                                                                  "name"=>"Start Date"
+                                                                                  "name"=>"Start Date",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "endDate"=>array("size"=>11,
-                                                                                  "name"=>"End Date"
+                                                                                  "name"=>"End Date",
+                                                                                "class"=>"span2"
                                                                                  )
 
                                                                   )
@@ -1771,11 +1784,13 @@ class RatingTables {
                                                                   "enum_tld"=>array("size"=>35,
                                                                                "mustExist"=>true,
                                                                                   "checkType"=>'domain',
-                                                                                  "name"=>"ENUM TLD"
+                                                                                  "name"=>"ENUM TLD",
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                   "e164_regexp"=>array("size"=>35,
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"E164 Regexp"
+                                                                                  "name"=>"E164 Regexp",
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "discount"=>array("size"=>10,
                                                                                "mustExist"=>true,
@@ -1794,7 +1809,8 @@ class RatingTables {
                                                  "fields"=>array("account"=>array("size"=>35,
                                                                                "name"=>"Subscriber",
                                                                                "checkType"=>'sip_account',
-                                                                               "mustExist"=>true
+                                                                               "mustExist"=>true,
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1822,24 +1838,27 @@ class RatingTables {
                                                  "exceptions" =>array('service'),
                                                  "fields"=>array("batch"=>array("size"=>40,
                                                                                "name"=>"Batch name",
-                                                                               "readonly"=>1
+                                                                               "readonly"=>1,
+                                                                               "class"=>"span3"
                                                                                 ),
                                                                  "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
+                                                                                "checkType"=>'numeric',
+                                                                                 "name"=>"Reseller"
                                                                                  ),
                                                                  "date_batch"=>array("size"=>11,
-                                                                                  "name"=>"Batch Date"
+                                                                                "name"=>"Batch Date",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "number"=>array("size"=>20,
-                                                                               "checkType"=>'numeric',
-                                                                               "mustExist"=>true,
-                                                                                  "name"=>"Card Number"
-                                                                                 ),
+                                                                                "checkType"=>'numeric',
+                                                                                "mustExist"=>true,
+                                                                                "name"=>"Card Number",
+                                                                                "class"=>"span2"
+                                                                                ),
                                                                  "id"=>array("size"=>20,
                                                                                "checkType"=>'numeric',
                                                                                "mustExist"=>true,
-                                                                                  "name"=>"Card Id"
+                                                                                  "name"=>"Card Id",
                                                                                  ),
                                                                  "value"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1850,7 +1869,8 @@ class RatingTables {
                                                                                   "name"=>"Lock"
                                                                                  ),
                                                                  "date_active"=>array("size"=>18,
-                                                                                  "name"=>"Activation Date"
+                                                                                  "name"=>"Activation Date",
+                                                                                "class"=>"span2"
                                                                                  )
 
                                                                   )
@@ -1862,10 +1882,12 @@ class RatingTables {
                                                  "size"=>15,
                                                  "exceptions" =>array('session','destination'),
                                                  "fields"=>array("username"=>array( "size"=>15,
-                                                                                    "readonly"=>1
+                                                                                    "readonly"=>1,
+                                                                                "class"=>"span2"
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
-                                                                                    "readonly"=>1
+                                                                                    "readonly"=>1,
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
@@ -1873,7 +1895,8 @@ class RatingTables {
                                                                                     "readonly"=>1
                                                                                  ),
                                                                  "action"=>array("size"=>15,
-                                                                                 "readonly"=>1
+                                                                                 "readonly"=>1,
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "duration"=>array("size"=>5
                                                                                  ),
@@ -1882,13 +1905,15 @@ class RatingTables {
                                                                  "session"=>array("size"=>30,
                                                                                  "readonly"=>1
                                                                                  ),
-                                                                 "description"=>array("size"=>30
+                                                                 "description"=>array("size"=>30,
+                                                                                "class"=>"span3"
                                                                                  ),
                                                                  "value"=>array("size"=>10
                                                                                  ),
                                                                  "balance"=>array("size"=>10
                                                                                  ),
                                                                  "date"=>array("size"=>18,
+                                                                                "class"=>"span2"
                                                                                  ))
 
 
@@ -1909,10 +1934,12 @@ class RatingTables {
                                                                                  ),
                                                                  "account"=>array("size"=>30,
                                                                                "readonly"=>1,
-                                                                               "name" => "Subscriber"
+                                                                               "name" => "Subscriber",
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "domain"=>array("size"=>15,
-                                                                               "readonly"=>1
+                                                                               "readonly"=>1,
+                                                                                "class"=>"span2"
                                                                                  ),
                                                                  "blocked"=>array("size"=>2,
                                                                                "readonly"=>1
@@ -4743,6 +4770,8 @@ class RatingTables {
         while ($j < $cc ) {
             $Fname=$metadata[$j]['name'];
             $size=$metadata[$j]['len'];
+            $class=$metadata[$j]['class'];
+
             if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                 $f_name="search_".$Fname;
                 $value=$_REQUEST[$f_name];
@@ -4924,7 +4953,6 @@ class RatingTables {
             ";
             }
         }
-        
         while ($k < $cc) {
             $th=$metadata[$k]['name'];
             if (!in_array($th,$this->tables[$this->table]['exceptions']) ) {
@@ -4978,7 +5006,7 @@ class RatingTables {
             while ($j < $cc ) {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
-            
+
                 if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
@@ -4992,21 +5020,11 @@ class RatingTables {
                     } else {
                         $field_size=$el_size;
                     }
-            
+                     
+                    $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                     if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                        $class="span1";
-                        if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
-                                $Fname == 'account'     || $Fname == 'action' ||
-                                $Fname == 'username'    ||
-                                preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
-                                $Fname == 'number'      || $Fname == 'enum_tld' ||
-                                preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
-                                $Fname == 'timezone' ||
-                                $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
-                        ) {
-                            $class="span2";
-                        } else if ($Fname == 'batch' || $Fname =='description') {
-                            $class="span3";
+                        if (!$class) {
+                            $class="span1";
                         }
                         print "<td><input class=$class type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
         
@@ -5073,6 +5091,7 @@ class RatingTables {
                 while ($j < $cc ) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
+
                     if ($this->tables[$this->table]['fields'][$Fname]['size']) {
                         $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
@@ -5080,21 +5099,11 @@ class RatingTables {
                     }
             
             
+                    $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            $class="span1";
-                            if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
-                                    $Fname == 'account'     || $Fname == 'action' ||
-                                    $Fname == 'username'    ||
-                                    preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
-                                    $Fname == 'number'      || $Fname == 'enum_tld' ||
-                                    preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
-                                    $Fname == 'timezone' ||
-                                    $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
-                            ) {
-                                $class="span2";
-                            } else if ($Fname == 'batch' || $Fname =='description' ) {
-                                $class="span3";
+                            if (!$class) {
+                                $class="span1";
                             }
                             print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
@@ -5204,28 +5213,18 @@ class RatingTables {
                 while ($j < $cc ) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-            
+                    
                     if ($this->tables[$this->table]['fields'][$Fname]['size']) {
                         $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
                         $field_size=$el_size;
                     }
             
+                    $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            $class="span1";
-                            if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
-                                    $Fname == 'account'     || $Fname == 'action' ||
-                                    $Fname == 'username'    ||
-                                    preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
-                                    $Fname == 'number'      || $Fname == 'enum_tld' || 
-                                    preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
-                                    $Fname == 'timezone' ||
-                                    $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
-                            ) {
-                                $class="span2";
-                            } else if ($Fname == 'batch' || $Fname =='description') {
-                                $class="span3";
+                            if (!$class){
+                                $class='span1';
                             }
                             print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
@@ -5347,19 +5346,22 @@ class RatingTables {
                 $value=$this->db->Record[$j];
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
-        
+                $class=$metadata[$j]['class'];
+
                 if ($this->tables[$this->table]['fields'][$Fname]['size']) {
                     $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
                 } else {
                     $field_size=$el_size;
                 }
         
+                $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                 if ($this->tables[$this->table]['fields'][$Fname]['readonly']=="1") {
                     $extra_form_els="disabled=true";
                 } else {
                     $extra_form_els="";
                 }
         
+                $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                 if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                     if (!$export) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) && !$this->readonly) {
@@ -5373,19 +5375,8 @@ class RatingTables {
                                 printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
 
                             } else {
-                                $class="span1";
-                                if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
-                                        $Fname == 'account'     || $Fname == 'action' ||
-                                        $Fname == 'username'    ||
-                                        preg_match("/date.*/",$Fname)  || $Fname == 'subscriber' ||
-                                        $Fname == 'number' || $Fname == 'enum_tld' ||
-                                        preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
-                                        $Fname == 'timezone' ||
-                                        $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname )
-                                ) {
-                                    $class='span2';
-                                } else if ($Fname == 'batch' || $Fname =='description') {
-                                    $class="span3";
+                                if (!$class) {
+                                    $class="span1";
                                 }
                                 print "<td>
                                 <input class='$class' type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
