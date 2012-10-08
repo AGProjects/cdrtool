@@ -1861,13 +1861,16 @@ class RatingTables {
                                                  "keys"=>array("id"),
                                                  "size"=>15,
                                                  "exceptions" =>array('session','destination'),
-                                                 "fields"=>array("username"=>array("size"=>15,
+                                                 "fields"=>array("username"=>array( "size"=>15,
+                                                                                    "readonly"=>1
                                                                                 ),
                                                                  "domain"=>array("size"=>15,
+                                                                                    "readonly"=>1
                                                                                  ),
                                                                  "reseller_id"=>array("size"=>8,
                                                                                "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
+                                                                                  "name"=>"Reseller",
+                                                                                    "readonly"=>1
                                                                                  ),
                                                                  "action"=>array("size"=>15,
                                                                                  "readonly"=>1
@@ -4992,9 +4995,18 @@ class RatingTables {
             
                     if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                         $class="span1";
-                        if ( $Fname == 'e164_regexp' ||
-                             $Fname == 'account') {
+                        if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
+                                $Fname == 'account'     || $Fname == 'action' ||
+                                $Fname == 'username'    ||
+                                preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
+                                $Fname == 'number'      || $Fname == 'enum_tld' ||
+                                preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
+                                $Fname == 'timezone' ||
+                                $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
+                        ) {
                             $class="span2";
+                        } else if ($Fname == 'batch' || $Fname =='description') {
+                            $class="span3";
                         }
                         print "<td><input class=$class type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
         
@@ -5071,9 +5083,18 @@ class RatingTables {
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                             $class="span1";
-                            if ( $Fname == 'dest_name' ||
-                                 $Fname == 'account') {
-                                $class="span1";
+                            if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
+                                    $Fname == 'account'     || $Fname == 'action' ||
+                                    $Fname == 'username'    ||
+                                    preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
+                                    $Fname == 'number'      || $Fname == 'enum_tld' ||
+                                    preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
+                                    $Fname == 'timezone' ||
+                                    $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
+                            ) {
+                                $class="span2";
+                            } else if ($Fname == 'batch' || $Fname =='description' ) {
+                                $class="span3";
                             }
                             print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
@@ -5193,9 +5214,18 @@ class RatingTables {
                     if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
                         if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
                             $class="span1";
-                            if ( $Fname == 'e164_regexp' ||
-                                 $Fname == 'account') {
+                            if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
+                                    $Fname == 'account'     || $Fname == 'action' ||
+                                    $Fname == 'username'    ||
+                                    preg_match("/date.*/",$Fname) || $Fname == 'subscriber' ||
+                                    $Fname == 'number'      || $Fname == 'enum_tld' || 
+                                    preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
+                                    $Fname == 'timezone' ||
+                                    $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname ) 
+                            ) {
                                 $class="span2";
+                            } else if ($Fname == 'batch' || $Fname =='description') {
+                                $class="span3";
                             }
                             print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
@@ -5223,7 +5253,7 @@ class RatingTables {
                     <td>
                     <input type=hidden name=table value=\"$this->table\">
                     <input type=hidden name=search_text value=\"$search_text\">
-                    <input class='btn' type=submit name=subweb_task value=Insert>
+                    <input class='btn btn-warning' type=submit name=subweb_task value=Insert>
                     </td>
                 </tr></thead>
                 </form>
@@ -5344,9 +5374,18 @@ class RatingTables {
 
                             } else {
                                 $class="span1";
-                                if ( $Fname == 'e164_regexp' ||
-                                     $Fname == 'account') {
-                                    $class="span2";
+                                if (    $Fname == 'e164_regexp' || $Fname == 'domain' ||
+                                        $Fname == 'account'     || $Fname == 'action' ||
+                                        $Fname == 'username'    ||
+                                        preg_match("/date.*/",$Fname)  || $Fname == 'subscriber' ||
+                                        $Fname == 'number' || $Fname == 'enum_tld' ||
+                                        preg_match("/profile_name.*/",$Fname) || $Fname == 'dest_name' ||
+                                        $Fname == 'timezone' ||
+                                        $Fname == 'name'        || preg_match("/rate_name[1-9]/",$Fname )
+                                ) {
+                                    $class='span2';
+                                } else if ($Fname == 'batch' || $Fname =='description') {
+                                    $class="span3";
                                 }
                                 print "<td>
                                 <input class='$class' type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>

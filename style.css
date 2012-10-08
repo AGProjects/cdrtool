@@ -268,7 +268,11 @@ ul.dropdown-menu  li{
       line-height:18px;
 }
 
-.cform, #rates_table input.span2, #rates_table td input.span1, #rates_table td input.btn{
+#rates_table td {
+    padding:2px;
+}
+
+.cform, #rates_table input.span2, #rates_table input.span3, #rates_table td input.span1, #rates_table td input.btn{
   margin: 0;
 }
 
