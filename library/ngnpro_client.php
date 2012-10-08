@@ -10506,7 +10506,7 @@ class Customers extends Records {
                 <tr>
                     <th></th>
                     <th>Id</th>
-                    <th>Alias of</th>
+                    <th>Impersonate</th>
                     <th>Username</th>
                     <th>Name</th>
                     <th>Organization</th>
@@ -11444,9 +11444,9 @@ class Customers extends Records {
     function showAddForm($confirmPassword=false) {
 
         print "<div class='row-fluid'>
-        <h1 class=page-header>Register new account</h1>";
+        <h1 class=page-header>Create new account</h1>";
         print "<p>";
-        print _("Accounts are used for login and to assign ownership to data created in the platform");
+        print _("Accounts are used for login and to assign ownership to data created in the platform. ");
         printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
         print "
