@@ -1205,7 +1205,7 @@ class Records {
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
-                printf ("<select class=span1 name=%s>",$name);
+                printf ("<select class=span2 name=%s>",$name);
                 print "<option>";
                 foreach (array_keys($this->customers) as $_res) {
                     printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
