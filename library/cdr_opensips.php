@@ -1744,8 +1744,8 @@ class CDRS_opensips extends CDRS {
 
                 } else {
                     if (!$this->export) {
-                        printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
-                }
+                       // printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
+                    }
 
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
@@ -3242,7 +3242,7 @@ class CDR_opensips extends CDR {
         $providerTimezone=$this->CDRS->CDRTool['provider']['timezone'];
 
         print "
-        <tr bgcolor=$inout_color>
+        <tr rel=tooltip data-placement='bottom' data-original-title='For more information about this call click the row.'>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->flow</nobr></td>
