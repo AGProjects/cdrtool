@@ -1626,9 +1626,7 @@ class SipDomains extends Records {
             }
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             <thead>
@@ -2205,9 +2203,7 @@ class SipAccounts extends Records {
 
             print "
             <p>
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-condensed table-striped'width=100%>
             <thead>
@@ -3235,9 +3231,7 @@ class SipAliases extends Records {
 
             print "
             <p>
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-condensed table-striped' width=100%>
             <thead>
@@ -3732,10 +3726,7 @@ class EnumRanges extends Records {
             }
 
             print "
-            <p>
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             <thead>
@@ -4523,9 +4514,7 @@ class EnumMappings extends Records {
             }
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-condensed table-striped' width=100%>
             <thead>
@@ -5796,10 +5785,7 @@ class DnsZones extends Records {
             }
 
             print "
-            <p>
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             <thead>
@@ -6669,10 +6655,7 @@ class DnsRecords extends Records {
             }
 
             print "
-            <p>
-            <table border=0 align=center>
-            <tr><td>$this->rows records found. Click on record id to edit the values.</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found. Click on record id to edit the values.</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             ";
@@ -7637,9 +7620,7 @@ class TrustedPeers extends Records {
             }
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
 
             <table class='table table-striped table-condensed' width=100%>
             <thead>
@@ -7912,9 +7893,7 @@ class Carriers extends Records {
             $this->rows = $result->total;
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-condensed table-striped' width=100%>
             ";
@@ -8337,9 +8316,7 @@ class Gateways extends Records {
             $this->rows = $result->total;
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             ";
@@ -8872,9 +8849,7 @@ class GatewayRules extends Records {
             $this->rows = $result->total;
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-striped table-condensed' width=100%>
             ";
@@ -9387,9 +9362,7 @@ class Routes extends Records {
             $this->rows = $result->total;
 
             print "
-            <table border=0 align=center>
-            <tr><td>$this->rows records found</td></tr>
-            </table>
+            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
             <p>
             <table class='table table-condensed table-striped'width=100%>
             ";
@@ -10502,8 +10475,12 @@ class Customers extends Records {
             }
 
             print "
-            <table border=0 align=center width=100%>
-            <tr><td align=left width=33%>";
+            <div class='alert alert-success'><center>$this->rows records found. Click on the id to edit the account.</center></div>
+            ";
+
+            print "
+            <div class=\"row-fluid\">
+            ";
 
             $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
             urlencode($this->SoapEngine->service)
@@ -10518,16 +10495,9 @@ class Customers extends Records {
                     urlencode($this->SoapEngine->service),
                     urlencode($this->filters['reseller'])
                     );
-                    printf (" | <a href=%s>Create a new account belonging to reseller %s</a> ",$_add_url,$this->filters['reseller']);
+                    printf (" | <a href=%s>Create a new account belonging to reseller %s</a></div>",$_add_url,$this->filters['reseller']);
                 }
             }
-
-            print "
-            <td align=center width=33%>$this->rows records found. Click on the id to edit the account.</td>
-            <td>
-            </td></tr>
-            </table>
-            ";
 
             if ($this->rows > 1) {
 

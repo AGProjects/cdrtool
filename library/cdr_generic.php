@@ -681,18 +681,13 @@ class CDRS {
             ";
             if (!$hide_rows) {
                 print "
-                <table width=100%>
-                <tr>
-                <td align=center>
-                ";
+                <div class=\"alert alert-success\"><center>";
                 if ($this->rows == 0) {
-                    print "No records found.";
+                    print "No records found";
                 } else {
-                    print "$this->rows records found. ";
+                    print "$this->rows records found";
                 }         
-                print "</td>
-                </tr>
-                </table>
+                print "</center></div>
                 ";
             }
         }
@@ -759,18 +754,14 @@ class CDRS {
             ";
             if (!$hide_rows) {
                 print "
-                <table width=100%>
-                <tr>
-                <td align=center>
-                ";
+                <div class=\"alert alert-success\"><center>";
                 if ($this->rows == 0) {
-                    print "No records found.";
+                    print "No records found";
                 } else {
-                    print "$this->rows records found. ";
+                    print "$this->rows records found";
                 }         
-                print "</td>
-                </tr>
-                </table>
+                print "</center>
+                </div>
                 ";
             }
         }
