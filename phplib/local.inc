@@ -883,7 +883,7 @@ class pageLayout {
 
         if ($perm->have_perm("callsearch")) {  
             print "
-                    <li><a href=callsearch.phtml>CDRs</a></li>";
+                    <li><a href=callsearch.phtml>CDR</a></li>";
         }
 
         if ($perm->have_perm("rates")) {
