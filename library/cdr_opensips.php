@@ -152,25 +152,25 @@ class CDRS_opensips extends CDRS {
 
     function showTableHeader() {
         print "
-        <table class='table table-hover table-condensed' width=100%>
-        <thead>
-        <tr>
-        <th>Id</th>
-        <th>Start Time</th>
-        <th>Flow</th>
-        <th>SIP Caller</th>
-        <th>Caller Location</th>
-        <th>Sip Proxy</th>
-        <th>Media</th>
-        <th>SIP Destination</th>
-        <th>Dur</th>
-        <th>Price</th>
-        <th align=right>KBIn</th>
-        <th align=right>KBOut</th>
-        <th align=right>Codecs</th>
-        <th align=right>Status</th>
-        </tr>
-        </thead>
+        <table class='table table-hover table-condensed'>
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Start Time</th>
+                    <th>Flow</th>
+                    <th>SIP Caller</th>
+                    <th>Caller Location</th>
+                    <th>Sip Proxy</th>
+                    <th>Media</th>
+                    <th>SIP Destination</th>
+                    <th>Dur</th>
+                    <th>Price</th>
+                    <th>KBIn</th>
+                    <th>KBOut</th>
+                    <th>Codecs</th>
+                    <th class='pull-right'>Status</th>
+                </tr>
+            </thead>
         ";
     }
 
@@ -182,21 +182,21 @@ class CDRS_opensips extends CDRS {
         if (!$this->export) {
 
             print  "
-            <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
-            <thead>
-            <tr>
-            <td>Id</td>
-            <td><b>Start Time</b>
-            <td><b>SIP Caller</b></td>
-            <td><b>Caller Location</b></td>
-            <td><b>Sip Proxy</b></td>
-            <td><b>SIP Destination</b></td>
-            <td><b>Duration</b></td>
-            <td><b>Price</b></td>
-            <td align=right><b>KBIn</b></td>
-            <td align=right><b>KBOut</b></td>
-            </tr>
-            </thead>
+            <table class='table table-striped table-condensed'>
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Start Time</th>
+                        <th>SIP Caller</th>
+                        <th>Caller Location</th>
+                        <th>Sip Proxy</th>
+                        <th>SIP Destination</th>
+                        <th>Duration</th>
+                        <th>Price</th>
+                        <th>KBIn</th>
+                        <th>KBOut</th>
+                    </tr>
+                </thead>
             ";
         } else {
             print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,RemotePartyId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Applications,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
@@ -209,24 +209,24 @@ class CDRS_opensips extends CDRS {
         if (!$this->export) {
 
             print "
-            <table class='table table-striped table-condensed' border=0 cellspacing=2 width=100%>
-            <thead>
-                <tr>
-                <td></td>
-                <td>            <b>Calls</b></td>
-                <td align=right><b>Seconds</b></td>
-                <td align=right><b>Minutes</b></td>
-                <td align=right><b>Hours</b></td>
-                <td align=right><b>Price</b></td>
-                <td align=right><b>TrafficIn(MB)</b></td>
-                <td align=right><b>TrafficOut(MB)</b></td>
-                <td align=center colspan=2><b>Success</b></td>
-                <td align=center colspan=2><b>Failure</b></td>
-                <td>            <b>$group_byPrint</b></td>
-                <td>            <b>Description</b></td>
-                <td>            <b>Action</b></td>
-            </tr>
-            </thead>
+            <table class='table table-striped table-condensed'>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Calls</th>
+                        <th>Seconds</th>
+                        <th>Minutes</th>
+                        <th>Hours</th>
+                        <th>Price</th>
+                        <th>TrafficIn(MB)</th>
+                        <th>TrafficOut(MB)</th>
+                        <th colspan=2>Success</th>
+                        <th colspan=2>Failure</th>
+                        <th>$group_byPrint</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
             ";
         } else {
             print "id,Calls,Seconds,Minutes,Hours,Price,TrafficIn(MB),TrafficOut(MB),Success(%),Success(calls),Failure(%),Failure(calls),$group_byPrint,Description\n";
