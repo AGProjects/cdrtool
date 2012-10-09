@@ -891,6 +891,7 @@ class CDRS_opensips extends CDRS {
             </td>
             <td valign=top>   ";
             $this->f->show_element("flow","");
+            print "&nbsp;";
             $this->f->show_element("application","");
             print " Media Info: ";
             $this->f->show_element("media_info","");
@@ -908,6 +909,7 @@ class CDRS_opensips extends CDRS {
             $this->f->show_element("duration","");
             print "&nbsp;";
             $this->f->show_element("sip_status","");
+            print "&nbsp;";
             $this->f->show_element("sip_status_class","");
             print "
             </td>
@@ -921,6 +923,7 @@ class CDRS_opensips extends CDRS {
             <td valign=top>
              ";
             $this->f->show_element("order_by","");
+            print "&nbsp;";
             $this->f->show_element("order_type","");
 
             if ($perm->have_perm("statistics")) {
