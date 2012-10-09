@@ -4814,16 +4814,6 @@ class RatingTables {
             
             if ($this->settings['socketIPforClients'] && $this->settings['socketPort']) {
         
-                if ($ReloadRatingTables) {
-                    reloadRatingEngineTables();
-
-                } else {
-                    $this->db->query("select var_value from settings where var_name = 'reloadRating' and var_value='1'");
-                    if ($this->db->num_rows()) {
-                        print " | <a href=rating_tables.phtml?ReloadRatingTables=1&table=$this->table><font color=red>Reload rating tables</font></a>";
-                    }
-                }
-        
                 $engineAddress=$this->settings['socketIPforClients'].":".$this->settings['socketPort'];
 
                 if ($this->checkRatingEngineConnection()) {
@@ -4891,8 +4881,18 @@ class RatingTables {
                 ",$this->table,$this->csv_export[$this->table],$this->csv_export[$this->table]);
             }
         
-            print "
-            </form></td>
+            
+            if ($this->settings['socketIPforClients'] && $this->settings['socketPort']) {
+                if ($ReloadRatingTables) {
+                    reloadRatingEngineTables();
+                } else {
+                    $this->db->query("select var_value from settings where var_name = 'reloadRating' and var_value='1'");
+                    if ($this->db->num_rows()) {
+                        print "<a class='btn btn-danger' href=rating_tables.phtml?ReloadRatingTables=1&table=$this->table>Reload rating tables</a>";
+                    }
+                }
+            }
+            print "</form></td>
             </tr>
             </table>
             ";
