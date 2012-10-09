@@ -1,3 +1,34 @@
+cdrtool (9.0.0) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Quote sql statements in rating engine
+  * Adjusted radius procedure to not update media info from mediaproxy
+  * Fixes in MaxRate CSV writter
+
+  [ Web Interface ]
+
+  * Refactored HTML layout using bootstrap project
+  * Quote sql statements in authentication
+  * Added Jingle Me icons
+  * Fixed export balance link
+  * Fixed updating accounts with empty passwords
+
+  [ NGNPro client ]
+
+  * Fixed sip client enrollment errors
+  * Added timezone and language to enrollment
+  * Fixed email template functions
+  * Fixed sending registration email to billing email address
+  * Fixed owner in sip settings page
+  * Moved SOAP error from local lib to syslog
+  * Updated password reminder function
+  * Quote sql statements in cc processing
+  * Update sipo client page translations
+
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Tue, 09 Oct 2012 15:03:55 +0200
+
 cdrtool (8.4.0) unstable; urgency=low
 
   [ Rating Engine ]
