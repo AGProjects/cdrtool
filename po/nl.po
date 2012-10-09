@@ -1,20 +1,15 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: 2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-10-08 15:53+0200\n"
-"PO-Revision-Date: 2011-09-27 11:31+0100\n"
+"PO-Revision-Date: 2012-10-09 14:50+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language-Team: language@ag-projects.com\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
 #. define_syslog_variables();
 #: /var/www/CDRTool/library/sip_settings.php:182
@@ -211,11 +206,11 @@ msgstr "Uitloggen"
 
 #: /var/www/CDRTool/library/sip_settings.php:1266
 msgid "Home Node"
-msgstr "Home Node"
+msgstr "Home node"
 
 #: /var/www/CDRTool/library/sip_settings.php:1269
 msgid "SIP Thor Node"
-msgstr "SIP Thor Node"
+msgstr "SIP Thor node"
 
 #: /var/www/CDRTool/library/sip_settings.php:1277
 msgid "Unknown"
@@ -239,7 +234,7 @@ msgstr "Mobiel %s"
 #: /var/www/CDRTool/library/sip_settings.php:1349
 #, php-format
 msgid "Other"
-msgstr "Anders"
+msgstr "Andere"
 
 #: /var/www/CDRTool/library/sip_settings.php:1484
 #: /var/www/CDRTool/library/sip_settings.php:1660
@@ -265,7 +260,7 @@ msgstr "PSTN Privacy"
 #: /var/www/CDRTool/library/sip_settings.php:1678
 #, php-format
 msgid "Rate on net"
-msgstr ""
+msgstr "Rate on net"
 
 #: /var/www/CDRTool/library/sip_settings.php:1509
 #: /var/www/CDRTool/library/sip_settings.php:1687
@@ -292,7 +287,7 @@ msgstr "Prijslijst"
 
 #: /var/www/CDRTool/library/sip_settings.php:1867
 msgid "You must set the Owner to enable Credit Card Payments. "
-msgstr "U moet de Eigenaar invullen om Credit Card betalingen aan te zetten."
+msgstr "U moet de eigenaar invullen om Credit Card betalingen aan te zetten."
 
 #: /var/www/CDRTool/library/sip_settings.php:1891
 #: /var/www/CDRTool/library/sip_settings.php:1951
@@ -451,7 +446,7 @@ msgstr "SIP Account"
 #: /var/www/CDRTool/library/sip_settings.php:2342
 #: /etc/cdrtool/local/sip_settings.php:974
 msgid "SIP Address"
-msgstr "SIP Adres"
+msgstr "SIP adres"
 
 #: /var/www/CDRTool/library/sip_settings.php:2362
 #: /etc/cdrtool/local/sip_settings.php:994
@@ -492,9 +487,9 @@ msgstr "Aliassen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2444
 #: /etc/cdrtool/local/sip_settings.php:1064
-#, fuzzy, php-format
+#, php-format
 msgid "You may create new aliases for incoming calls"
-msgstr "U mag nieuwe aliassen maken onder hetzelfde domein"
+msgstr "U kunt nieuwe aliassen maken voor inkomende gesprekken"
 
 #: /var/www/CDRTool/library/sip_settings.php:2472
 #: /etc/cdrtool/local/sip_settings.php:1092
@@ -504,12 +499,12 @@ msgstr "SIP Alias"
 #: /var/www/CDRTool/library/sip_settings.php:2484
 #: /etc/cdrtool/local/sip_settings.php:1104
 msgid "New SIP Alias"
-msgstr "Nieuwe SIP Alias"
+msgstr "Nieuwe SIP alias"
 
 #: /var/www/CDRTool/library/sip_settings.php:2495
 #: /etc/cdrtool/local/sip_settings.php:1115
 msgid "Save aliases"
-msgstr "Bewaar Aliassen"
+msgstr "Bewaar aliassen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2512
 #: /etc/cdrtool/local/sip_settings.php:1132
@@ -615,7 +610,7 @@ msgid ""
 "Download and install <a href=http://icanblink.com target=blink>Blink</a> "
 "preconfigured with your SIP account:"
 msgstr ""
-"Download en installeer <a href=http://icanblink.com target=blink>Blink</a> "
+"Download en installer <a href=http://icanblink.com target=blink>Blink</a> "
 "geconfigureerd met uw SIP account:"
 
 #: /var/www/CDRTool/library/sip_settings.php:2909
@@ -875,7 +870,7 @@ msgstr "Abonnee is geïnformeerd op %s"
 #: /var/www/CDRTool/library/sip_settings.php:4672
 #, php-format
 msgid "Current Balance"
-msgstr "Huidige Balans"
+msgstr "Huidige balans"
 
 #: /var/www/CDRTool/library/sip_settings.php:4678
 msgid "Your current balance is"
@@ -967,7 +962,7 @@ msgstr "Balans"
 
 #: /var/www/CDRTool/library/sip_settings.php:5074
 msgid "Total Credit"
-msgstr "Totaal Tegoed"
+msgstr "Totaal beltegoed"
 
 #: /var/www/CDRTool/library/sip_settings.php:5090
 msgid "Total Debit"
@@ -977,9 +972,8 @@ msgstr "Totaal Debet"
 #: /var/www/CDRTool/library/sip_settings.php:5106
 #: /var/www/CDRTool/library/sip_settings.php:5110
 #: /var/www/CDRTool/library/sip_settings.php:5114
-#, fuzzy
 msgid "Export"
-msgstr "Support"
+msgstr "Exporteer"
 
 #: /var/www/CDRTool/library/sip_settings.php:5104
 #: /var/www/CDRTool/library/sip_settings.php:5112
@@ -996,7 +990,7 @@ msgstr "Account"
 
 #: /var/www/CDRTool/library/sip_settings.php:5138
 msgid "Final Balance"
-msgstr "Eind Balans"
+msgstr "Eindbalans"
 
 #: /var/www/CDRTool/library/sip_settings.php:5249
 #: /var/www/CDRTool/library/sip_settings.php:5251
@@ -1052,9 +1046,9 @@ msgstr ""
 "Voor help over de SIP2SIP service bezoek <a href=%s target=sip2sip>%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:237
-#, fuzzy, php-format
+#, php-format
 msgid "More Help"
-msgstr "Heeft u meer hulp nodig?"
+msgstr "Meer hulp nodig?"
 
 #: /etc/cdrtool/local/sip_settings.php:246
 #, fuzzy, php-format
@@ -1066,23 +1060,27 @@ msgstr ""
 "%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:248
-#, fuzzy, php-format
+#, php-format
 msgid "Account Deletion"
-msgstr "Account"
+msgstr "Account verwijderen"
 
 #: /etc/cdrtool/local/sip_settings.php:252
 msgid ""
 "Use the following credentials to login <a href=http://support.ag-projects."
 "com>here</a> and request the deletion of your SIP account:"
 msgstr ""
+"Gebruik de volgende gegevens om in the loggen <a href=http://support.ag-"
+"projects.com>here</a> en verzoek om uw SIP account te wissen:"
 
 #: /etc/cdrtool/local/sip_settings.php:371
 #: /etc/cdrtool/local/sip_settings.php:1310
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "For help a about SIP2SIP service visit <a href=http://wiki.sip2sip."
 "info>http://wiki.sip2sip.info</a>"
-msgstr "Voor help over de SIP2SIP service bezoek http://wiki.sip2sip.info"
+msgstr ""
+"Voor help over de SIP2SIP service bezoek <a href=http://wiki.sip2sip."
+"info>http://wiki.sip2sip.info</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:383
 #: /etc/cdrtool/local/sip_settings.php:1322
@@ -1097,12 +1095,13 @@ msgstr "Extra support wordt gegeven door een externe website."
 
 #: /etc/cdrtool/local/sip_settings.php:397
 #: /etc/cdrtool/local/sip_settings.php:1336
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "Use your web browser and open a ticket at <a href=http://support.ag-projects."
 "com>http://support.ag-projects.com</a>"
 msgstr ""
-"Gebruik uw web browser en open een 'ticket' op http://support.ag-projects.com"
+"Gebruik uw web browser en open een 'ticket' op <a href=http://support.ag-"
+"projects.com>http://support.ag-projects.com<a/>"
 
 #: /etc/cdrtool/local/sip_settings.php:399
 #: /etc/cdrtool/local/sip_settings.php:1338
@@ -1132,13 +1131,12 @@ msgid "Did you already get your SIP address? "
 msgstr "Heeft U al uw SIP adres?"
 
 #: /etc/cdrtool/local/sip_settings.php:1751
-#, fuzzy
 msgid ""
 "You may access your account <a href=https://mdns.sipthor.net/sip_settings."
 "phtml>here</a>. "
 msgstr ""
 " U kunt uw SIP account gegevens <a href=https://mdns.sipthor.net/"
-"sip_settings.phtml>hier</a>  bereiken. "
+"sip_settings.phtml>hier</a> bereiken. "
 
 #: /etc/cdrtool/local/sip_settings.php:1768
 msgid "Failed to open timezone file."
@@ -1172,7 +1170,7 @@ msgstr "E-mail"
 #. ";
 #: /etc/cdrtool/local/sip_settings.php:1915
 msgid "Captcha"
-msgstr ""
+msgstr "Captcha"
 
 #: /etc/cdrtool/local/sip_settings.php:2431
 msgid "My first name"
@@ -1188,7 +1186,7 @@ msgstr "Mijn email-adres"
 
 #: /etc/cdrtool/local/sip_settings.php:2500
 msgid "My domain name"
-msgstr "Mijn domein naam"
+msgstr "Mijn domeinnaam"
 
 #: /var/www/CDRTool/library/cc_processor.php:523
 msgid "Email"
@@ -1226,7 +1224,7 @@ msgstr "BTW"
 #: /var/www/CDRTool/library/cc_processor.php:636
 #: /var/www/CDRTool/library/cc_processor.php:647
 msgid "Total Due"
-msgstr "Totaal Verschuldigd"
+msgstr "Totaal verschuldigd"
 
 #: /var/www/CDRTool/library/cc_processor.php:658
 msgid "Credit Card Details"
@@ -1254,13 +1252,13 @@ msgstr "Kopen"
 
 #: /var/www/CDRTool/library/cc_processor.php:781
 msgid "You have no items in your cart. "
-msgstr "U heb geen items in de winkelwagen"
+msgstr "U heeft geen items in de winkelwagen"
 
 #: /var/www/CDRTool/library/cc_processor.php:782
 #: /var/www/CDRTool/library/cc_processor.php:874
 #: /var/www/CDRTool/library/cc_processor.php:890
 msgid "Go Back"
-msgstr "Ga Terug"
+msgstr "Ga terug"
 
 #: /var/www/CDRTool/library/cc_processor.php:804
 msgid "Amount cannot be zero"
@@ -1276,7 +1274,7 @@ msgstr "Ongeldige Achternaam gegeven"
 
 #: /var/www/CDRTool/library/cc_processor.php:816
 msgid "Invalid Email Address provided"
-msgstr "Ongeldig Email Adres gegeven"
+msgstr "Ongeldig email adres gegeven"
 
 #: /var/www/CDRTool/library/cc_processor.php:820
 msgid "Invalid Credit Card Number"
@@ -1292,11 +1290,11 @@ msgstr "Ongeldig Kaart Verificatie Nummer"
 
 #: /var/www/CDRTool/library/cc_processor.php:833
 msgid "Invalid Address"
-msgstr "Ongeldig Adres"
+msgstr "Ongeldig adres"
 
 #: /var/www/CDRTool/library/cc_processor.php:837
 msgid "Invalid City"
-msgstr "Foute Stad"
+msgstr "Ongeldige stad"
 
 #: /var/www/CDRTool/library/cc_processor.php:860
 msgid "Error"
