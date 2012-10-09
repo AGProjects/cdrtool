@@ -19,21 +19,31 @@ class PrepaidCards {
 
         $this->PHP_SELF = $_SERVER['PHP_SELF'];
 
-        print "<h3>Prepaid card generator</h3>";
+        print "<form action=$this->PHP_SELF method=posti class='form-horizontal'>
+            <div class=control-group>
+                <label class=control-label>
+                Batch name
+                </label>
+                <div class=controls>
+                    <input type=text name=batch>
+                </div>
+            </div>
 
-        print "<form action=$this->PHP_SELF method=post>
-        <table border=0 class=border cellpadding=2>";
-        print "
-
-        <tr><td>Batch name</td>
-            <td><input type=text name=batch></td>
-        </tr>
-
-        <tr><td>Begins with</td>
-            <td><input type=text name=start></td>
-        </tr>
-        <tr><td>Number of digits</td>
-            <td>
+            <div class=control-group>
+                <label class=control-label>
+                Begins with
+                </label>
+                <div class=controls>
+                    <input type=text name=start>
+                </div>
+            </div>
+        
+            <div class=control-group>
+                <label class=control-label>
+                    Number of digits
+                </label>
+                <div class=controls>
+            
             <select name=digits>
             	<option>11
             	<option>12
@@ -41,23 +51,42 @@ class PrepaidCards {
             	<option>14
             	<option>15
             </select>
-            </td>
-        </tr>
-        <tr><td>Number of cards</td>
-            <td><input type=text size=6 name=nr_cards value=100></td>
-        </tr>
-        <tr><td>Value:</td>
-            <td><input type=text size=6 name=value value=10></td>
-        </tr>
-        <tr><td>Reseller:</td>
-            <td><input type=text size=6 name=reseller value=></td>
-        </tr>
-        <tr>
-        <td colspan=2><input type=submit value=Generate>
-        </td>
-        </tr>
-        <input type=hidden name=action value=generate>
-        </table>
+                </div>
+            </div>
+            
+        
+            <div class=control-group>
+                <label class=control-label>
+                    Number of cards
+                </label>
+                <div class=controls>
+            <input type=text size=6 name=nr_cards value=100>
+                </div>
+            </div>
+        
+            <div class=control-group>
+                <label class=control-label>
+                    Value
+                </label>
+                <div class=controls>
+            <input type=text size=6 name=value value=10>
+                </div>
+            </div>
+        
+            <div class=control-group>
+                <label class=control-label>
+                    Reseller
+                </label>
+                <div class=controls>
+            <input type=text size=6 name=reseller value=>
+                </div>
+            </div>
+        
+            <div class='form-actions'> 
+                <input class='btn btn-warning' type=submit value=Generate>
+            </div>
+        
+            <input type=hidden name=action value=generate>
         </form>
         ";
     }
@@ -280,16 +309,19 @@ class PrepaidCards {
         dprint($query);
 
         $this->db->query($query);
-        print "<table border=1 cellpadding=4>";
+        print "<table class='table table-condesed table-striped table-bordered'>";
 
-        print "<tr bgcolor=lightgrey>
-        <td>Reseller</td>
-        <td>Cards</td>
-        <td>Date</td>
-        <td>Batch</td>
-        <td colspan=3>Download</td>
-        <td>Actions</td>
+        print "
+            <thead>
+            <tr>
+        <th>Reseller</th>
+        <th>Cards</th>
+        <th>Date</th>
+        <th>Batch</th>
+        <th colspan=3>Download</th>
+        <th>Actions</th>
         </tr>
+        </thead>
         ";
 
         while ($this->db->next_record()) {
