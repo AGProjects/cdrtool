@@ -167,8 +167,8 @@ class CDRS_opensips extends CDRS {
         <th>Price</th>
         <th align=right>KBIn</th>
         <th align=right>KBOut</th>
-        <th align=right>Status</th>
         <th align=right>Codecs</th>
+        <th align=right>Status</th>
         </tr>
         </thead>
         ";
@@ -3252,8 +3252,8 @@ class CDR_opensips extends CDR {
         }
 
         print "
-        <td valign=top align=right>$status_color $this->disconnectPrint</span></td>
         <td valign=top align=right>$this->SipCodec</td>
+        <td valign=top align=right>$status_color $this->disconnectPrint</span></td>
         </tr>
         <tr class=extrainfo id='row$found'>
         <td></td>
