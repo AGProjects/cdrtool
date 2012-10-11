@@ -852,11 +852,11 @@ class pageLayout {
         $tz=$CDRTool['provider']['timezone'];
         
         if (is_readable($CDRTool['Path']."/images/logo.gif")) {
-            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
+            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
         } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
-            printf ("span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
+            printf ("span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height:35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
         } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
-            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img height=\"35px\"src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
+            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
         } else {
             $this->hasAGProjectslogo=1;
             print '<a class="brand" href=http://cdrtool.ag-projects.com target=agprojects>CDRTool</a>';
