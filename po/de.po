@@ -3,18 +3,18 @@ msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-10-08 15:53+0200\n"
-"PO-Revision-Date: 2010-03-30 16:03+0100\n"
+"PO-Revision-Date: 2012-10-11 17:20+0100\n"
 "Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
 #. define_syslog_variables();
 #: /var/www/CDRTool/library/sip_settings.php:182
 msgid "unlimited"
-msgstr ""
+msgstr "unbegrenzt"
 
 #: /var/www/CDRTool/library/sip_settings.php:208
 msgid "Error: missing sip_engine in login credentials"
@@ -26,9 +26,9 @@ msgid "Status"
 msgstr "Status"
 
 #: /var/www/CDRTool/library/sip_settings.php:291
-#, php-format
+#, fuzzy, php-format
 msgid "Deny password change"
-msgstr ""
+msgstr "Passwortänderung ablehnen"
 
 #: /var/www/CDRTool/library/sip_settings.php:302
 #: /var/www/CDRTool/library/sip_settings.php:307
@@ -44,7 +44,7 @@ msgstr "Ablehnen Anonym"
 #: /var/www/CDRTool/library/sip_settings.php:321
 #, php-format
 msgid "Email Missed Calls"
-msgstr ""
+msgstr "Liste verpasster Anrufe per Email verschicken"
 
 #: /var/www/CDRTool/library/sip_settings.php:337
 msgid "Identity"
@@ -64,7 +64,7 @@ msgstr "Weiterleitung"
 
 #: /var/www/CDRTool/library/sip_settings.php:341
 msgid "DND"
-msgstr ""
+msgstr "nicht stören"
 
 #: /var/www/CDRTool/library/sip_settings.php:342
 msgid "Contacts"
@@ -87,7 +87,7 @@ msgstr "Anwesenheit"
 
 #: /var/www/CDRTool/library/sip_settings.php:359
 msgid "DID"
-msgstr ""
+msgstr "DID"
 
 #: /var/www/CDRTool/library/sip_settings.php:366
 msgid "Every day"
@@ -260,7 +260,7 @@ msgstr "PSTN Privatsphäre"
 #: /var/www/CDRTool/library/sip_settings.php:1678
 #, php-format
 msgid "Rate on net"
-msgstr ""
+msgstr "Netzinterne Tarife"
 
 #: /var/www/CDRTool/library/sip_settings.php:1509
 #: /var/www/CDRTool/library/sip_settings.php:1687
@@ -283,7 +283,7 @@ msgstr "Sprach Mailbox"
 #: /var/www/CDRTool/library/sip_settings.php:1849
 #, php-format
 msgid "Price list"
-msgstr ""
+msgstr "Preisliste"
 
 #: /var/www/CDRTool/library/sip_settings.php:1867
 msgid "You must set the Owner to enable Credit Card Payments. "
@@ -411,6 +411,8 @@ msgid ""
 "This copy will be kept on your profile until the credit card transaction has "
 "been approved. "
 msgstr ""
+"Diese Kopie wird in Ihrem Profil aufbewahrt, bis die Kreditkarten-"
+"Transaktion genehmigt worden ist."
 
 #: /var/www/CDRTool/library/sip_settings.php:2222
 msgid "Name printed on the Credit Card"
@@ -548,7 +550,7 @@ msgstr "Registrierte SIP-Geräte"
 #: /var/www/CDRTool/library/sip_settings.php:2630
 #: /var/www/CDRTool/library/sip_settings.php:2796
 msgid "Month"
-msgstr ""
+msgstr "Monat"
 
 #: /var/www/CDRTool/library/sip_settings.php:2631
 #: /var/www/CDRTool/library/sip_settings.php:2632
@@ -559,18 +561,18 @@ msgstr ""
 #: /var/www/CDRTool/library/sip_settings.php:2799
 #: /var/www/CDRTool/library/sip_settings.php:2800
 msgid "Months"
-msgstr ""
+msgstr "Monate"
 
 #: /var/www/CDRTool/library/sip_settings.php:2658
 #: /var/www/CDRTool/library/sip_settings.php:2758
 #, php-format
 msgid "Register New Number"
-msgstr ""
+msgstr "New Nummer registrieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:2668
-#, php-format
+#, fuzzy, php-format
 msgid "Telephone Number (+%s %s) for %d months"
-msgstr ""
+msgstr "Telefonnummer (+%s %s) für %d Monate"
 
 #: /var/www/CDRTool/library/sip_settings.php:2719
 #, fuzzy, php-format
@@ -584,38 +586,41 @@ msgstr "Kartennummer"
 
 #: /var/www/CDRTool/library/sip_settings.php:2767
 msgid "Select a region where you want to have a telephone number: "
-msgstr ""
+msgstr "Wählen Sie die Wunschregion für Ihre Telefonnummer:"
 
 #: /var/www/CDRTool/library/sip_settings.php:2792
 msgid "Select the duration for which you want to use the telephone number: "
-msgstr ""
+msgstr "Wählen Sie die Gültigkeitdauer für Ihre Telefonnummer"
 
 #: /var/www/CDRTool/library/sip_settings.php:2830
 #, php-format
 msgid "Support"
-msgstr ""
+msgstr "Hilfe"
 
 #: /var/www/CDRTool/library/sip_settings.php:2838
 #, php-format
 msgid "To request support you may send an e-mail to %s"
-msgstr ""
+msgstr "Für weitere Hilfe senden Sie eine Email an %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2842
 #, php-format
 msgid "For more information visit %s"
-msgstr ""
+msgstr "Für weitere Informationen besuchen Sie %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2887
-#, php-format
+#, fuzzy, php-format
 msgid ""
 "Download and install <a href=http://icanblink.com target=blink>Blink</a> "
 "preconfigured with your SIP account:"
 msgstr ""
+"Sie können <a href=http://icanblink.com target=blink>Blink</a> konfiguriert "
+"mit Ihrem SIP Konto herunter laden und installieren: "
 
 #: /var/www/CDRTool/library/sip_settings.php:2909
 #, php-format
 msgid "To download Blink visit <a href='%s' target=blink>%s</a>"
 msgstr ""
+"Um Blink herunter zu laden besuchen Sie <a href='%s' target=blink>%s</a>"
 
 #: /var/www/CDRTool/library/sip_settings.php:2915
 #, php-format
@@ -623,12 +628,16 @@ msgid ""
 "If you have already installed Blink, you can configure it to use your SIP "
 "account:"
 msgstr ""
+"Wenn Sie Blink bereits installiert haben, können Sie es für Ihr SIP Konto "
+"konfigurieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:2936
 msgid ""
 "<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime "
 "Environment</a> (JRE) must be activated in the web browser. "
 msgstr ""
+"<a href='http://www.java.com/en/download/manual.jsp'>Java Laufzeit Umgebung</"
+"a> (JRE) muss im Web-Browser aktiviert werden. "
 
 #: /var/www/CDRTool/library/sip_settings.php:2970
 #: /etc/cdrtool/local/sip_settings.php:482
@@ -651,7 +660,7 @@ msgstr "Passwort"
 #: /var/www/CDRTool/library/sip_settings.php:3006
 #: /etc/cdrtool/local/sip_settings.php:518
 msgid "Password can be changed only by the operator"
-msgstr ""
+msgstr "Das Passwort kann nur durch einen Administrator geändert werden"
 
 #: /var/www/CDRTool/library/sip_settings.php:3009
 #: /etc/cdrtool/local/sip_settings.php:521
@@ -774,7 +783,7 @@ msgstr "Timeout bei nicht Erreichbarkeit"
 #: /var/www/CDRTool/library/sip_settings.php:3389
 #: /etc/cdrtool/local/sip_settings.php:904
 msgid "Tabs"
-msgstr ""
+msgstr "Tabs"
 
 #: /var/www/CDRTool/library/sip_settings.php:3421
 #: /etc/cdrtool/local/sip_settings.php:926
@@ -902,7 +911,7 @@ msgstr "Hinzufügen"
 #: /var/www/CDRTool/library/sip_settings.php:4729
 #, php-format
 msgid "Refund Transaction"
-msgstr ""
+msgstr "Rückerstattungsvorgang"
 
 #: /var/www/CDRTool/library/sip_settings.php:4739
 #, fuzzy
@@ -911,7 +920,7 @@ msgstr "Ergebnisse"
 
 #: /var/www/CDRTool/library/sip_settings.php:4755
 msgid "Refund"
-msgstr ""
+msgstr "Rückerstattung"
 
 #: /var/www/CDRTool/library/sip_settings.php:4771
 #, php-format
@@ -942,7 +951,7 @@ msgstr "Salden Verlauf"
 #: /var/www/CDRTool/library/sip_settings.php:4975
 #, php-format
 msgid "Today's transactions: %.2f credit, %.2f debit"
-msgstr ""
+msgstr "Heutige Transaktionen: %.2f Guthaben, %.2f Abbuchung"
 
 #: /var/www/CDRTool/library/sip_settings.php:4986
 msgid "Date and Time"
@@ -970,7 +979,7 @@ msgstr "Gesamt Guthaben"
 #: /var/www/CDRTool/library/sip_settings.php:5110
 #: /var/www/CDRTool/library/sip_settings.php:5114
 msgid "Export"
-msgstr ""
+msgstr "Exportieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:5104
 #: /var/www/CDRTool/library/sip_settings.php:5112
@@ -1031,9 +1040,9 @@ msgstr ""
 #: /etc/cdrtool/local/sip_settings.php:218
 #: /etc/cdrtool/local/sip_settings.php:362
 #: /etc/cdrtool/local/sip_settings.php:1301
-#, php-format
+#, fuzzy, php-format
 msgid "Self Support"
-msgstr ""
+msgstr "Selbsthilfe"
 
 #: /etc/cdrtool/local/sip_settings.php:226
 #: /etc/cdrtool/local/sip_settings.php:373
@@ -1041,18 +1050,21 @@ msgstr ""
 #, php-format
 msgid "For help about SIP2SIP service visit <a href=%s target=sip2sip>%s</a>"
 msgstr ""
+"Für Hilfe zum SIP2SIP Service besuchen Sie <a href=%s target=sip2sip>%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:237
 #, php-format
 msgid "More Help"
-msgstr ""
+msgstr "Weitere Hilfe"
 
 #: /etc/cdrtool/local/sip_settings.php:246
-#, php-format
+#, fuzzy, php-format
 msgid ""
 "To request support you may open an issue <a href='%s' "
 "target=support><b>here</b></a>."
 msgstr ""
+"Für weitere Hilfe können Sie unter <a href='%s' target=support><b>here</b></"
+"a> einen neuen Vorgang erstellen."
 
 #: /etc/cdrtool/local/sip_settings.php:248
 #, fuzzy, php-format
@@ -1064,6 +1076,8 @@ msgid ""
 "Use the following credentials to login <a href=http://support.ag-projects."
 "com>here</a> and request the deletion of your SIP account:"
 msgstr ""
+"Benutzen Sie sum Einlochen folgende Anmeldedaten <a href=http://support.ag-"
+"projects.com>here</a> und bitten Sie um Löschung Ihres SIP Kontos:"
 
 #: /etc/cdrtool/local/sip_settings.php:371
 #: /etc/cdrtool/local/sip_settings.php:1310
@@ -1072,17 +1086,19 @@ msgid ""
 "For help a about SIP2SIP service visit <a href=http://wiki.sip2sip."
 "info>http://wiki.sip2sip.info</a>"
 msgstr ""
+"Für Hilfe zum SIP2SIP Service besuchen Sie <a href=http://wiki.sip2sip."
+"info>http://wiki.sip2sip.info</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:383
 #: /etc/cdrtool/local/sip_settings.php:1322
 #, php-format
 msgid "Need More Help?"
-msgstr ""
+msgstr "Benötigen Sie weitere Hilfe?"
 
 #: /etc/cdrtool/local/sip_settings.php:392
 #: /etc/cdrtool/local/sip_settings.php:1331
 msgid "Additional support is provided by an external website. "
-msgstr ""
+msgstr "Weitere Hilfe finden Sie auf einer externen Internetseite."
 
 #: /etc/cdrtool/local/sip_settings.php:397
 #: /etc/cdrtool/local/sip_settings.php:1336
@@ -1091,6 +1107,8 @@ msgid ""
 "Use your web browser and open a ticket at <a href=http://support.ag-projects."
 "com>http://support.ag-projects.com</a>"
 msgstr ""
+"Benutzen Sie Ihren Web-Browser und öffnen Sie ein Ticket unter  <a "
+"href=http://support.ag-projects.com>http://support.ag-projects.com</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:399
 #: /etc/cdrtool/local/sip_settings.php:1338
@@ -1098,11 +1116,14 @@ msgstr ""
 msgid ""
 "Use your web browser and open a ticket at <a href='%s' target=support>%s</a>"
 msgstr ""
+"Benutzen Sie Ihren Web-Browser und öffnen Sie ein Ticket unter <a href='%s' "
+"target=support>%s</a>"
 
 #: /etc/cdrtool/local/sip_settings.php:404
 #: /etc/cdrtool/local/sip_settings.php:1343
 msgid "Use the following credentials to login to the support website:"
 msgstr ""
+"Benutzen Sie folgende Anmeldedaten um in den Supportbereich einzuloggen:"
 
 #: /etc/cdrtool/local/sip_settings.php:1391
 #, fuzzy, php-format
@@ -1115,13 +1136,15 @@ msgstr ""
 
 #: /etc/cdrtool/local/sip_settings.php:1750
 msgid "Did you already get your SIP address? "
-msgstr ""
+msgstr "Haben Sie bereits eine SIP Adresse?"
 
 #: /etc/cdrtool/local/sip_settings.php:1751
 msgid ""
 "You may access your account <a href=https://mdns.sipthor.net/sip_settings."
 "phtml>here</a>. "
 msgstr ""
+"Sie haben Zugang zu Ihrem Konto <a href=https://mdns.sipthor.net/"
+"sip_settings.phtml>here</a>."
 
 #: /etc/cdrtool/local/sip_settings.php:1768
 msgid "Failed to open timezone file."
@@ -1156,7 +1179,7 @@ msgstr "Email"
 #. ";
 #: /etc/cdrtool/local/sip_settings.php:1915
 msgid "Captcha"
-msgstr ""
+msgstr "Captcha"
 
 #: /etc/cdrtool/local/sip_settings.php:2431
 #, fuzzy
@@ -1175,7 +1198,7 @@ msgstr "E-Mail Adresse"
 
 #: /etc/cdrtool/local/sip_settings.php:2500
 msgid "My domain name"
-msgstr ""
+msgstr "Mein Domain Name"
 
 #: /var/www/CDRTool/library/cc_processor.php:523
 msgid "Email"
@@ -1208,7 +1231,7 @@ msgstr "Warenkorb"
 
 #: /var/www/CDRTool/library/cc_processor.php:625
 msgid "VAT"
-msgstr ""
+msgstr "MwSt"
 
 #: /var/www/CDRTool/library/cc_processor.php:636
 #: /var/www/CDRTool/library/cc_processor.php:647
@@ -1307,6 +1330,8 @@ msgstr "Fehlende Zeitzone"
 #: /var/www/CDRTool/library/cc_processor.php:910
 msgid "Transaction already exists. Do not press the browser reload button."
 msgstr ""
+"Die Transaktion ist bereits aktive. Drücken Sie nicht den "
+"Aktualisierungsknopf Ihres Browsers."
 
 #~ msgid "Registered SIP Devices"
 #~ msgstr "Registrierte SIP-Geräte"
@@ -1600,3 +1625,4 @@ msgstr ""
 
 #~ msgid "PSTN Termination Credit"
 #~ msgstr "PSTN Kündigung Credit"
+
