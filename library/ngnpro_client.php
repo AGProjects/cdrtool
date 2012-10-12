@@ -141,6 +141,8 @@ class SoapEngine {
     var $extraFormElements = array();
     var $default_enum_tld  =  'e164.arpa';
     var $default_timezone  =  'Europe/Amsterdam';
+    var $default_sip_proxy = "";
+    var $default_msrp_relay = "";
 
     var $ports=array(
                          'customers'      => array(
@@ -435,6 +437,14 @@ class SoapEngine {
 
             if ($this->soapEngines[$this->soapEngine]['default_timezone']) {
             	$this->default_timezone  = $this->soapEngines[$this->soapEngine]['default_timezone'];
+            }
+
+            if ($this->soapEngines[$this->soapEngine]['sip_proxy']) {
+            	$this->default_sip_proxy  = $this->soapEngines[$this->soapEngine]['sip_proxy'];
+            }
+
+            if ($this->soapEngines[$this->soapEngine]['msrp_relay']) {
+            	$this->default_msrp_relay = $this->soapEngines[$this->soapEngine]['msrp_relay'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['default_country']) {
@@ -6332,7 +6342,6 @@ class DnsRecords extends Records {
     var $typeFilter          = false;
     var $default_ttl         = 3600;
     var $fancy               = false;
-    var $default_sip_proxy   = "proxy.sipthor.net";
 
     var $sortElements=array('changeDate' => 'Change date',
                             'type'       => 'Type',
@@ -7203,7 +7212,10 @@ class DnsRecords extends Records {
                         if (!$value) {
                             $value=$this->getCustomerProperty('dns_records_last_sip_server');
                             if (!$value)  {
-                            	$value=$this->getCustomerProperty('sip_proxy');
+                            	$value = $this->getCustomerProperty('sip_proxy');
+                            }
+                            if (!value) {
+            	                $value = $this->SoapEngine->default_sip_proxy;
                             }
                             $save_new_value=false;
                         } else {
