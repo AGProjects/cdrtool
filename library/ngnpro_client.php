@@ -6381,6 +6381,54 @@ class DnsRecords extends Records {
     var $getRecordFunction    = 'getRecord';
 
     var $recordTypesTemplate=array(
+                               'sip2sip' =>  array('name'    => 'SIP2SIP infrastructure',
+                                                  'records' =>  array(
+                                                                      'naptr1' => array('name'    => '',
+                                                                                       'type'    => 'NAPTR',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '10 100 "s" "SIP+D2T" "" _sip._tcp'
+                                                                                       ),
+                                                                      'naptr2' => array('name'  => '',
+                                                                                       'type'   => 'NAPTR',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '30 100 "s" "SIP+D2U" "" _sip._udp'
+                                                                                       ),
+                                                                      'srv1'   => array('name'  => '_sip._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '100 5060 proxy.sipthor.net'
+                                                                                       ),
+                                                                      'srv2'   => array('name'   => '_sip._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '100',
+                                                                                       'ttl'     => '3600',
+                                                                                       'value' => '100 5060 proxy.sipthor.net'
+                                                                                       ),
+                                                                      'srv3'   => array('name'  => '_stun._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 3478 stun1.dns-hosting.info'
+                                                                                       ),
+                                                                      'srv4'   => array('name'  => '_stun._udp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '0',
+                                                                                       'value' => '10 3478 stun2.dns-hosting.info'
+                                                                                       ),
+                                                                      'srv5'   => array('name'  => '_msrps._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 2855 msrprelay.sipthor.net'
+                                                                                       ),
+                                                                      'txt1'   => array('name'  => 'xcap',
+                                                                                       'type'   => 'TXT',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => 'https://xcap.sipthor.net/xcap-root'
+                                                                                       )
+                                                                      ),
+                                                 ),
                                'siptcp' =>  array('name'    => 'SIP - TCP transport',
                                                   'records' =>  array(
                                                                       'naptr' => array('name'    => '',
@@ -6431,7 +6479,8 @@ class DnsRecords extends Records {
                                                                       ),
                                                  ),
                                'stun' =>  array('name'    => 'STUN - NAT mirror',
-                                                  'records' =>  array('srv'   => array('name'  => '_stun._udp',
+                                                  'records' =>  array(
+                                                                      'srv'   => array('name'  => '_stun._udp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '0',
                                                                                        'value' => '10 3478 #VALUE#|10 3478 stun'
@@ -6461,7 +6510,8 @@ class DnsRecords extends Records {
                                                                       ),
                                                   ),
                                'msrp' =>  array('name'    => 'MSRP - IM relay',
-                                                  'records' =>  array('srv'   => array('name'  => '_msrps._tcp',
+                                                  'records' =>  array(
+                                                                      'srv'   => array('name'  => '_msrps._tcp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '10',
                                                                                        'value' => '0 2855 msrprelay'
