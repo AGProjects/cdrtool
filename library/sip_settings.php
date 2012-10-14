@@ -4635,7 +4635,7 @@ class SipSettings {
                     $refund_results = $ccp->refundPayment($transaction->id);
 
                     if(count($refund_results['error']) > 0 ){
-                        printf ("<p><font color=red>Error %d: %s (%s)",$refund_results['error']['error_code'], $refund_results['error']['desc'], $refund_results['error']['short_message']);
+                        printf ("<p><font color=red>Error %d: %s (%s)</font>",$refund_results['error']['error_code'], $refund_results['error']['desc'], $refund_results['error']['short_message']);
                     } else {
                         printf ("<p>Transaction %s refunded with %s: %s",$transaction->id, $refund_results['success']['desc']->RefundTransactionID,$refund_results['success']['desc']->GrossRefundAmount->_value);
                         $description=sprintf("Refund %s with %s",$transaction->id, $refund_results['success']['desc']->RefundTransactionID);
