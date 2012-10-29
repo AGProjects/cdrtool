@@ -763,6 +763,36 @@ class pageLayout {
             </div>
             <br>
         ";
+
+        if ( isset($username)) {
+            if (!$sendotp || $username) {
+                print "
+                 <p class='alert alert-error'>
+                   Invalid username/password combination. <br>
+                   $otp_error
+                  </p>
+                ";
+                
+                $spam=new DB_CDRTool;
+
+                $query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER[REMOTE_ADDR]));
+                $spam->query($query);
+
+                if (!$spam->num_rows()) {
+                    $query=sprintf("insert into spam (ip,tries,login,stamp)
+                    values ('%s','1','%s','%s')
+                    ",$_SERVER[REMOTE_ADDR],addslashes($username),time());
+                } else {
+                    $query=sprintf("update spam set
+                    tries = tries +1 where ip = '%s'", addslashes($_SERVER[REMOTE_ADDR]));
+                }
+                $spam->query($query);
+            
+            } else {
+                print "Please fill in your One Time Password!";
+            }
+        }
+
         
         print "
             <div class='well well-small'>
@@ -781,39 +811,6 @@ class pageLayout {
         </div>
         ";
         
-       
-        
-        if ( isset($username)) {
-            if (!$sendotp || $username) {
-                print "
-                 <p>
-                 <table>
-                  <tr>
-                   <td colspan=2><font color=red><b>Invalid username/password combination. <br>
-                   <br> $otp_error</b></font></td>
-                  </tr>
-                 </table>
-                ";
-                
-                $spam=new DB_CDRTool;
-
-		        $query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER[REMOTE_ADDR]));
-    			$spam->query($query);
-
-                if (!$spam->num_rows()) {
-                    $query=sprintf("insert into spam (ip,tries,login,stamp)
-                    values ('%s','1','%s','%s')
-                    ",$_SERVER[REMOTE_ADDR],addslashes($username),time());
-                } else {
-                    $query=sprintf("update spam set
-                    tries = tries +1 where ip = '%s'", addslashes($_SERVER[REMOTE_ADDR]));
-                }
-                $spam->query($query);
-            
-            } else {
-                print "Please fill in your One Time Password!";
-            }
-        }
         print "<input type=\"hidden\" name=\"response\"  value=\"\">";
         print "<input type=\"hidden\" name=\"challenge\" value=\"$challenge\">";
         print "
