@@ -19,9 +19,9 @@ if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-print "<div class='row-fluid'>";
 foreach (array_keys($DATASOURCES) as $datasource) {
 
+    print "<div class='row-fluid'>";
     if (in_array($datasource,$CDRTool['dataSourcesAllowed']) && !$DATASOURCES[$datasource]['invisible']) {
         print "<div class='span6'>";
 
@@ -65,9 +65,9 @@ foreach (array_keys($DATASOURCES) as $datasource) {
 
         print "</div>";
     }
+    print "</div>";
 }
 
-print "</div>";
 
 $layout->showFooter();
 
