@@ -1103,7 +1103,7 @@ msgid ""
 "click the Search button. "
 msgstr ""
 "Um anderen SIP-Adressen zu finden, geben Sie den Vor- oder den Nachnamen ein "
-"und klicken Sie auf die Schaltfläche \"Suchen\"."
+"und klicken Sie auf die Schaltfläche \"Suche\"."
 
 #: /var/www/CDRTool/library/sip_settings.php:6065
 #, php-format
@@ -1256,7 +1256,7 @@ msgstr "Zeitintervall"
 #: /var/www/CDRTool/library/sip_settings.php:7105
 #, php-format
 msgid "Rejected Callers"
-msgstr "Abgelehnt Anrufer"
+msgstr "Abgelehnte Anrufer"
 
 #: /var/www/CDRTool/library/sip_settings.php:7114
 msgid ""
