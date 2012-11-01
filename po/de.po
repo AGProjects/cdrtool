@@ -3,10 +3,9 @@ msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-11-01 12:51+0100\n"
-"PO-Revision-Date: 2012-10-11 17:20+0100\n"
-"Last-Translator: Adrian Georgescu <ag@ag-projects.com>\n"
+"PO-Revision-Date: 2012-11-01 14:35+0100\n"
+"Last-Translator: Thomas Martin <tmartin@bel-apps.com>\n"
 "Language-Team: language@ag-projects.com\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -65,7 +64,7 @@ msgstr "Weiterleitung"
 
 #: /var/www/CDRTool/library/sip_settings.php:341
 msgid "DND"
-msgstr "nicht stören"
+msgstr "Rufsperren"
 
 #: /var/www/CDRTool/library/sip_settings.php:342
 msgid "Contacts"
@@ -79,7 +78,7 @@ msgstr "Verlauf"
 #: /var/www/CDRTool/library/sip_settings.php:3447
 #: /etc/cdrtool/local/sip_settings.php:913
 msgid "Barring"
-msgstr "Barring"
+msgstr "Sperrung"
 
 #: /var/www/CDRTool/library/sip_settings.php:354
 #: /var/www/CDRTool/library/sip_settings.php:3438
@@ -279,7 +278,7 @@ msgstr "Kreditkarten Zahlungen"
 #: /var/www/CDRTool/library/sip_settings.php:3889
 #, php-format
 msgid "Voice Mailbox"
-msgstr "Sprach Mailbox"
+msgstr "Anrufbeantworter"
 
 #: /var/www/CDRTool/library/sip_settings.php:1887
 #, php-format
@@ -289,7 +288,8 @@ msgstr "Preisliste"
 #: /var/www/CDRTool/library/sip_settings.php:1905
 msgid "You must set the Owner to enable Credit Card Payments. "
 msgstr ""
-"Sie müssen die Besitzer festlegen, um Kreditkarten-Zahlungen zu ermöglichen."
+"Sie müssen einen Besitzer festlegen, um Kreditkarten-Zahlungen zu "
+"ermöglichen."
 
 #: /var/www/CDRTool/library/sip_settings.php:1929
 #: /var/www/CDRTool/library/sip_settings.php:1989
@@ -501,9 +501,9 @@ msgstr "Aliase"
 
 #: /var/www/CDRTool/library/sip_settings.php:2482
 #: /etc/cdrtool/local/sip_settings.php:1064
-#, fuzzy, php-format
+#, php-format
 msgid "You may create new aliases for incoming calls"
-msgstr "Sie können unter der gleichen Domain neue Aliasnamen erstellen"
+msgstr "Sie können für eingehende Anrufe neue Aliasnamen erstellen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2510
 #: /etc/cdrtool/local/sip_settings.php:1092
@@ -591,9 +591,9 @@ msgid "Renew Number"
 msgstr "Telefon-Nr"
 
 #: /var/www/CDRTool/library/sip_settings.php:2778
-#, fuzzy, php-format
+#, php-format
 msgid "Cancel Number"
-msgstr "Kartennummer"
+msgstr "Nummer verwerfen"
 
 #: /var/www/CDRTool/library/sip_settings.php:2805
 msgid "Select a region where you want to have a telephone number: "
@@ -682,15 +682,13 @@ msgstr "Neues Passwort eingeben"
 
 #: /var/www/CDRTool/library/sip_settings.php:3059
 #: /etc/cdrtool/local/sip_settings.php:533
-#, fuzzy
 msgid "Web Password"
-msgstr "Passwort"
+msgstr "Web Passwort"
 
 #: /var/www/CDRTool/library/sip_settings.php:3065
 #: /etc/cdrtool/local/sip_settings.php:539
-#, fuzzy
 msgid "Enter text to change the password to access this web page"
-msgstr "Neues Passwort eingeben"
+msgstr "Neues Passwort für diese Webseite eingeben"
 
 #: /var/www/CDRTool/library/sip_settings.php:3075
 #: /etc/cdrtool/local/sip_settings.php:549
@@ -750,7 +748,7 @@ msgstr "Anrufe"
 #: /var/www/CDRTool/library/sip_settings.php:3214
 #: /etc/cdrtool/local/sip_settings.php:688
 msgid "Prepaid"
-msgstr "Entsperren"
+msgstr "Prepaid"
 
 #: /var/www/CDRTool/library/sip_settings.php:3295
 #: /etc/cdrtool/local/sip_settings.php:769
@@ -804,7 +802,7 @@ msgstr "Tabs"
 #: /etc/cdrtool/local/sip_settings.php:926
 #, php-format
 msgid "Notifications Address"
-msgstr "Benachrichtigungs Adresse"
+msgstr "Nachrichten werden an weitergeleitet an"
 
 #: /var/www/CDRTool/library/sip_settings.php:3465
 #: /etc/cdrtool/local/sip_settings.php:932
@@ -860,7 +858,7 @@ msgstr "Geräte"
 #: /var/www/CDRTool/library/sip_settings.php:3765
 #, php-format
 msgid "Barred Destinations"
-msgstr "Ausgeschlossene Ziele"
+msgstr "Gesperrte Ziele"
 
 #: /var/www/CDRTool/library/sip_settings.php:3775
 msgid "You can deny outbound calls to unwanted PSTN prefixes. "
@@ -930,9 +928,8 @@ msgid "Refund Transaction"
 msgstr "Rückerstattungsvorgang"
 
 #: /var/www/CDRTool/library/sip_settings.php:4777
-#, fuzzy
 msgid "Transaction Id"
-msgstr "Ergebnisse"
+msgstr "Transaktionsnummer"
 
 #: /var/www/CDRTool/library/sip_settings.php:4793
 msgid "Refund"
@@ -952,7 +949,7 @@ msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:4835
 msgid "Card Id"
-msgstr "Karten Id"
+msgstr "Karten ID"
 
 #: /var/www/CDRTool/library/sip_settings.php:4838
 #: /var/www/CDRTool/library/cc_processor.php:525
@@ -1006,7 +1003,7 @@ msgstr "Saldenverlauf im CSV-Format exportieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:5164
 msgid "Id"
-msgstr "Saldenverlauf im CSV-Format exportieren"
+msgstr "ID"
 
 #: /var/www/CDRTool/library/sip_settings.php:5166
 msgid "Account"
@@ -1055,7 +1052,7 @@ msgstr "PSTN-Zugang"
 #: /var/www/CDRTool/library/sip_settings.php:5598
 #, php-format
 msgid "Default is %s"
-msgstr ""
+msgstr "Standard ist %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:5610
 #: /var/www/CDRTool/library/sip_settings.php:5622
@@ -1124,12 +1121,12 @@ msgid ""
 "You can organize contacts into groups that can be used to accept incoming "
 "calls in Don't Disturb section. "
 msgstr ""
-"Sie können Kontakte in Gruppen organisieren, die dazu benutzt werden, um "
-"eingehende Anrufe während ,Bitte nicht stören‘ zu akzeptieren. "
+"Sie können Kontakte in Gruppen organisieren, um bestimmte Anrufe, trotz "
+"aktiver Rufsperre, zu akzeptieren. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6145
 msgid "Add sip address or search for contacts"
-msgstr ""
+msgstr "SIP Adresse hinzufügen oder nach Kontakten suchen"
 
 #: /var/www/CDRTool/library/sip_settings.php:6156
 #: /var/www/CDRTool/library/sip_settings.php:6201
@@ -1184,13 +1181,13 @@ msgid ""
 "Rejected calls are diverted based on the Unavailable condition in the Call "
 "Forwarding page. "
 msgstr ""
-"Abgelehnte Anrufe werden auf der Grundlage der Nicht-Erreichbar Bedingung in "
-"der Umleitung Seite umgeleitet. "
+"Abgelehnte Anrufe werden auf der Grundlage der "
+"Anrufweiterleitungsbedingungen im Bereich \"Weiterleitung\" umgeleitet. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6749
 #, php-format
 msgid "Your current time is: %s"
-msgstr "Ihre aktuelle Uhrzeit ist: %s"
+msgstr "Ihre aktuelle Zeitzone/Uhrzeit ist: %s"
 
 #. print "<div class='control-group $class_e'>
 #. <label for=duration class=control-label>";
@@ -1224,9 +1221,9 @@ msgid "Temporary Rules"
 msgstr "Temporäre Regel"
 
 #: /var/www/CDRTool/library/sip_settings.php:6835
-#, fuzzy
 msgid "This will override the permanent rules for the chosen duration."
-msgstr "Dies überschreibt die permanenten Regeln für die gewählte Dauer. "
+msgstr ""
+"Dies setzt die permanenten Regeln für die gewählte Dauer ausser Kraft. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6852
 #, fuzzy
@@ -1319,7 +1316,7 @@ msgstr "Hinweis"
 #: /var/www/CDRTool/library/sip_settings.php:7427
 #, php-format
 msgid "Watchers"
-msgstr "Betrachter"
+msgstr "Beobachter"
 
 #: /var/www/CDRTool/library/sip_settings.php:7835
 #, php-format
@@ -1357,7 +1354,7 @@ msgstr "Fehler: X.509 Client-Zertifikat konnte nicht gelesen werden\n"
 
 #: /var/www/CDRTool/library/sip_settings.php:10631
 msgid "No SIP Address available. "
-msgstr "Nr. SIP-Adresse verfügbar. "
+msgstr "Keine SIP-Adresse verfügbar. "
 
 #: /var/www/CDRTool/library/sip_settings.php:10888
 #, php-format
@@ -1367,17 +1364,17 @@ msgstr "Fehler: %s"
 #: /var/www/CDRTool/library/sip_settings.php:11067
 #, php-format
 msgid "Do not disturb has been enabled for %d minutes"
-msgstr "Bitte nicht stören wurde für %d Minuten aktiviert"
+msgstr "\"Bitte nicht stören\" wurde für %d Minuten aktiviert"
 
 #: /var/www/CDRTool/library/sip_settings.php:11069
 #, php-format
 msgid "Do not disturb has been enabled"
-msgstr "Bitte nicht stören wurde aktiviert"
+msgstr "\"Bitte nicht stören\" wurde aktiviert"
 
 #: /var/www/CDRTool/library/sip_settings.php:11094
 #, php-format
 msgid "Do not disturb has been disabled"
-msgstr "Bitte nicht stören wurde deaktiviert"
+msgstr "\"Bitte nicht stören\" wurde deaktiviert"
 
 #: /var/www/CDRTool/library/sip_settings.php:11114
 #, php-format
@@ -1467,16 +1464,16 @@ msgstr ""
 "a> einen neuen Vorgang erstellen."
 
 #: /etc/cdrtool/local/sip_settings.php:248
-#, fuzzy, php-format
+#, php-format
 msgid "Account Deletion"
-msgstr "Konto"
+msgstr "Konto Löschen"
 
 #: /etc/cdrtool/local/sip_settings.php:252
 msgid ""
 "Use the following credentials to login <a href=http://support.ag-projects."
 "com>here</a> and request the deletion of your SIP account:"
 msgstr ""
-"Benutzen Sie sum Einlochen folgende Anmeldedaten <a href=http://support.ag-"
+"Benutzen Sie zum Einloggen folgende Anmeldedaten <a href=http://support.ag-"
 "projects.com>here</a> und bitten Sie um Löschung Ihres SIP Kontos:"
 
 #: /etc/cdrtool/local/sip_settings.php:371
@@ -1660,7 +1657,7 @@ msgstr "Kaufen"
 
 #: /var/www/CDRTool/library/cc_processor.php:781
 msgid "You have no items in your cart. "
-msgstr "Sie haben keine Artikel in Ihrem Warenkorb. "
+msgstr "Ihr Warenkorb ist leer. "
 
 #: /var/www/CDRTool/library/cc_processor.php:782
 #: /var/www/CDRTool/library/cc_processor.php:874
@@ -1714,9 +1711,8 @@ msgid "correct the errors and re-submit. "
 msgstr "korrigieren Sie die Fehler und senden Sie erneut ab. "
 
 #: /var/www/CDRTool/library/cc_processor.php:882
-#, fuzzy
 msgid "Transaction failed"
-msgstr "Ergebnisse"
+msgstr "Die Transaktion ist fehlgeschlagen"
 
 #: /var/www/CDRTool/library/cc_processor.php:908
 #, fuzzy
@@ -1783,3 +1779,4 @@ msgstr ""
 
 #~ msgid "PSTN Termination Credit"
 #~ msgstr "PSTN Kündigung Credit"
+
