@@ -5333,15 +5333,9 @@ class SipSettings {
     }
 
     function chapterTableStart() {
-        //print "
-        //<table class=settings border=0 width=100%>
-        //";
     }
 
     function chapterTableStop() {
-        //print "
-        //</table>
-       // ";
     }
 
 
