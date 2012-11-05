@@ -26,7 +26,7 @@ msgid "Status"
 msgstr "Status"
 
 #: /var/www/CDRTool/library/sip_settings.php:291
-#, fuzzy, php-format
+#, php-format
 msgid "Deny password change"
 msgstr "Passwortänderung ablehnen"
 
@@ -297,7 +297,7 @@ msgid "Page Not Available"
 msgstr "Seite nicht verfügbar"
 
 #: /var/www/CDRTool/library/sip_settings.php:1951
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "Calling to telephone numbers is possible at the costs set forth in the <a "
 "href=%s&tab=payments&task=showprices>Price List</a>. "
@@ -549,12 +549,12 @@ msgid "Login using SIP credentials at <a href=%s>%s</a>"
 msgstr "Login mit SIP-Anmeldeinformationen unter <a href=%s>%s</a>"
 
 #: /var/www/CDRTool/library/sip_settings.php:2618
-#, fuzzy, php-format
+#, php-format
 msgid "SIP Client"
 msgstr "SIP-Alias"
 
 #: /var/www/CDRTool/library/sip_settings.php:2639
-#, fuzzy, php-format
+#, php-format
 msgid "Registered Numbers"
 msgstr "Registrierte SIP-Geräte"
 
@@ -581,12 +581,12 @@ msgid "Register New Number"
 msgstr "New Nummer registrieren"
 
 #: /var/www/CDRTool/library/sip_settings.php:2706
-#, fuzzy, php-format
+#, php-format
 msgid "Telephone Number (+%s %s) for %d months"
 msgstr "Telefonnummer (+%s %s) für %d Monate"
 
 #: /var/www/CDRTool/library/sip_settings.php:2757
-#, fuzzy, php-format
+#, php-format
 msgid "Renew Number"
 msgstr "Telefon-Nr"
 
@@ -619,7 +619,7 @@ msgid "For more information visit %s"
 msgstr "Für weitere Informationen besuchen Sie %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:2925
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "Download and install <a href=http://icanblink.com target=blink>Blink</a> "
 "preconfigured with your SIP account:"
@@ -851,7 +851,7 @@ msgid "Owner"
 msgstr "Eigentümer"
 
 #: /var/www/CDRTool/library/sip_settings.php:3657
-#, fuzzy, php-format
+#, php-format
 msgid "SIP Devices"
 msgstr "Geräte"
 
@@ -1420,7 +1420,7 @@ msgstr "Fehler beim Speichern der Bestellung"
 #: /etc/cdrtool/local/sip_settings.php:301
 #: /etc/cdrtool/local/sip_settings.php:1240
 #: /etc/cdrtool/local/sip_settings.php:1400
-#, fuzzy, php-format
+#, php-format
 msgid "Credit Card"
 msgstr "Kredit Karten Details"
 
@@ -1428,7 +1428,7 @@ msgstr "Kredit Karten Details"
 #: /etc/cdrtool/local/sip_settings.php:310
 #: /etc/cdrtool/local/sip_settings.php:1249
 #: /etc/cdrtool/local/sip_settings.php:1409
-#, fuzzy, php-format
+#, php-format
 msgid "To add credit to your account go to <a href=%s>Payments</a> tab. "
 msgstr ""
 "Für die Gutschrift auf Ihrem Konto mit einer Prepaid-Karte geben Sie diese "
@@ -1437,7 +1437,7 @@ msgstr ""
 #: /etc/cdrtool/local/sip_settings.php:218
 #: /etc/cdrtool/local/sip_settings.php:362
 #: /etc/cdrtool/local/sip_settings.php:1301
-#, fuzzy, php-format
+#, php-format
 msgid "Self Support"
 msgstr "Selbsthilfe"
 
@@ -1455,7 +1455,7 @@ msgid "More Help"
 msgstr "Weitere Hilfe"
 
 #: /etc/cdrtool/local/sip_settings.php:246
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "To request support you may open an issue <a href='%s' "
 "target=support><b>here</b></a>."
@@ -1523,7 +1523,7 @@ msgstr ""
 "Benutzen Sie folgende Anmeldedaten um in den Supportbereich einzuloggen:"
 
 #: /etc/cdrtool/local/sip_settings.php:1391
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "Calling to PSTN numbers is possible at the costs set forth in the <a href="
 "%s>price list</a>. "
