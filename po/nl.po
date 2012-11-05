@@ -3,10 +3,9 @@ msgstr ""
 "Project-Id-Version: 2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-11-01 12:51+0100\n"
-"PO-Revision-Date: 2012-10-09 14:50+0100\n"
+"PO-Revision-Date: 2012-11-05 10:30+0100\n"
 "Last-Translator: Tijmen de Mes <tijmen@ag-projects.com>\n"
 "Language-Team: language@ag-projects.com\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -729,7 +728,7 @@ msgstr "Deze maand gebruikt: %.2f %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:3162
 #: /etc/cdrtool/local/sip_settings.php:636
-#, fuzzy
+
 msgid "Calls "
 msgstr "Gesprekken"
 
@@ -848,7 +847,7 @@ msgid "Owner"
 msgstr "Eigenaar"
 
 #: /var/www/CDRTool/library/sip_settings.php:3657
-#, fuzzy, php-format
+#, php-format
 msgid "SIP Devices"
 msgstr "Apparaten"
 
@@ -1121,7 +1120,7 @@ msgstr ""
 
 #: /var/www/CDRTool/library/sip_settings.php:6145
 msgid "Add sip address or search for contacts"
-msgstr ""
+msgstr "Voeg adres toe of zoek voor contacten"
 
 #: /var/www/CDRTool/library/sip_settings.php:6156
 #: /var/www/CDRTool/library/sip_settings.php:6201
@@ -1202,7 +1201,7 @@ msgid "Rules"
 msgstr "Regels"
 
 #: /var/www/CDRTool/library/sip_settings.php:6806
-#, fuzzy
+
 msgid "Temporary"
 msgstr "Tijdelijke Regel"
 
@@ -1211,17 +1210,17 @@ msgid "Duration"
 msgstr "Duur"
 
 #: /var/www/CDRTool/library/sip_settings.php:6833
-#, fuzzy
+
 msgid "Temporary Rules"
 msgstr "Tijdelijke Regel"
 
 #: /var/www/CDRTool/library/sip_settings.php:6835
-#, fuzzy
+
 msgid "This will override the permanent rules for the chosen duration."
 msgstr "Dit zal de permanente regels overtreffen voor de gekozen duur"
 
 #: /var/www/CDRTool/library/sip_settings.php:6852
-#, fuzzy
+
 msgid "Minute(s)"
 msgstr "minuten"
 
@@ -1236,7 +1235,7 @@ msgid "Nobody"
 msgstr "Niemand"
 
 #: /var/www/CDRTool/library/sip_settings.php:6922
-#, fuzzy
+
 msgid "Permanent"
 msgstr "Permanente Regels"
 
@@ -1449,7 +1448,7 @@ msgid "More Help"
 msgstr "Meer hulp nodig?"
 
 #: /etc/cdrtool/local/sip_settings.php:246
-#, fuzzy, php-format
+#, php-format
 msgid ""
 "To request support you may open an issue <a href='%s' "
 "target=support><b>here</b></a>."
@@ -1537,12 +1536,12 @@ msgstr ""
 "sip_settings.phtml>hier</a> bereiken. "
 
 #: /etc/cdrtool/local/sip_settings.php:1831
-#, fuzzy
+
 msgid "First name"
 msgstr "Voornaam"
 
 #: /etc/cdrtool/local/sip_settings.php:1847
-#, fuzzy
+
 msgid "Last name"
 msgstr "Achternaam"
 
