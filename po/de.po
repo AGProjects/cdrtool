@@ -306,12 +306,12 @@ msgstr ""
 "finden Sie in der <a href=%s> Preisliste </ a>."
 
 #: /var/www/CDRTool/library/sip_settings.php:1953
-#, fuzzy
+
 msgid "You can purchase credit with a Credit Card. "
 msgstr "Guthaben mit der Kreditkarte aufladen. "
 
 #: /var/www/CDRTool/library/sip_settings.php:2003
-#, fuzzy
+
 msgid "Prepaid Credit"
 msgstr "Prepaid Karte"
 
@@ -731,7 +731,7 @@ msgstr "Diesen Monat Nutzung: %.2f %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:3162
 #: /etc/cdrtool/local/sip_settings.php:636
-#, fuzzy
+
 msgid "Calls "
 msgstr "Anrufe"
 
@@ -1045,7 +1045,7 @@ msgstr "Vorwahl für die automatische Vervollständigung Kurzer Nummern"
 
 #: /var/www/CDRTool/library/sip_settings.php:5567
 #: /var/www/CDRTool/library/sip_settings.php:5579
-#, fuzzy
+
 msgid "IP Access List"
 msgstr "PSTN-Zugang"
 
@@ -1056,7 +1056,7 @@ msgstr "Standard ist %s"
 
 #: /var/www/CDRTool/library/sip_settings.php:5610
 #: /var/www/CDRTool/library/sip_settings.php:5622
-#, fuzzy
+
 msgid "PSTN Call Limit"
 msgstr "Guthaben"
 
@@ -1207,7 +1207,7 @@ msgid "Rules"
 msgstr "Regeln"
 
 #: /var/www/CDRTool/library/sip_settings.php:6806
-#, fuzzy
+
 msgid "Temporary"
 msgstr "Temporäre Regel"
 
@@ -1216,7 +1216,7 @@ msgid "Duration"
 msgstr "Dauer"
 
 #: /var/www/CDRTool/library/sip_settings.php:6833
-#, fuzzy
+
 msgid "Temporary Rules"
 msgstr "Temporäre Regel"
 
@@ -1226,7 +1226,7 @@ msgstr ""
 "Dies setzt die permanenten Regeln für die gewählte Dauer ausser Kraft. "
 
 #: /var/www/CDRTool/library/sip_settings.php:6852
-#, fuzzy
+
 msgid "Minute(s)"
 msgstr "Minute(n)"
 
@@ -1241,7 +1241,7 @@ msgid "Nobody"
 msgstr "Niemand"
 
 #: /var/www/CDRTool/library/sip_settings.php:6922
-#, fuzzy
+
 msgid "Permanent"
 msgstr "Permanente Regeln"
 
@@ -1407,12 +1407,12 @@ msgid "Transaction completed sucessfully. "
 msgstr "Transaktion erfolgreich abgeschlossen. "
 
 #: /var/www/CDRTool/library/sip_settings.php:12074
-#, fuzzy
+
 msgid "Invalid CC Request"
 msgstr "Ungültige Anfrage"
 
 #: /etc/cdrtool/local/sip_settings.php:79
-#, fuzzy
+
 msgid "Error inserting article"
 msgstr "Fehler beim Speichern der Bestellung"
 
@@ -1544,17 +1544,17 @@ msgstr ""
 "sip_settings.phtml>here</a>."
 
 #: /etc/cdrtool/local/sip_settings.php:1831
-#, fuzzy
+
 msgid "First name"
 msgstr "Vorname"
 
 #: /etc/cdrtool/local/sip_settings.php:1847
-#, fuzzy
+
 msgid "Last name"
 msgstr "Nachname"
 
 #: /etc/cdrtool/local/sip_settings.php:1862
-#, fuzzy
+
 msgid "E-mail"
 msgstr "Email"
 
@@ -1575,17 +1575,17 @@ msgid "Captcha"
 msgstr "Captcha"
 
 #: /etc/cdrtool/local/sip_settings.php:2431
-#, fuzzy
+
 msgid "My first name"
 msgstr "Vorname"
 
 #: /etc/cdrtool/local/sip_settings.php:2448
-#, fuzzy
+
 msgid "My last name"
 msgstr "Nachname"
 
 #: /etc/cdrtool/local/sip_settings.php:2464
-#, fuzzy
+
 msgid "My e-mail address"
 msgstr "E-Mail Adresse"
 
@@ -1715,7 +1715,7 @@ msgid "Transaction failed"
 msgstr "Die Transaktion ist fehlgeschlagen"
 
 #: /var/www/CDRTool/library/cc_processor.php:908
-#, fuzzy
+
 msgid "Missing transaction key"
 msgstr "Fehlende Zeitzone"
 
