@@ -114,10 +114,17 @@ class CDRS_opensips extends CDRS {
         "duration","action","MONTHYEAR",
         "order_by","order_type","group_by",
         "cdr_source","trace",
-        "unnormalize","media_info","cdr_table","maxrowsperpage", "flow"
+        "ReNormalize","media_info","cdr_table","maxrowsperpage", "flow"
         );
 
-    var $createTableFile="/setup/radius/OpenSIPS/radacct.mysql";
+    function initCDRFields() {
+        // init names of CDR fields
+        foreach (array_keys($this->CDRFields) as $field) {
+            $mysqlField=$this->CDRFields[$field];
+            $_field=$field."Field";
+            $this->$_field=$mysqlField;
+        }
+    }
 
     function LoadDisconnectCodes() {
 
@@ -1220,12 +1227,13 @@ class CDRS_opensips extends CDRS {
             $this->url.=sprintf("&a_number=%s",urlencode($a_number));
 
             if ($a_number_comp=="begin") {
-                $where .= sprintf(" and %s like '%s%s'", addslashes($this->aNumberField), addslashes($a_number), '%s');
+                $where .= sprintf(" and %s like '%s%s'", addslashes($this->aNumberField), addslashes($a_number), '%');
             } elseif ($a_number_comp=="contain") {
                 $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->aNumberField), '%s', addslashes($a_number), '%s');
             } elseif ($a_number_comp=="equal") {
                 $where .= sprintf(" and %s = '%s'", addslashes($this->aNumberField), addslashes($a_number));
             }
+
             $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
         }
 
@@ -1238,9 +1246,9 @@ class CDRS_opensips extends CDRS {
             if (!$c_number_comp) $c_number_comp="begin";
 
             if (!$c_number_comp || $c_number_comp=="begin") {
-                $where .= sprintf(" and %s like '%s%s'", addslashes($this->CanonicalURIField), addslashes($c_number), '%s');
+                $where .= sprintf(" and %s like '%s%s'", addslashes($this->CanonicalURIField), addslashes($c_number), '%');
             } elseif ($c_number_comp=="contain") {
-                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->CanonicalURIField), '%s', addslashes($c_number), '%s');
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->CanonicalURIField), '%', addslashes($c_number), '%');
             } elseif ($c_number_comp=="equal") {
                 $where .= sprintf(" and %s = '%s'", addslashes($this->CanonicalURIField), addslashes($c_number));
             }
@@ -1253,7 +1261,7 @@ class CDRS_opensips extends CDRS {
             $where .= "
             and (" ;
             $rr=0;
-            foreach ($Realms as $realm) {
+            foreach ($this->CDRTool['filter']['domain'] as $realm) {
                 if ($rr) $where .= " or ";
                 $where .= " $this->domainField like '".addslashes($realm)."%' ";
                 $rr++;
@@ -1369,7 +1377,7 @@ class CDRS_opensips extends CDRS {
 
         if ($this->CDRTool[filter]["gateway"]) {
             $gatewayFilter=$this->CDRTool[filter]["gateway"];
-            $where .= " and ($this->gatewayField = '".addslashes($gatewayFilter)."')";
+            $where .= " and $this->gatewayField = '".addslashes($gatewayFilter)."'";
         } else if ($gateway) {
             $gateway=urldecode($gateway);
             $where .= " and $this->gatewayField = '".addslashes($gateway)."'";
@@ -1385,6 +1393,7 @@ class CDRS_opensips extends CDRS {
                 $where .= " and $this->durationField = 0";
             } elseif ($duration == "zeroprice" && $this->priceField) {
                 $where .= " and $this->durationField > 0 and ($this->priceField = '' or $this->priceField is NULL)";
+                $mongo_where[$this->priceField] = '';
             } elseif ($duration == "nonzero") {
                 $where .= " and $this->durationField > 0";
             } elseif ($duration == "onewaymedia") {
@@ -1489,7 +1498,7 @@ class CDRS_opensips extends CDRS {
         
         if ($rows>0)  {
             
-            if ($call_id && $unnormalize) {
+            if ($call_id && $ReNormalize) {
                 $query=sprintf("update %s
                 set %s = '0'
                 where %s = '%s'",
@@ -1588,6 +1597,7 @@ class CDRS_opensips extends CDRS {
                 limit $i,$this->maxrowsperpage
                 ";
 
+                dprint($query);
                 $this->CDRdb->query($query);
                 
                 $this->showTableHeaderStatistics();
@@ -2489,17 +2499,12 @@ class CDRS_opensips extends CDRS {
 
 class CDR_opensips extends CDR {
 
-    var $show_in_icon  = 0;
-    var $show_out_icon = 0;
-    var $CalleeCallerId = NULL;
-
     function CDR_opensips($parent, $CDRfields) {
 
         $this->CDRS = $parent;
 
         $this->cdr_source  = $this->CDRS->cdr_source;
 
-        //dprint_r($CDRfields);
         foreach (array_keys($this->CDRS->CDRFields) as $field) {
             $this->$field = $CDRfields[$this->CDRS->CDRFields[$field]];
         }
@@ -2527,7 +2532,9 @@ class CDR_opensips extends CDR {
         if ($this->SipRPID) {
             $this->SipRPID        = quoted_printable_decode($this->SipRPID);
         }
-        
+
+        $this->buildMongoCDR();
+
         if (!$this->application && $this->SipMethod) {
             $_method=strtolower($this->SipMethod);
             if ($_method == 'message') {
@@ -2821,6 +2828,43 @@ class CDR_opensips extends CDR {
             } else {
                 $this->pricePrint='x.xxx';
             }
+        }
+    }
+
+    function buildMongoCDR() {
+        # TODO = remove me
+        $this->mongo_cdr = array();
+        $int_values = array('duration', 'inputTraffic', 'outputTraffic', 'timestamp', 'disconnect');
+        foreach (array_keys($this->CDRS->CDRFields) as $field) {
+            if (in_array($field, $int_values)) {
+                $this->mongo_cdr[$field] = intval($this->$field);
+            } else {
+                $this->mongo_cdr[$field] = $this->$field;
+            }
+        }
+
+        if ($this->CanonicalURI) {
+            $this->mongo_cdr['CanonicalURI'] = $this->CanonicalURI;
+        }
+
+        if ($this->RemoteAddress) {
+            $this->mongo_cdr['RemoteAddress'] = $this->RemoteAddress;
+        }
+
+        if ($this->BillingPartyId) {
+            $this->mongo_cdr['BillingPartyId'] = $this->BillingPartyId;
+        }
+
+        if ($this->aNumber) {
+            $this->mongo_cdr['aNumber'] = $this->aNumber;
+        }
+
+        if ($this->cNumber) {
+            $this->mongo_cdr['cNumber'] = $this->cNumber;
+        }
+
+        if ($this->SipRPID) {
+            $this->mongo_cdr['SipRPID'] = $this->SipRPID;
         }
     }
 
@@ -3480,7 +3524,829 @@ class CDR_opensips extends CDR {
             $this->SourceIP='xxx.xxx.xxx.xxx';
         }
     }
+}
 
+class CDRS_opensips_mongo extends CDRS_opensips {
+    var $CDR_class   = "CDR_opensips_mongo";
+    var $mongo_db_ro = NULL;
+    var $mongo_db_rw = NULL;
+
+    function getCDRtables() {
+
+        if (!is_object($this->mongo_db_rw) && !$this->initDatabaseConnection) {
+            return array();
+        }
+
+        $_tables=array();
+        try {
+            $_tables=$this->mongo_db_rw->listCollections();
+        } catch (MongoException $e) {
+            printf("<p>Caught Mongo exception in getCDRtables(): %s", $e->getMessage());
+        } catch (MongoCursorException $e) {
+            printf("<p>Caught MongoCursorException in getCDRtables(): %s", $e->getMessage());
+        }
+        $t=count($_tables);
+        if ($this->table) $this->tables[]=$this->table;
+
+        foreach ($_tables as $_table) {
+            $_table=strval($_table);
+            if (preg_match("/^.*\.(radacct\d{6})$/",$_table,$m)) {
+                if ($list_t > 24) break;
+                if (!in_array($m[1], $this->tables)) {
+                    $this->tables[]=$m[1];
+                }
+                $list_t++;
+            }
+            $t--;
+        }
+
+        $this->tables=array_unique($this->tables);
+    }
+
+    function initDatabaseConnection() {
+        if ($this->DATASOURCES[$this->cdr_source]['mongo_db']) {
+            $mongo_db         = $this->CDRTool['mongo_db'][$this->DATASOURCES[$this->cdr_source]['mongo_db']];
+            $mongo_uri        = $mongo_db['uri'];
+            $mongo_replicaSet = $mongo_db['replicaSet'];
+            $mongo_database   = $mongo_db['database'];
+            try {
+                $mongo_connection_ro = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
+                $this->mongo_db_ro->setSlaveOkay(true);
+
+                $mongo_connection_rw = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
+                return true;
+            } catch (MongoException $e) {
+                printf("<p>Caught Mongo exception in initDatabaseConnection(): %s", $e->getMessage());
+                return false;
+            } catch (MongoConnectionException $e) {
+                printf("<p>Caught Mongo Connection exception in initDatabaseConnection(): %s", $e->getMessage());
+                return false;
+            } catch (Exception $e) {
+                printf("<p>Caught exception in initDatabaseConnection(): %s", $e->getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function getMongoTable($table, $rw=false) {
+        try {
+            if ($rw) {
+                if (!$this->mongo_db_rw && !$this->initDatabaseConnection()) {
+                    return NULL;
+                }
+                $table = $this->mongo_db_rw->selectCollection($table);
+            } else {
+                if (!$this->mongo_db_ro && !$this->initDatabaseConnection()) {
+                    return NULL;
+                }
+                $table = $this->mongo_db_ro->selectCollection($table);
+            }
+            return $table;
+        } catch (MongoException $e) {
+            printf("<p>Caught Mongo exception in getMongoTable(): %s", $e->getMessage());
+        } catch (MongoConnectionException $e) {
+            printf("<p>Caught Mongo Connection exception in getMongoTable(): %s", $e->getMessage());
+        } catch (Exception $e) {
+            printf("<p>Caught exception in getMongoTable(): %s", $e->getMessage());
+        }
+        return NULL;
+    }
+
+    function initCDRFields() {
+        // init names of CDR fields
+        foreach (array_keys($this->CDRFields) as $field) {
+            $mongo_field=$field;
+            $_field=$field."Field";
+            $this->$_field=$mongo_field;
+        }
+    }
+
+    function _readCDRFieldsFromDB($mongo_result) {
+        foreach (array_keys($this->CDRFields) as $field) {
+            $CDRStructure[$this->CDRFields[$field]] = $mongo_result[$field];
+        }
+        return $CDRStructure;
+    }
+
+    function getUnNormalized($where="",$table) {
+       return 0;
+    }
+
+    function show() {
+        global $perm;
+
+        foreach ($this->FormElements as $_el) {
+            ${$_el} = trim($_REQUEST[$_el]);
+        }
+
+        // overwrite some elements based on user rights
+        if ($this->CDRTool['filter']['gateway']) {
+            $gateway =$this->CDRTool['filter']['gateway'];
+        }
+
+        if (!$this->export) {
+            if (!$begin_datetime) {
+                $begin_datetime="$begin_year-$begin_month-$begin_day $begin_hour:$begin_min";
+                $begin_datetime_timestamp=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
+            } else {
+                $begin_datetime_timestamp=$begin_datetime;
+                $begin_datetime=Date("Y-m-d H:i",$begin_datetime);
+            }
+
+            if (!$end_datetime) {
+                $end_datetime_timestamp=mktime($end_hour, $end_min, 0, $end_month,$end_day,$end_year);
+                $end_datetime="$end_year-$end_month-$end_day $end_hour:$end_min";
+            } else {
+                $end_datetime_timestamp=$end_datetime;
+                $end_datetime=Date("Y-m-d H:i",$end_datetime);
+            }
+        } else {
+            $begin_datetime=Date("Y-m-d H:i",$begin_datetime);
+            $end_datetime=Date("Y-m-d H:i",$end_datetime);
+        }
+
+        if (!$order_by || (!$group_by && $order_by == "group_by")) {
+            $order_by=$this->idField;
+        }
+
+        $mongo_where = array();
+
+        if (!$cdr_table) $cdr_table=$this->table;
+        $mongo_table_ro = $this->getMongoTable($cdr_table);
+        $mongo_table_rw = $this->getMongoTable($cdr_table, true);
+
+        $this->url=sprintf("?cdr_source=%s&cdr_table=%s",$this->cdr_source,$cdr_table);
+
+        if ($this->CDRTool['filter']['domain']) {
+            $this->url  .= sprintf("&Realms=%s",urlencode($this->CDRTool['filter']['domain']));
+            $Realms      = explode(" ",$this->CDRTool['filter']['domain']);
+        } else if ($Realms) {
+            $this->url   .= sprintf("&Realms=%s",urlencode($Realms));
+            $Realms      = explode(" ",$Realms);
+        }
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $this->url   .= sprintf("&UserName=%s",urlencode($this->CDRTool['filter']['aNumber']));
+        }
+
+        if ($this->CDRTool['filter']['after_date']) {
+            $mongo_where[$this->startTimeField] = array('$gte' => $this->CDRTool['filter']['after_date']);
+        }
+
+        if ($order_by) {
+            $this->url.=sprintf("&order_by=%s&order_type=%s",addslashes($order_by),addslashes($order_type));
+        }
+
+        $this->url.=sprintf("&begin_datetime=%s",urlencode($begin_datetime_timestamp));
+        $this->url.=sprintf("&end_datetime=%s",urlencode($end_datetime_timestamp));
+
+        if (!$call_id && $begin_datetime && $end_datetime) {
+            $mongo_where[$this->startTimeField] = array('$gte' => $begin_datetime, '$lt' => $end_datetime);
+        } else {
+            $mongo_where[$this->startTimeField] = array('$gte' => '1970-01-01');
+        }
+
+        if ($MONTHYEAR) {
+            $mongo_where[$this->startTimeField] = new MongoRegex("/^$MONTHYEAR/");
+            $this->url.= sprintf("&MONTHYEAR=%s",urlencode($MONTHYEAR));
+        }
+
+        if ($flow) {
+            $this->url.=sprintf("&flow=%s",urlencode($flow));
+            $mongo_where[$this->flowField] = $flow;
+        }
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            // force user to see only CDRS with his a_numbers
+            $mongo_where['$or'] = array(array($this->usernameField => $this->CDRTool['filter']['aNumber']), array($this->CanonicalURIField => $this->CDRTool['filter']['aNumber']));
+            $UserName_comp='equal';
+            $UserName=$this->CDRTool['filter']['aNumber'];
+        }
+
+        if ($UserName_comp == "empty") {
+            $mongo_where[$this->usernameField] = '';
+            $this->url.=sprintf("&UserName_comp=%s",urlencode($UserName_comp));
+        } else if (strlen($UserName) && !$this->CDRTool['filter']['aNumber']) {
+            if (!$UserName_comp) $UserName_comp='begin';
+
+            if ($UserName_comp=="begin") {
+                $mongo_where[$this->usernameField] = new MongoRegex("/^$UserName/");
+            } elseif ($UserName_comp=="contain") {
+                $mongo_where[$this->usernameField] = new MongoRegex("/$UserName/");
+            } elseif ($UserName_comp=="equal") {
+                $mongo_where[$this->usernameField] = $UserName;
+            } else {
+                $mongo_where[$this->usernameField] = '';
+            }
+
+            $this->url.=sprintf("&UserName=%s&UserName_comp=%s",urlencode($UserName),$UserName_comp);
+        }
+
+        $a_number=trim($a_number);
+        if ($a_number_comp == "empty") {
+            $mongo_where[$this->aNumberField] = '';
+            $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
+        } else if (strlen($a_number)) {
+            $a_number=urldecode($a_number);
+            if (!$a_number_comp) $a_number_comp="equal";
+
+            $this->url.=sprintf("&a_number=%s",urlencode($a_number));
+
+            if ($a_number_comp=="begin") {
+                $mongo_where[$this->aNumberField] = new MongoRegex("/^$a_number/");
+            } elseif ($a_number_comp=="contain") {
+                $mongo_where[$this->aNumberField] = new MongoRegex("/$a_number/");
+            } elseif ($a_number_comp=="equal") {
+                $mongo_where[$this->aNumberField] = $a_number;
+            }
+
+            $this->url.=sprintf("&a_number_comp=%s",urlencode($a_number_comp));
+        }
+
+        $c_number=trim($c_number);
+        if ($c_number_comp == "empty") {
+            $mongo_where[$this->CanonicalURIField] = '';
+            $this->url.=sprintf("&c_number_comp=%s",urlencode($c_number_comp));
+        } else if (strlen($c_number)) {
+            $c_number=urldecode($c_number);
+            if (!$c_number_comp) $c_number_comp="begin";
+
+            if (!$c_number_comp || $c_number_comp=="begin") {
+                $mongo_where[$this->CanonicalURIField] =  new MongoRegex("/^$c_number/");
+            } elseif ($c_number_comp=="contain") {
+                $mongo_where[$this->CanonicalURIField] =  new MongoRegex("/$c_number/");
+            } elseif ($c_number_comp=="equal") {
+                $mongo_where[$this->CanonicalURIField] =  $c_number;
+            }
+            $this->url.=sprintf("&c_number=%s&c_number_comp=%s",urlencode($c_number),urlencode($c_number_comp));
+        }
+
+        $Realm=trim($Realm);
+
+        if ($this->CDRTool['filter']['domain']) {
+            $d_array=array();
+            foreach ($this->CDRTool['filter']['domain'] as $realm) {
+                $d_array[] = array($this->domainField => new MongoRegex("/$realm$/"));
+            }
+            $mongo_where['$or'] = $d_array;
+
+        } else if ($Realm) {
+            $Realm=urldecode($Realm);
+            $mongo_where[$this->domainField] =  new MongoRegex("/^$Realm/");
+            $this->url.=sprintf("&Realm=%s",urlencode($Realm));
+        } else if ($Realms)  {
+            $d_array=array();
+            foreach ($Realms as $realm) {
+                $d_array[] = array($this->domainField => new MongoRegex("/$realm$/"));
+            }
+            $mongo_where['$or'] = $d_array;
+        }
+
+        $BillingId=trim($BillingId);
+        if (preg_match("/^\d+$/",$BillingId) && $this->BillingIdField) {
+            $mongo_where[$this->BillingIdField] = $BillingId;
+            $this->url.=sprintf("&BillingId=%s",urlencode($BillingId));
+        }
+
+        if ($application) {
+            $mongo_where[$this->applicationField] = new MongoRegex("/$application/");
+            $this->url.=sprintf("&application=%s",urlencode($application));
+        }
+
+        if ($DestinationId) {
+            if ($DestinationId=="empty") {
+                $DestinationIdSQL="";
+            } else {
+                $DestinationIdSQL=$DestinationId;
+            }
+            $mongo_where[$this->DestinationIdField] = $DestinationIdSQL;
+            $this->url.=sprintf("&DestinationId=%s",urlencode($DestinationId));
+        }
+
+        if (strlen(trim($ExcludeDestinations))) {
+            $ExcludeDestArray=explode(" ",trim($ExcludeDestinations));
+
+            foreach ($ExcludeDestArray as $exclDst) {
+                if (preg_match("/^0+(\d+)$/",$exclDst,$m)) {
+                    $exclDest_id=$m[1];
+                } else {
+                    $exclDest_id=$exclDst;
+                }
+
+                $where .= " and ".
+                $this->CanonicalURIField.
+                " not like '".
+                addslashes(trim($exclDst)).
+                "'";
+            }
+
+            $this->url.=sprintf("&ExcludeDestinations=%s",urlencode($ExcludeDestinations));
+        }
+
+        $call_id=trim($call_id);
+
+        if ($call_id) {
+            $call_id=urldecode($call_id);
+            $mongo_where[$this->callIdField] = $call_id;
+            $this->url.=sprintf("&call_id=%s",urlencode($call_id));
+        }
+
+        if ($sip_proxy) {
+            $sip_proxy=urldecode($sip_proxy);
+            $mongo_where[$this->SipProxyServerField] = $sip_proxy;
+            $this->url.=sprintf("&sip_proxy=%s",urlencode($sip_proxy));
+        }
+
+        if ($SipCodec) {
+            $this->url.=sprintf("&SipCodec=%s",urlencode($SipCodec));
+            if ($SipCodec != "empty") {
+                $mongo_where[$this->SipCodecField] = $SipCodec;
+            } else {
+                $mongo_where[$this->SipCodecField] = '';
+            }
+        }
+
+        if ($SipRPID) {
+            $this->url.=sprintf("&SipRPID=%s",urlencode($SipRPID));
+            if ($SipRPID != "empty") {
+                $mongo_where[$this->SipRPIDField] = $SipRPID;
+            } else {
+                $mongo_where[$this->SipRPIDField] = '';
+            }
+        }
+
+        if ($UserAgent) {
+            $mongo_where[$this->UserAgentField] = $UserAgent;
+            $this->url.=sprintf("&UserAgent=%s",urlencode($UserAgent));
+        }
+
+        if (strlen($sip_status)) {
+            $mongo_where[$this->disconnectField] = $sip_status;
+            $this->url.=sprintf("&sip_status=%s",urlencode($sip_status));
+        }
+
+        if ($sip_status_class) {
+            $mongo_where[$this->disconnectField] = new MongoRegex("/^$sip_status_class/");
+            $this->url.=sprintf("&sip_status_class=%s",urlencode($sip_status_class));
+        }
+
+        if ($this->CDRTool[filter]["gateway"]) {
+            $mongo_where[$this->gatewayField] = $this->CDRTool[filter]["gateway"];
+        } else if ($gateway) {
+            $gateway=urldecode($gateway);
+            $mongo_where[$this->gatewayField] = $gateway;
+            $this->url.=sprintf("&gateway=%s",$gateway);
+        }
+
+        if ($duration) {
+            if (preg_match("/\d+/",$duration) ) {
+                $mongo_where[$this->durationField] = array('$gt' => 0);;
+            } elseif (preg_match("/onehour/",$duration) ) {
+                $mongo_where[$this->durationField] = array('$lt' => 3610, '$gt' => 3530);
+            } elseif ($duration == "zero") {
+                $mongo_where[$this->durationField] = 0;
+            } elseif ($duration == "zeroprice" && $this->priceField) {
+                $mongo_where[$this->durationField] = array('$gt' => 0);
+                $mongo_where[$this->priceField] = NULL;
+            } elseif ($duration == "nonzero") {
+                $mongo_where[$this->durationField] = array('$gt' => 0);
+            } elseif ($duration == "onewaymedia") {
+                $mongo_where['$or'] = array(array($this->outputTrafficField => 0), array($this->inputTrafficField => 0));
+                $where .= " and (($this->inputTrafficField > 0 && $this->outputTrafficField = 0) || ($this->inputTrafficField = 0 && $this->outputTrafficField > 0)) " ;
+            } elseif ($duration == "nomedia") {
+                $mongo_where[$this->inputTrafficField] = 0;
+                $mongo_where[$this->outputTrafficField] = 0;
+            }
+            $this->url.=sprintf("&duration=%s",urlencode($duration));
+        }
+
+        if ($media_info) {
+            $this->url.=sprintf("&media_info=%s",urlencode($media_info));
+            $mongo_where[$this->MediaInfoField] = $media_info;
+        }
+
+        $this->url.=sprintf("&maxrowsperpage=%s",addslashes($this->maxrowsperpage));
+        $url_calls = $this->scriptFile.$this->url."&action=search";
+
+        if ($group_by) {
+            $this->url.=sprintf("&group_by=%s",urlencode($group_by));
+        }
+
+        $this->url_edit   = $this->scriptFile.$this->url."&action=edit";
+        $this->url_run    = $this->scriptFile.$this->url."&action=search";
+        $this->url_export = $_SERVER["PHP_SELF"].$this->url."&action=search&export=1";
+
+        if ($duration == "unnormalized") {
+            $mongo_where[$this->normalizedField] = '0';
+        }
+
+        if ($duration == "unnormalized_duration") {
+            $mongo_where[$this->normalizedField] = '0';
+            $mongo_where[$this->durationField] = array('$gt' => 0);
+        }
+
+        if ($group_by) {
+
+            $this->group_byOrig=$group_by;
+
+            if ($group_by=="hour") {
+                $group_by="HOUR(AcctStartTime)";
+            } else if (preg_match("/^DAY/",$group_by)) {
+                $group_by="$group_by(AcctStartTime)";
+            } else if (preg_match("/BYMONTH/",$group_by)) {
+                $group_by="DATE_FORMAT(AcctStartTime,'%Y-%m')";
+            } else if (preg_match("/BYYEAR/",$group_by)) {
+                $group_by="DATE_FORMAT(AcctStartTime,'%Y')";
+            } else if ($group_by=="UserAgentType") {
+                $group_by="SUBSTRING_INDEX($this->SipUserAgentsField, ' ', '1')";
+            }
+
+            $this->group_by=$group_by;
+
+            if ($group_by==$this->callIdField) {
+                $having=sprintf(" having count(%s) > 1 ", addslashes($group_by));
+            }
+
+            $field = array_search($group_by, $this->CDRFields);
+            $pipeline=array(
+                            array('$match' => $mongo_where),
+                            array('$group' => array("_id"      => sprintf('$%s', $field),
+                                                    'calls'    => array('$sum' => 1))),
+                            array('$match' => array('calls' => array('$gte' => 0)))
+            );
+
+            $rows = 0;
+            if ($mongo_table_ro) {
+                try {
+                    $group_results = $mongo_table_ro->aggregate($pipeline);
+                    $rows = count($group_results);
+                } catch (MongoException $e) {
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
+                } catch (MongoConnectionException $e) {
+                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
+                } catch (Exception $e) {
+                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                }
+            }
+
+        } else {
+            $rows = 0;
+            if ($mongo_table_ro) {
+                try {
+                    $rows = $mongo_table_ro->find($mongo_where)->slaveOkay()->count();
+                } catch (MongoException $e) {
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
+                } catch (MongoConnectionException $e) {
+                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
+                } catch (MongoCursorException $e) {
+                    printf("<p>Caught Mongo Cursor exception in show(): %s", $e->getMessage());
+                } catch (Exception $e) {
+                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                }
+            }
+        }
+
+        dprint_r($mongo_where);
+
+        $this->rows=$rows;
+
+        if ($this->CDRTool['filter']['aNumber']) {
+            $this->showResultsMenuSubscriber('0',$begin_datetime,$end_datetime);
+        } else {
+            $this->showResultsMenu('0',$begin_datetime,$end_datetime);
+        }
+
+        if (!$this->next)   {
+            $i=0;
+            $this->next=0;
+        } else {
+            $i=$this->next;
+        }
+        $j=0;
+        $z=0;
+
+        
+        if ($rows>0)  {
+
+            if ($call_id && $ReNormalize) {
+                if ($mongo_table_rw) {
+                    $mongo_table_rw->update(array($this->normalizedField=>0), array('$set' => array($this->callIdField => $call_id)));
+                }
+            }
+
+            if ($UnNormalizedCalls=$this->getUnNormalized($mongo_where,$cdr_table)) {
+                if (!$this->DATASOURCES[$this->cdr_source]['skipNormalizeOnPageLoad']) {
+                    if ($UnNormalizedCalls < $this->maxCDRsNormalizeWeb) {
+                        $this->NormalizeCDRS($mongo_where,$cdr_table);
+                        if (!$this->export && $this->status['normalized'] ) {
+                            print "<div class=\"alert alert-info\">";
+                            printf ("<b><span class=\"alert-heading\">%d</span></b> CDRs normalized. ",$this->status['normalized']);
+                            if ($this->status['cached_keys']['saved_keys']) {
+                                printf ("Quota usage updated for <b><span class=\"alert-heading\">%d</span></b> accounts. ",$this->status['cached_keys']['saved_keys']);
+                            }
+                            print "</div>";
+                        }
+                    }
+                }
+            }
+
+            if ($rows > $this->maxrowsperpage)  {
+                $maxrows=$this->maxrowsperpage+$this->next;
+                if ($maxrows > $rows) {
+                    $maxrows=$rows;
+                    $prev_rows=$maxrows;
+                }
+            } else {
+                $maxrows=$rows;
+            }
+
+            if ($duration == "unnormalized") {
+                // if display un normalized calls we must substract
+                // the amount of calls normalized above
+                $maxrows=$maxrows-$this->status['normalized'];
+            }
+
+            $mongo_order_by = '_id';
+
+            if ($order_type == DESC) {
+                $mongo_order_type = -1;
+            } else {
+                $mongo_order_type = 1;
+            }
+
+            if ($group_by) {
+                if ($order_by == "group_by") {
+                    $mongo_order_by = '_id';
+                } else {
+                    $_tmp = array_search($order_by, $this->CDRFields);
+                    if (in_array($_tmp, array('price', 'duration','inputTraffic', 'outputTraffic'))) {
+                        $mongo_order_by = $_tmp;
+                    } else {
+                        $mongo_order_by = 'calls';
+                    }
+                }
+
+                $pipeline=array(
+                                array('$match' => $mongo_where),
+                                array('$group' => array('_id'           => sprintf('$%s', $field),
+                                                        'calls'         => array( '$sum' => 1),
+                                                        'duration'      => array( '$sum' => '$duration'),
+                                                        'inputTraffic'  => array( '$sum' => '$inputTraffic'),
+                                                        'outputTraffic' => array( '$sum' => '$outputTraffic'),
+                                                        'price'         => array( '$sum' => '$price'),
+                                                        'zero'          => array( '$sum' => array('$cond'=> array(array('$eq' => array('$duration', 0)), 1, 0 ))),
+                                                        'nonzero'       => array( '$sum' => array('$cond'=> array(array('$gt' => array('$duration', 0)), 1, 0 )))
+                                                        )
+                                         ),
+
+                                array('$match' => array('calls' => array('$gte' => 0))),
+                                array('$sort'  => array($mongo_order_by => $mongo_order_type)),
+                                array('$skip'  => intval($i)),
+                                array('$limit' => intval($this->maxrowsperpage))
+                );
+
+                //dprint_r($pipeline);
+
+                try {
+                    $group_results = $mongo_table_ro->aggregate($pipeline);
+                } catch (MongoException $e) {
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
+                } catch (MongoConnectionException $e) {
+                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
+                } catch (Exception $e) {
+                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                }
+
+                $this->showTableHeaderStatistics();
+
+                foreach ($group_results as $result) {
+                    $found=$i+1;
+
+                    $mygroup            = $result['_id'];
+
+                    $calls              = $result['calls'];
+                    $seconds            = $result['duration'];
+                    $price              = $result['price'];
+                    $zero               = $result['zero'];
+                    $zeroP              = $calls/$zero * 100;
+                    $nonzero            = $result['nonzero'];
+                    $nonzeroP           = $calls/$nonzero * 100;
+                    $seconds_print      = number_format($seconds,0);
+                    $minutes            = number_format($seconds/60,0,"","");
+                    $minutes_print      = number_format($seconds/60,0);
+                    $hours              = sec2hms($seconds);
+
+                    $AcctInputOctets    = number_format($result['inputTraffic'] * 2/ 1024/1024,2,".","");
+                    $AcctOutputOctets   = number_format($result['outputTraffic'] * 2/ 1024/1024,2,".","");
+                    $NetRateIn          = $result['inputTraffic']*8*2/1024/$seconds;
+                    $NetRateOut         = $result['outputTraffic']*8*2/1024/$seconds;
+                    $success            = number_format($nonzero/$calls*100,2,".","");
+                    $failure            = number_format($zero/$calls*100,2,".","");
+
+                    $NetworkRateIn      = number_format($NetRateIn,2);
+                    $NetworkRateOut     = number_format($NetRateOut,2);
+                    $NetworkRate        = max($NetworkRateIn,$NetworkRateOut);
+
+                    $rr=floor($found/2);
+                    $mod=$found-$rr*2;
+                
+                    if ($mod ==0) {
+                        $inout_color="lightgrey";
+                    } else {
+                        $inout_color="white";
+                    }
+
+                    $traceValue="";
+                    $mygroup_print=quoted_printable_decode($mygroup);
+
+                    if ($this->group_byOrig==$this->DestinationIdField) {
+                        if ($this->CDRTool['filter']['domain'] && $this->destinations[$this->CDRTool['filter']['domain']]) {
+                            list($_dst_id,$_dst_name)=$this->getPSTNDestinationId($mygroup,'',$this->CDRTool['filter']['domain']);
+                            $description=$_dst_name;
+                        } else {
+                            $description=$this->destinations[0]["default"][$mygroup]["name"];
+                        }
+
+                        if ($mygroup) {
+                            $traceValue=$mygroup;
+                        } else {
+                            $traceValue="empty";
+                        }
+                        
+                    } else if ($this->group_byOrig==$this->aNumberField) {
+                        # Normalize Called Station Id
+                        $N=$this->NormalizeNumber($mygroup);
+                        $mygroup_print=$N['username']."@".$N[domain];
+                        $description="";
+                        $traceField="a_number";
+                        $traceValue=urlencode($mygroup);
+                    } else if ($this->group_byOrig==$this->CanonicalURIField) {
+                        $traceField="c_number";
+                        $traceValue=urlencode($mygroup);
+                    } else if ($this->group_byOrig==$this->SipProxyServerField) {
+                        $traceField="sip_proxy";
+                        $traceValue=urlencode($mygroup);
+                    } else if ($this->group_byOrig==$this->SipCodecField) {
+                        $traceField="SipCodec";
+                    } else if (preg_match("/UserAgent/",$this->group_byOrig)) {
+                        $traceField="UserAgent";
+                    } else if (preg_match("/^BY/",$this->group_byOrig)) {
+                        $traceField="MONTHYEAR";
+                    } else if ($this->group_byOrig==$this->callIdField) {
+                        $traceField="call_id";
+                    } else if ($this->group_byOrig=="SourceIP") {
+                        $traceField = "gateway";
+                    } else if ($this->group_byOrig=="SipResponseCode") {
+                        $description = $this->disconnectCodesDescription[$mygroup];
+                        $traceField="sip_status";
+                    } else if ($this->group_byOrig=="SipApplicationType") {
+                        $traceField="application";
+                    } else if ($this->group_byOrig=="ServiceType") {
+                        $traceField="flow";
+                    } else {
+                        $description="";
+                    }
+
+                    if (!$traceField) {
+                        $traceField    = $group_by;
+                    }
+
+                    if (!$traceValue) {
+                        $traceValue    = $mygroup;
+                    }
+
+                    if (!$traceValue) {
+                        $traceValue="";
+                        $comp_type="empty";
+                    } else {
+                        $comp_type="begin";
+                    }
+
+                    $traceValue_enc=urlencode($traceValue);
+
+                    if (!$this->export) {
+                        print "
+                            <tr>
+                            <td><b>$found</b></td>
+                            <td align=right>$calls</td>
+                            <td align=right>$seconds_print</td>
+                            <td align=right>$minutes_print</td>
+                            <td align=right>$hours</td>
+                            ";
+                            if ($perm->have_perm("showPrice")) {
+                                $pricePrint=number_format($price,4,".","");
+                            } else {
+                                $pricePrint='x.xxx';
+                            }
+                            print "
+                            <td align=right>$pricePrint</td>
+                            <td align=right>$AcctInputOctets</td>
+                            <td align=right>$AcctOutputOctets</td>
+                            <td align=right>$success%</td>
+                            <td align=right>($nonzero calls)</td>
+                            <td align=right>$failure%</td>
+                            <td align=right>($zero calls)</td>
+                            <td>$mygroup_print</td>
+                            <td>$description</td>
+                            <td>";
+                            printf("<a href=%s&%s=%s&%s_comp=%s target=_new>Display calls</a></td>",$url_calls,$traceField,$traceValue_enc,$traceField,$comp_type);
+                            print "
+                            </tr>
+                            ";
+                        } else {
+                             print "$found,";
+                             print "$calls,";
+                             print "$seconds,";
+                             print "$minutes,";
+                             print "$hours,";
+                             if ($perm->have_perm("showPrice")) {
+                                 $pricePrint=$price;
+                             } else {
+                                 $pricePrint='x.xxx';
+                             }
+                             print "$pricePrint,";
+                             print "$AcctInputOctets,";
+                             print "$AcctOutputOctets,";
+                             print "$success,";
+                             print "$nonzero,";
+                             print "$failure,";
+                             print "$zero,";
+                             print "$mygroup_print,";
+                             print "$description";
+                             print "\n";
+                        }
+                        $i++;
+                     }
+
+                     if (!$this->export) {
+                        print "
+                        </table>
+                        ";
+                     }
+            
+                } else {
+                    if (!$this->export) {
+                       // printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
+                    }
+                
+                if ($order_by=="zeroP" || $order_by=="nonzeroP") {
+                    $order_by="timestamp";
+                }
+
+                if ($mongo_table_ro) {
+                    $cursor = $mongo_table_ro->find($mongo_where)->sort(array($mongo_order_by=>$mongo_order_type))->skip($i)->limit($this->maxrowsperpage)->slaveOkay();;
+                } else {
+                    $cursor = array();
+                }
+
+                if ($this->CDRTool['filter']['aNumber']) {
+                    $this->showTableHeaderSubscriber();
+                } else {
+                    if (!$this->export) {
+                        $this->showTableHeader();
+                    } else {
+                        $this->showExportHeader();
+                    }
+                }
+
+                foreach ($cursor as $result) {
+                    global $found;
+                    $found=$i+1;
+
+                    $Structure=$this->_readCDRFieldsFromDB($result);
+                    $CDR = new $this->CDR_class($this, $Structure);
+
+                    if ($this->CDRTool['filter']['aNumber']) {
+                        $CDR->showSubscriber();
+                    } else {
+                         if (!$this->export) {
+                            $CDR->show();
+                        } else {
+                            $CDR->export();
+                        }
+                    }
+
+                    $i++;
+                 }
+
+                 if (!$this->export) {
+                    print "
+                    </table>
+                    ";
+                 }
+        
+            }
+
+            $this->showPagination($this->next,$maxrows);
+        }
+    }
+
+}
+
+class CDR_opensips_mongo extends CDR_opensips {
 }
 
 class SIP_trace {

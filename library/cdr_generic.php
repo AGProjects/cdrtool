@@ -27,19 +27,19 @@ class CDRS {
     var $CallerIsLocal       = false;
     var $CalleeIsLocal       = false;
 
-    var $CDRNormalizationFields=array('id'               => 'RadAcctId',
+    var $CDRNormalizationFields=array('id'              => 'RadAcctId',
                                       'callId'          => 'AcctSessionId',
                                       'username'        => 'UserName',
-                                      'domain'            => 'Realm',
+                                      'domain'          => 'Realm',
                                       'gateway'         => 'NASIPAddress',
                                       'duration'        => 'AcctSessionTime',
                                       'startTime'       => 'AcctStartTime',
                                       'stopTime'        => 'AcctStopTime',
                                       'inputTraffic'    => 'AcctInputOctets',
                                       'outputTraffic'   => 'AcctOutputOctets',
-                                      'aNumber'          => 'CallingStationId',
-                                      'cNumber'           => 'CalledStationId',
-                                      'timestamp'        => 'timestamp',
+                                      'aNumber'         => 'CallingStationId',
+                                      'cNumber'         => 'CalledStationId',
+                                      'timestamp'       => 'timestamp',
                                       'BillingPartyId'  => 'UserName',
                                       'sipRPID'         => 'SipRPID',
                                       'ResellerId'      => 'BillingId',
@@ -64,63 +64,19 @@ class CDRS {
         return $CDRStructure;
     }
 
-    function CDRS($cdr_source) {
-
-        global $CDRTool;
-        global $DATASOURCES;
-           global $RatingEngine;
-
-        if (!$cdr_source) {
-            $log="Error: cdr_source not defined\n";
-            syslog(LOG_NOTICE, $log);
-            return 0;
-        }
-
-        if (!$DATASOURCES[$cdr_source] || !$DATASOURCES[$cdr_source]['db_class']) {
-            $log="Error: no such datasource defined ($cdr_source) \n";
-            syslog(LOG_NOTICE, $log);
-            return 0;
-        }
-
-        $this->initDefaults();
-
-        $this->cdrtool         = new DB_CDRTool();
-        $this->cdr_source      = $cdr_source;
-        $this->CDRTool         = $CDRTool;
-        $this->rating_settings = $RatingEngine;
-        $this->DATASOURCES     = $DATASOURCES;
-
-        $this->cdrtool->Halt_On_Error="no";
-
-        $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
-
+    function initCDRFields() {
         // init names of CDR fields
         foreach (array_keys($this->CDRFields) as $field) {
             $mysqlField=$this->CDRFields[$field];
             $_field=$field."Field";
             $this->$_field=$mysqlField;
         }
+    }
 
-        if ($this->DATASOURCES[$this->cdr_source]['rating']) {
-            $this->ratingEnabled   = 1;
-            $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
-            if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
-            if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
-            if ($this->DATASOURCES[$this->cdr_source]['priceField']) $this->priceField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
-        }
-
-        if ($this->DATASOURCES[$this->cdr_source]['UserQuotaClass']) {
-            $this->quotaEnabled     = 1;
-            $this->quota_init_flag  = $this->cdr_source.':quotaCheckInit';
-            $this->quota_reset_flag = $this->cdr_source.':reset_quota_for';
-            if ($this->DATASOURCES[$this->cdr_source]['daily_quota']) {
-                $this->daily_quota=$this->DATASOURCES[$this->cdr_source]['daily_quota'];
-            }
-        }
-
+    function initDatabaseConnection() {
         // connect to the CDR database(s)
         if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
-            $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined",$this->cdr_source);
+            $log=sprintf("Error: \$DATASOURCES['%s']['db_class'] is not defined (init)",$this->cdr_source);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -164,6 +120,83 @@ class CDRS {
             $this->CDRdb1         = new $this->primary_database;
             $this->db_class       = $this->primary_database;
         }
+        return 1;
+    }
+
+    function CDRS($cdr_source) {
+
+        global $CDRTool;
+        global $DATASOURCES;
+        global $RatingEngine;
+
+        if (!$cdr_source) {
+            $log="Error: cdr_source not defined\n";
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        if (!$DATASOURCES[$cdr_source]) {
+            $log="Error: no such datasource defined ($cdr_source) \n";
+            syslog(LOG_NOTICE, $log);
+            return 0;
+        }
+
+        $this->initDefaults();
+
+        $this->cdrtool         = new DB_CDRTool();
+        $this->cdr_source      = $cdr_source;
+        $this->CDRTool         = $CDRTool;
+        $this->rating_settings = $RatingEngine;
+        $this->DATASOURCES     = $DATASOURCES;
+
+        $this->cdrtool->Halt_On_Error="no";
+
+        $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
+
+        #TODO remove me, I am used to temporary sync mysql data with mongo data
+        if ($DATASOURCES[$cdr_source]['mongo_db']) {
+            $mongo_db         = $this->CDRTool['mongo_db'][$DATASOURCES[$this->cdr_source]['mongo_db']];
+            $mongo_uri        = $mongo_db['uri'];
+            $mongo_replicaSet = $mongo_db['replicaSet'];
+            $mongo_database   = $mongo_db['database'];
+            try {
+                $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $db = $mongo_connection->selectDB($mongo_database);
+                $this->mongo_table = $db->selectCollection($this->table);
+            } catch (MongoException $e) {
+                printf("<p>Caught Mongo exception in initDatabaseConnection(): %s", $e->getMessage());
+                return 0;
+            } catch (MongoConnectionException $e) {
+                printf("<p>Caught Mongo Connection exception in initDatabaseConnection(): %s", $e->getMessage());
+                return 0;
+            } catch (Exception $e) {
+                printf("<p>Caught exception in initDatabaseConnection(): %s", $e->getMessage());
+                return 0;
+            }
+        } else {
+            $this->mongo_table = NULL;
+        }
+
+        $this->initCDRFields();
+
+        if ($this->DATASOURCES[$this->cdr_source]['rating']) {
+            $this->ratingEnabled   = 1;
+            $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
+            if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
+            if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
+            if ($this->DATASOURCES[$this->cdr_source]['priceField']) $this->priceField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
+        }
+
+        if ($this->DATASOURCES[$this->cdr_source]['UserQuotaClass']) {
+            $this->quotaEnabled     = 1;
+            $this->quota_init_flag  = $this->cdr_source.':quotaCheckInit';
+            $this->quota_reset_flag = $this->cdr_source.':reset_quota_for';
+            if ($this->DATASOURCES[$this->cdr_source]['daily_quota']) {
+                $this->daily_quota=$this->DATASOURCES[$this->cdr_source]['daily_quota'];
+            }
+        }
+
+        $this->initDatabaseConnection();
 
         if ($this->DATASOURCES[$this->cdr_source]['DestinationIdField']) {
             $this->DestinationIdField = $this->DATASOURCES[$this->cdr_source]['DestinationIdField'];
@@ -879,14 +912,6 @@ class CDRS {
 
     function unNormalize($where="",$table) {
 
-        // do not allow renormalization for readonly accounts
-        global $perm;
-        if (is_object($perm) && $perm->have_perm('readonly')) return false;
-
-        if (!$where) $where=" (1=1) ";
-
-        if (!$table) $table=$this->table;
-
         if ($this->skipNormalize) {
             return 0;
         }
@@ -894,6 +919,14 @@ class CDRS {
         if (!$this->normalizedField) {
             return 0;
         }
+
+        // do not allow renormalization for readonly accounts
+        global $perm;
+        if (is_object($perm) && $perm->have_perm('readonly')) return false;
+
+        if (!$where) $where=" (1=1) ";
+
+        if (!$table) $table=$this->table;
 
         $query=sprintf("update %s set %s = '0' where %s ",
         addslashes($table),
@@ -960,7 +993,7 @@ class CDRS {
     function getUnNormalized($where="",$table) {
 
         if ($this->skipNormalize) {
-            return 1;
+            return 0;
         }
 
         if (!$where) $where=" (1=1) ";
@@ -971,7 +1004,7 @@ class CDRS {
         if ($ReNormalize) $this->unNormalize($where,$table);
 
         if (!$this->normalizedField) {
-            return 1;
+            return 0;
         }
 
         $this->buildWhereForUnnormalizedSessions();
@@ -1057,8 +1090,8 @@ class CDRS {
 
         while ($this->CDRdb->next_record()) {
 
-            $Structure=$this->_readCDRNormalizationFieldsFromDB();
-
+            //$Structure=$this->_readCDRNormalizationFieldsFromDB();
+            $Structure=$this->_readCDRFieldsFromDB();
             if ($this->csv_writter) {
                 if (!$this->csv_file_cannot_be_opened) {
                     if (!$this->csv_writter->ready) {
@@ -2028,7 +2061,6 @@ class CDR {
     }
 
     function normalize($save="",$table="") {
-
         if (!$table) $table = $this->CDRS->table;
 
         if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize']['CS_CODES'][$this->CDRS->CSCODE]) {
@@ -2037,6 +2069,7 @@ class CDR {
         }
 
         if ($save) {
+
             if (!$this->id) {
                 return 0;
             }
@@ -2049,12 +2082,16 @@ class CDR {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s='1' ",addslashes($this->CDRS->normalizedField));
+                $mongo_field = array_search($this->CDRS->normalizedField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = 1;
             }
 
             if ($this->CDRS->BillingPartyIdField && $this->BillingPartyId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
+                $mongo_field = array_search($this->CDRS->BillingPartyIdField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->BillingPartyId;
             }
 
             if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
@@ -2062,24 +2099,35 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s ='%s' ",addslashes($this->CDRS->durationField),addslashes($this->durationNormalized));
                 $this->duration=$this->durationNormalized;
+                $mongo_field = array_search($this->CDRS->durationField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = intval($this->durationNormalized);
+            } else {
+                $mongo_field = array_search($this->CDRS->durationField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = intval($this->duration);
             }
 
             if ($this->CDRS->DestinationIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->DestinationIdField),addslashes($this->DestinationId));
+                $mongo_field = array_search($this->CDRS->DestinationIdField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->DestinationId;
             }
 
             if ($this->CDRS->ResellerIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->ResellerIdField),addslashes($this->ResellerId));
+                $mongo_field = array_search($this->CDRS->ResellerIdField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->ResellerId;
             }
 
             if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->usernameField),addslashes($this->usernameNormalized));
+                $mongo_field = array_search($this->CDRS->usernameField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->usernameNormalized;
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
@@ -2087,6 +2135,8 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->aNumberField),addslashes($this->aNumberNormalized));
                 $this->aNumber=$this->aNumberNormalized;
+                $mongo_field = array_search($this->CDRS->aNumberField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->aNumberNormalized;
             }
 
             if ($this->CDRS->applicationField && $this->applicationNormalized) {
@@ -2094,12 +2144,16 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->applicationField), addslashes($this->applicationNormalized));
                 $this->application=$this->applicationNormalized;
+                $mongo_field = array_search($this->CDRS->applicationField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->applicationNormalized;
             }
 
             if ($this->CDRS->flowField && $this->flow) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->flowField),addslashes($this->flow));
+                $mongo_field = array_search($this->CDRS->flowField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->flow;
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
@@ -2108,6 +2162,8 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->domainField),addslashes($this->domainNormalized));
                 $this->domainNumber=$this->domainNormalized;
                 $this->domain=$this->domainNormalized;
+                $mongo_field = array_search($this->CDRS->domainField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->domainNormalized;
             }
 
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
@@ -2115,30 +2171,40 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->cNumberField),addslashes($this->cNumberNormalized));
                 $this->cNumber=$this->cNumberNormalized;
+                $mongo_field = array_search($this->CDRS->cNumberField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->cNumberNormalized;
             }
 
             if ($this->CDRS->BillingIdField && $this->BillingId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingIdField),addslashes($this->BillingId));
+                $mongo_field = array_search($this->CDRS->BillingIdField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->BillingId;
             }
 
             if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->RemoteAddressField),addslashes($this->RemoteAddressNormalized));
+                $mongo_field = array_search($this->CDRS->RemoteAddressField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->RemoteAddressNormalized;
             }
 
             if ($this->CDRS->CanonicalURIField && $this->CanonicalURINormalized && $this->CanonicalURINormalized!= $this->CanonicalURI) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->CanonicalURIField),addslashes($this->CanonicalURINormalized));
+                $mongo_field = array_search($this->CDRS->CanonicalURIField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->CanonicalURINormalized;
             }
 
             if ($this->stopTimeNormalized) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->stopTimeField),addslashes($this->stopTimeNormalized));
+                $mongo_field = array_search($this->CDRS->stopTimeField, $this->CDRS->CDRFields);
+                $this->mongo_cdr[$mongo_field] = $this->stopTimeNormalized;
             }
 
             if ($this->CDRS->ratingEnabled && ($this->duration || $this->application == 'message')) {
@@ -2203,11 +2269,15 @@ class CDR {
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
                     $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->priceField),addslashes($this->pricePrint));
+                    $mongo_field = array_search($this->CDRS->priceField, $this->CDRS->CDRFields);
+                    $this->mongo_cdr[$mongo_field] = floatval($this->pricePrint);
     
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
                         $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->rateField),addslashes($this->rateInfo));
+                        $mongo_field = array_search($this->CDRS->rateField, $this->CDRS->CDRFields);
+                        $this->mongo_cdr[$mongo_field] = $this->rateInfo;
                     }
                 }
             }
@@ -2215,8 +2285,19 @@ class CDR {
             $query1 = sprintf("update %s set %s where %s = '%s'",addslashes($table),$query,addslashes($this->idField),addslashes($this->id));
             dprint($query1);
 
-            if ($updatedFields) {
+            #TODO remove me, I am used to temporary sync mysql data with mongo data
+            if ($this->CDRS->mongo_table) {
+                $mongo_field = array_search($this->idField, $this->CDRS->CDRFields);
+                try {
+                    $this->CDRS->mongo_table->update(array($mongo_field => $this->id), $this->mongo_cdr, array("upsert" => true));
+                } catch (MongoException $e) {
+                    printf("Caught Mongo exception: %s", $e->getMessage());
+                } catch (Exception $e) {
+                    printf("Caught exception: %s", $e->getMessage());
+                }
+            }
 
+            if ($updatedFields) {
                 if ($this->CDRS->CDRdb1->query($query1)) {
                     if ($this->CDRS->CDRdb1->affected_rows()) {
                         if ($this->isBillingPartyLocal()) {
@@ -2277,6 +2358,7 @@ class CDR {
                     return 0;
                 }
             }
+
         } else {
             if ($this->CDRS->BillingPartyIdField && $CarrierInfo['BillingPartyId']) {
                 $this->domain = $CarrierInfo['BillingDomain'];
