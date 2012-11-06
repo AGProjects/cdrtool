@@ -144,7 +144,7 @@ class SipSettings {
     var $enrollment_url      = false;
     var $sip_settings_api_url= false;
     var $journalEntries      = array();
-
+    var $chat_replication_backend = 'mysql';   // mongo or mysql
 	var $owner_information   =array();
 
     var $languages=array("en"=>array('name'=>"English",
@@ -434,6 +434,14 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['enrollment_url']) {
         	$this->enrollment_url =$this->soapEngines[$this->sip_engine]['enrollment_url'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['chat_replication_backend']) {
+        	$this->chat_replication_backend = $this->soapEngines[$this->sip_engine]['chat_replication_backend'];
+        }
+
+        if ($this->soapEngines[$this->sip_engine]['mongo_db']) {
+        	$this->mongo_db = $this->soapEngines[$this->sip_engine]['mongo_db'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['sip_settings_api_url']) {
@@ -783,6 +791,36 @@ class SipSettings {
 
     }
 
+    function getMongoJournalTable() {
+        $this->mongo_table_ro = NULL;
+        $this->mongo_table_rw = NULL;
+        $this->mongo_exception = 'Mongo exception';
+
+        if (is_array($this->mongo_db)) {
+            $mongo_uri        = $this->mongo_db['uri'];
+            $mongo_replicaSet = $this->mongo_db['replicaSet'];
+            $mongo_database   = $this->mongo_db['database'];
+            $mongo_table      = $this->mongo_db['table'];
+            try {
+                $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $mongo_db = $mongo_connection->selectDB($mongo_database);
+                $this->mongo_table_ro = $mongo_db->selectCollection($mongo_table);
+                $this->mongo_table_ro->setSlaveOkay(true);
+                $this->mongo_table_rw = $mongo_db->selectCollection($mongo_table);
+                return true;
+            } catch (MongoException $e) {
+                $this->mongo_exception=$e->getMessage();
+                return false;
+            } catch (MongoConnectionException $e) {
+                $this->mongo_exception=$e->getMessage();
+                return false;
+            } catch (Exception $e) {
+                $this->mongo_exception=$e->getMessage();
+                return false;
+            }
+        }
+        return false;
+    }
     function getAccount($account) {
         dprint("getAccount($account, engine=$this->sip_engine)");
 
@@ -6382,61 +6420,99 @@ class SipSettings {
     }
 
     function getJournalEntries() {
-        $this->db = new DB_CDRTool();
-
         $this->journalEntries['success']       = false;
         $this->journalEntries['error_message'] = NULL;
         $this->journalEntries['results']       = array();
+        if ($this->chat_replication_backend == 'mysql') {
+            $this->db = new DB_CDRTool();
+     
+            $where="";
+            if ($_REQUEST['except_uuid']) {
+                $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
+            }
+            if ($_REQUEST['after_id']) {
+                $after_id = intval($_REQUEST['after_id']);
+            } else {
+                $after_id = 0;
+            }
+            $where.= sprintf(" and id > %d", addslashes($after_id));
+            if ($_REQUEST['after_timestamp']) {
+                $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
+            }
+            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
+                $limit = intval($limit);
+            } else {
+                $limit = 1000;
+            }
+     
+            $query=sprintf("select * from client_journal where account = '%s' %s order by timestamp ASC limit %d",  addslashes($this->account), $where, $limit);
+            if (!$this->db->query($query)) {
+                $this->journalEntries['error_message'] = 'Database Failure';
+                $this->journalEntries['rows'] = 0;
+                return false;
+            } else {
+                $this->journalEntries['success'] = true;
+                $this->journalEntries['rows'] = $this->db->num_rows();
+            }
+     
+            if ($this->db->num_rows()) {
+                while ($this->db->next_record()) {
+                    $entry = array(
+                                   'id'          => $this->db->f('id'),
+                                   'source'      => 'default',
+                                   'timestamp'   => $this->db->f('timestamp'),
+                                   'account'     => $this->db->f('account'),
+                                   'uuid'        => $this->db->f('uuid'),
+                                   'ip_address'  => $this->db->f('ip_address'),
+                                   'data'        => $this->db->f('data')
+                                   );
+                    $this->journalEntries['results'][]=$entry;
+                }
+            }
+        } else {
+            if (!$this->getMongoJournalTable()) {
+                $result['success'] = false;
+                $result['error_message'] = $this->mongo_exception;
+                return $result;
+            }
 
-        $where="";
-        if ($_REQUEST['except_uuid']) {
-            $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
-        }
-        if ($_REQUEST['after_id']) {
-            $after_id = intval($_REQUEST['after_id']);
-        } else {
-            $after_id = 0;
-        }
-        $where.= sprintf(" and id > %d", addslashes($after_id));
-        if ($_REQUEST['after_timestamp']) {
-            $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
-        }
-        if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
-            $limit = intval($limit);
-        } else {
-            $limit = 1000;
-        }
+            $mongo_where=array();
+            $mongo_where['account'] = $this->account;
+            if ($_REQUEST['except_uuid']) {
+                $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
+            }
+            if ($_REQUEST['after_id']) {
+                $mongo_where['timestamp'] = array('$gte' => intval($_REQUEST['after_id']));
+            }
 
-        $query=sprintf("select * from client_journal where account = '%s' %s order by timestamp ASC limit %d",  addslashes($this->account), $where, $limit);
-        if (!$this->db->query($query)) {
-            $this->journalEntries['error_message'] = 'Database Failure';
-            $this->journalEntries['rows'] = 0;
-            return false;
-        } else {
+            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
+                $limit = intval($limit);
+            } else {
+                $limit = 1000;
+            }
+
+            $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
             $this->journalEntries['success'] = true;
-            $this->journalEntries['rows'] = $this->db->num_rows();
-        }
+            $this->journalEntries['rows'] = $cursor->count();
 
-        if ($this->db->num_rows()) {
-            while ($this->db->next_record()) {
+            foreach ($cursor as $result) {
                 $entry = array(
-                               'id'          => $this->db->f('id'),
+                               'id'          => strval($result['_id']),
                                'source'      => 'default',
-                               'timestamp'   => $this->db->f('timestamp'),
-                               'account'     => $this->db->f('account'),
-                               'uuid'        => $this->db->f('uuid'),
-                               'ip_address'  => $this->db->f('ip_address'),
-                               'data'        => $this->db->f('data')
+                               'timestamp'   => $result['timestamp'],
+                               'account'     => $result['account'],
+                               'uuid'        => $result['uuid'],
+                               'ip_address'  => $result['ip_address'],
+                               'data'        => $result['data']
                                );
                 $this->journalEntries['results'][]=$entry;
             }
-        }
 
+        }
         return True;
     }
 
     function putJournalEntries() {
-        $this->db = new DB_CDRTool();
         if (strlen($_REQUEST['uuid'])) {
             $uuid = $_REQUEST['uuid'];
         } else {
@@ -6451,24 +6527,59 @@ class SipSettings {
             $result['error_message'] = 'Missing data';
             return $result;
         }
+
+        if ($this->chat_replication_backend == 'mysql') {
+            $this->db = new DB_CDRTool();
+        } else if ($this->chat_replication_backend == 'mongo') {
+            if (!$this->getMongoJournalTable()) {
+                $result['success'] = false;
+                $result['error_message'] = $this->mongo_exception;
+                return $result;
+            }
+        }
         if ($rows=json_decode($data)) {
             foreach ($rows as $row) {
                 $entry = $row->data;
-                $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), addslashes($_SERVER['REMOTE_ADDR']));
-                if (!$this->db->query($query)) {
-                    $result['results'][]=array('id'         => $row->id,
-                                               'journal_id' => NULL,
-                                               'source'     => 'default'
-                                            );
-                } else {
-                    $query="select LAST_INSERT_ID() as id";
-                    $this->db->query($query);
-                    $this->db->next_record();
-                    $id = $this->db->f('id');
-                    $result['results'][]=array('id'         => $row->id,
-                                               'journal_id' => $id,
-                                               'source'     => 'default'
-                                               );
+                if ($this->chat_replication_backend == 'mysql') {
+                    $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), addslashes($_SERVER['REMOTE_ADDR']));
+                    if (!$this->db->query($query)) {
+                        $result['results'][]=array('id'         => $row->id,
+                                                   'journal_id' => NULL,
+                                                   'source'     => 'default'
+                                                );
+                    } else {
+                        $query="select LAST_INSERT_ID() as id";
+                        $this->db->query($query);
+                        $this->db->next_record();
+                        $id = $this->db->f('id');
+                        $result['results'][]=array('id'         => $row->id,
+                                                   'journal_id' => $id,
+                                                   'source'     => 'default'
+                                                   );
+                    }
+
+                } else if ($this->chat_replication_backend == 'mongo') {
+                    $timestamp = time();
+                    $mongo_query=array('timestamp'  => $timestamp,
+                                       'account'    => $this->account,
+                                       'uuid'       => $uuid,
+                                       'data'       => $entry,
+                                       'ip_address' => $_SERVER['REMOTE_ADDR']
+                                       );
+
+                    $this->mongo_table_rw->insert($mongo_query);
+                    if ($mongo_query['_id']) {
+                        $mongo_id = $mongo_query['_id'];
+                        $result['results'][]=array('id'         => $row->id,
+                                                   'journal_id' => $timestamp,
+                                                   'source'     => 'default'
+                                                   );
+                    } else {
+                        $result['results'][]=array('id'         => $row->id,
+                                                   'journal_id' => NULL,
+                                                   'source'     => 'default'
+                                                );
+                    }
                 }
             }
             $result['success'] = true;
