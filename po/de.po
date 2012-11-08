@@ -39,7 +39,7 @@ msgstr "Zum Ändern %s wählen"
 #: /var/www/CDRTool/library/sip_settings.php:313
 #, php-format
 msgid "Reject Anonymous"
-msgstr "Ablehnen Anonym"
+msgstr "Anonyme Anrufe ablehnen"
 
 #: /var/www/CDRTool/library/sip_settings.php:321
 #, php-format
@@ -802,7 +802,7 @@ msgstr "Tabs"
 #: /etc/cdrtool/local/sip_settings.php:926
 #, php-format
 msgid "Notifications Address"
-msgstr "Nachrichten werden an weitergeleitet an"
+msgstr "Nachrichten werden weitergeleitet an"
 
 #: /var/www/CDRTool/library/sip_settings.php:3465
 #: /etc/cdrtool/local/sip_settings.php:932
@@ -1262,7 +1262,7 @@ msgstr "Abgelehnte Anrufer"
 msgid ""
 "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
 msgstr ""
-"Verwenden Sie %Nummer@% auf Telefon-Nummern und user@domain für SIP-Adressen"
+"Verwenden Sie %Nummer@% für Telefon-Nummern und user@domain für SIP-Adressen"
 
 #: /var/www/CDRTool/library/sip_settings.php:7186
 msgid "Please fill in the e-mail address. "
