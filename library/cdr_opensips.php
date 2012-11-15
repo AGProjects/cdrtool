@@ -1257,34 +1257,17 @@ class CDRS_opensips extends CDRS {
 
         $Realm=trim($Realm);
 
-        if ($this->CDRTool['filter']['domain']) {
-            $where .= "
-            and (" ;
-            $rr=0;
-            foreach ($this->CDRTool['filter']['domain'] as $realm) {
-                if ($rr) $where .= " or ";
-                $where .= " $this->domainField like '".addslashes($realm)."%' ";
-                $rr++;
+        if ($Realms)  {
+            $where .= sprintf("and %s in (",$this->domainField);
+            foreach ($Realms as $realm) {
+                $where .= sprintf("'%s',",addslashes($realm));
             }
-            $where .= " ) ";
-
+            $where=rtrim($where, ",");
+            $where .= ") ";
         } else if ($Realm) {
             $Realm=urldecode($Realm);
-            $where .= " and $this->domainField like '".addslashes($Realm)."%' ";
+            $where .= sprintf(" and %s = '%s' ", $this->domainField, addslashes($Realm));
             $this->url.=sprintf("&Realm=%s",urlencode($Realm));
-        } else if ($Realms)  {
-            $where .= "
-            and (" ;
-            $rr=0;
-            foreach ($Realms as $realm) {
-                if ($rr) {
-                    $where .= " or ";
-                }
-                $where .= " $this->domainField like '".addslashes($realm)."%' ";
-
-                $rr++;
-            }
-            $where .= " ) ";
         }
 
         $BillingId=trim($BillingId);
