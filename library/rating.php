@@ -26,14 +26,11 @@ class Rate {
 
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
     var $broken_rate            = false;
+    var $database_backend       = "mysql";
 
     function Rate($settings=array(),$db) {
 
         $this->settings = $settings;
-
-        $this->db = $db;
-
-        $this->db->Halt_On_Error="no";
 
         if ($this->settings['priceDenominator']) {
             $this->priceDenominator=$this->settings['priceDenominator'];
@@ -64,6 +61,16 @@ class Rate {
         if ($this->settings['increment']) {
             $this->increment=$this->settings['increment'];
         }
+
+        if ($this->settings['database_backend']) {
+            $this->database_backend=$this->settings['database_backend'];
+        }
+
+        if ($this->database_backend == "mysql") {
+            $this->db->Halt_On_Error="no";
+        }
+
+        $this->db = $db;
 
     }
 
@@ -1440,6 +1447,7 @@ class Rate {
 }
 
 class RatingTables {
+    var $database_backend = 'mysql';   // mongo or mysql
     var $csv_export=array(
                            "destinations"          => "destinations.csv",
                            "billing_customers"     => "customers.csv",
@@ -1985,12 +1993,6 @@ class RatingTables {
 
         $this->readonly=$readonly;
 
-        $this->db = new DB_cdrtool;
-        $this->db1 = new DB_cdrtool;
-
-        $this->db->Halt_On_Error="no";
-        $this->db1->Halt_On_Error="no";
-
         if ($this->settings['csv_delimiter']) {
             $this->delimiter=$this->settings['csv_delimiter'];
         }
@@ -2016,6 +2018,39 @@ class RatingTables {
             }
         }
 
+        if ($this->settings['database_backend']) {
+            $this->database_backend = $this->settings['database_backend'];
+        }
+
+        $this->db = new DB_cdrtool;
+        $this->db1 = new DB_cdrtool;
+ 
+        $this->db->Halt_On_Error="no";
+        $this->db1->Halt_On_Error="no";
+ 
+        if ($this->database_backend == "mysql") {
+        } else if ($this->database_backend == "mongo") {
+            $this->mongo_safe = 1;
+            if (is_array($this->settings['mongo_db'])) {
+                $mongo_uri        = $this->settings['mongo_db']['uri'];
+                $mongo_replicaSet = $this->settings['mongo_db']['replicaSet'];
+                $mongo_database   = $this->settings['mongo_db']['database'];
+                if ($this->settings['mongo_db']['safe']) {
+                    $this->mongo_safe = $this->settings['mongo_db']['safe'];
+                }
+                try {
+                    $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                    $this->mongo_db_ro = $mongo_connection->selectDB($mongo_database);
+                    $this->mongo_db_ro->setSlaveOkay(true);
+                    $this->mongo_db_rw = $mongo_connection->selectDB($mongo_database);
+                    $this->mongo_exception = NULL;
+                } catch (MongoConnectionException $e) {
+                    $this->mongo_db_ro = NULL;
+                    $this->mongo_db_rw = NULL;
+                    $this->mongo_exception=$e->getMessage();
+                }
+            }
+        }
     }
 
     function ImportCSVFiles($dir=false) {
@@ -3012,6 +3047,7 @@ class RatingTables {
                 addslashes($max_duration),
                 addslashes($max_price)
                 );
+
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -3024,6 +3060,38 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                          'gateway'      => $gateway,
+                                          'domain'       => $domain,
+                                          'subscriber'   => $subscriber,
+                                          'dest_id'      => $dest_id,
+                                          'region'       => $region,
+                                          'dest_name'    => $dest_name,
+                                          'increment'    => intval($increment),
+                                          'min_duration' => intval($min_duration),
+                                          'max_duration' => intval($max_duration),
+                                          'max_price'    => floatval($max_price)
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in destinations: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in destinations: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } elseif ($ops=="3") {
                 $query=sprintf("delete from destinations
                 where gateway      = '%s'
@@ -3048,6 +3116,33 @@ class RatingTables {
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
+                            $mongo_table_rw->remove(array('gateway'     => $gateway,
+                                                          'reseller_id' => intval(reseller_id),
+                                                          'domain'      => $domain,
+                                                          'subscriber'  => $subscriber,
+                                                          'dest_id'     => $dest_id
+                                                          ),
+                                                    array("safe" => $self->mongo_safe)
+                                                    );
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when deleting from destinations: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when deleting from destinations: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } elseif ($ops=="2") {
                 $query=sprintf("select * from destinations
                 where gateway      = '%s'
@@ -3106,7 +3201,49 @@ class RatingTables {
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
-                 } else {
+
+                    dprint($this->database_backend);
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_match = array('gateway'     => $gateway,
+                                                 'reseller_id' => intval(reseller_id),
+                                                 'domain'      => $domain,
+                                                 'subscriber'  => $subscriber,
+                                                 'dest_id'     => $dest_id
+                                                 );
+                            $mongo_data = array('reseller_id'  => intval(reseller_id),
+                                                'gateway'      => $gateway,
+                                                'domain'       => $domain,
+                                                'subscriber'   => $subscriber,
+                                                'dest_id'      => $dest_id,
+                                                'region'       => $region,
+                                                'dest_name'    => $dest_name,
+                                                'increment'    => intval($increment),
+                                                'min_duration' => intval($min_duration),
+                                                'max_duration' => intval($max_duration),
+                                                'max_price'    => floatval($max_price)
+                                                );
+                            $mongo_options = array("upsert" => true,
+                                                   "safe" => $self->mongo_safe
+                                                   );
+
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
+                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when updating destinations: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when updating destinations: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
+                } else {
                     $query=sprintf("insert into destinations
                     (
                     reseller_id,
@@ -3158,7 +3295,36 @@ class RatingTables {
                         $failed++;
                     }
 
-                 }
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                              'gateway'      => $gateway,
+                                              'domain'       => $domain,
+                                              'subscriber'   => $subscriber,
+                                              'dest_id'      => $dest_id,
+                                              'region'       => $region,
+                                              'dest_name'    => $dest_name,
+                                              'increment'    => intval($increment),
+                                              'min_duration' => intval($min_duration),
+                                              'max_duration' => intval($max_duration),
+                                              'max_price'    => floatval($max_price)
+                                              );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
+                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when inserting in destinations: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when inserting in destinations: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
+                }
             } else {
                 $skipped++;
             }
@@ -4725,7 +4891,6 @@ class RatingTables {
     }
 
     function showTable() {
-
         $PHP_SELF=$_SERVER['PHP_SELF'];
 
         foreach ($this->web_elements as $_el) {
