@@ -2029,6 +2029,7 @@ class RatingTables {
         $this->db1->Halt_On_Error="no";
  
         if ($this->database_backend == "mysql") {
+            # TODO
         } else if ($this->database_backend == "mongo") {
             $this->mongo_safe = 1;
             if (is_array($this->settings['mongo_db'])) {

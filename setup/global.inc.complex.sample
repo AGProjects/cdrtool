@@ -52,6 +52,19 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "rate_on_net_calls"      => false
                     );
 
+/*
+# temporary testing mongo backend capabilities
+"database_backend"   => "mongo",
+                     "mongo_db"           => array("uri" => "mongo1.example.com, mongo2.example.com",
+                                                   "database"   => "rating",
+                                                   "replicaSet" => "sipthor",
+                                                   "safe"       => 1)
+
+$CDRTool['mongo_db']['sipthor'] = array("uri"        => "mongo1.example.com, mongo2.example.com",
+                                        "database"   => "accounting",
+                                        "replicaSet" => "sipthor");
+*/
+
 ###########################################
 # Normalize engine settings
 $CDRTool['normalize']['defaultCountryCode']      = "31";
@@ -187,6 +200,7 @@ $DATASOURCES=array(
                     "skipNormalize"      => 0,              // set it it to true to disable the normalization process
                     "BillingPartyIdField"=> "UserName",
                     "db_susbcribers"	 => "DB_opensips",
+                    #"mongo_db"             => "sipthor",   // experimental/testing purposes only
                     "domain_table"	 => "domain",       // table of db_susbcribers that holds domains served by the sip proxy
                     "subscriber_table"	 => "subscriber",   // table of db_susbcribers that holds susbcribers served by the sip proxy
                     "intAccessCode"      => "00",	    // international acess code, numbers prefixed with this are considered international destinations
