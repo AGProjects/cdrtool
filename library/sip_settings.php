@@ -6561,6 +6561,7 @@ class SipSettings {
                 } else if ($this->chat_replication_backend == 'mongo') {
                     $timestamp = time();
                     $mongo_query=array('timestamp'  => $timestamp,
+                                       'datetime'   => Date("Y-m-d H:i:s", $timestamp),
                                        'account'    => $this->account,
                                        'uuid'       => $uuid,
                                        'data'       => $entry,
