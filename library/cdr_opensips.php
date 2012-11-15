@@ -3615,6 +3615,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
     }
 
     function getUnNormalized($where="",$table) {
+       # TODO
        return 0;
     }
 
@@ -3769,23 +3770,16 @@ class CDRS_opensips_mongo extends CDRS_opensips {
 
         $Realm=trim($Realm);
 
-        if ($this->CDRTool['filter']['domain']) {
-            $d_array=array();
-            foreach ($this->CDRTool['filter']['domain'] as $realm) {
-                $d_array[] = array($this->domainField => new MongoRegex("/$realm$/"));
-            }
-            $mongo_where['$or'] = $d_array;
-
-        } else if ($Realm) {
-            $Realm=urldecode($Realm);
-            $mongo_where[$this->domainField] =  new MongoRegex("/^$Realm/");
-            $this->url.=sprintf("&Realm=%s",urlencode($Realm));
-        } else if ($Realms)  {
+        if ($Realms)  {
             $d_array=array();
             foreach ($Realms as $realm) {
-                $d_array[] = array($this->domainField => new MongoRegex("/$realm$/"));
+                $d_array[] = array($this->domainField => $realm);
             }
             $mongo_where['$or'] = $d_array;
+        } else if ($Realm) {
+            $Realm=urldecode($Realm);
+            $mongo_where[$this->domainField] =  $Realm;
+            $this->url.=sprintf("&Realm=%s",urlencode($Realm));
         }
 
         $BillingId=trim($BillingId);
@@ -3810,6 +3804,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
         }
 
         if (strlen(trim($ExcludeDestinations))) {
+            # TODO: migrateb clause to mongo
             $ExcludeDestArray=explode(" ",trim($ExcludeDestinations));
 
             foreach ($ExcludeDestArray as $exclDst) {
@@ -3898,7 +3893,6 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                 $mongo_where[$this->durationField] = array('$gt' => 0);
             } elseif ($duration == "onewaymedia") {
                 $mongo_where['$or'] = array(array($this->outputTrafficField => 0), array($this->inputTrafficField => 0));
-                $where .= " and (($this->inputTrafficField > 0 && $this->outputTrafficField = 0) || ($this->inputTrafficField = 0 && $this->outputTrafficField > 0)) " ;
             } elseif ($duration == "nomedia") {
                 $mongo_where[$this->inputTrafficField] = 0;
                 $mongo_where[$this->outputTrafficField] = 0;
