@@ -5724,7 +5724,7 @@ class OpenSIPSQuota {
 
         $this->db_subscribers = $parent->db_subscribers;
         if (!class_exists($this->db_subscribers)) {
-            print("Info: No database defined for SIP accounts $this->cdr_source.\n");
+            printf("Info: No database defined for SIP accounts for source '%s'.\n", $this->cdr_source);
             return false;
         }
 
