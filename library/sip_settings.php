@@ -6435,7 +6435,9 @@ class SipSettings {
             } else {
                 $after_id = 0;
             }
+
             $where.= sprintf(" and id > %d", addslashes($after_id));
+
             if ($_REQUEST['after_timestamp']) {
                 $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
             }
@@ -6481,8 +6483,9 @@ class SipSettings {
             if ($_REQUEST['except_uuid']) {
                 $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
             }
-            if ($_REQUEST['after_id']) {
-                $mongo_where['timestamp'] = array('$gte' => intval($_REQUEST['after_id']));
+
+            if ($_REQUEST['after_timestamp']) {
+                $mongo_where['timestamp'] = array('$gte' => intval($_REQUEST['after_timestamp']));
             }
 
             if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
@@ -6570,9 +6573,9 @@ class SipSettings {
 
                     $this->mongo_table_rw->insert($mongo_query);
                     if ($mongo_query['_id']) {
-                        $mongo_id = $mongo_query['_id'];
+                        $mongo_id = strval($mongo_query['_id']);
                         $result['results'][]=array('id'         => $row->id,
-                                                   'journal_id' => $timestamp,
+                                                   'journal_id' => $mongo_id,
                                                    'source'     => 'default'
                                                    );
                     } else {
