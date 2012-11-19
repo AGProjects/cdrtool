@@ -476,9 +476,9 @@
   .brand,
   .nav > li > a {
     color: @navbarWhiteLinkColor;
-    text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+    text-shadow: 0 1px @navbarWhiteBackgroundHighlight;
     &:hover {
-      color: @navbarWhiteLinkColorHover;
+      text-decoration:none ;
     }
   }
 
@@ -486,13 +486,16 @@
   .nav > li > a:hover {
     background-color: @navbarWhiteLinkBackgroundHover;
     color: @navbarWhiteLinkColorHover;
-  }
+    text-decoration: none;
+    text-shadow: 0 1px 0 @navbarBackgroundHighlight;
+}
 
   .nav .active > a,
   .nav .active > a:hover,
   .nav .active > a:focus {
     color: @navbarWhiteLinkColorActive;
     background-color: @navbarWhiteLinkBackgroundActive;
+
   }
 
   // Inline text links
