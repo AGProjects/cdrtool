@@ -938,7 +938,7 @@ class CDRS_opensips extends CDRS {
                $this->f->show_element("group_by","");
             }
 
-            print "<nobr> Max results per page ";
+            print " Max results per page ";
             $this->f->show_element("maxrowsperpage","");
 
             print "</nobr>&nbsp";
@@ -946,7 +946,7 @@ class CDRS_opensips extends CDRS {
             if (!$perm->have_perm('readonly')) {
                 print ";&nbsp;&nbsp; <nobr>ReNormalize ";
                 print "<input type=checkbox name=ReNormalize value=1>
-                </nobr>";
+                ";
             }
 
             print "
