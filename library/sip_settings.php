@@ -6542,7 +6542,16 @@ class SipSettings {
         }
         if ($rows=json_decode($data)) {
             foreach ($rows as $row) {
+                if (!property_exists($row, 'data')) {
+                    continue;
+                }
+
                 $entry = $row->data;
+                if (property_exists($row, 'action')) {
+                    $action = $row->action;
+                } else {
+                    $action = 'add';
+                }
                 if ($this->chat_replication_backend == 'mysql') {
                     $query=sprintf("insert into client_journal (timestamp, account, uuid, data, ip_address) values (NOW(),'%s', '%s', '%s', '%s')", addslashes($this->account), addslashes($uuid), addslashes($entry), addslashes($_SERVER['REMOTE_ADDR']));
                     if (!$this->db->query($query)) {
