@@ -1347,12 +1347,20 @@ class CDRS {
             $fCustomer="default";
         }
 
+        $ret = false;
         if ($destinations_sip[$destination]) {
-            $ret=array($destination,$destinations_sip[$destination]['name']);
-            return $ret;
+            $ret = array($destination,$destinations_sip[$destination]['name']);
         } else {
-            return false;
+            list($user,$domain) = explode("@", $destination);
+            printf ("%s, %s", $user, $domain);
+            if ($domain) {
+                $domain=sprintf("@%s",$domain);
+                if ($destinations_sip[$domain]) {
+                    $ret = array($domain,$destinations_sip[$domain]['name']);
+                }
+            }
         }
+        return $ret;
     }
 
     function lookupPSTNDestination($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
