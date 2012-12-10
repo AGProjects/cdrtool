@@ -1,3 +1,31 @@
+cdrtool (9.0.1) unstable; urgency=low
+
+  [ Rating Engine ]
+
+  * Added rating based on SIP destination domain
+
+  [ Web Interface ]
+
+  * Fixed row display in search table for Firefox
+  * Changed shadow in bootstrap white menubar
+  * Updated bootstrap menubar
+  * Added white navbar to boostrap
+  * Added sip2sip dns records template
+
+  [ NGNPro client ]
+
+  * Added posibility for removal of chat_replication journal entries
+  * Fixed sip domain auth checks at login
+  * Update language translations
+  * Removed comments causing xgettext to not read entire file 
+  * Fixed login error position
+  * Fixed displaying multiple datasources in network overview
+  * Updated bootstrap to include table warning
+  * Changed customer logo display height in menu
+  * Set default sip proxy from soap engine settings
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Mon, 10 Dec 2012 11:20:08 +0100
+
 cdrtool (9.0.0) unstable; urgency=low
 
   [ Rating Engine ]
