@@ -1352,7 +1352,6 @@ class CDRS {
             $ret = array($destination,$destinations_sip[$destination]['name']);
         } else {
             list($user,$domain) = explode("@", $destination);
-            printf ("%s, %s", $user, $domain);
             if ($domain) {
                 $domain=sprintf("@%s",$domain);
                 if ($destinations_sip[$domain]) {
