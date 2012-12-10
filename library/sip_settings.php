@@ -6571,27 +6571,42 @@ class SipSettings {
                     }
 
                 } else if ($this->chat_replication_backend == 'mongo') {
-                    $timestamp = time();
-                    $mongo_query=array('timestamp'  => $timestamp,
-                                       'datetime'   => Date("Y-m-d H:i:s", $timestamp),
-                                       'account'    => $this->account,
-                                       'uuid'       => $uuid,
-                                       'data'       => $entry,
-                                       'ip_address' => $_SERVER['REMOTE_ADDR']
-                                       );
-
-                    $this->mongo_table_rw->insert($mongo_query);
-                    if ($mongo_query['_id']) {
-                        $mongo_id = strval($mongo_query['_id']);
-                        $result['results'][]=array('id'         => $row->id,
-                                                   'journal_id' => $mongo_id,
-                                                   'source'     => 'default'
-                                                   );
-                    } else {
-                        $result['results'][]=array('id'         => $row->id,
-                                                   'journal_id' => NULL,
-                                                   'source'     => 'default'
-                                                );
+                    if ($action == 'add') {
+                        $timestamp = time();
+                        $mongo_query=array('timestamp'  => $timestamp,
+                                           'datetime'   => Date("Y-m-d H:i:s", $timestamp),
+                                           'account'    => $this->account,
+                                           'uuid'       => $uuid,
+                                           'data'       => $entry,
+                                           'ip_address' => $_SERVER['REMOTE_ADDR']
+                                           );
+     
+                        $this->mongo_table_rw->insert($mongo_query);
+                        if ($mongo_query['_id']) {
+                            $mongo_id = strval($mongo_query['_id']);
+                            $result['results'][]=array('id'         => $row->id,
+                                                       'journal_id' => $mongo_id,
+                                                       'source'     => 'default'
+                                                       );
+                        } else {
+                            $result['results'][]=array('id'         => $row->id,
+                                                       'journal_id' => NULL,
+                                                       'source'     => 'default'
+                                                    );
+                        }
+                    } else if ($action == 'remove') {
+                        if (property_exists($row, 'journal_id')) {
+                            $mongo_query=array(
+                                               'account'    => $this->account,
+                                               'uuid'       => $uuid,
+                                               'journal_id' => $row->journal_id
+                                               );
+         
+                            $this->mongo_table_rw->remove($mongo_query);
+                            $result['results'][]=array('id'         => NULL,
+                                                       'journal_id' => $row->journal_id
+                                                      );
+                        }
                     }
                 }
             }
