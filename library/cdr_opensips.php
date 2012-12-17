@@ -2098,7 +2098,8 @@ class CDRS_opensips extends CDRS {
             }
 
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",addslashes($this->missed_calls_group));
+            $query=sprintf("select CONCAT(username,'@',domain) as account,email_address,timezone from grp join subscriber on grp.subscriber_id =subscriber.id  where grp = '%s'",
+				addslashes($this->missed_calls_group));
             if (strlen($account)) {
                 $query.= sprintf (" and username = '%s' and domain = '%s' ",$username,$domain);
             }
@@ -2111,7 +2112,7 @@ class CDRS_opensips extends CDRS {
 
             if ($this->AccountsDB->num_rows()) {
                 while ($this->AccountsDB->next_record()) {
-                    $this->notifySubscribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email'),'timezone' => $this->AccountsDB->f('timezone'));
+                    $this->notifySubscribers[$this->AccountsDB->f('account')]=array('email'=>$this->AccountsDB->f('email_address'),'timezone' => $this->AccountsDB->f('timezone'));
                 }
             } else {
                 return 0;
