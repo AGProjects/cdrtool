@@ -2584,8 +2584,8 @@ class SIPonline {
     }
 
     function showHeader() {
-        print "<table border=0 cellspacing=1 class=border>";
-        print "<tr bgcolor=lightgrey>
+        print "<table class='table table-striped table-condensed'>";
+        print "<thead><tr>
         ";
 
         if ($this->domain) {
@@ -2608,13 +2608,13 @@ class SIPonline {
             ";
         }
         print "
-        </tr>
+        </tr></thead>
         ";
     }
 
     function showFooter() {
         print "
-        <tr bgcolor=lightgrey>
+        <tr>
         <th></td>
         <th align=right>$this->total users@</td>
         <th align=left>$this->domains domains</td>
@@ -2630,14 +2630,6 @@ class SIPonline {
         foreach (array_keys($this->Registered) as $ld) {
 
             $onlines=$this->Registered[$ld];
-            $rr  = floor($found/2);
-            $mod = $found-$rr*2;
-        
-            if ($mod ==0) {
-                $bgcolor="lightgrey";
-            } else {
-                $bgcolor="white";
-            }
 
             if ($this->expandAll || ($this->domain && $this->domain==$ld)) {
                    $this->show($ld);
@@ -2651,7 +2643,7 @@ class SIPonline {
                 );
 
                 print "
-                <tr bgcolor=white>
+                <tr>
                 <td valign=top align=right>$found</td>
                 <td valign=top align=right>$onlines users@</td>
                 <td valign=top><a href=$url>$ld</a></td>
@@ -2692,15 +2684,6 @@ class SIPonline {
         $this->locationDB->query($query);
 
          while ($this->locationDB->next_record()) {
-
-            $rr  = floor($found/2);
-            $mod = $found-$rr*2;
-        
-            if ($mod ==0) {
-                $bgcolor="lightgrey";
-            } else {
-                $bgcolor="white";
-            }
         
             $found++;
 
@@ -2726,16 +2709,16 @@ class SIPonline {
             $sip_account=$username."@".$domain;
 
             print "
-            <tr bgcolor=$bgcolor>
-            <td valign=top align=right class=border>$found</td>
-            <td valign=top align=right class=border>$username@</td>
-            <td valign=top bgcolor=lightyellow class=border>$domain</td>
-            <td valign=top class=border>$transport</td>
-            <td valign=top align=right class=border>$c_els[0]</td>
-            <td valign=top align=right class=border>$r_els[0]</td>
-            <td valign=top class=border>$user_agent</td>
-            <td valign=top class=border>$expires</td>
-            <td valign=top align=right class=border>$remain</td>
+            <tr>
+            <td valign=top align=right>$found</td>
+            <td valign=top align=right>$username@</td>
+            <td valign=top class=warning>$domain</td>
+            <td valign=top>$transport</td>
+            <td valign=top align=right>$c_els[0]</td>
+            <td valign=top align=right>$r_els[0]</td>
+            <td valign=top>$user_agent</td>
+            <td valign=top>$expires</td>
+            <td valign=top align=right>$remain</td>
             </tr>
             ";
 

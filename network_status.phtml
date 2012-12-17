@@ -23,22 +23,24 @@ foreach (array_keys($DATASOURCES) as $datasource) {
 
     print "<div class='row-fluid'>";
     if (in_array($datasource,$CDRTool['dataSourcesAllowed']) && !$DATASOURCES[$datasource]['invisible']) {
-        print "<div class='span6'>";
 
         if ($DATASOURCES[$datasource]['networkStatus']) {
+			print "<div class='span6'>";
 	      	printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
             printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",
             $DATASOURCES[$datasource]['networkStatus']);
-
+	        print "</div>";
+	        print "<div class='span6'>";
         } else if ($DATASOURCES[$datasource]['db_registrar']){
+			print "<div class='span8'>";
 	      	printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
 			require_once("cdr_generic.php");
 			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_registrar']);
             $online->showAll();
+	        print "</div>";
+	        print "<div class='span4'>";
         }
 
-        print "</div>";
-        print "<div class='span6'>";
 
         if ($DATASOURCES[$datasource]['mediaSessions']) {
            	$MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains);
