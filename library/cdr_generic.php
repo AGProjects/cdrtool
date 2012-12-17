@@ -2584,15 +2584,14 @@ class SIPonline {
     }
 
     function showHeader() {
-        print "<table class='table table-striped table-condensed'>";
+        print "<table id='opensips_registrar' class='table table-striped table-condensed'>";
         print "<thead><tr>
         ";
 
         if ($this->domain) {
             print "
             <th></th>
-            <th width=120 align=right>User@</th>
-            <th align=left>Domain</th>
+            <th width=120 align=right>User@Domain</th>
             <th></th>
             <th>SIP UA contact</th>
             <th>NAT address</th>
@@ -2603,8 +2602,8 @@ class SIPonline {
         } else {
             print "
             <th></td>
-            <th width=120 align=right>Users@</th>
-            <th align=left>Domain</th>
+            <th align=right>Users@</th>
+            <th>Domain</th>
             ";
         }
         print "
@@ -2615,7 +2614,7 @@ class SIPonline {
     function showFooter() {
         print "
         <tr>
-        <th></td>
+        <th></th>
         <th align=right>$this->total users@</td>
         <th align=left>$this->domains domains</td>
         </tr>
@@ -2711,8 +2710,7 @@ class SIPonline {
             print "
             <tr>
             <td valign=top align=right>$found</td>
-            <td valign=top align=right>$username@</td>
-            <td valign=top class=warning>$domain</td>
+            <td valign=top>$sip_account</td>
             <td valign=top>$transport</td>
             <td valign=top align=right>$c_els[0]</td>
             <td valign=top align=right>$r_els[0]</td>

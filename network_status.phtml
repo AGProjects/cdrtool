@@ -32,13 +32,13 @@ foreach (array_keys($DATASOURCES) as $datasource) {
 	        print "</div>";
 	        print "<div class='span6'>";
         } else if ($DATASOURCES[$datasource]['db_registrar']){
-			print "<div class='span8'>";
+			print "<div class='span7'>";
 	      	printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
 			require_once("cdr_generic.php");
 			$online = new SIPonline($datasource,$DATASOURCES[$datasource]['db_registrar']);
             $online->showAll();
 	        print "</div>";
-	        print "<div class='span4'>";
+	        print "<div class='span5'>";
         }
 
 
