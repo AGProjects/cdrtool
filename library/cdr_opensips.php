@@ -4275,7 +4275,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                 }
 
                 if ($mongo_table_ro) {
-                    $cursor = $mongo_table_ro->find($mongo_where)->sort(array($mongo_order_by=>$mongo_order_type))->skip($i)->limit($this->maxrowsperpage)->slaveOkay();;
+                    $cursor = $mongo_table_ro->find($mongo_where)->sort(array($mongo_order_by=>$mongo_order_type))->skip($i)->limit($this->maxrowsperpage)->slaveOkay();
                 } else {
                     $cursor = array();
                 }
