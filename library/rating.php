@@ -652,6 +652,7 @@ class Rate {
             );
         }
 
+        // mysql backend
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
@@ -1570,7 +1571,6 @@ class Rate {
             }
         }
 
-        // mysql backend
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -1591,6 +1591,7 @@ class Rate {
             );
         }
 
+        // mysql backend
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -1678,7 +1679,6 @@ class Rate {
             }
         }
 
-        // mysql backend
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -1698,7 +1698,7 @@ class Rate {
             );
         }
 
-        // lookup rate from MySQL
+        // mysql backend
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -2447,6 +2447,7 @@ class RatingTables {
                 addslashes($durationRateIn)
                 );
 
+                // mysql backend
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -2551,6 +2552,7 @@ class RatingTables {
                 addslashes($application)
                 );
 
+                // mysql backend
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
@@ -2627,6 +2629,7 @@ class RatingTables {
                 addslashes($application)
                 );
 
+                // mysql backend
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
