@@ -3918,6 +3918,36 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'   => intval(reseller_id),
+                                          'profile'       => $profile,
+                                          'rate1'         => $rate1,
+                                          'hour1'         => $hour1,
+                                          'rate2'         => $rate2,
+                                          'hour2'         => $hour2,
+                                          'rate3'         => $rate3,
+                                          'hour3'         => $hour3,
+                                          'rate4'         => $rate4,
+                                          'hour4'         => $hour4
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in billing_profiles: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_profiles
                 where name     = '%s'
@@ -3936,6 +3966,31 @@ class RatingTables {
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
+                            $mongo_match = array('reseller_id' => intval(reseller_id),
+                                                 'name'        => $name
+                                                 );
+                            $mongo_table_rw->remove($mongo_match,
+                                                    array("safe" => $self->mongo_safe)
+                                                    );
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when deleting from billing_profiles: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when deleting from billing_profiles: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
 
             } else if ($ops=="2") {
                 $query=sprintf("select * from billing_profiles
@@ -3977,6 +4032,7 @@ class RatingTables {
                     addslashes($profile),
                     addslashes($reseller_id)
                     );
+
                     if (!$this->db->query($query)) {
                         $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                         print $log;
@@ -3986,6 +4042,42 @@ class RatingTables {
 
                     if ($this->db->affected_rows()) {
                         $updated++;
+                    }
+
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_match = array('reseller_id' => intval(reseller_id),
+                                                 'name'        => $name
+                                                 );
+                            $mongo_data=array('reseller_id'   => intval(reseller_id),
+                                              'profile'       => $profile,
+                                              'rate1'         => $rate1,
+                                              'hour1'         => $hour1,
+                                              'rate2'         => $rate2,
+                                              'hour2'         => $hour2,
+                                              'rate3'         => $rate3,
+                                              'hour3'         => $hour3,
+                                              'rate4'         => $rate4,
+                                              'hour4'         => $hour4
+                                              );
+                            $mongo_options = array("upsert" => true,
+                                                   "safe" => $self->mongo_safe
+                                                   );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
+                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when updating billing_profiles: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when updating billing_profiles: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
                     }
                 } else {
                     $query=sprintf("insert into billing_profiles
@@ -4035,6 +4127,36 @@ class RatingTables {
                     } else {
                         $failed++;
                     }
+
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'   => intval(reseller_id),
+                                              'profile'       => $profile,
+                                              'rate1'         => $rate1,
+                                              'hour1'         => $hour1,
+                                              'rate2'         => $rate2,
+                                              'hour2'         => $hour2,
+                                              'rate3'         => $rate3,
+                                              'hour3'         => $hour3,
+                                              'rate4'         => $rate4,
+                                              'hour4'         => $hour4
+                                              );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
+                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when inserting in billing_profiles: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
+
                 }
             }
 
