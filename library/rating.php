@@ -1455,7 +1455,7 @@ class RatingTables {
                            "billing_rates"         => "rates.csv",
                            "billing_rates_history" => "ratesHistory.csv",
                            "billing_discounts"     => "discounts.csv",
-                           "prepaid"                  => "prepaid.csv",
+                           "prepaid"               => "prepaid.csv",
                            "billing_enum_tlds"     => "enumtld.csv",
                            "quota_usage"           => "quotausage.csv"
                            );
@@ -2279,7 +2279,7 @@ class RatingTables {
                         }
 
                         $query=sprintf("delete from %s
-                        where reseller_id     = '%s'
+                        where reseller_id  = '%s'
                         and name           = '%s'
                         and destination    = '%s'
                         and application    = '%s'",
@@ -2787,7 +2787,7 @@ class RatingTables {
                 $query=sprintf("select * from billing_rates_history
                 where name       = '%s'
                 and destination  = '%s'
-                and reseller_id      = '%s'
+                and reseller_id  = '%s'
                 and startDate    = '%s'
                 and endDate      = '%s'
                 ",
@@ -2797,13 +2797,13 @@ class RatingTables {
                 addslashes($startDate),
                 addslashes($endDate)
                 );
+
                 if (!$this->db->query($query)) {
                     $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-
 
                 if ($this->db->num_rows()) {
                     $query=sprintf("update billing_rates_history set
@@ -3073,6 +3073,36 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'       => intval(reseller_id),
+                                          'gateway'           => $gateway,
+                                          'domain'            => $domain,
+                                          'subscriber'        => $subscriber,
+                                          'profile_name1'     => $profile_name1,
+                                          'profile_name2'     => $profile_name2,
+                                          'profile_name1_alt' => $profile_name1_alt,
+                                          'profile_name2_alt' => $profile_name2_alt,
+                                          'timezone'          => $timezone
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_customers
                 where gateway      = '%s'
@@ -3095,6 +3125,34 @@ class RatingTables {
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
+                            $mongo_match = array('gateway'     => $gateway,
+                                                 'reseller_id' => intval(reseller_id),
+                                                 'domain'      => $domain,
+                                                 'subscriber'  => $subscriber,
+                                                 'dest_id'     => $dest_id
+                                                 );
+                            $mongo_table_rw->remove($mongo_match,
+                                                    array("safe" => $self->mongo_safe)
+                                                    );
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when deleting from billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when deleting billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } else if ($ops=="2") {
                 $query=sprintf("select * from billing_customers
                 where gateway      = '%s'
@@ -3148,6 +3206,43 @@ class RatingTables {
                         $updated++;
                     }
 
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_match = array('gateway'     => $gateway,
+                                                 'reseller_id' => intval(reseller_id),
+                                                 'domain'      => $domain,
+                                                 'subscriber'  => $subscriber
+                                                 );
+                            $mongo_data=array('reseller_id'       => intval(reseller_id),
+                                              'gateway'           => $gateway,
+                                              'domain'            => $domain,
+                                              'subscriber'        => $subscriber,
+                                              'profile_name1'     => $profile_name1,
+                                              'profile_name2'     => $profile_name2,
+                                              'profile_name1_alt' => $profile_name1_alt,
+                                              'profile_name2_alt' => $profile_name2_alt,
+                                              'timezone'          => $timezone
+                                              );
+                            $mongo_options = array("upsert" => true,
+                                                   "safe" => $self->mongo_safe
+                                                   );
+
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
+                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when updating billing_customers: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when updating billing_customers: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
                 } else {
                     $query=sprintf("insert into billing_customers
                     (
@@ -3191,6 +3286,33 @@ class RatingTables {
 
                     if ($this->db->affected_rows()) {
                         $inserted++;
+                    }
+
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'       => intval(reseller_id),
+                                          'gateway'           => $gateway,
+                                          'domain'            => $domain,
+                                          'subscriber'        => $subscriber,
+                                          'profile_name1'     => $profile_name1,
+                                          'profile_name2'     => $profile_name2,
+                                          'profile_name1_alt' => $profile_name1_alt,
+                                          'profile_name2_alt' => $profile_name2_alt,
+                                          'timezone'          => $timezone
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in billing_customers: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
                     }
                 }
             } else {
@@ -3367,12 +3489,13 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                            $mongo_table_rw->remove(array('gateway'     => $gateway,
-                                                          'reseller_id' => intval(reseller_id),
-                                                          'domain'      => $domain,
-                                                          'subscriber'  => $subscriber,
-                                                          'dest_id'     => $dest_id
-                                                          ),
+                            $mongo_match = array('gateway'     => $gateway,
+                                                 'reseller_id' => intval(reseller_id),
+                                                 'domain'      => $domain,
+                                                 'subscriber'  => $subscriber,
+                                                 'dest_id'     => $dest_id
+                                                 );
+                            $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
                         } catch (MongoException $e) {
@@ -3740,7 +3863,7 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                            $mongo_match=array('reseller_id'  => intval(reseller_id),
                                               'gateway'      => $gateway,
                                               'domain'       => $domain,
                                               'subscriber'   => $subscriber,
@@ -3748,7 +3871,7 @@ class RatingTables {
                                               'destination'  => $destination,
                                               'region'       => $region
                                               );
-                            $mongo_table_rw->remove($mongo_data,
+                            $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
                         } catch (MongoException $e) {
@@ -3827,7 +3950,7 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                            $mongo_match=array('reseller_id'  => intval(reseller_id),
                                               'gateway'      => $gateway,
                                               'domain'       => $domain,
                                               'subscriber'   => $subscriber,
@@ -4425,7 +4548,6 @@ class RatingTables {
 
         $this->profiles=$_profiles;
         return $i;
-
     }
 
     function LoadHolidaysTable() {
@@ -4488,8 +4610,8 @@ class RatingTables {
 
     function scanFilesForImport($dir) {
         $import_dirs[$this->cvs_import_dir]=array('path'=>$this->cvs_import_dir,
-                                 'reseller' => 0
-                                 );
+                                                  'reseller' => 0
+                                                 );
 
         if ($handle = opendir($this->cvs_import_dir)) {
             while (false !== ($filename = readdir($handle))) {
