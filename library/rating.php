@@ -28,9 +28,15 @@ class Rate {
     var $broken_rate            = false;
     var $database_backend       = "mysql";
 
-    function Rate($settings=array(),$db) {
+    function Rate($settings=array(), $db, $database_backend="mysql") {
 
+        $this->db = $db;
         $this->settings = $settings;
+        $this->database_backend = $database_backend;
+
+        if ($this->database_backend == "mysql") {
+            $this->db->Halt_On_Error="no";
+        }
 
         if ($this->settings['priceDenominator']) {
             $this->priceDenominator=$this->settings['priceDenominator'];
@@ -65,13 +71,6 @@ class Rate {
         if ($this->settings['database_backend']) {
             $this->database_backend=$this->settings['database_backend'];
         }
-
-        if ($this->database_backend == "mysql") {
-            $this->db->Halt_On_Error="no";
-        }
-
-        $this->db = $db;
-
     }
 
     function calculateAudio($dictionary) {
