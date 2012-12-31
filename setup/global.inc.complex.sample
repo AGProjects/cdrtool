@@ -231,7 +231,8 @@ $DATASOURCES=array(
                     "mediaServers"       => array(
                                                   "10.0.0.2",
                                                   "10.0.0.3"
-                                                  )  // where to get the active sessions from MediaRroxy 1.x
+                                                  ),  // where to get the active sessions from MediaRroxy 1.x
+                    "skipStatistics"     => 0         // Skip usage graphs
                     ),
 "cisco"     =>array("name"               => "Cisco gateway",
                     "class"              => "CDRS_cisco",

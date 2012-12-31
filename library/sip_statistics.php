@@ -607,34 +607,36 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         $totals=array();
 
         foreach ($datasources as $datasource) {
-            if ($DATASOURCES[$datasource]['mediaSessions']) {
-                // MediaProxy 2 via NGNPro
-            	require_once("media_sessions.php");
-                $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions']);
-                $MediaSessions->getSessions();
-                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
-            } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
-                // MediaProxy 2 via dispatcher tcp socket
-            	require_once("media_sessions.php");
-                $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
-                $MediaSessions->getSessions();
-                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
-            } else if ($DATASOURCES[$datasource]['mediaServers']){
-                // MediaProxy 1 via relay tcp socket
-                $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
-                $MediaSessions->getSessions();
-                $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
-            }
-        
-            if ($DATASOURCES[$datasource]['networkStatus']) {
-                // OpenSIPS via NGNPro
-                $NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus']);
-                $NetworkStatistics->getStatistics();
-                $totals=array_merge_recursive($totals,$NetworkStatistics->domain_statistics);
-            } else if ($DATASOURCES[$datasource]['db_registrar']) {
-                // OpenSIPS via MySQL query
-                $db_registrar_domains=$this->getOnlineAccountsFromMySQL($DATASOURCES[$datasource]['db_registrar']);
-                $totals=array_merge_recursive($totals,$db_registrar_domains);
+            if (!$DATASOURCES[$datasource]['skipStatistics']) {
+                if ($DATASOURCES[$datasource]['mediaSessions']) {
+                    // MediaProxy 2 via NGNPro
+                    require_once("media_sessions.php");
+                    $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions']);
+                    $MediaSessions->getSessions();
+                    $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+                } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+                    // MediaProxy 2 via dispatcher tcp socket
+                    require_once("media_sessions.php");
+                    $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
+                    $MediaSessions->getSessions();
+                    $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+                } else if ($DATASOURCES[$datasource]['mediaServers']){
+                    // MediaProxy 1 via relay tcp socket
+                    $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
+                    $MediaSessions->getSessions();
+                    $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
+                }
+            
+                if ($DATASOURCES[$datasource]['networkStatus']) {
+                    // OpenSIPS via NGNPro
+                    $NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus']);
+                    $NetworkStatistics->getStatistics();
+                    $totals=array_merge_recursive($totals,$NetworkStatistics->domain_statistics);
+                } else if ($DATASOURCES[$datasource]['db_registrar']) {
+                    // OpenSIPS via MySQL query
+                    $db_registrar_domains=$this->getOnlineAccountsFromMySQL($DATASOURCES[$datasource]['db_registrar']);
+                    $totals=array_merge_recursive($totals,$db_registrar_domains);
+                }
             }
         }
 
