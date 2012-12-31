@@ -2540,31 +2540,31 @@ class RatingTables {
                     } else {
                         $failed++;
                     }
-                }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                          'name'           => $name,
-                                          'destination'    => $destination,
-                                          'application'    => $application,
-                                          'connectCost'    => intval($connectCost),
-                                          'durationRate'   => intval($durationRate),
-                                          'connectCostIn'  => intval($connectCostIn),
-                                          'durationRateIn' => intval($durationRateIn)
-                                          );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'    => intval(reseller_id),
+                                              'name'           => $name,
+                                              'destination'    => $destination,
+                                              'application'    => $application,
+                                              'connectCost'    => intval($connectCost),
+                                              'durationRate'   => intval($durationRate),
+                                              'connectCostIn'  => intval($connectCostIn),
+                                              'durationRateIn' => intval($durationRateIn)
+                                              );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
+                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when inserting in billing_rates: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when inserting in billing_rates: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
                         }
                     }
                 }
