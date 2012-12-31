@@ -1980,7 +1980,7 @@ class RatingTables {
                            );
 
 
-    function RatingTables ($readonly=false) {
+    function RatingTables($readonly=false) {
         global $CDRTool;
         global $RatingEngine;
 
@@ -4979,7 +4979,7 @@ class RatingTables {
                             }
     
                             if (in_array($table,$this->requireReload)) {
-                                if (!$this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'")){
+                                if (!$this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'")){
                                     printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
                                 }
                             }
@@ -5107,7 +5107,7 @@ class RatingTables {
                             }
 
                             if (in_array($table,$this->requireReload)) {
-                                $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
         
@@ -5191,7 +5191,7 @@ class RatingTables {
                             }
 
                             if (in_array($table,$this->requireReload)) {
-                                $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
                     } else {
@@ -5302,7 +5302,7 @@ class RatingTables {
                             }
 
                             if (in_array($table,$this->requireReload)) {
-                                $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
         
@@ -5404,7 +5404,7 @@ class RatingTables {
                                 $log_entity=sprintf("id=%s",$this->db->f('lid'));
 
                                 if (in_array($table,$this->requireReload)) {
-                                    $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                                    $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                                 }
                             }
         
@@ -5427,7 +5427,7 @@ class RatingTables {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
                         
-                            $this->db->query("update settings setting set var_value= '1' where var_name = 'reloadRating'");
+                            $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                         }
 
                         $log_entity=sprintf("id=%s",$id);
