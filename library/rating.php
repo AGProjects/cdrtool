@@ -2701,6 +2701,36 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'    => intval(reseller_id),
+                                          'name'           => $name,
+                                          'destination'    => $destination,
+                                          'application'    => $application,
+                                          'connectCost'    => intval($connectCost),
+                                          'durationRate'   => intval($durationRate),
+                                          'connectCostIn'  => intval($connectCostIn),
+                                          'durationRateIn' => intval($durationRateIn),
+                                          'startDate'      => $startDate,
+                                          'endDate'        => $endDate
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in billing_rates_history: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_rates_history
                 where reseller_id      = '%s'
@@ -2724,6 +2754,34 @@ class RatingTables {
 
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
+                }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
+                            $mongo_match = array('reseller_id' => intval(reseller_id),
+                                                 'name'        => $name,
+                                                 'destination' => $destination,
+                                                 'application' => $application,
+                                                 'startDate'   => $startDate,
+                                                 'endDate'     => $endDate
+                                                 );
+                            $mongo_table_rw->remove($mongo_match,
+                                                    array("safe" => $self->mongo_safe)
+                                                    );
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when deleting from billing_rates_history: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
                 }
             } else if ($ops=="2") {
                 $query=sprintf("select * from billing_rates_history
@@ -2783,6 +2841,46 @@ class RatingTables {
                         $updated++;
                     }
 
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_match = array('reseller_id' => intval(reseller_id),
+                                                 'name'        => $name,
+                                                 'destination' => $destination,
+                                                 'application' => $application,
+                                                 'startDate'   => $startDate,
+                                                 'endDate'     => $endDate
+                                                 );
+                            $mongo_data=array('reseller_id'    => intval(reseller_id),
+                                              'name'           => $name,
+                                              'destination'    => $destination,
+                                              'application'    => $application,
+                                              'connectCost'    => intval($connectCost),
+                                              'durationRate'   => intval($durationRate),
+                                              'connectCostIn'  => intval($connectCostIn),
+                                              'durationRateIn' => intval($durationRateIn),
+                                              'startDate'      => $startDate,
+                                              'endDate'        => $endDate
+                                              );
+                            $mongo_options = array("upsert" => true,
+                                                   "safe" => $self->mongo_safe
+                                                   );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
+                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when updating billing_rates_history: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when updating billing_rates_history: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
+
                 } else {
                     $query=sprintf("insert into billing_rates_history
                     (
@@ -2831,6 +2929,35 @@ class RatingTables {
                         $inserted++;
                     } else {
                         $failed++;
+                    }
+
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'    => intval(reseller_id),
+                                              'name'           => $name,
+                                              'destination'    => $destination,
+                                              'application'    => $application,
+                                              'connectCost'    => intval($connectCost),
+                                              'durationRate'   => intval($durationRate),
+                                              'connectCostIn'  => intval($connectCostIn),
+                                              'durationRateIn' => intval($durationRateIn),
+                                              'startDate'      => $startDate,
+                                              'endDate'        => $endDate
+                                              );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
+                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when inserting in billing_rates_history: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
                     }
                 }
             } else {
