@@ -26,13 +26,14 @@ class Rate {
 
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
     var $broken_rate            = false;
+    var $mongo_db               = NULL;
+    var $db                     = NULL;
     var $database_backend       = "mysql";
 
-    function Rate($settings=array(), $db, $database_backend="mysql") {
+    function Rate($settings, $db) {
 
         $this->db = $db;
         $this->settings = $settings;
-        $this->database_backend = $database_backend;
 
         if ($this->database_backend == "mysql") {
             $this->db->Halt_On_Error="no";
@@ -70,6 +71,22 @@ class Rate {
 
         if ($this->settings['database_backend']) {
             $this->database_backend=$this->settings['database_backend'];
+        }
+
+        if ($this->database_backend == "mongo") {
+            if (is_array($this->settings['mongo_db'])) {
+                $mongo_uri        = $this->settings['mongo_db']['uri'];
+                $mongo_replicaSet = $this->settings['mongo_db']['replicaSet'];
+                $mongo_database   = $this->settings['mongo_db']['database'];
+                try {
+                    $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                    $this->mongo_db = $mongo_connection->selectDB($mongo_database);
+                    $this->mongo_db->setSlaveOkay(true);
+                } catch (MongoConnectionException $e) {
+                    syslog(LOG_NOTICE, sprintf("Error: cannot connect to mongo database %s: %s",$mongo_uri, $e->getMessage()));
+                    $this->mongo_db = NULL;
+                }
+            }
         }
     }
 
@@ -554,9 +571,60 @@ class Rate {
             $_field='destination';
             $_value=$this->DestinationId;
         }
-        
-        if ($this->CustomerProfile == 'default') {
 
+        if ($this->mongo_db != NULL) {
+            // mongo backend
+            if ($this->CustomerProfile == 'default') {
+                $mongo_where['subscriber']  = '';
+                $mongo_where['domain']      = '';
+                $mongo_where['domain']      = '';
+                $mongo_where['domain']      = '';
+                $mongo_where['application'] = $this->application;
+                $mongo_where[$_field]       = $_value;
+            } else {
+                $els=explode("=",$this->CustomerProfile);
+                $mongo_where[$els[0]]  = $els[1];
+                $mongo_where['application'] = $this->application;
+                $mongo_where[$_field]       = $_value;
+            }
+
+            try {
+                $table = $this->mongo_db->selectCollection('billing_discounts');
+                $cursor = $table->find($mongo_where)->limit(1)->slaveOkay();
+                $result = $cursor->getNext();
+            } catch (MongoException $e) {
+                $log = sprintf("<p>Caught Mongo exception in lookupDiscounts(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (MongoConnectionException $e) {
+                $log = sprintf("<p>Caught Mongo Connection exception in lookupDiscounts(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (Exception $e) {
+                $log = sprintf("<p>Caught exception in lookupDiscounts(): %s", var_dump($e));
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            if(!$result) {
+                $log=sprintf ("Error: cannot find mongo discounts for dest id %s",$this->DestinationId);
+                syslog(LOG_NOTICE, $log);
+                //return false;
+            }
+
+            if($result) {
+                if ($result['connect'] > 0 && $result['connect'] <=100) {
+                    $this->discount_connect  = $result['connect'];
+                }
+    
+                if ($result['duration'] > 0 && $result['duration'] <=100) {
+                    $this->discount_duration = $result['duration'];
+                }
+                return true;
+            }
+        }
+
+        if ($this->CustomerProfile == 'default') {
             $query=sprintf("select * from billing_discounts
             where subscriber     = ''
             and domain           = ''
@@ -600,18 +668,64 @@ class Rate {
                 $this->discount_duration = $this->db->f('duration');
             }
         }
-
         return true;
     }
 
     function lookupDestinationDetails() {
         // get rating related details for the destination id
-
         if (!$this->DestinationId) {
             syslog(LOG_NOTICE, "Error: Cannot lookup destination details without a destination id");
             return false;
         }
 
+        if ($this->mongo_db != NULL) {
+            // mongo backend
+            $mongo_where['dest_id'] = $this->DestinationId;
+            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
+                                        array('reseller_id' => 0)
+                                        );
+
+            try {
+                $table = $this->mongo_db->selectCollection('destinations');
+                $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
+                $result = $cursor->getNext();
+            } catch (MongoException $e) {
+                $log = sprintf("<p>Caught Mongo exception in lookupProfiles(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (MongoConnectionException $e) {
+                $log = sprintf("<p>Caught Mongo Connection exception in lookupProfiles(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (Exception $e) {
+                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", var_dump($e));
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            if(!$result) {
+                $log=sprintf ("Error: cannot find mongo destination details for dest id %s",$this->DestinationId);
+                syslog(LOG_NOTICE, $log);
+                //return false;
+            }
+
+            if($result) {
+                $this->region          = $result['region'];
+                $this->max_duration    = $result['max_duration'];
+                $this->max_price       = $result['max_price'];
+    
+                if ($result['increment']) {
+                    $this->increment = $result['increment'];
+                }
+    
+                if ($result['min_duration']) {
+                    $this->min_duration = $result['min_duration'];
+                }
+                return true;
+            }
+        }
+
+        // mysql backend
         $query=sprintf("select * from destinations
         where dest_id = '%s'
         and (reseller_id = %d or reseller_id = 0) order by reseller_id desc limit 1",
@@ -659,6 +773,93 @@ class Rate {
             than lookup rates in profileX_alt
         */
 
+        if ($this->mongo_db != NULL) {
+            // mongo backend
+
+            $mongo_where['$or'] = array(array('subscriber' => $this->BillingPartyId),
+                                        array('domain'     => $this->domain),
+                                        array('gateway'    => $this->gateway),
+                                        array('gateway'    => '',
+                                              'domain'     => '',
+                                              'subscriber' => ''
+                                              )
+                                        );
+
+            try {
+                $table = $this->mongo_db->selectCollection('billing_customers');
+                $cursor = $table->find($mongo_where)->sort(array('subscriber'=>-1, 'domain'=>-1, 'gateway'=>-1))->limit(1)->slaveOkay();
+                $result = $cursor->getNext();
+            } catch (MongoException $e) {
+                $log = sprintf("<p>Caught Mongo exception in lookupProfiles(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (MongoConnectionException $e) {
+                $log = sprintf("<p>Caught Mongo Connection exception in lookupProfiles(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (Exception $e) {
+                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", var_dump($e));
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            if(!$result) {
+                $log=sprintf("Error: no customer found in mongo billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
+                syslog(LOG_NOTICE, $log);
+                //return false;
+            }
+
+            if($result) {
+                if ($result['subscriber']) {
+                    $this->CustomerProfile = sprintf("subscriber=%s",$result['subscriber']);
+                } else if ($result['domain']) {
+                    $this->CustomerProfile = sprintf("domain=%s",$result['domain']);
+                } else if ($result['gateway']) {
+                    $this->CustomerProfile = sprintf("gateway=%s",$result['gateway']);
+                } else {
+                    $this->CustomerProfile = "default";
+                }
+    
+                if (!$result['profile_name1']) {
+                    $log=sprintf("Error: customer %s (id=%d) has no weekday profile assigned in profiles table",$this->CustomerProfile,$result['id']);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+    
+                if (!$result['profile_name2']) {
+                    $log=sprintf("Error: customer %s (id=%d) has no weekend profile assigned in profiles table",$this->CustomerProfile,$result['id']);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+    
+    
+                if (!$result['timezone']) {
+                    $log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+    
+                $this->billingTimezone = $result['timezone'];
+    
+                $this->allProfiles = array (
+                                            "profile_workday"     => $result['profile_name1'],
+                                            "profile_weekend"     => $result['profile_name2'],
+                                            "profile_workday_alt" => $result['profile_name1_alt'],
+                                            "profile_weekend_alt" => $result['profile_name2_alt'],
+                                            "timezone"            => $result['timezone']
+                                        );
+                if ($result['increment']) {
+                    $this->increment = $result['increment'];
+                }
+    
+                if ($result['min_duration']) {
+                    $this->min_duration = $result['min_duration'];
+                }
+                return true;
+            }
+        }
+
+        // mysql backend
         $query=sprintf("select * from billing_customers
         where subscriber = '%s'
         or domain        = '%s'
@@ -1323,6 +1524,53 @@ class Rate {
             return $this->rateValuesCache[$rateName][$DestinationId]['audio'];
         }
 
+        if ($this->mongo_db != NULL) {
+            // mongo backend
+            $mongo_where['destination'] = $DestinationId;
+            $mongo_where['application'] = 'audio';
+            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
+                                        array('reseller_id' => 0)
+                                        );
+
+            try {
+                $table = $this->mongo_db->selectCollection('billing_rates');
+                $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
+                $result = $cursor->getNext();
+            } catch (MongoException $e) {
+                $log = sprintf("<p>Caught Mongo exception in lookupRateValuesAudio(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (MongoConnectionException $e) {
+                $log = sprintf("<p>Caught Mongo Connection exception in lookupRateValuesAudio(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (Exception $e) {
+                $log = sprintf("<p>Caught exception in lookupRateValuesAudio(): %s", var_dump($e));
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            if(!$result) {
+                $log=sprintf ("Error: cannot find mongo rate values for dest id %s",$DestinationId);
+                syslog(LOG_NOTICE, $log);
+                //return false;
+            }
+
+            if($result){
+                $values=array(
+                            "connectCost"     => $result['connectCost'],
+                            "durationRate"    => $result['durationRate'],
+                            "connectCostIn"   => $result['connectCostIn'],
+                            "durationRateIn"  => $result['durationRateIn']
+                           );
+    
+                // cache values
+                $this->rateValuesCache[$rateName][$DestinationId]['audio']=$values;
+                return $values;
+            }
+        }
+
+        // mysql backend
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -1343,8 +1591,6 @@ class Rate {
             );
         }
 
-        // lookup rate from MySQL
-
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -1352,7 +1598,6 @@ class Rate {
                 return false;
             }
             // try the main table
-            // lookup rate from MySQL
             $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = 'audio'",
             addslashes($rateName),
             addslashes($DestinationId)
@@ -1388,6 +1633,52 @@ class Rate {
             return $this->rateValuesCache[$rateName][$DestinationId]['sms'];
         }
 
+        if ($this->mongo_db != NULL) {
+            // mongo backend
+            $mongo_where['application'] = 'sms';
+            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
+                                        array('reseller_id' => 0)
+                                        );
+            $mongo_where['$or'] = array(array('destination' => $DestinationId),
+                                        array('destination' => '')
+                                        );
+
+            try {
+                $table = $this->mongo_db->selectCollection('billing_rates');
+                $cursor = $table->find($mongo_where)->sort(array('destination'=>-1))->limit(1)->slaveOkay();
+                $result = $cursor->getNext();
+            } catch (MongoException $e) {
+                $log = sprintf("<p>Caught Mongo exception in lookupRateValuesMessage(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (MongoConnectionException $e) {
+                $log = sprintf("<p>Caught Mongo Connection exception in lookupRateValuesMessage(): %s", $e->getMessage());
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } catch (Exception $e) {
+                $log = sprintf("<p>Caught exception in lookupRateValuesMessage(): %s", var_dump($e));
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
+
+            if(!$result) {
+                $log=sprintf ("Error: cannot find mongo rate sms values for dest id %s",$DestinationId);
+                syslog(LOG_NOTICE, $log);
+                //return false;
+            }
+
+            if($result){
+                $values=array(
+                            "connectCost"     => $result['connectCost']
+                           );
+    
+                // cache values
+                $this->rateValuesCache[$rateName][$DestinationId]['sms']=$values;
+                return $values;
+            }
+        }
+
+        // mysql backend
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -1398,7 +1689,6 @@ class Rate {
             $table,
             addslashes($DestinationId)
             );
-
         } else {
             $table="billing_rates";
             $query=sprintf("select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
@@ -1409,7 +1699,6 @@ class Rate {
         }
 
         // lookup rate from MySQL
-
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -4572,7 +4861,7 @@ class RatingTables {
 
     function checkRatingEngineConnection () {
         if ($this->settings['socketIPforClients'] && $this->settings['socketPort'] &&
-              $fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
+            $fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
             fclose($fp);
             return true;
         }
