@@ -3676,6 +3676,36 @@ class RatingTables {
                 } else {
                     $failed++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                          'gateway'      => $gateway,
+                                          'domain'       => $domain,
+                                          'subscriber'   => $subscriber,
+                                          'application'  => $application,
+                                          'destination'  => $destination,
+                                          'region'       => $region,
+                                          'connect'      => intval($connect),
+                                          'duration'     => intval($min_duration)
+                                          );
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
+                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when inserting in billing_discounts: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } elseif ($ops=="3") {
                 $query=sprintf("delete from billing_discounts
                 where gateway      = '%s'
@@ -3705,6 +3735,36 @@ class RatingTables {
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
+
+                if ($this->database_backend == 'mongo') {
+                    if ($this->mongo_db_rw) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
+                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                              'gateway'      => $gateway,
+                                              'domain'       => $domain,
+                                              'subscriber'   => $subscriber,
+                                              'application'  => $application,
+                                              'destination'  => $destination,
+                                              'region'       => $region
+                                              );
+                            $mongo_table_rw->remove($mongo_data,
+                                                    array("safe" => $self->mongo_safe)
+                                                    );
+                        } catch (MongoException $e) {
+                            $log=sprintf("Mongo exception when deleting from billing_discounts: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        } catch (MongoCursorException $e) {
+                            $log=sprintf("Mongo cursor exception when deleting from billing_discounts: %s", $e->getMessage());
+                            print $log;
+                            syslog(LOG_NOTICE, $log);
+                            return false;
+                        }
+                    }
+                }
+
             } elseif ($ops=="2") {
                 $query=sprintf("select * from billing_discounts
                 where gateway      = '%s'
@@ -3764,6 +3824,47 @@ class RatingTables {
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
+
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                              'gateway'      => $gateway,
+                                              'domain'       => $domain,
+                                              'subscriber'   => $subscriber,
+                                              'application'  => $application,
+                                              'destination'  => $destination,
+                                              'region'       => $region
+                                              );
+                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                              'gateway'      => $gateway,
+                                              'domain'       => $domain,
+                                              'subscriber'   => $subscriber,
+                                              'application'  => $application,
+                                              'destination'  => $destination,
+                                              'region'       => $region,
+                                              'connect'      => intval($connect),
+                                              'duration'     => intval($min_duration)
+                                              );
+                            $mongo_options = array("upsert" => true,
+                                                   "safe" => $self->mongo_safe
+                                                   );
+
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
+                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when updating billing_discounts: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when updating billing_discounts: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
                  } else {
                     $query=sprintf("insert into billing_discounts
                     (
@@ -3811,7 +3912,35 @@ class RatingTables {
                         $failed++;
                     }
 
-                 }
+                    if ($this->database_backend == 'mongo') {
+                        if ($this->mongo_db_rw) {
+                            $mongo_data=array('reseller_id'  => intval(reseller_id),
+                                              'gateway'      => $gateway,
+                                              'domain'       => $domain,
+                                              'subscriber'   => $subscriber,
+                                              'application'  => $application,
+                                              'destination'  => $destination,
+                                              'region'       => $region,
+                                              'connect'      => intval($connect),
+                                              'duration'     => intval($min_duration)
+                                              );
+                            try {
+                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
+                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
+                            } catch (MongoException $e) {
+                                $log=sprintf("Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            } catch (MongoCursorException $e) {
+                                $log=sprintf("Mongo cursor exception when inserting in billing_discounts: %s", $e->getMessage());
+                                print $log;
+                                syslog(LOG_NOTICE, $log);
+                                return false;
+                            }
+                        }
+                    }
+                }
             } else {
                 $skipped++;
             }
