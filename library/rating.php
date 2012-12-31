@@ -1455,8 +1455,8 @@ class RatingTables {
                            "billing_rates"         => "rates.csv",
                            "billing_rates_history" => "ratesHistory.csv",
                            "billing_discounts"     => "discounts.csv",
-                           "prepaid"               => "prepaid.csv",
                            "billing_enum_tlds"     => "enumtld.csv",
+                           "prepaid"               => "prepaid.csv",
                            "quota_usage"           => "quotausage.csv"
                            );
     var $csv_import=array(
@@ -2330,7 +2330,7 @@ class RatingTables {
                 $query=sprintf("select * from billing_rates
                 where name       = '%s'
                 and destination  = '%s'
-                and reseller_id     = '%s'
+                and reseller_id  = '%s'
                 and application  = '%s'
                 ",
                 addslashes($name),
@@ -2354,7 +2354,7 @@ class RatingTables {
                     durationRateIn  = '%s'
                     where name      = '%s'
                     and destination = '%s'
-                    and reseller_id    = '%s'
+                    and reseller_id = '%s'
                     and application = '%s'
                     ",
                     addslashes($connectCost),
@@ -2388,7 +2388,7 @@ class RatingTables {
                             durationRateIn  = '%s'
                             where name      = '%s'
                             and destination = '%s'
-                            and reseller_id    = '%s'
+                            and reseller_id = '%s'
                             and application = '%s'
                             ",
                             addslashes($_table),
@@ -2733,7 +2733,7 @@ class RatingTables {
 
             } else if ($ops=="3") {
                 $query=sprintf("delete from billing_rates_history
-                where reseller_id      = '%s'
+                where reseller_id  = '%s'
                 and name           = '%s'
                 and destination    = '%s'
                 and startDate      = '%s'
@@ -3864,13 +3864,13 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                             $mongo_match=array('reseller_id'  => intval(reseller_id),
-                                              'gateway'      => $gateway,
-                                              'domain'       => $domain,
-                                              'subscriber'   => $subscriber,
-                                              'application'  => $application,
-                                              'destination'  => $destination,
-                                              'region'       => $region
-                                              );
+                                               'gateway'      => $gateway,
+                                               'domain'       => $domain,
+                                               'subscriber'   => $subscriber,
+                                               'application'  => $application,
+                                               'destination'  => $destination,
+                                               'region'       => $region
+                                               );
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
@@ -3951,13 +3951,13 @@ class RatingTables {
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
                             $mongo_match=array('reseller_id'  => intval(reseller_id),
-                                              'gateway'      => $gateway,
-                                              'domain'       => $domain,
-                                              'subscriber'   => $subscriber,
-                                              'application'  => $application,
-                                              'destination'  => $destination,
-                                              'region'       => $region
-                                              );
+                                               'gateway'      => $gateway,
+                                               'domain'       => $domain,
+                                               'subscriber'   => $subscriber,
+                                               'application'  => $application,
+                                               'destination'  => $destination,
+                                               'region'       => $region
+                                               );
                             $mongo_data=array('reseller_id'  => intval(reseller_id),
                                               'gateway'      => $gateway,
                                               'domain'       => $domain,
