@@ -163,12 +163,6 @@ class CDRS {
                 $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
                 $db = $mongo_connection->selectDB($mongo_database);
                 $this->mongo_table = $db->selectCollection($this->table);
-            } catch (MongoException $e) {
-                printf("<p>Caught Mongo exception in initDatabaseConnection(): %s", $e->getMessage());
-                return 0;
-            } catch (MongoConnectionException $e) {
-                printf("<p>Caught Mongo Connection exception in initDatabaseConnection(): %s", $e->getMessage());
-                return 0;
             } catch (Exception $e) {
                 printf("<p>Caught exception in initDatabaseConnection(): %s", $e->getMessage());
                 return 0;

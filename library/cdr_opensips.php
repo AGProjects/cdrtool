@@ -3516,7 +3516,6 @@ class CDRS_opensips_mongo extends CDRS_opensips {
     var $mongo_db_rw = NULL;
 
     function getCDRtables() {
-
         if (!is_object($this->mongo_db_rw) && !$this->initDatabaseConnection) {
             return array();
         }
@@ -3524,11 +3523,10 @@ class CDRS_opensips_mongo extends CDRS_opensips {
         $_tables=array();
         try {
             $_tables=$this->mongo_db_rw->listCollections();
-        } catch (MongoException $e) {
+        } catch (Exception $e) {
             printf("<p>Caught Mongo exception in getCDRtables(): %s", $e->getMessage());
-        } catch (MongoCursorException $e) {
-            printf("<p>Caught MongoCursorException in getCDRtables(): %s", $e->getMessage());
         }
+
         $t=count($_tables);
         if ($this->table) $this->tables[]=$this->table;
 
@@ -3554,19 +3552,11 @@ class CDRS_opensips_mongo extends CDRS_opensips {
             $mongo_replicaSet = $mongo_db['replicaSet'];
             $mongo_database   = $mongo_db['database'];
             try {
-                $mongo_connection_ro = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $mongo_connection_ro = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
                 $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
-                $this->mongo_db_ro->setSlaveOkay(true);
-
-                $mongo_connection_rw = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                $mongo_connection_rw = new Mongo("mongodb://$mongo_uri?readPreference=primaryPreferred", array("replicaSet" => $mongo_replicaSet));
                 $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
                 return true;
-            } catch (MongoException $e) {
-                printf("<p>Caught Mongo exception in initDatabaseConnection(): %s", $e->getMessage());
-                return false;
-            } catch (MongoConnectionException $e) {
-                printf("<p>Caught Mongo Connection exception in initDatabaseConnection(): %s", $e->getMessage());
-                return false;
             } catch (Exception $e) {
                 printf("<p>Caught exception in initDatabaseConnection(): %s", $e->getMessage());
                 return false;
@@ -3589,10 +3579,6 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                 $table = $this->mongo_db_ro->selectCollection($table);
             }
             return $table;
-        } catch (MongoException $e) {
-            printf("<p>Caught Mongo exception in getMongoTable(): %s", $e->getMessage());
-        } catch (MongoConnectionException $e) {
-            printf("<p>Caught Mongo Connection exception in getMongoTable(): %s", $e->getMessage());
         } catch (Exception $e) {
             printf("<p>Caught exception in getMongoTable(): %s", $e->getMessage());
         }
@@ -3961,12 +3947,8 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                 try {
                     $group_results = $mongo_table_ro->aggregate($pipeline);
                     $rows = count($group_results);
-                } catch (MongoException $e) {
-                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
-                } catch (MongoConnectionException $e) {
-                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
                 } catch (Exception $e) {
-                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
                 }
             }
 
@@ -3975,14 +3957,8 @@ class CDRS_opensips_mongo extends CDRS_opensips {
             if ($mongo_table_ro) {
                 try {
                     $rows = $mongo_table_ro->find($mongo_where)->slaveOkay()->count();
-                } catch (MongoException $e) {
-                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
-                } catch (MongoConnectionException $e) {
-                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
-                } catch (MongoCursorException $e) {
-                    printf("<p>Caught Mongo Cursor exception in show(): %s", $e->getMessage());
                 } catch (Exception $e) {
-                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
                 }
             }
         }
@@ -4090,12 +4066,8 @@ class CDRS_opensips_mongo extends CDRS_opensips {
 
                 try {
                     $group_results = $mongo_table_ro->aggregate($pipeline);
-                } catch (MongoException $e) {
-                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
-                } catch (MongoConnectionException $e) {
-                    printf("<p>Caught Mongo Connection exception in show(): %s", $e->getMessage());
                 } catch (Exception $e) {
-                    printf("<p>Caught exception in show(): %s", $e->getMessage());
+                    printf("<p>Caught Mongo exception in show(): %s", $e->getMessage());
                 }
 
                 $this->showTableHeaderStatistics();

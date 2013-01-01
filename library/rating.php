@@ -79,10 +79,9 @@ class Rate {
                 $mongo_replicaSet = $this->settings['mongo_db']['replicaSet'];
                 $mongo_database   = $this->settings['mongo_db']['database'];
                 try {
-                    $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
+                    $mongo_connection = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
                     $this->mongo_db = $mongo_connection->selectDB($mongo_database);
-                    $this->mongo_db->setSlaveOkay(true);
-                } catch (MongoConnectionException $e) {
+                } catch (Exception $e) {
                     syslog(LOG_NOTICE, sprintf("Error: cannot connect to mongo database %s: %s",$mongo_uri, $e->getMessage()));
                     $this->mongo_db = NULL;
                 }
@@ -592,24 +591,10 @@ class Rate {
                 $table = $this->mongo_db->selectCollection('billing_discounts');
                 $cursor = $table->find($mongo_where)->limit(1)->slaveOkay();
                 $result = $cursor->getNext();
-            } catch (MongoException $e) {
-                $log = sprintf("<p>Caught Mongo exception in lookupDiscounts(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } catch (MongoConnectionException $e) {
-                $log = sprintf("<p>Caught Mongo Connection exception in lookupDiscounts(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
             } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupDiscounts(): %s", var_dump($e));
+                $log = sprintf("<p>Caught exception in lookupDiscounts(): %s", $e->getMessage());
                 syslog(LOG_NOTICE, $log);
                 return false;
-            }
-
-            if(!$result) {
-                $log=sprintf ("Error: cannot find mongo discounts for dest id %s",$this->DestinationId);
-                syslog(LOG_NOTICE, $log);
-                //return false;
             }
 
             if($result) {
@@ -690,16 +675,8 @@ class Rate {
                 $table = $this->mongo_db->selectCollection('destinations');
                 $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
                 $result = $cursor->getNext();
-            } catch (MongoException $e) {
-                $log = sprintf("<p>Caught Mongo exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } catch (MongoConnectionException $e) {
-                $log = sprintf("<p>Caught Mongo Connection exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
             } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", var_dump($e));
+                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", $e->getMessage());
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -790,16 +767,8 @@ class Rate {
                 $table = $this->mongo_db->selectCollection('billing_customers');
                 $cursor = $table->find($mongo_where)->sort(array('subscriber'=>-1, 'domain'=>-1, 'gateway'=>-1))->limit(1)->slaveOkay();
                 $result = $cursor->getNext();
-            } catch (MongoException $e) {
-                $log = sprintf("<p>Caught Mongo exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } catch (MongoConnectionException $e) {
-                $log = sprintf("<p>Caught Mongo Connection exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
             } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", var_dump($e));
+                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", $e->getMessage());
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -1537,16 +1506,8 @@ class Rate {
                 $table = $this->mongo_db->selectCollection('billing_rates');
                 $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
                 $result = $cursor->getNext();
-            } catch (MongoException $e) {
-                $log = sprintf("<p>Caught Mongo exception in lookupRateValuesAudio(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } catch (MongoConnectionException $e) {
-                $log = sprintf("<p>Caught Mongo Connection exception in lookupRateValuesAudio(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
             } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupRateValuesAudio(): %s", var_dump($e));
+                $log = sprintf("<p>Caught exception in lookupRateValuesAudio(): %s", $e->getMessage());
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -1648,16 +1609,8 @@ class Rate {
                 $table = $this->mongo_db->selectCollection('billing_rates');
                 $cursor = $table->find($mongo_where)->sort(array('destination'=>-1))->limit(1)->slaveOkay();
                 $result = $cursor->getNext();
-            } catch (MongoException $e) {
-                $log = sprintf("<p>Caught Mongo exception in lookupRateValuesMessage(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } catch (MongoConnectionException $e) {
-                $log = sprintf("<p>Caught Mongo Connection exception in lookupRateValuesMessage(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
             } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupRateValuesMessage(): %s", var_dump($e));
+                $log = sprintf("<p>Caught exception in lookupRateValuesMessage(): %s", $e->getMessage());
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -2268,11 +2221,10 @@ class RatingTables {
                                                    )
                            );
 
-
     function RatingTables($readonly=false) {
         global $CDRTool;
         global $RatingEngine;
-
+        
         $this->settings = $RatingEngine;
         $this->CDRTool  = $CDRTool;
 
@@ -2328,15 +2280,43 @@ class RatingTables {
                     $this->mongo_safe = $this->settings['mongo_db']['safe'];
                 }
                 try {
-                    $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
-                    $this->mongo_db_ro = $mongo_connection->selectDB($mongo_database);
-                    $this->mongo_db_ro->setSlaveOkay(true);
-                    $this->mongo_db_rw = $mongo_connection->selectDB($mongo_database);
+                    $mongo_connection_rw = new Mongo("mongodb://$mongo_uri?readPreference=primaryPreferred",   array("replicaSet" => $mongo_replicaSet));
+                    $mongo_connection_ro = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
+                    $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
+                    $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
                     $this->mongo_exception = NULL;
-                } catch (MongoConnectionException $e) {
+                } catch (Exception $e) {
                     $this->mongo_db_ro = NULL;
                     $this->mongo_db_rw = NULL;
+                    $log = sprintf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
                     $this->mongo_exception=$e->getMessage();
+                }
+
+                $existing_rating_tables=array();
+                try {
+                    $_tables=$this->mongo_db_ro->listCollections();;
+                    foreach ($_tables as $_table) {
+                        list($collection, $table) = explode(".",strval($_table));
+                        $existing_rating_tables[]=$table;
+                    }
+                } catch (Exception $e) {
+                    printf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
+                }
+
+                foreach (array_keys($this->csv_export) as $table) {
+                    if (!in_array($table, $existing_rating_tables)) {
+                        try {
+                            $mongo_table_rw = $this->mongo_db_rw->selectCollection($table);
+                            $mongo_table_rw->insert(array("test"=>1), array("safe" => $self->mongo_safe));
+                            $mongo_table_rw->remove(array("test"=>1), array("safe" => $self->mongo_safe));
+                            $log=sprintf("Created mongo collection %s", $table);
+                            syslog(LOG_NOTICE, $log);
+                        } catch (Exception $e) {
+                            $log=sprintf("Error creating mongo collection %s: %s", $table, $e->getMessage());
+                            syslog(LOG_NOTICE, $log);
+                        }
+                    }
                 }
             }
         }
@@ -2526,12 +2506,8 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_rates: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -2602,13 +2578,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting from billing_rates: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from billing_rates: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -2724,13 +2695,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating billing_rates: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating billing_rates: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating billing_rates: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -2846,15 +2812,10 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when inserting in billing_rates: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when inserting in billing_rates: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
                             }
                         }
                     }
@@ -3009,15 +2970,10 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_rates_history: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
                         }
                     }
                 }
@@ -3061,13 +3017,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting from billing_rates_history: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3158,13 +3109,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating billing_rates_history: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating billing_rates_history: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating billing_rates_history: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -3238,15 +3184,10 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when inserting in billing_rates_history: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
                             }
                         }
                     }
@@ -3380,13 +3321,8 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_customers: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3430,13 +3366,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting billing_customers: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from billing_customers: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3521,13 +3452,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating billing_customers: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating billing_customers: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating billing_customers: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -3593,13 +3519,8 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_customers: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3737,13 +3658,8 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in destinations: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in destinations: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in destinations: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3789,13 +3705,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from destinations: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting from destinations: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from destinations: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -3890,13 +3801,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating destinations: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating destinations: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating destinations: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -3972,15 +3878,10 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when inserting in destinations: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when inserting in destinations: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when inserting in destinations: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
                             }
                         }
                     }
@@ -4106,13 +4007,8 @@ class RatingTables {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_discounts: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -4165,13 +4061,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from billing_discounts: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting from billing_discounts: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from billing_discounts: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -4266,13 +4157,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating billing_discounts: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating billing_discounts: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating billing_discounts: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -4341,13 +4227,8 @@ class RatingTables {
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when inserting in billing_discounts: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -4465,28 +4346,23 @@ class RatingTables {
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
                         $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                          'profile'       => $profile,
-                                          'rate1'         => $rate1,
+                                          'name'          => $profile,
+                                          'rate_name1'    => $rate1,
                                           'hour1'         => $hour1,
-                                          'rate2'         => $rate2,
+                                          'rate_name2'    => $rate2,
                                           'hour2'         => $hour2,
-                                          'rate3'         => $rate3,
+                                          'rate_name3'    => $rate3,
                                           'hour3'         => $hour3,
-                                          'rate4'         => $rate4,
+                                          'rate_name4'    => $rate4,
                                           'hour4'         => $hour4
                                           );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when inserting in billing_profiles: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
                         }
                     }
                 }
@@ -4520,13 +4396,8 @@ class RatingTables {
                             $mongo_table_rw->remove($mongo_match,
                                                     array("safe" => $self->mongo_safe)
                                                     );
-                        } catch (MongoException $e) {
-                            $log=sprintf("Mongo exception when deleting from billing_profiles: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        } catch (MongoCursorException $e) {
-                            $log=sprintf("Mongo cursor exception when deleting from billing_profiles: %s", $e->getMessage());
+                        } catch (Exception $e) {
+                            $log=sprintf("Error: Mongo exception when deleting from billing_profiles: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
@@ -4590,32 +4461,28 @@ class RatingTables {
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
                             $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name
+                                                 'name'        => $profile
                                                  );
                             $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                              'profile'       => $profile,
-                                              'rate1'         => $rate1,
+                                              'name'          => $profile,
+                                              'rate_name1'    => $rate1,
                                               'hour1'         => $hour1,
-                                              'rate2'         => $rate2,
+                                              'rate_name2'    => $rate2,
                                               'hour2'         => $hour2,
-                                              'rate3'         => $rate3,
+                                              'rate_name3'    => $rate3,
                                               'hour3'         => $hour3,
-                                              'rate4'         => $rate4,
+                                              'rate_name4'    => $rate4,
                                               'hour4'         => $hour4
                                               );
+
                             $mongo_options = array("upsert" => true,
                                                    "safe" => $self->mongo_safe
                                                    );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when updating billing_profiles: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when updating billing_profiles: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when updating billing_profiles: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -4673,29 +4540,25 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                              'profile'       => $profile,
-                                              'rate1'         => $rate1,
-                                              'hour1'         => $hour1,
-                                              'rate2'         => $rate2,
-                                              'hour2'         => $hour2,
-                                              'rate3'         => $rate3,
-                                              'hour3'         => $hour3,
-                                              'rate4'         => $rate4,
-                                              'hour4'         => $hour4
-                                              );
+                        $mongo_data=array('reseller_id'   => intval(reseller_id),
+                                          'name'          => $profile,
+                                          'rate_name1'    => $rate1,
+                                          'hour1'         => $hour1,
+                                          'rate_name2'    => $rate2,
+                                          'hour2'         => $hour2,
+                                          'rate_name3'    => $rate3,
+                                          'hour3'         => $hour3,
+                                          'rate_name4'    => $rate4,
+                                          'hour4'         => $hour4
+                                          );
+
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (MongoException $e) {
-                                $log=sprintf("Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
+                            } catch (Exception $e) {
+                                $log=sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
-                            } catch (MongoCursorException $e) {
-                                $log=sprintf("Mongo cursor exception when inserting in billing_profiles: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
                             }
                         }
                     }
@@ -4738,6 +4601,42 @@ class RatingTables {
     }
 
     function LoadENUMtldsTable() {
+        if ($this->database_backend == 'mongo') {
+            if ($this->mongo_db_ro) {
+                // mongo backend
+                try {
+                    $table = $this->mongo_db_ro->selectCollection('billing_enum_tlds');
+                    $cursor = $table->find()->slaveOkay();
+                } catch (Exception $e) {
+                    $log = sprintf("<p>Caught Mongo exception in LoadENUMtldsTable(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
+    
+                $i=0;
+                foreach ($cursor as $result) {
+                    if ($result['enum_tld']) {
+                        $i++;
+                        $_app=$result['application'];
+                        if (!$_app) $_app='audio';
+        
+                        $_ENUMtlds[$result['enum_tld']]=
+                        array(
+                             "discount"    => $result['discount'],
+                             "e164_regexp" => $result['e164_regexp']
+                        );
+                    }
+                }
+                $this->ENUMtlds = $_ENUMtlds;
+                $this->ENUMtldsCount = $i;
+                return $i;
+            } else {
+                $log = sprintf("<p>Error: mongo db is not initialized in LoadENUMtldsTable()");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        }
+
         $query="select * from billing_enum_tlds";
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -4768,6 +4667,54 @@ class RatingTables {
     }
 
     function LoadRatesHistoryTable() {
+        if ($this->database_backend == 'mongo') {
+            if ($this->mongo_db_ro) {
+                // mongo backend
+                try {
+                    $table = $this->mongo_db_ro->selectCollection('billing_rates_history');
+                    $cursor = $table->find()->slaveOkay();
+                } catch (Exception $e) {
+                    $log = sprintf("<p>Caught Mongo exception in LoadRatesHistoryTable(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
+    
+                $i=0;
+                foreach ($cursor as $result) {
+                    $i++;
+                    if ($result['name'] && $result['destination']) {
+                        $i++;
+                        $_app=$result['application'];
+                        if (!$_app) $_app='audio';
+
+                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$result['startDateTimestamp'],$m);
+                        $startDate = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$result['endDateTimestamp'],$m);
+                        $endDate = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+
+                        $_rates[$result['name']][$result['destination']][$_app][$result['id']]=
+                        array(
+                             "connectCost"    => $result['connectCost'],
+                             "durationRate"   => $result['durationRate'],
+                             "connectCostIn"  => $result['connectCostIn'],
+                             "durationRateIn" => $result['durationRateIn'],
+                             "increment"      => $result['increment'],
+                             "min_duration"   => $result['min_duration'],
+                             "startDate"      => $startDate,
+                             "endDate"        => $endDate
+                        );
+                    }
+                }
+                $this->ratesHistory=$_rates;
+                $this->ratesHistoryCount=$i;
+                return $i;
+            } else {
+                $log = sprintf("<p>Error: mongo db is not initialized in LoadRatesHistoryTable()");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        }
+
         $query="select *,
         UNIX_TIMESTAMP(startDate) as startDateTimestamp,
         UNIX_TIMESTAMP(endDate) as endDateTimestamp
@@ -4811,6 +4758,44 @@ class RatingTables {
     }
 
     function LoadProfilesTable() {
+        if ($this->database_backend == 'mongo') {
+            if ($this->mongo_db_ro) {
+                // mongo backend
+                try {
+                    $table = $this->mongo_db_ro->selectCollection('billing_profiles');
+                    $cursor = $table->find()->slaveOkay();
+                } catch (Exception $e) {
+                    $log = sprintf("<p>Caught Mongo exception in LoadProfilesTable(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
+    
+                $i=0;
+                foreach ($cursor as $result) {
+                    $i++;
+                    if ($result['name'] && $result['hour1'] > 0 ) {
+                        $_profiles[$result['name']]=
+                        array(
+                             "rate_name1"  => $result['rate_name1'],
+                             "hour1"       => $result['hour1'],
+                             "rate_name2"  => $result['rate_name2'],
+                             "hour2"       => $result['hour2'],
+                             "rate_name3"  => $result['rate_name3'],
+                             "hour3"       => $result['hour3'],
+                             "rate_name4"  => $result['rate_name4'],
+                             "hour4"       => $result['hour4'],
+                        );
+                    }
+                }
+                $this->profiles=$_profiles;
+                return $i;
+            } else {
+                $log = sprintf("<p>Error: mongo db is not initialized in LoadProfilesTable()");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        }
+
         $query="select * from billing_profiles order by name";
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
@@ -4842,6 +4827,35 @@ class RatingTables {
     }
 
     function LoadHolidaysTable() {
+        if ($this->database_backend == 'mongo') {
+            if ($this->mongo_db_ro) {
+                // mongo backend
+                try {
+                    $table = $this->mongo_db_ro->selectCollection('billing_holidays');
+                    $cursor = $table->find()->slaveOkay();
+                } catch (Exception $e) {
+                    $log = sprintf("<p>Caught Mongo exception in LoadHolidaysTable(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
+    
+                $i=0;
+                foreach ($cursor as $result) {
+                    $i++;
+                    if ($result['day']) {
+                        $i++;
+                        $_holidays[$result['day']]++;
+                    }
+                }
+                $this->holidays=$_holidays;
+                return $i;
+            } else {
+                $log = sprintf("<p>Error: mongo db is not initialized in LoadHolidaysTable()");
+                syslog(LOG_NOTICE, $log);
+                return 0;
+            }
+        }
+
         $query="select * from billing_holidays order by day";
         if (!$this->db->query($query)) {
             $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
