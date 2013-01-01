@@ -2224,7 +2224,10 @@ class RatingTables {
     function RatingTables($readonly=false) {
         global $CDRTool;
         global $RatingEngine;
-        
+
+        $this->mongo_db_ro = NULL;
+        $this->mongo_db_rw = NULL;
+
         $this->settings = $RatingEngine;
         $this->CDRTool  = $CDRTool;
 
@@ -2284,13 +2287,9 @@ class RatingTables {
                     $mongo_connection_ro = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
                     $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
                     $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
-                    $this->mongo_exception = NULL;
                 } catch (Exception $e) {
-                    $this->mongo_db_ro = NULL;
-                    $this->mongo_db_rw = NULL;
-                    $log = sprintf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
+                    $log = sprintf("Error: mongo exception in RatingTables(): %s", $e->getMessage());
                     syslog(LOG_NOTICE, $log);
-                    $this->mongo_exception=$e->getMessage();
                 }
 
                 $existing_rating_tables=array();
@@ -2301,7 +2300,8 @@ class RatingTables {
                         $existing_rating_tables[]=$table;
                     }
                 } catch (Exception $e) {
-                    printf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
+                    $log = sprintf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
                 }
 
                 foreach (array_keys($this->csv_export) as $table) {
