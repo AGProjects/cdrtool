@@ -2307,9 +2307,7 @@ class RatingTables {
                 foreach (array_keys($this->csv_export) as $table) {
                     if (!in_array($table, $existing_rating_tables)) {
                         try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection($table);
-                            $mongo_table_rw->insert(array("test"=>1), array("safe" => $self->mongo_safe));
-                            $mongo_table_rw->remove(array("test"=>1), array("safe" => $self->mongo_safe));
+                            $this->mongo_db_rw->command(array("create" => $table));
                             $log=sprintf("Created mongo collection %s", $table);
                             syslog(LOG_NOTICE, $log);
                         } catch (Exception $e) {
