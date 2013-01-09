@@ -6521,6 +6521,11 @@ class DnsRecords extends Records {
                                'sipthor' =>  array('name'    => 'SIP - Thor network',
                                                    'records' =>
                                                                 array(
+                                                                      'eventserver' => array('name'  => '_eventserver._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 8000 eventserver'
+                                                                                       ),
                                                                       'sipserver' => array('name'  => '_sip._udp',
                                                                                        'type'   => 'SRV',
                                                                                        'priority'=> '10',
@@ -6535,23 +6540,6 @@ class DnsRecords extends Records {
                                                                                        'value' => 'ns2'
                                                                                        ),
                                                                       'sipns3' => array('name'  => 'proxy',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       ),
-                                                                      'eventserver' => array('name'  => '_eventserver._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 8000 eventserver'
-                                                                                       ),
-                                                                      'evns1' => array('name'  => 'eventserver',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'evns2' => array('name'  => 'eventserver',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'evns3' => array('name'  => 'eventserver',
                                                                                        'type'   => 'NS',
                                                                                        'value' => 'ns3'
                                                                                        ),
@@ -6586,6 +6574,23 @@ class DnsRecords extends Records {
                                                                                        'value' => 'ns2'
                                                                                        ),
                                                                       'xcapns3' => array('name'  => 'xcap',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns3'
+                                                                                       ),
+                                                                      'msrpserver' => array('name'  => '_msrps._tcp',
+                                                                                       'type'   => 'SRV',
+                                                                                       'priority'=> '10',
+                                                                                       'value' => '0 2855 msrprelay'
+                                                                                       ),
+                                                                      'msrpns1' => array('name'  => 'msrprelay',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns1'
+                                                                                       ),
+                                                                      'msrpns2' => array('name'  => 'msrprelay',
+                                                                                       'type'   => 'NS',
+                                                                                       'value' => 'ns2'
+                                                                                       ),
+                                                                      'msrpns3' => array('name'  => 'msrprelay',
                                                                                        'type'   => 'NS',
                                                                                        'value' => 'ns3'
                                                                                        ),
