@@ -647,7 +647,7 @@ class SoapEngine {
             syslog(LOG_NOTICE, $log);
 
             if ($html) {
-                $log=sprintf("Failed to add account: %s (%s): %s",
+                $log=sprintf("Failed to add record: %s (%s): %s",
                 $this->error_msg,
                 $this->error_fault->detail->exception->errorcode,
                 $this->error_fault->detail->exception->errorstring);
@@ -845,6 +845,9 @@ class Records {
     }
 
     function showSeachForm() {
+        if ($this->hide_html()) {
+            return;
+        }
 
     	printf ("<p><b>%s</b>",
         $this->SoapEngine->ports[$this->SoapEngine->port]['description']);
@@ -878,7 +881,7 @@ class Records {
         print "</div>
         </form>
         ";
-
+            
         if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
     }
 
@@ -1554,6 +1557,9 @@ class Records {
         print "</pre>\n";
     }
 
+    function hide_html() {
+        return false;
+    }
 }
 
 class SipDomains extends Records {
@@ -3904,7 +3910,7 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4019,7 +4025,7 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4281,7 +4287,7 @@ class EnumRanges extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4959,7 +4965,7 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
@@ -4978,7 +4984,7 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
@@ -5306,7 +5312,7 @@ class EnumMappings extends Records {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
@@ -5354,7 +5360,7 @@ class EnumMappings extends Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 syslog(LOG_NOTICE, $log);
                 return false;
             } else {
@@ -5672,7 +5678,7 @@ class EnumMappings extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -5952,7 +5958,7 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -5964,7 +5970,7 @@ class DnsZones extends Records {
     function showAddForm() {
         if ($this->selectionActive) return;
 
-        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf ("<form class=form-inline method=post name=addform action=%s enctype='multipart/form-data'>",$_SERVER['PHP_SELF']);
         print "
         <div class='well well-small'>
         ";
@@ -5978,6 +5984,24 @@ class DnsZones extends Records {
 
         $this->printHiddenFormElements();
 
+        printf (" Import DNS zones from file:
+        <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
+        <div class='fileupload fileupload-new' style='display: inline-block; margin-bottom:0px' data-provides='fileupload'>
+            <div class='input-append'>
+                <div class='uneditable-input input-small'>
+                    <span class='fileupload-preview'></span>
+                </div>
+                <span class='btn btn-file'>
+                <span class='fileupload-new'>Select file</span>
+                <span class='fileupload-exists'>Change</span>
+                <input type='file' name='import_file'/></span>
+                <a href='#' class='btn fileupload-exists' data-dismiss='fileupload'>Remove</a>
+                <button type='submit' name=action class='btn fileupload-exists' value=\"Add\"><i class='icon-upload'></i> Import</button>
+            </div>
+        </div>
+        "
+        );
+
         print "
             </div>
         </form>
@@ -5989,62 +6013,195 @@ class DnsZones extends Records {
         $info         = trim($_REQUEST['info']);
         $name_servers = trim($_REQUEST['name_servers']);
 
-        if (!strlen($name)) {
-            printf ("<p><font color=red>Error: Missing zone name. </font>");
-            return false;
-        }
+        if ($_FILES['import_file']['tmp_name']) {
+            $content=fread(fopen($_FILES['import_file']['tmp_name'], "r"), $_FILES['import_file']['size']);
+            //print_r($content);
 
-        if (is_numeric($prefix)) {
-            printf ("<p><font color=red>Error: Numeric zone names are not allowed. Use ENUM port instead. </font>");
-            return false;
-        }
+            if (!$imported_data=json_decode($content, true)) {
+                printf ("<p><font color=red>Error: reading imported data. </font>");
+                return false;
+            }
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+            //print_r($imported_data);
 
-        if (!trim($_REQUEST['ttl'])) {
-            $ttl=3600;
-        } else {
-            $ttl=intval(trim($_REQUEST['ttl']));
-        }
+            if (!in_array('dns_zones', array_keys($imported_data))) {
+                printf ("<p><font color=red>Error: Missing zones in imported data. </font>");
+                return false;
+            }
 
-        if ($name_servers)  {
-            $ns_array=explode(" ",trim($name_servers));
-        } else if ($this->login_credentials['login_type'] != 'admin' && $this->SoapEngine->name_servers){
-            $ns_array=explode(" ",trim($this->SoapEngine->name_servers));
-        } else {
-            $ns_array=array();
-        }
+            if (!in_array('dns_records', array_keys($imported_data))) {
+                return false;
+                printf ("<p><font color=red>Error: Missing records in imported data. </font>");
+            }
 
-        $zone=array(
-                     'name'        => $name,
-                     'ttl'         => $ttl,
-                     'info'        => $info,
-                     'customer'    => intval($customer),
-                     'reseller'    => intval($reseller),
-                     'nameservers' => $ns_array
-                    );
+            foreach($imported_data['customers'] as $customer) {
+                // Insert credetials
+                $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
 
-        $deleteZone=array('name'=>$name);
+                $customer['credit'] = floatval($customer['credit']);
+                $customer['balance'] = floatval($customer['balance']);
+                // Call function
+                $result     = $this->SoapEngine->soapclientCustomers->addAccount($customer);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 5001) {
+                        $result     = $this->SoapEngine->soapclientCustomers->updateCustomer($customer);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            syslog(LOG_NOTICE, $log);
+                            printf ("<p><font color=red>Error: $log</font>");
+                        } else {
+                            printf('<p>Customer %s has been updated',$customer['id']);
+                        }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        syslog(LOG_NOTICE, $log);
+                        printf ("<p><font color=red>Error: $log</font>");
+                    }
+                } else {
+                    printf('<p>Customer %s has been added',$customer['id']);
+                }
 
-        $function=array('commit'   => array('name'       => 'addZone',
-                                            'parameters' => array($zone),
-                                            'logs'       => array('success' => sprintf('DNS zone %s has been added',$name)))
-                        );
+            }
 
-        $result = $this->SoapEngine->execute($function,$this->html);
-        dprint_r($result);
+            $name_servers = array();
+            foreach($imported_data['dns_zones'] as $zone) {
+                flush();
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->addZone($zone);
+                $name_servers[$zone['name']] = $zone['nameservers'];
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 7001) {
+                        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $result = $this->SoapEngine->soapclient->updateZone($zone);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            syslog(LOG_NOTICE, $log);
+                            printf ("<p><font color=red>Error: $log</font>");
+                         } else {
+                             printf('<p>Zone %s has been updated',$zone['name']);
+                         }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        syslog(LOG_NOTICE, $log);
+                        printf ("<p><font color=red>Error: $log</font>");
 
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
-            return false;
-        } else {
+                    }
+                } else {
+                    printf('<p>Zone %s has been added',$zone['name']);
+                }
+
+            }
+
+            $added = 0;
+            $updated = 0;
+            foreach($imported_data['dns_records'] as $record) {
+                flush();
+                if (in_array($record['name'], $name_servers[$record['zone']]) && $record['type'] == "A") {
+                    continue;
+                }
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->addRecord($record);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 7003) {
+                        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $result = $this->SoapEngine->soapclient->updateRecord($record);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            syslog(LOG_NOTICE, $log);
+                            printf ("<p><font color=red>Error: $log</font>");
+                        } else {
+                            $added += 1;
+                        }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        syslog(LOG_NOTICE, $log);
+                        printf ("<p><font color=red>Error: $log</font>");
+                    }
+                } else {
+                   $added += 1;
+                }
+            }
+
+            printf('<p>%d DNS records added and %d updated',$added, $updated);
+
             return true;
-        }
 
+
+        } else {
+
+            if (!strlen($name)) {
+                printf ("<p><font color=red>Error: Missing zone name. </font>");
+                return false;
+            }
+    
+            if (is_numeric($prefix)) {
+                printf ("<p><font color=red>Error: Numeric zone names are not allowed. Use ENUM port instead. </font>");
+                return false;
+            }
+    
+            list($customer,$reseller)=$this->customerFromLogin($dictionary);
+    
+            if (!trim($_REQUEST['ttl'])) {
+                $ttl=3600;
+            } else {
+                $ttl=intval(trim($_REQUEST['ttl']));
+            }
+    
+            if ($name_servers)  {
+                $ns_array=explode(" ",trim($name_servers));
+            } else if ($this->login_credentials['login_type'] != 'admin' && $this->SoapEngine->name_servers){
+                $ns_array=explode(" ",trim($this->SoapEngine->name_servers));
+            } else {
+                $ns_array=array();
+            }
+    
+            $zone=array(
+                         'name'        => $name,
+                         'ttl'         => $ttl,
+                         'info'        => $info,
+                         'customer'    => intval($customer),
+                         'reseller'    => intval($reseller),
+                         'nameservers' => $ns_array
+                        );
+    
+            $function=array('commit'   => array('name'       => 'addZone',
+                                                'parameters' => array($zone),
+                                                'logs'       => array('success' => sprintf('DNS zone %s has been added',$name)))
+                            );
+    
+            $result = $this->SoapEngine->execute($function,$this->html);
+            dprint_r($result);
+    
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 
     function showSeachFormCustom() {
@@ -6234,7 +6391,7 @@ class DnsZones extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -6333,6 +6490,14 @@ class DnsZones extends Records {
                 $this->selectionKeys[]=array('name' => $zone->name);
             }
             return true;
+        }
+    }
+
+    function hide_html() {
+        if ($_REQUEST['action'] == 'PerformActions' && $_REQUEST['sub_action'] == 'export') {
+            return true;
+        } else {
+            return false;
         }
     }
 }
@@ -6959,7 +7124,7 @@ class DnsRecords extends Records {
 
         $function=array('commit'   => array('name'       => $this->deleteRecordFunction,
                                             'parameters' => array($id),
-                                            'logs'       => array('success' => sprintf('Dns record %s has been deleted',$id)))
+                                            'logs'       => array('success' => sprintf('DNS record %s has been deleted',$id)))
                         );
 
 		$zone=$this->filters['zone'];
@@ -6972,7 +7137,7 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -7240,7 +7405,7 @@ class DnsRecords extends Records {
      
             $function=array('commit'   => array('name'       => $this->addRecordFunction,
                                                 'parameters' => array($record),
-                                                'logs'       => array('success' => sprintf('Dns record %s under %s has been added',$name,$zone))),
+                                                'logs'       => array('success' => sprintf('DNS record %s under %s has been added',$name,$zone))),
                             );
          
             $result = $this->SoapEngine->execute($function,$this->html);
@@ -7251,7 +7416,7 @@ class DnsRecords extends Records {
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
                 if ($this->html) {
-                  $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                  $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 }
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -7335,7 +7500,7 @@ class DnsRecords extends Records {
                     $error_code = $result->getCode();
 
                     if ($this->html) {
-                    	$log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    	$log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     }
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -7576,7 +7741,7 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -8285,7 +8450,7 @@ class Carriers extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -8778,7 +8943,7 @@ class Gateways extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -9295,7 +9460,7 @@ class GatewayRules extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -9831,7 +9996,7 @@ class Routes extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -14025,7 +14190,8 @@ class DnsZonesActions extends Actions {
                        'changeinfo'     => 'Change Info to:',
                        'addnsrecord'    => 'Add name server:',
                        'removensrecord' => 'Remove name server:',
-                       'delete'         => 'Delete zones'
+                       'delete'         => 'Delete zones',
+                       'export'         => 'Export zones'
                        );
 
     function DnsZonesActions($SoapEngine) {
@@ -14038,14 +14204,21 @@ class DnsZonesActions extends Actions {
             return false;
         }
 
-        print "<ol>";
+        if ($action!='export')  {
+            print "<ol>";
+        } else {
+            $exported_data=array('dns_zones'=>array());
+            $export_customers=array();
+        }
+
         foreach($selectionKeys as $key) {
             flush();
-            print "<li>";
+            if ($action!='export')  {
+                print "<li>";
+            }
             //printf ("Performing action=%s on key=%s",$action,$key['name']);
 
             if ($action=='delete') {
-
                 $function=array('commit'   => array('name'       => 'deleteZone',
                                                     'parameters' => array($key['name']),
                                                     'logs'       => array('success' => sprintf('Zone %s has been deleted',$key['name'])
@@ -14054,6 +14227,51 @@ class DnsZonesActions extends Actions {
         
                                 );
                 $this->SoapEngine->execute($function,$this->html);
+            } else if ($action=='export') {
+                // Filter
+                $filter=array(
+                              'zone'     => $key['name']
+                              );
+        
+                $range   = array('start' => 0,'count' => 5000);
+                // Compose query
+                $Query=array('filter'  => $filter,
+                             'range'   => $range
+                             );
+
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result     = $this->SoapEngine->soapclient->getZone($key['name']);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                } else {
+                    if (!in_array($result->customer, $export_customers)) {
+                        $export_customers[]=$result->customer;
+                    }
+                    if (!in_array($result->reseller, $export_customers)) {
+                        $export_customers[]=$result->reseller;
+                    }
+                    $exported_data['dns_zones'][] = objectToArray($result);
+                }
+
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                // Call function
+                $result = call_user_func_array(array($this->SoapEngine->soapclient,'getRecords'),array($Query));
+        
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                } else {
+                    $exported_data['dns_records'] = objectToArray($result->records);
+                }
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
@@ -14242,7 +14460,37 @@ class DnsZonesActions extends Actions {
             }
         }
 
-        print "</ol>";
+        if ($action!='export')  {
+            print "</ol>";
+        } else {
+            // Filter
+            foreach ($export_customers as $customer) {
+                $filter=array(
+                              'customer'     => intval($customer),
+                              );
+        
+                // Compose query
+                $Query=array('filter'     => $filter
+                                );
+        
+                // Insert credetials
+                $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+
+                // Call function
+                $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                } else {
+                    $exported_data['customers'] = objectToArray($result->accounts);
+                }
+            }
+            print_r(json_encode($exported_data));
+        }
     }
 }
 
@@ -14320,4 +14568,24 @@ function check_ip_access_list($acl_string, $check=false) {
     }
 }
 
+function objectToArray($d) {
+		if (is_object($d)) {
+			// Gets the properties of the given object
+			// with get_object_vars function
+			$d = get_object_vars($d);
+		}
+ 
+		if (is_array($d)) {
+			/*
+			* Return array converted to object
+			* Using __FUNCTION__ (Magic constant)
+			* for recursive call
+			*/
+			return array_map(__FUNCTION__, $d);
+		}
+		else {
+			// Return array
+			return $d;
+		}
+	}
 ?>

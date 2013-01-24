@@ -30,8 +30,17 @@ if (is_readable("/etc/cdrtool/local/header.phtml")) {
 
 $perm->check("provisioning");
 
-$layout = new pageLayoutLocal();
-$layout->showTopMenu($title);
+if ($_REQUEST['action'] == 'PerformActions' && $_REQUEST['sub_action'] == 'export') {
+    $export = true;
+}
+
+if ($export) {
+    Header("Content-type: text/plain");
+    Header("Content-Disposition: attachment; filename=export.txt");
+} else {
+    $layout = new pageLayoutLocal();
+    $layout->showTopMenu($title);
+}
 
 global $CDRTool;
 
@@ -122,12 +131,14 @@ if ($_REQUEST['generatorId']) {
     }
 }
 
-$layout->showFooter();
-
-print "
-</body>
-</html>
-";
+if (!$export) {
+    $layout->showFooter();
+    
+    print "
+    </body>
+    </html>
+    ";
+}
 
 page_close();
 ?>
