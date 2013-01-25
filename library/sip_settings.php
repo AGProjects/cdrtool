@@ -4189,7 +4189,25 @@ class SipSettings {
             $result->timeout=intval($timeout);
         }
 
-        $result->timeout=intval($result->timeout);
+        if ($result->owner == '') {
+            $this->somethingChanged=1;
+            $result->owner=0;
+        }
+
+        if ($result->callLimit == '') {
+            $this->somethingChanged=1;
+            $result->callLimit=0;
+        }
+
+        if ($result->quota == '') {
+            $this->somethingChanged=1;
+            $result->quota=0;
+        }
+
+        if ($result->timeout == '') {
+            $this->somethingChanged=1;
+            $result->timeout=35;
+        }
 
         if ($this->somethingChanged) {
 
@@ -5385,7 +5403,7 @@ class SipSettings {
         $filter=array(
                       'type'     => 'sip',
                       'mapto'    => $this->account,
-                      'owner'    => $this->owner
+                      'owner'    => intval($this->owner)
                       );
         // Range
         $range=array('start' => 0,

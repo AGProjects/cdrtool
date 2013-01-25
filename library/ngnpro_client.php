@@ -455,6 +455,10 @@ class SoapEngine {
                 $this->sip_engine=$this->soapEngines[$this->soapEngine]['sip_engine'];
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['voicemail_engine'])) {
+                $this->voicemail_engine=$this->soapEngines[$this->soapEngine]['voicemail_engine'];
+            }
+
             if (strlen($this->login_credentials['customer_engine'])) {
                 $this->customer_engine=$this->login_credentials['customer_engine'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
@@ -583,6 +587,29 @@ class SoapEngine {
                     $this->soapclientCustomers->_options['timeout'] = intval($this->soapEngines[$this->customer_engine]['timeout']);
                 } else {
                     $this->soapclientCustomers->_options['timeout'] = $this->timeout;
+                }
+            }
+
+            if ($this->voicemail_engine) {
+                $this->SOAPloginVoicemail = array(
+                                       "username"    => $this->soapEngines[$this->voicemail_engine]['username'],
+                                       "password"    => $this->soapEngines[$this->voicemail_engine]['password'],
+                                       "admin"       => true,
+                                       "impersonate" => intval($this->reseller)
+                                       );
+
+                $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
+
+                $this->SOAPurlVoicemail    = $this->soapEngines[$this->voicemail_engine]['url'];
+                $this->soapclientVoicemail = new WebService_NGNPro_VoicemailPort($this->SOAPurlVoicemail);
+
+                $this->soapclientVoicemail->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                $this->soapclientVoicemail->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+                if (strlen($this->soapEngines[$this->voicemail_engine]['timeout'])) {
+                    $this->soapclientVoicemail->_options['timeout'] = intval($this->soapEngines[$this->voicemail_engine]['timeout']);
+                } else {
+                    $this->soapclientVoicemail->_options['timeout'] = $this->timeout;
                 }
             }
 
@@ -1633,8 +1660,13 @@ class SipDomains extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             $this->rows = $result->total;
+
+            if ($_REQUEST['action'] == 'Export' and $this->rows) {
+                $this->exportDomain($result->domains[0]->domain);
+                return;
+            }
+
 
             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
@@ -1674,17 +1706,25 @@ class SipDomains extends Records {
 
                     $index = $this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
+                    $delete_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($domain->domain)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['domain_filter'] == $domain->domain) {
-                        $_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
+                        $delete_url .= "&confirm=1";
+                        $deleteText = "<font color=red>Confirm</font>";
                     } else {
-                        $actionText = "Delete";
+                        $deleteText = "Delete";
+                    }
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                        $delete_url .= "&confirm=1";
+                        $deleteText = "<font color=red>Confirm</font>";
+                    } else {
+                        $deleteText = "Delete";
                     }
 
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
@@ -1706,29 +1746,60 @@ class SipDomains extends Records {
                     urlencode($this->SoapEngine->soapEngine),
                     urlencode($domain->domain)
                     );
-
-                    printf("
-                    <tr>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td><a href=%s>Sip accounts</a></td>
-                    <td><a href=%s>Sip aliases</a></td>
-                    <td>%s</td>
-                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                    </tr>",
-                    $index,
-                    $_customer_url,
-                    $domain->customer,
-                    $domain->reseller,
-                    $_sip_domains_url,
-                    $domain->domain,
-                    $_sip_accounts_url,
-                    $_sip_aliases_url,
-                    $domain->changeDate,
-                    $_url,
-                    $actionText
-                    );
+                    if ($this->adminonly) {
+                        $export_url = $this->url.sprintf("&service=%s&action=Export&domain_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($domain->domain)
+                        );
+    
+                        printf("
+                        <tr>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>Sip accounts</a></td>
+                        <td><a href=%s>Sip aliases</a></td>
+                        <td>%s</td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                        <td><a class='btn-small btn-danger' href=%s>Export</a></td>
+                        </tr>",
+                        $index,
+                        $_customer_url,
+                        $domain->customer,
+                        $domain->reseller,
+                        $_sip_domains_url,
+                        $domain->domain,
+                        $_sip_accounts_url,
+                        $_sip_aliases_url,
+                        $domain->changeDate,
+                        $delete_url,
+                        $deleteText,
+                        $export_url
+                        );
+                    } else {
+                        printf("
+                        <tr>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>Sip accounts</a></td>
+                        <td><a href=%s>Sip aliases</a></td>
+                        <td>%s</td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                        </tr>",
+                        $index,
+                        $_customer_url,
+                        $domain->customer,
+                        $domain->reseller,
+                        $_sip_domains_url,
+                        $domain->domain,
+                        $_sip_accounts_url,
+                        $_sip_aliases_url,
+                        $domain->changeDate,
+                        $delete_url,
+                        $deleteText
+                        );
+                    }
 
                     $i++;
                 }
@@ -1748,6 +1819,9 @@ class SipDomains extends Records {
 
     function showSeachFormCustom() {
         printf (" <div class='input-prepend'><span class=add-on>SIP domain</span><input class=span2 type=text size=20 name=domain_filter value='%s'></div>",$this->filters['domain']);
+    }
+
+    function exportRecord($dictionary=array()) {
     }
 
     function deleteRecord($dictionary=array()) {
@@ -1779,7 +1853,7 @@ class SipDomains extends Records {
 
     function showAddForm() {
         if ($this->selectionActive) return;
-            printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+            printf ("<form class=form-inline method=post name=addform action=%s enctype='multipart/form-data'>",$_SERVER['PHP_SELF']);
             print "
             <div class='well well-small'>
             ";
@@ -1793,38 +1867,214 @@ class SipDomains extends Records {
             printf (" </div><div class='input-prepend'><span class='add-on'>SIP domain</span><input type=text size=20 name=domain></div>");
 
             $this->printHiddenFormElements();
-
+            printf (" Import SIP domain from file:
+            <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
+            <div class='fileupload fileupload-new' style='display: inline-block; margin-bottom:0px' data-provides='fileupload'>
+                <div class='input-append'>
+                    <div class='uneditable-input input-small'>
+                        <span class='fileupload-preview'></span>
+                    </div>
+                    <span class='btn btn-file'>
+                    <span class='fileupload-new'>Select file</span>
+                    <span class='fileupload-exists'>Change</span>
+                    <input type='file' name='import_file'/></span>
+                    <a href='#' class='btn fileupload-exists' data-dismiss='fileupload'>Remove</a>
+                    <button type='submit' name=action class='btn fileupload-exists' value=\"Add\"><i class='icon-upload'></i> Import</button>
+                </div>
+            </div>
+            "
+            );
             print "</div>
             </form>
         ";
     }
 
     function addRecord($dictionary=array()) {
+        if ($this->adminonly && $_FILES['import_file']['tmp_name']) {
+            $content=fread(fopen($_FILES['import_file']['tmp_name'], "r"), $_FILES['import_file']['size']);
+            //print_r($content);
 
-        if ($dictionary['domain']) {
-            $domain = $dictionary['domain'];
+            if (!$imported_data=json_decode($content, true)) {
+                printf ("<p><font color=red>Error: reading imported data. </font>");
+                return false;
+            }
+
+            //print_r($imported_data);
+
+            if (!in_array('sip_domains', array_keys($imported_data))) {
+                printf ("<p><font color=red>Error: Missing SIP domains in imported data. </font>");
+                return false;
+            }
+
+            if (!in_array('sip_accounts', array_keys($imported_data))) {
+                return false;
+                printf ("<p><font color=red>Error: Missing SIP accounts in imported data. </font>");
+            }
+
+            foreach($imported_data['customers'] as $customer) {
+                // Insert credetials
+                $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+
+                $customer['credit'] = floatval($customer['credit']);
+                $customer['balance'] = floatval($customer['balance']);
+                // Call function
+                $result     = $this->SoapEngine->soapclientCustomers->addAccount($customer);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 5001) {
+                        $result     = $this->SoapEngine->soapclientCustomers->updateCustomer($customer);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            printf ("<p><font color=red>Error: $log</font>");
+                        } else {
+                            printf('<p>Customer %s has been updated',$customer['id']);
+                        }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        printf ("<p><font color=red>Error: $log</font>");
+                    }
+                } else {
+                    printf('<p>Customer %s has been added',$customer['id']);
+                }
+
+            }
+
+            foreach($imported_data['sip_domains'] as $domain) {
+                flush();
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->addDomain($domain);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 1001) {
+                        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $result = $this->SoapEngine->soapclient->updateDomain($domain);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            printf ("<p><font color=red>Error: $log</font>");
+                         } else {
+                             printf('<p>SIP domain %s has been updated',$domain['domain']);
+                         }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        printf ("<p><font color=red>Error: $log</font>");
+                    }
+                } else {
+                    printf('<p>SIP domain %s has been added',$domain['domain']);
+                }
+
+            }
+            $i = 0;
+            $added = 0;
+            $updated = 0;
+            $failed = 0;
+            foreach($imported_data['sip_accounts'] as $account) {
+                $i+=1;
+                flush();
+                $account['callLimit'] = intval($account['callLimit']);
+                $account['prepaid']   = intval($account['prepaid']);
+                $account['quota']     = intval($account['quota']);
+                $account['owner']     = intval($account['owner']);
+                $account['timeout']   = intval($account['timeout']);
+
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->addAccount($account);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode == 1011) {
+                        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $result = $this->SoapEngine->soapclient->updateAccount($account);
+                        if (PEAR::isError($result)) {
+                            $error_msg  = $result->getMessage();
+                            $error_fault= $result->getFault();
+                            $error_code = $result->getCode();
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            printf ("<p><font color=red>Error: $log</font>");
+                            $failed += 1;
+                        } else {
+                            printf('<p>%d SIP account %s@%s has been updated',$i,$account['id']['username'], $account['id']['domain']);
+                            $updated += 1;
+                        }
+                    } else {
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        printf ("<p><font color=red>Error: $log</font>");
+                        $failed += 1;
+                    }
+                } else {
+                    printf('<p>%d SIP account %s@%s has been added',$i, $account['id']['username'], $account['id']['domain']);
+                    $added += 1;
+                }
+            }
+            if ($added) {
+                printf('<p>%d SIP accounts added',$added);
+            }
+            if ($updated ) {
+                printf('<p>%d SIP accounts updated',$updated);
+            }
+            if ($failed) {
+                printf('<p>%d SIP accounts failed',$failed);
+            }
+
+            $added = 0;
+            foreach($imported_data['sip_aliases'] as $alias) {
+                flush();
+
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->addAlias($alias);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error: $log</font>");
+                } else {
+                   $added += 1;
+                }
+            }
+
+            if ($added) {
+                printf('<p>%d SIP aliases added',$added);
+            }
+
+            return true;
         } else {
-            $domain = trim($_REQUEST['domain']);
+            if ($dictionary['domain']) {
+                $domain = $dictionary['domain'];
+            } else {
+                $domain = trim($_REQUEST['domain']);
+            }
+    
+            list($customer,$reseller)=$this->customerFromLogin($dictionary);
+    
+            if (!$this->validDomain($domain)) {
+                print "<font color=red>Error: invalid domain name</font>";
+                return false;
+            }
+    
+            $domainStructure = array('domain'   => strtolower($domain),
+                                     'customer' => intval($customer),
+                                     'reseller' => intval($reseller)
+                                    );
+            $function=array('commit'   => array('name'       => 'addDomain',
+                                                'parameters' => array($domainStructure),
+                                                'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain)))
+                                               );
+    
+            return $this->SoapEngine->execute($function,$this->html);
         }
-
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
-
-        if (!$this->validDomain($domain)) {
-            print "<font color=red>Error: invalid domain name</font>";
-            return false;
-        }
-
-        $domainStructure = array('domain'   => strtolower($domain),
-                                 'customer' => intval($customer),
-                                 'reseller' => intval($reseller)
-                                );
-        $function=array('commit'   => array('name'       => 'addDomain',
-                                            'parameters' => array($domainStructure),
-                                            'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain)))
-                                           );
-
-        return $this->SoapEngine->execute($function,$this->html);
-
     }
 
     function getRecordKeys() {
@@ -2042,6 +2292,156 @@ class SipDomains extends Records {
 
     }
 
+    function hide_html() {
+        if ($_REQUEST['action'] == 'Export') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function exportDomain($domain) {
+        $exported_data= array();
+        // Filter
+        $filter=array(
+                      'domain'    => $domain,
+                      'customer'  => intval($this->filters['customer']),
+                      'reseller'  => intval($this->filters['reseller'])
+                      );
+
+        // Range
+        $range=array('start' => 0,
+                     'count' => 1000
+                     );
+        // Compose query
+        $Query=array('filter'  => $filter,
+                     'range'   => $range
+                     );
+    
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result     = $this->SoapEngine->soapclient->getDomains($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        } else {
+            $i = 0 ;
+
+            while ($i < $result->total)  {
+                $domain = $result->domains[$i];
+                if (!in_array($domain->customer, $export_customers)) {
+                    $export_customers[]=$domain->customer;
+                }
+                if (!in_array($domain->reseller, $export_customers)) {
+                    $export_customers[]=$domain->reseller;
+                }
+                $i+=1;
+                $exported_data['sip_domains'][] = objectToArray($domain);
+            }
+        }
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        // Call function
+        $result = call_user_func_array(array($this->SoapEngine->soapclient,'getAccounts'),array($Query));
+    
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
+            return false;
+        } else {
+            $exported_data['sip_accounts'] = objectToArray($result->accounts);
+            foreach ($result->accounts as $account) {
+                if (!in_array($account->owner, $export_customers)) {
+                    $export_customers[]=$account->owner;
+                }
+
+                $sipId=array("username" => $account->id->username,
+                             "domain"   => $account->id->domain
+                             );
+                $this->SoapEngine->soapclientVoicemail->addHeader($this->SoapEngine->SoapAuthVoicemail);
+                $result = $this->SoapEngine->soapclientVoicemail->getAccount($sipId);
+    
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    if ($error_fault->detail->exception->errorcode != "2000" && $error_fault->detail->exception->errorcode != "1010") {
+                        printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    }
+                } else {
+                    $exported_data['voicemail_accounts'][] = $result;
+                }
+
+                // Filter
+                $filter=array('targetUsername' => $account->id->username,
+                              'targetDomain'   => $account->id->domain
+                              );
+        
+                // Range
+                $range=array('start' => 0,
+                             'count' => 20
+                             );
+        
+                // Compose query
+                $Query=array('filter'  => $filter,
+                             'range'   => $range
+                             );
+        
+                // Call function
+                $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $result = $this->SoapEngine->soapclient->getAliases($Query);
+                if (PEAR::isError($result)) {
+                    $error_msg  = $result->getMessage();
+                    $error_fault= $result->getFault();
+                    $error_code = $result->getCode();
+                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                } else {
+                    foreach ($result->aliases as $alias) {
+                        $exported_data['sip_aliases'][] = objectToArray($alias);
+                    }
+                }
+            }
+        }
+
+        foreach ($export_customers as $customer) {
+            if (!$customer) {
+                continue;
+            }
+            $filter=array(
+                          'customer'     => intval($customer),
+                          );
+    
+            // Compose query
+            $Query=array('filter'     => $filter
+                            );
+    
+            // Insert credetials
+            $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+
+            // Call function
+            $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                syslog(LOG_NOTICE, $log);
+                return false;
+            } else {
+                $exported_data['customers'] = objectToArray($result->accounts);
+            }
+        }
+        //print_r($exported_data['customers']);
+
+        print_r(json_encode($exported_data));
+    }
 }
 
 class SipAccounts extends Records {
@@ -2195,7 +2595,7 @@ class SipAccounts extends Records {
                         'range'   => $range
                         );
 
-        // Insert credetials
+        // Insert credentials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Call function
