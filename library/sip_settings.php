@@ -20,7 +20,6 @@ class SipSettings {
     var $soapClassRatingPort       = 'WebService_NGNPro_RatingPort';
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
-    var $soapClassPresencePort     = 'WebService_SoapSIMPLEProxy_PresencePort';
     var $showSoapConnectionInfo    = false;
 	var $store_clear_text_passwords=true;
 
@@ -57,7 +56,6 @@ class SipSettings {
     var $reject_anonymous_access_number = "*69";
 
 	var $show_barring_tab   = false;
-	var $show_presence_tab  = false;
     var $show_payments_tab  = false;
     var $show_tls_section   = false;
     var $show_support_tab   = false;
@@ -115,29 +113,18 @@ class SipSettings {
                                            'owner',
                                            'mobile_number',
                                            'extra_groups',
-                                           'show_presence_tab',
                                            'show_barring_tab',
                                            'ip_access_list',
                                            'callLimit'
                                            );
-
-    var $presence_statuses   = array('allow','deny','confirm');
-    var $presence_activities = array('busy'      => 'buddy_busy.jpg',
-                                    'open'      => 'buddy_online.jpg',
-                                    'available' => 'buddy_online.jpg',
-                                    'idle'      => 'buddy_idle.jpg',
-                                    'away'      => 'buddy_away.jpg'
-                                    );
 
 	var $disable_extra_groups=true;
 
     var $prepaid             = 0;
     var $emergency_regions   = array();
     var $FNOA_timeoutDefault = 35;
-    var $presence_rules      = array();
     var $enums               = array();
     var $barring_prefixes    = array();
-    var $presence_watchers   = array();
     var $SipUAImagesPath     = "images";
     var $SipUAImagesFile     = "phone_images.php";
     var $balance_history     = array();
@@ -349,12 +336,6 @@ class SipSettings {
             }
         }
 
-        if ($this->presence_engine && $this->show_presence_tab) {
-            if ($this->Preferences['show_presence_tab']) {
-            	$this->tabs['presence']=_("Presence");
-            }
-        }
-
         if ($this->show_did_tab) {
         	$this->tabs['did']=_("DID");
         }
@@ -480,21 +461,12 @@ class SipSettings {
 
         $this->SoapAuthAdmin = array('auth', $this->SOAPloginAdmin , 'urn:AGProjects:NGNPro', 0, '');
 
-        // Presence
-        $this->SOAPurlPresence=$this->soapEngines[$this->presence_engine]['url'];
-
         if (strlen($this->loginCredentials['customer_engine'])) {
             $this->customer_engine=$this->loginCredentials['customer_engine'];
         } else if (strlen($this->soapEngines[$this->sip_engine]['customer_engine'])) {
             $this->customer_engine=$this->soapEngines[$this->sip_engine]['customer_engine'];
         } else {
             $this->customer_engine=$this->sip_engine;
-        }
-
-        if (strlen($this->loginCredentials['presence_engine'])) {
-            $this->presence_engine=$this->loginCredentials['presence_engine'];
-        } else if (strlen($this->soapEngines[$this->sip_engine]['presence_engine'])) {
-            $this->presence_engine=$this->soapEngines[$this->sip_engine]['presence_engine'];
         }
 
         if (strlen($this->loginCredentials['voicemail_engine'])) {
@@ -620,10 +592,6 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['reject_anonymous_access_number']) {
             $this->reject_anonymous_access_number = $this->soapEngines[$this->sip_engine]['reject_anonymous_access_number'];
-        }
-
-        if ($this->soapEngines[$this->sip_engine]['show_presence_tab']) {
-            $this->show_presence_tab = $this->soapEngines[$this->sip_engine]['show_presence_tab'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['show_directory']) {
@@ -772,23 +740,6 @@ class SipSettings {
         if ($this->showSoapConnectionInfo && $this->SOAPurlCustomer != $this->SOAPurl)  {
             printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customer_engine]['username']);
         }
-
-        if ($this->presence_engine) {
-            $this->SOAPurlPresence = $this->soapEngines[$this->presence_engine]['url'];
-            $this->PresencePort    = new $this->soapClassPresencePort($this->SOAPurlPresence);
-            if (strlen($this->soapEngines[$this->presence_engine]['timeout'])) {
-                $this->PresencePort->_options['timeout'] = intval($this->soapEngines[$this->presence_engine]['timeout']);
-            } else {
-                $this->PresencePort->_options['timeout'] = $this->soapTimeout;
-            }
-
-            $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-            if ($this->showSoapConnectionInfo)  {
-                printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> ",$this->soapClassPresencePort,$this->SOAPurlPresence,$this->SOAPurlPresence);
-            }
-        }
-
     }
 
     function getMongoJournalTable() {
@@ -2418,7 +2369,7 @@ class SipSettings {
                         </tr>
         ";
 
-        if ($this->presence_engine) {
+        if ($this->xcap_root) {
                 print "
                     <tr>
                     <td>";
@@ -3429,15 +3380,6 @@ class SipSettings {
         </label>
         <div id='extra' class=controls>";
 
-        if ($this->show_presence_tab) {
-            if ($this->Preferences['show_presence_tab']){
-                $check_show_presence_tab="checked";
-            } else {
-                $check_show_presence_tab="";
-            }
-            printf ("<label class='checkbox'><input type=checkbox %s value=1 name='show_presence_tab'>%s</label>\n",$check_show_presence_tab,_("Presence"));
-        }
-
         if (in_array("free-pstn",$this->groups) && !$this->show_barring_tab) {
             if ($this->Preferences['show_barring_tab']){
                 $check_show_barring_tab="checked";
@@ -4085,11 +4027,6 @@ class SipSettings {
             }
 
             $this->setPreference("language",$language);
-            $this->somethingChanged=1;
-        }
-
-        if ($show_presence_tab != $this->Preferences['show_presence_tab'] ) {
-            $this->setPreference("show_presence_tab",$show_presence_tab);
             $this->somethingChanged=1;
         }
 
@@ -7408,366 +7345,6 @@ class SipSettings {
         return true;
     }
 
-    function showPresenceTab() {
-
-        if (!$this->password) {
-            print "Error: the acocunt password is not available in clear text. You cannot retrieve XCAP documents from this page.";
-            return false;
-        }
-
-        $this->getPresenceWatchers();
-        $this->getPresenceRules();
-        $this->getPresenceInformation();
-
-        print "
-        <form method=post class=form-inline name=sipsettings onSubmit=\"return checkForm(this)\">
-        ";
-        $chapter=sprintf(_("Activity"));
-        $this->showChapter($chapter);
-
-        print ("<table width='100%'>
-        <tr>
-        <td width=100px>");
-        print _("Note");
-        print "</td>
-        <td>";
-        print _("Activity");
-        print "</td>
-        </tr>";
-
-        printf ("
-        <tr>
-          <td><input class=span3 type=text size=50 name=note value='%s'></td>
-          <td>
-          <select class=span3 name=activity>
-        <option>
-        ",$this->presentity['note']);
-
-        $selected_activity[$this->presentity['activity']]='selected';
-
-        foreach (array_keys($this->presence_activities) as $_activity) {
-            printf ("<option %s value='%s'>%s",$selected_activity[$_activity],$_activity,ucfirst($_activity));
-        }
-        print "</select>";
-
-        if ($this->presence_activities[$this->presentity['activity']]) {
-            printf ("<img src=images/%s border=0>",$this->presence_activities[$this->presentity['activity']]);
-        }
-
-        print "
-          </td>
-        </tr><tr><td colspan=2>
-        ";
-
-        $chapter=sprintf(_("Watchers"));
-        $this->showChapter($chapter);
-
-        print "</td></tr>";
-        $j=0;
-
-        foreach (array_keys($this->presence_watchers) as $_watcher) {
-            $j++;
-
-            $online_icon='';
-
-            if (is_array($this->presence_rules['allow']) && in_array($_watcher,$this->presence_rules['allow'])) {
-                $display_status = 'allow';
-            } elseif (is_array($this->presence_rules['deny']) && in_array($_watcher,$this->presence_rules['deny'])) {
-                $display_status = 'deny';
-            } else {
-                $display_status = $this->presence_watchers[$_watcher]['status'];
-            }
-
-            if ($this->presence_watchers[$_watcher]['online'] == 1) {
-                $online_icon="<img src=images/buddy_online.jpg border=0>";
-            } else {
-                $online_icon="<img src=images/buddy_offline.jpg border=0>";
-            }
-
-            if ($display_status == 'deny') {
-                $online_icon="<img src=images/buddy_banned.jpg border=0>";
-                $color='red';
-            } else if ($display_status == 'confirm') {
-                $color='blue';
-            } else {
-                $color='green';
-            }
-
-            printf ("
-            <tr>
-            <input type=hidden name=watcher[] value=%s>
-            <td><font color=%s>%s</font></td>
-            <td>
-            <select class=span3 name=watcher_status[]>
-            ",
-            $_watcher,
-            $color,
-            $_watcher);
-
-            unset($selected);
-            $selected[$display_status]='selected';
-
-            foreach ($this->presence_statuses as $_status) {
-                if ($_status== 'confirm' && !$selected[$_status]) continue;
-                printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
-            }
-
-            print "
-            </select>
-            $online_icon
-            </td>
-            </tr>
-            ";
-        }
-        print "<tr><td colspan=2>";
-        $chapter=sprintf(_("Rules"));
-        $this->showChapter($chapter);
-
-        print "</td></tr>";
-        $j=0;
-        foreach (array_keys($this->presence_rules) as $_key) {
-            $j++;
-
-            foreach ($this->presence_rules[$_key] as $_tmp) {
-
-                if (in_array($_tmp,array_keys($this->presence_watchers))) {
-                    continue;
-                }
-
-                printf ("
-                <tr>
-                <input type=hidden name=watcher[] value=%s>
-                <td>%s</td>
-                <td>
-                <select class=span3 name=watcher_status[]>
-                ",$_tmp,$_tmp);
-
-                unset($selected);
-                $selected[$_key]='selected';
-
-                foreach ($this->presence_statuses as $_status) {
-                    if ($_status== 'confirm' && !$selected[$_status]) continue;
-                    printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
-                }
-                print "
-                <option value=delete>";
-                print _("Delete");
-                print "
-                </select>
-                ";
-
-                if ($_key == 'deny') {
-                    print "<img src=images/buddy_banned.jpg border=0>";
-                }
-                print "
-                </td>
-                </tr>
-                ";
-            }
-        }
-
-        printf ("
-        <tr>
-        <td><input class=span3 type=text name=watcher[]></td>
-        <td>
-        <select class=span3 name=watcher_status[]>
-        ");
-        $selected['deny']='selected';
-        foreach ($this->presence_statuses as $_status) {
-            printf ("<option %s value=%s>%s",$selected[$_status],$_status,ucfirst($_status));
-        }
-
-        print "
-        </select>
-        </td>
-        </tr>
-        ";
-
-        print "
-        <tr>
-          <td colspan=2>
-            <input type=hidden name=action value=\"set presence\">
-        ";
-
-        print "<div class='form-actions'>
-        <input class=btn type=submit value=\"";
-        print _("Save");
-        print "\"
-               onClick=saveHandler(this)>
-        ";
-        print "</div>
-          </td>
-        </tr>
-        ";
-
-        print $this->hiddenElements;
-
-        print "</table>
-        </form>
-        ";
-
-    }
-
-    function setPresence() {
-
-        // publish information
-        $this->setPresenceInformation();
-
-        // set policy
-        unset($policy);
-        foreach ($this->presence_statuses as $_status) {
-            $policy[$_status]=array();
-        }
-
-        $j=0;
-        $seen_watcher=array();
-        foreach($_REQUEST['watcher'] as $_w) {
-            if (!strlen($_w)) continue;
-            if ($seen_watcher[$_w]) continue;
-            $seen_watcher[$_w]++;
-            if (!strstr($_w,'@')) {
-                if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
-                $domain_policy[$_REQUEST['watcher_status'][$j]][]=$_w;
-            }
-            $j++;
-        }
-
-        $j=0;
-        $seen_watcher=array();
-        foreach($_REQUEST['watcher'] as $_w) {
-            if (!strlen($_w)) continue;
-            if ($seen_watcher[$_w]) continue;
-            $seen_watcher[$_w]++;
-
-             if ($_REQUEST['watcher_status'][$j] == 'delete') continue;
-
-            $status=$_REQUEST['watcher_status'][$j];
-            list($u,$d)=explode('@',$_w);
-            if (!in_array($d,$domain_policy[$status])) {
-                $policy[$status][]=$_w;
-            }
-            $j++;
-        }
-
-        $result = $this->PresencePort->setPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password,$policy);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-    }
-
-    function getPresenceWatchers () {
-        dprint("getPresenceWatchers()");
-
-        if (!$this->password) {
-            print "Error: password is not available in clear text";
-            return false;
-        }
-
-        $result = $this->PresencePort->getWatchers(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-        dprint_r($result);
-
-        foreach ($result as $_watcher) {
-            $this->presence_watchers[$_watcher->id]['status']=$_watcher->status;
-            $this->presence_watchers[$_watcher->id]['online']=$_watcher->online;
-            $this->watchersOnline=0;
-            if ($this->presence_watchers[$_watcher->id]['online']) {
-                $this->watchersOnline++;
-            }
-        }
-        //dprint_r($this->presence_watchers);
-
-    }
-
-    function getPresenceInformation() {
-        dprint("getPresenceInformation()");
-
-        if (!$this->password) {
-            print "<p>Error: password is not available in clear text";
-            return false;
-        }
-
-        $result = $this->PresencePort->getPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-        $this->presentity['activity'] = $result->activity;
-        $this->presentity['note']     = $result->note;
-    }
-
-    function setPresenceInformation() {
-
-        if (!$this->password) {
-            print "<p>Error: password is not available in clear text";
-            return false;
-        }
-
-        $presentity['activity'] = $_REQUEST['activity'];
-        $presentity['note']     = $_REQUEST['note'];
-
-        if (strlen($presentity['activity']) && strlen($presentity['note'])) {
-            $result = $this->PresencePort->setPresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password, $presentity);
-        } else if (!strlen($presentity['note'])) {
-            $result = $this->PresencePort->deletePresenceInformation(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
-        } else {
-            return true;
-        }
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-        return true;
-    }
-
-    function getPresenceRules () {
-        dprint("getPresenceRules()");
-
-        if (!$this->password) {
-            print "<p>Error: password is not available in clear text";
-            return false;
-        }
-
-        $result = $this->PresencePort->getPolicy(array("username" =>$this->username,"domain"   =>$this->domain),$this->password);
-
-        if (PEAR::isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (PresencePort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            return false;
-        }
-
-        foreach ($this->presence_statuses as $_status) {
-            $this->presence_rules[$_status] = $result->$_status;
-        }
-
-        //dprint_r($this->presence_rules);
-    }
-
     function getFileTemplate($name, $type="file") {
     
         dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
@@ -10946,8 +10523,6 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
     } else if ($_REQUEST['action']=="set barring") {
         $SipSettings->setBarringPrefixes();
-    } else if ($_REQUEST['action']=="set presence") {
-        $SipSettings->setPresence();
     } else if ($_REQUEST['action']=="set reject") {
         $SipSettings->setRejectMembers();
     } else if ($_REQUEST['action']=="set accept rules") {

@@ -23,7 +23,6 @@ $soapEngines=array(
                                          'version'             => 4,
                                          'record_generator'    => 'rg',
                                          'sip_engine'          => 'sip',
-                                         'presence_engine'     => 'ssp',
                                          'customer_engine'     => 'sip',
                                          'voicemail_engine'    => 'vm',
                                          'customer_properties' => $customerProperties,
@@ -56,11 +55,7 @@ $soapEngines=array(
                                          'password'=> 'password',
                                          'url'     => 'http://vm.example.com:9200/',
                                          'skip'    =>  true
-                                         ),
-                           'ssp' => array('name'=> 'Simple Soap Proxy',
-                                         'url'     => 'http://cdr.example.com:9300/',
-                                         'skip'    => true
-                                         ),
+                                         )
                                          
                           );
 $recordGenerators =array (
