@@ -562,7 +562,7 @@ class SipSettings {
             $this->msrp_relay  = $this->soapEngines[$this->sip_engine]['msrp_relay'];
         }
 
-        if (strlen($this->soapEngines[$this->sip_engine]['emergency_regions'])) {
+        if ($this->soapEngines[$this->sip_engine]['emergency_regions']) {
             $this->emergency_regions  = $this->soapEngines[$this->sip_engine]['emergency_regions'];
         }
 
