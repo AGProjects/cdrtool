@@ -10721,8 +10721,9 @@ function getSipAccountFromHTTPDigest () {
     require("/etc/cdrtool/enrollment/config.ini");
  
     if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
-        syslog(LOG_NOTICE, 'Missing nonce in enrollment settings');
-        die('Missing enrollment settings');
+        $log= 'Error: Missing nonce in enrollment settings';
+        syslog(LOG_NOTICE, $log);
+        die($log);
         return false;
     }
 
@@ -10745,15 +10746,19 @@ function getSipAccountFromHTTPDigest () {
 
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-    
-        die('You have canceled login');
+
+        $log="web login cancelled";
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
     
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
-        !isset($data['username']))
-        die('Wrong Credentials!');
-    
+        !isset($data['username'])) {
+        $log = "Wrong Credentials";
+        syslog(LOG_NOTICE, $log);
+        die($log);
+    }
 
     // generate the valid response
     $username    = $data['username'];
@@ -10765,8 +10770,10 @@ function getSipAccountFromHTTPDigest () {
         header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-    
-        die("Invalid username, must be in the format user@domain");
+
+        $log="Invalid username, must be in the format user@domain";
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
 
     if (!strlen($domain)) {
@@ -10774,7 +10781,9 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
     
-        die("Invalid domain name");
+        $log="Invalid domain name";
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
 
     require("/etc/cdrtool/ngnpro_engines.inc");
@@ -10818,7 +10827,9 @@ function getSipAccountFromHTTPDigest () {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-        die('Wrong Credentials!');
+        $log = 'Wrong Credentials!';
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
 
 
@@ -10841,7 +10852,9 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        die('Wrong Credentials!');
+        $log = "Wrong Credentials";
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
     // check nonce
 
@@ -10852,7 +10865,9 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        die('Wrong nonce!');
+        $log = 'Wrong nonce!';
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
 
 
@@ -10862,7 +10877,9 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",stale=true,opaque="'.md5($realm).'"');
 
-        die('Nonce has expired!');
+        $log = 'Nonce has expired!';
+        syslog(LOG_NOTICE, $log);
+        die($log);
     }
 
     $credentials['customer'] = $result->customer;
