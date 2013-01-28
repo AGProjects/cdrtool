@@ -486,8 +486,6 @@ class SIP_Subscriber_Auth extends Auth {
             return false;
         }
 
-        printf ("Engine=%s",$SIP['engine']);
-
         $this->SOAPlogin=array(
                                "username" => $soapEngines[$SIP['engine']]['username'],
                                "password" => $soapEngines[$SIP['engine']]['password'],
