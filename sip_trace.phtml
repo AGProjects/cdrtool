@@ -1,37 +1,37 @@
 <?
 require("/etc/cdrtool/global.inc");
 
-if ($_REQUEST['public']) {
-    $db = new DB_CDRTool;
-    $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
-    $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
-    sleep(1);
-    dprint($query);
-    if ($db->query($query)) {
-	    if ($db->num_rows()) {
-    	    $authorize=0;
-    	} else {
-        	$authorize=1;
-	    }
-    } else {
-		$authorize=1;
-    }
-} else {
-	$authorize=1;
-}
-
-if ($authorize==1) {
-	page_open(array(
-          "sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm")
-          );
-
-} else {
-	unset($auth);
-	unset($sess);
-	unset($perm);
-}
+// if ($_REQUEST['public']) {
+//     $db = new DB_CDRTool;
+//     $key="callid-".trim($_REQUEST['callid']).trim($_REQUEST['fromtag']);
+//     $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
+//     sleep(1);
+//     dprint($query);
+//     if ($db->query($query)) {
+//         if ($db->num_rows()) {
+//             $authorize=0;
+//         } else {
+//             $authorize=1;
+//         }
+//     } else {
+//         $authorize=1;
+//     }
+// } else {
+//     $authorize=1;
+// }
+// 
+// if ($authorize==1) {
+//     page_open(array(
+//           "sess" => "CDRTool_Session",
+//           "auth" => "CDRTool_Auth",
+//           "perm" => "CDRTool_Perm")
+//           );
+// 
+// } else {
+//     unset($auth);
+//     unset($sess);
+//     unset($perm);
+// }
 
 $proxyIP     = $_REQUEST['proxyIP'];
 $callid      = $_REQUEST['callid'];
