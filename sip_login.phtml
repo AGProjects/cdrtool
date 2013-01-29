@@ -1,7 +1,6 @@
 <?
 $title="Login";
-include("sip_header.phtml");
-
+include("header.phtml");
 ?>
 
 <script language="javascript" src="md5.js"></script>
@@ -19,104 +18,88 @@ include("sip_header.phtml");
 
 </script>
 <?
-print "<h2>";
+print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
 print _("Login");
-print "</h2>";
-print "<p>";
-print _("Use your own SIP account credentials. ");
-print _("Example");
-
-if ($example_domain) {
-	print ": account@$example_domain";
-} else {
-	print ": account@example.com";
-}
-
-?>
-<form action="<?php print $this->url() ?>" method=post name=login>
-
-<table border=0 cellpadding=3>
- <tr valign=middle align=left>
-<?
-print "<td>";
-  print _("SIP address");
-  print ":</td>";
-?>
-  <td><input type="text" name="username"
-        value="<?php
-    if (isset($this->auth["uname"])) {
-        print $this->auth["uname"];
-    } else if (isset($_REQUEST['username'])) {
-       print $_REQUEST['username'];
-    }
-    ?>"
-        size=35 maxlength=50>
-<?
-print "
- </td>
- </tr>
- <tr>
-  <td>";
-  print _("Password");
-  print ":</td>";
+print "</h2></div>";
 ?>
 
- <td><input type="password" name="password" size=35 maxlength=50></td>
-  <input type="hidden" name="step" value=<?print $step?>>
- </tr>
-
-
-<? $sess->hidden_session(); ?>
-
- <tr>
-
-  <td colspan=2>
-	<br>
-	<input onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
-
-<p>SIP account or password or forgotten? Click <a href=sip_login_reminder.phtml><u>here</u></a> to receive a reminder.
-
-<?
-?>
-
-</td>
-
- </tr>
-</table>
-
- <?php global $username, $login_msg;
-print "<p class=s>";
-
- if ( isset($username) ):
-	print "<p>";
-
-
-?>
-
- <!-- failed login code -->
-
-
- <p>
+<!-- failed login code -->
 <?  
 if ($username) {
-	print "
-   	<font color=red>
-	";
+    print "<div class='alert alert-error'>";
     print _("Either your SIP account or password are invalid");
 
-	print "<br>
-    </font>
-    <p>$login_msg";
+    print "
+    </div>
+    <p>$login_msg</p>";
 
 }
 ?>
 
- <?php endif ?>
+    <form class='form-horizontal' action="<?php print $this->url() ?>" method=post name=login>
+
+<?
+print "<div class=control-group>
+        <label class='control-label'>";
+print _("SIP address");
+print "</label>";
+?>
+
+
+        <div class=controls>
+            <input type="text" name="username"
+        value="
+<?php
+if (isset($this->auth["uname"])) {
+    print $this->auth["uname"];
+} else if (isset($_REQUEST['username'])) {
+    print $_REQUEST['username'];
+}
+?>" placeholder="Example: 
+<?php
+if ($example_domain) {
+    print "account@$example_domain";
+} else {
+    print "account@example.com";
+}
+?>" size=35 maxlength=50 class='span11'></div></div>
+
+<?php
+print "
+                <div class=control-group>
+                    <label class='control-label'>";
+print _("Password");
+print "
+                    </label>
+";
+?>
+
+                <div class='controls'>
+                    <input type="password" name="password" size=35 maxlength=50 class='span11'></td>
+                    <input type="hidden" name="step" value=<?php print $step?>>
+                </div>
+            </div>
+
+
+<?php $sess->hidden_session(); ?>
+            <p class="help-block">
+                <a href=sip_login_reminder.phtml>
+                    SIP address or password or forgotten?
+                </a>
+            </p>
+            <div class='form-actions'>
+                <input class='btn btn-primary' onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
+            </div>
+
+<?
+?>
 
 <!-- Set up the form with the challenge value and an empty reply value -->
-<input type="hidden" name="challenge" value="<?php print $challenge ?>">
-<input type="hidden" name="response"  value="">
-</form>
+                <input type="hidden" name="challenge" value="<?php print $challenge ?>">
+                <input type="hidden" name="response"  value="">
+            </form>
+        </div>
+    </div>
 </body>
 <script language="JavaScript">
   // Activate the appropriate input form field.
