@@ -1455,7 +1455,7 @@ class CDRS {
         if ($this->table) $this->tables[]=$this->table;
 
         while ($t <> 0 ) {
-            $_table=$_tables[$t]["table_name"];
+            $_table=$_tables[$t-1]["table_name"];
             if ($_table=='radacct') $this->tables[]='radacct';
 
             if (preg_match("/^(\w+)(\d{6})$/",$_table,$m)) {
@@ -1465,7 +1465,7 @@ class CDRS {
             }
             $t--;
         }
-
+        asort($this->tables);
         $this->tables=array_unique($this->tables);
     }
 
