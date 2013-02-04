@@ -1465,7 +1465,6 @@ class CDRS {
             }
             $t--;
         }
-        asort($this->tables);
         $this->tables=array_unique($this->tables);
     }
 
