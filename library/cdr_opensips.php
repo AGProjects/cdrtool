@@ -668,7 +668,7 @@ class CDRS_opensips extends CDRS {
                             array("label"=>"Destination","value"=>"CalledStationId"),
                             array("label"=>"Duration","value"=>"AcctSessionTime"),
                             array("label"=>"Input traffic","value"=>"AcctInputOctets"),
-                            array("label"=>"Output traffic","value"=>"AcctOutputInputOctets"),
+                            array("label"=>"Output traffic","value"=>"AcctOutputOctets"),
                             array("label"=>"Price","value"=>"Price"),
                             array("label"=>"Failures(%)","value"=>"zeroP"),
                             array("label"=>"Success(%)","value"=>"nonzeroP"),
