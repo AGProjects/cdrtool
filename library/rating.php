@@ -6564,7 +6564,7 @@ class RatingTables {
         }
         
         if (!$export) {
-            print "
+            print "</form>
             </table>
             ";
             
