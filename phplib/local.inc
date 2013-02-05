@@ -460,6 +460,7 @@ class SIP_Subscriber_Auth extends Auth {
         $password    = $_POST["password"];
         $challenge   = $_POST["challenge"];
         $response    = $_POST["response"];
+        $response_ha1= $_POST["response_ha1"];
 
         if(isset($username)) {
             $this->auth["uname"]=$username;
@@ -512,7 +513,6 @@ class SIP_Subscriber_Auth extends Auth {
             return false;
         }
 
-
         //dprint_r($result->properties);
 
         $web_password='';
@@ -531,11 +531,19 @@ class SIP_Subscriber_Auth extends Auth {
         $SIP['customer'] = $result->customer;
         $SIP['reseller'] = $result->reseller;
 
-        if ($expected_response == $response) {
+        if ($result->ha1 && $result->ha1 == $response_ha1) {
+            $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
+            syslog(LOG_NOTICE, $log);
             return true;
-       } else {
-            return false;
-       }
+        }
+
+        if ($expected_response == $response) {
+            $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
+            syslog(LOG_NOTICE, $log);
+            return true;
+        }
+
+        return false;
     }
 }
 

@@ -7,6 +7,8 @@ page_open(array("sess" => "SIP_Subscriber_Session",
 
 
 $loginname=$auth->auth["uname"] ;
+$log=sprintf("SIP settings page: %s logged out from %s", $loginname, $_SERVER['REMOTE_ADDR']);
+syslog(LOG_NOTICE, $log);
 
 $auth->logout();
 $sess->delete();
@@ -33,6 +35,7 @@ print "
 ";
 
 page_close();
+
 print "
 </body>
 </html>

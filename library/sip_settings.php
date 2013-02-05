@@ -788,7 +788,8 @@ class SipSettings {
             return false;
         }
 
-        //print_r($result);
+        //print "<pre>";
+        dprint_r($result);
         $this->owner     = $result->owner;
 
         if (!is_array($result->properties))   $result->properties=array();
@@ -10324,7 +10325,7 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log="web login cancelled";
+        $log=sprintf("SIP settings page: login cancelled from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
@@ -10332,7 +10333,7 @@ function getSipAccountFromHTTPDigest () {
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
         !isset($data['username'])) {
-        $log = "Wrong Credentials";
+        $log=sprintf("SIP settings page: Invalid credentials from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
@@ -10348,7 +10349,7 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log="Invalid username, must be in the format user@domain";
+        $log=sprintf("SIP settings page: Invalid username from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
@@ -10358,8 +10359,7 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
     
-        $log="Invalid domain name";
-        syslog(LOG_NOTICE, $log);
+        $log=sprintf("SIP settings page: Invalid domain from %s", $_SERVER['REMOTE_ADDR']);
         die($log);
     }
 
@@ -10404,11 +10404,10 @@ function getSipAccountFromHTTPDigest () {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-        $log = 'Wrong Credentials!';
+        $log=sprintf("SIP settings page: wrong credentials from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
-
 
     $web_password='';
     foreach ($result->properties as $_property) {
@@ -10429,7 +10428,7 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = "Wrong Credentials";
+        $log=sprintf("SIP settings page: wrong credentials from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
@@ -10442,7 +10441,7 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = 'Wrong nonce!';
+        $log=sprintf("SIP settings page: wrong nonce from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
@@ -10454,10 +10453,12 @@ function getSipAccountFromHTTPDigest () {
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",stale=true,opaque="'.md5($realm).'"');
 
-        $log = 'Nonce has expired!';
+        $log=sprintf("SIP settings page: nonce has expired from %s", $_SERVER['REMOTE_ADDR']);
         syslog(LOG_NOTICE, $log);
         die($log);
     }
+
+    $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
 
     $credentials['customer'] = $result->customer;
     $credentials['reseller'] = $result->reseller;
