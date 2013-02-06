@@ -10492,6 +10492,14 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
     $SipSettings = new $SipSettings_class($account,$login_credentials,$soapEngines);
 
+    if ($_REQUEST['action']) {
+        $log_action=$_REQUEST['action'];
+    } else {
+        $log_action='load main page';
+    }
+    $log=sprintf("SIP settings page: %s for %s from %s", $log_action, $account, $_SERVER['REMOTE_ADDR']);
+    syslog(LOG_NOTICE, $log);
+
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
         !strstr($_REQUEST['action'],'put_') &&
