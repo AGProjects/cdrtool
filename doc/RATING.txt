@@ -67,6 +67,9 @@ b. SIP domain of the SIP account
 c. Source IP of the session
 d. Default (when none of the above matches)
 
+You must have a maximum of one column (either subscriber, domain or gateway)
+set in every row of billing_customers table for this to work.
+
 The first match is considered to be the billing party for which the rating
 plan is determined. 
 
