@@ -7522,15 +7522,15 @@ class SipSettings {
         if ($tpl_html) {
             $bodyhtml = $smarty->fetch($tpl_html);
         }
-
-        include 'Mail.php';
-        include 'Mail/mime.php' ;
-
+        
+        include_once 'Mail.php';
+        include_once 'Mail/mime.php' ;
+        
         $hdrs = array(
             'From'    => $this->support_email,
             'Subject' => $subject
         );
-
+        
         $crlf = "\n";
         $mime = new Mail_mime($crlf);
 

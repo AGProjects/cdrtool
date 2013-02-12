@@ -3367,7 +3367,7 @@ class SipAccounts extends Records {
                 <div class=\"alert alert-warning\"><strong>");
             print _("Warning");
             print "</strong> ";
-            print _("More than one account uses this email address. If you wish to receive the password for a particular account fill in the SIP account below, default it will send it to the first 5 accounts found");
+            print _("More than one account uses this email address. If you wish to receive the password for a particular account fill in the SIP account below, default it has been send it to the first 5 accounts found");
             print "</div>";
 
             printf ("
