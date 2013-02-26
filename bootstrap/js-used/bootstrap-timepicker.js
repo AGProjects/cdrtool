@@ -38,12 +38,12 @@
       var self = this;
 
       if (this.$element.parent().hasClass('input-append')) {
-          this.$element.parent('.input-append').find('.add-on').on({
-            'click.timepicker': $.proxy(this.showWidget, this)
-          });
+          //this.$element.parent('.input-append').find('.add-on').on({
+          //  'click.timepicker': $.proxy(this.showWidget, this)
+          //});
           this.$element.on({
             'focus.timepicker': $.proxy(this.highlightUnit, this),
-            'click.timepicker': $.proxy(this.highlightUnit, this),
+            'click.timepicker': $.proxy(this.showWidget, this),
             'keydown.timepicker': $.proxy(this.elementKeydown, this),
             'blur.timepicker': $.proxy(this.blurElement, this)
           });
