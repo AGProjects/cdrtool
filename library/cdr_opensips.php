@@ -1436,11 +1436,11 @@ class CDRS_opensips extends CDRS {
             $query= sprintf("select sum(%s) as duration, SEC_TO_TIME(sum(%s)) as duration_print, count(%s) as calls, %s from %s where %s group by %s %s ",
             addslashes($this->durationField),
             addslashes($this->durationField),
-            addslashes($group_by),
-            addslashes($group_by),
+            $group_by,
+            $group_by,
             addslashes($cdr_table),
             $where,
-            addslashes($group_by),
+            $group_by,
             $having
             );
         } else {
