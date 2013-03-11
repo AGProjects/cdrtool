@@ -139,13 +139,13 @@ class CDRS_opensips extends CDRS {
                 $key         = $this->cdrtool->f('code');
                 $value       = $this->cdrtool->f('description');
                 $value_print = $this->cdrtool->f('description')." (".$this->cdrtool->f('code').")";
-    
+
                 if (preg_match("/^[^2-6]/",$key)) {
                     continue;
                 }
                 $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
                 $this->disconnectCodesDescription[$key]=$value;
-    
+
                 $class=substr($key,0,1);
                 $class_text=substr($key,0,1)."XX (".$this->cdrtool->f('code_type').")";
                 if (!$seen[$class]) {
@@ -251,7 +251,7 @@ class CDRS_opensips extends CDRS {
         }
 
         $action         = "search";
-        
+
         if ($this->CDRTool['filter']['gateway']) {
             $gateway=$this->CDRTool["filter"]["gateway"];
         }
@@ -274,7 +274,7 @@ class CDRS_opensips extends CDRS {
                 $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
         }
-        
+
         if (!$cdr_source) $cdr_source=$cdr_source_els[0]['value'];
 
         $this->f->add_element(array("name"=>"cdr_source",
@@ -294,7 +294,7 @@ class CDRS_opensips extends CDRS {
                 $cdr_table_els[]=array("label"=>$_table,"value"=>$_table);
             }
         }
-    
+
         $this->f->add_element(array(  "name"=>"cdr_table",
                                 "type"=>"select",
                                 "options"=>$cdr_table_els,
@@ -320,7 +320,7 @@ class CDRS_opensips extends CDRS {
             list($begin_hour,$begin_min)=explode(":",$begin_time);
             list($begin_year,$begin_month,$begin_day)=explode("-",$begin_date);
         }
-        
+
         if ($end_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
             $end_year    =date(Y,$end_datetime);
@@ -346,12 +346,12 @@ class CDRS_opensips extends CDRS {
         $default_month = Date("m");
         $default_day   = Date("d");
         $default_hour  = Date(H,time());
-        
+
         if ($default_hour > 1) $default_hour=$default_hour-1;
-        
+
         $default_hour = preg_replace("/^(\d)$/","0$1",$default_hour);
         $default_min  = Date("i");
-        
+
         if ($default_min > 10) {
             $default_min=$default_min-10;
             $default_min=preg_replace("/^(\d)$/","0$1",$default_min);
@@ -468,7 +468,7 @@ class CDRS_opensips extends CDRS {
                            );
 
         }
-        
+
         $flow_els = array(
                 array("label"=>"Any Call Flow","value"=>""),
                 array("label"=>"On Net","value"=>"on-net"),
@@ -724,7 +724,7 @@ class CDRS_opensips extends CDRS {
         }
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>SIP Call Id / Source IP</b>
             </td>
@@ -746,7 +746,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>User Agent / Media Codecs</b>
             </td>
@@ -763,7 +763,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>SIP Billing Party (Username)</b>
             </td>
@@ -787,7 +787,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>
             SIP Caller Party (From URI)
@@ -806,7 +806,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>SIP Destination (Canonical URI)
             </b>
@@ -827,7 +827,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>Application / Call Flow</b>
             </td>
@@ -843,7 +843,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>Duration / Status</b>
             </td>
@@ -858,7 +858,7 @@ class CDRS_opensips extends CDRS {
         </tr>
         ";
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>Order by / Group by</b>
             </td>
@@ -933,7 +933,7 @@ class CDRS_opensips extends CDRS {
         }
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>
             SIP Caller Party
@@ -950,7 +950,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>
             SIP Billing Party
@@ -967,7 +967,7 @@ class CDRS_opensips extends CDRS {
         ";
 
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>
             SIP Destination
@@ -983,9 +983,9 @@ class CDRS_opensips extends CDRS {
         <tr>
         </tr>
         ";
-        
+
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>SIP Session duration</b>
             </td>
@@ -998,7 +998,7 @@ class CDRS_opensips extends CDRS {
         </tr>
         ";
         print "
-        <tr> 
+        <tr>
             <td align=left>
             <b>Order by</b>
             </td>
@@ -1050,15 +1050,15 @@ class CDRS_opensips extends CDRS {
         if ($begin_time) {
             list($begin_hour,$begin_min)=explode(":",$begin_time);
         }
-        
+
         if ($end_time) {
             list($end_hour,$end_min)=explode(":",$end_time);
         }
-        
+
         if ($begin_date) {
             list($begin_year,$begin_month,$begin_day)=explode("-",$begin_date);
         }
-            
+
         if ($end_date) {
             list($end_year,$end_month,$end_day)=explode("-",$end_date);
         }
@@ -1428,9 +1428,9 @@ class CDRS_opensips extends CDRS {
         $j=0;
         $z=0;
 
-        
+
         if ($rows>0)  {
-            
+
             if ($call_id && $ReNormalize) {
                 $query=sprintf("update %s
                 set %s = '0'
@@ -1476,7 +1476,7 @@ class CDRS_opensips extends CDRS {
                 // the amount of calls normalized above
                 $maxrows=$maxrows-$this->status['normalized'];
             }
-            
+
             if ($group_by) {
                 if ($order_by=="group_by") {
                     $order_by1=$group_by;
@@ -1547,10 +1547,10 @@ class CDRS_opensips extends CDRS {
 
                 dprint($query);
                 $this->CDRdb->query($query);
-                
+
                 $this->showTableHeaderStatistics();
                 while ($i<$maxrows)  {
-                
+
                     $found=$i+1;
                     $this->CDRdb->next_record();
 
@@ -1585,7 +1585,7 @@ class CDRS_opensips extends CDRS {
 
                     $rr=floor($found/2);
                     $mod=$found-$rr*2;
-                
+
                     if ($mod ==0) {
                         $inout_color="lightgrey";
                     } else {
@@ -1610,7 +1610,7 @@ class CDRS_opensips extends CDRS {
                         } else {
                             $traceValue="empty";
                         }
-                        
+
                     } else if ($this->group_byOrig==$this->aNumberField) {
                         # Normalize Called Station Id
                         $N=$this->NormalizeNumber($mygroup);
@@ -1741,12 +1741,12 @@ class CDRS_opensips extends CDRS {
                         </table>
                         ";
                      }
-            
+
                 } else {
                     if (!$this->export) {
                         printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
                 }
-                
+
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
@@ -1779,7 +1779,7 @@ class CDRS_opensips extends CDRS {
                 while ($i<$maxrows)  {
                     global $found;
                     $found=$i+1;
-                    $this->CDRdb->next_record();                                            
+                    $this->CDRdb->next_record();
 
                     $Structure=$this->_readCDRFieldsFromDB('');
                     //dprint_r($Structure);
@@ -1803,7 +1803,7 @@ class CDRS_opensips extends CDRS {
                     </table>
                     ";
                  }
-        
+
             }
 
             $this->showPagination($this->next,$maxrows);
@@ -1971,7 +1971,7 @@ class CDRS_opensips extends CDRS {
 
         if ($this->enableThor) {
             $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
-    
+
             if (!$this->AccountsDB->query($query)) {
 
                 $log=sprintf ("Database error for query2 %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
@@ -1993,7 +1993,7 @@ class CDRS_opensips extends CDRS {
             }
         } else {
             $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
-    
+
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
@@ -2048,7 +2048,7 @@ class CDRS_opensips extends CDRS {
             if (strlen($account)) {
                 $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
             }
-    
+
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
@@ -2072,7 +2072,7 @@ class CDRS_opensips extends CDRS {
             if (strlen($account)) {
                 $query.= sprintf (" and username = '%s' and domain = '%s' ",$username,$domain);
             }
-    
+
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
@@ -2202,7 +2202,7 @@ class CDRS_opensips extends CDRS {
                 $textBody .= sprintf ("Missed sessions\n\n
                 Id,Date,From,Duration\n
                 ");
-    
+
                 $htmlBody .= sprintf ("<h2>Missed Calls</h2>
                 <p>
                 <table border=0>
@@ -2215,20 +2215,20 @@ class CDRS_opensips extends CDRS {
                 </th>
                 </tr>
                 ");
-    
+
                 $i=0;
                 foreach ($sessions['missed'] as $_session) {
                     $i++;
                     if ($i >= $count) break;
-    
+
                     $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td></tr>",
                     $i,
                     $_session['date'],
                     $_session['from'],
                     $_session['from']
                     );
-    
-    
+
+
                     $txtBody.=sprintf ("%s,%s,%s,%s,%s\n",
                     $i,
                     $_session['date'],
@@ -2236,7 +2236,7 @@ class CDRS_opensips extends CDRS {
                     $_session['to']
                     );
                 }
-    
+
                 $htmlBody.="</table>";
             }
 
@@ -2246,7 +2246,7 @@ class CDRS_opensips extends CDRS {
                 $textBody .= sprintf ("Diverted Calls\n\n
                 Id,Date,From,Diverted to\n
                 ");
-    
+
                 $htmlBody .= sprintf ("<h2>Diverted Calls</h2>
                 <p>
                 <table border=0>
@@ -2261,12 +2261,12 @@ class CDRS_opensips extends CDRS {
                 </th>
                 </tr>
                 ");
-    
+
                 $i=0;
                 foreach ($sessions['diverted'] as $_session) {
                     $i++;
                     if ($i >= $count) break;
-    
+
                     $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
                     $i,
                     $_session['date'],
@@ -2274,7 +2274,7 @@ class CDRS_opensips extends CDRS {
                     $_session['from'],
                     $_session['canonical']
                     );
-    
+
                     $txtBody.=sprintf ("%s,%s,%s,%s\n",
                     $i,
                     $_session['date'],
@@ -2282,7 +2282,7 @@ class CDRS_opensips extends CDRS {
                     $_session['canonical']
                     );
                 }
-    
+
                 $htmlBody.="</table>";
             }
 
@@ -2291,7 +2291,7 @@ class CDRS_opensips extends CDRS {
                 // received sessions
                 $textBody .= sprintf ("Received Calls\n\n
                 Id,Date,From,Duration\n");
-    
+
                 $htmlBody .= sprintf ("<h2>Received Calls</h2>
                 <p>
                 <table border=0>
@@ -2306,12 +2306,12 @@ class CDRS_opensips extends CDRS {
                 </th>
                 </tr>
                 ");
-    
+
                 $i=1;
                 foreach ($sessions['received'] as $_session) {
-    
+
                     if ($i >= $count) break;
-    
+
                     $htmlBody.=sprintf ("<tr><td>%s</td><td>%s</td><td><a href=sip:%s>sip:%s</a></td><td>%s</td></tr>",
                     $i,
                     $_session['date'],
@@ -2319,18 +2319,18 @@ class CDRS_opensips extends CDRS {
                     $_session['from'],
                     $_session['duration']
                     );
-    
-    
+
+
                     $txtBody.=sprintf ("%s,%s,%s,%s\n",
                     $i,
                     $_session['date'],
                     $_session['from'],
                     $_session['duration']
                     );
-    
+
                     $i++;
                 }
-    
+
                 $htmlBody.="</table>";
             }
 
@@ -2347,7 +2347,7 @@ class CDRS_opensips extends CDRS {
             $mime->setTXTBody($textBody);
             $mime->setHTMLBody($htmlBody);
 
-            $body = $mime->get();     
+            $body = $mime->get();
             $hdrs = $mime->headers($hdrs);
 
             $mail =& Mail::factory('mail');
@@ -2396,13 +2396,13 @@ class CDRS_opensips extends CDRS {
 
         if ($this->enableThor) {
             $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
-    
+
             if (!$this->AccountsDB->query($query)) {
                 $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
                 syslog(LOG_NOTICE,$log);
                 return NULL;
             }
-    
+
             if ($this->AccountsDB->num_rows()) {
                 $this->AccountsDB->next_record();
                 $_profile=json_decode(trim($this->AccountsDB->f('profile')));
@@ -2577,7 +2577,7 @@ class CDR_opensips extends CDR {
 
             $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
         }
-     
+
         $this->domainNormalized=strtolower($this->domainNormalized);
 
         $this->RemoteAddressPrint=quoted_printable_decode($this->RemoteAddress);
@@ -2642,10 +2642,10 @@ class CDR_opensips extends CDR {
             $this->RemoteAddressUsername        = $NormalizedNumber['username'];
             $this->RemoteAddressDelimiter       = $NormalizedNumber['delimiter'];
             $this->RemoteAddressE164            = $NormalizedNumber['E164'];
-    
+
             $this->remoteGateway                = $NormalizedNumber['domain'];
             $this->remoteUsername               = $NormalizedNumber['username'];
-    
+
         }
 
         $this->isCalleeLocal();
@@ -2781,7 +2781,7 @@ class CDR_opensips extends CDR {
                 addslashes($this->callId),
                 addslashes($this->destinationPrint)     // must be synced with maxsession time
                 );
-    
+
                 if ($this->CDRS->cdrtool->query($query)) {
                     if ($this->CDRS->cdrtool->num_rows()) {
                         $this->CDRS->cdrtool->next_record();
@@ -2789,7 +2789,7 @@ class CDR_opensips extends CDR {
                         $this->durationPrint      = sec2hms($this->durationNormalized);
                     } else {
                         $this->durationPrint      = sec2hms($this->duration);
-    
+
                     }
                 } else {
                     $log=sprintf("Database error for query %s: %s (%s)",$query,$this->CDRS->cdrtool->Error,$this->CDRS->cdrtool->Errno);
@@ -2918,11 +2918,11 @@ class CDR_opensips extends CDR {
         <div class=\"row-fluid\">
             <div class=\"span3\">To tag: </div>
             <div class=\"span9\">$this->SipToTag</div>
-        </div>                 
+        </div>
         <div class=\"row-fluid\">
             <div class=\"span3\">Start Time:</div>
             <div class=\"span9\">$this->startTime $providerTimezone</div>
-        </div>            
+        </div>
         <div class=\"row-fluid\">
             <div class=\"span3\">Stop Time:</div>
             <div class=\"span9\">$this->stopTime</div>
@@ -2967,7 +2967,7 @@ class CDR_opensips extends CDR {
         if ($this->CanonicalURI) {
         $this->cdr_details.= sprintf("
         <div class=\"row-fluid\">
-            
+
             <div class=\"span3\">Canonical URI:   </div>
             <div class=\"span9\">%s</div>
         </div>
@@ -2976,7 +2976,7 @@ class CDR_opensips extends CDR {
 
         $this->cdr_details.= sprintf("
         <div class=\"row-fluid\">
-            
+
             <div class=\"span3\">Next Hop URI:</div>
             <div class=\"span9\">%s</div>
         </div>
@@ -2985,7 +2985,7 @@ class CDR_opensips extends CDR {
         if ($this->DestinationId) {
             $this->cdr_details.= "
             <div class=\"row-fluid\">
-                
+
                 <div class=\"span3\">Destination: </div>
                 <div class=\"span9\">$this->destinationName ($this->DestinationId)</div>
             </div>
@@ -2995,7 +2995,7 @@ class CDR_opensips extends CDR {
         if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
             $this->cdr_details.= "
             <div class=\"row-fluid\">
-                
+
                 <div class=\"span3\">ENUM TLD: </div>
                 <div class=\"span9\">$this->ENUMtld</div>
             </div>
@@ -3005,7 +3005,7 @@ class CDR_opensips extends CDR {
         if ($this->SipRPID) {
             $this->cdr_details .= "
             <div class=\"row-fluid\">
-            
+
             <div class=\"span3\">Caller ID:  </div>
             <div class=\"span9\">$this->SipRPIDPrint</div>
             </div>
@@ -3015,7 +3015,7 @@ class CDR_opensips extends CDR {
         if ($this->CalleeCallerId) {
             $this->cdr_details .= "
             <div class=\"row-fluid\">
-            
+
             <div class=\"span3\">Called ID:  </div>
             <div class=\"span9\">$this->CalleeCallerId</div>
             </div>
@@ -3042,23 +3042,23 @@ class CDR_opensips extends CDR {
             $this->cdr_details.= "
                 <h5>Media Streams</h5>
             ";
-    
+
             if ($this->CDRS->mediaTrace) {
                 $media_trace_datasource = $this->CDRS->mediaTrace;
-    
+
                 $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', '_blank',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for media information</a> &nbsp;";
-    
+
                 $this->cdr_details.= sprintf("
                 <div class=\"row-fluid\">
                     <div class='span12'>%s</div>
                 </div>
                 ", $this->mediaTraceLink);
-    
+
             }
 
             $this->SipCodec   = quoted_printable_decode($this->SipCodec);
-    
+
             if ($this->SipCodec) {
                 $this->cdr_details.= "
                 <div class=\"row-fluid\">
@@ -3067,20 +3067,20 @@ class CDR_opensips extends CDR {
                 </div>
                 ";
             }
-    
+
             $this->cdr_details.= "
             <div class=\"row-fluid\">
-                
+
                 <div class=\"span5\">Caller RTP: </div>
                 <div class=\"span7\">$this->inputTrafficPrint KB</div>
             </div>
             <div class=\"row-fluid\">
-                
+
                 <div class=\"span5\">Called RTP: </div>
                 <div class=\"span7\">$this->outputTrafficPrint KB</div>
             </div>
             ";
-    
+
             if ($this->MediaInfo) {
                 $this->cdr_details.= "
                 <div class=\"row-fluid\">
@@ -3121,14 +3121,14 @@ class CDR_opensips extends CDR {
 
         $this->cdr_details.= "
         </div>";
- 
- 
+
+
         if ($perm->have_perm("showPrice") && $this->normalized) {
             $this->cdr_details.= "
             <div class=\"span3\">
                     <h5>Rating</h5>
             ";
- 
+
             if ($this->price > 0 || $this->rate) {
                 $this->ratePrint=nl2br($this->rate);
                 $this->cdr_details.= "
@@ -3136,7 +3136,7 @@ class CDR_opensips extends CDR {
                 $this->ratePrint
                 </div>
                 ";
- 
+
             } else {
                 $this->cdr_details.= "
                 <div class=\"row-fluid\">
@@ -3144,7 +3144,7 @@ class CDR_opensips extends CDR {
                 </div>
                 ";
             }
- 
+
             $this->cdr_details.= "
             </div>
             ";
@@ -3378,7 +3378,7 @@ class CDR_opensips extends CDR {
             $timezone_print=$this->CDRS->CDRTool['provider']['timezone'];
 
             $found_print=$found;
-    
+
             if ($this->normalized) $found_print.='N';
 
             print "
@@ -3449,7 +3449,7 @@ class CDR_opensips extends CDR {
 
             //Caller party
             $caller_els=explode("@",$this->aNumberPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
@@ -3464,24 +3464,24 @@ class CDR_opensips extends CDR {
 
             //Billing party
             $caller_els=explode("@",$this->BillingPartyIdPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
                 $_user='party';
             }
-    
+
             $this->BillingPartyIdPrint=$_user.'@'.$caller_els[1];
 
             // Destination
             $caller_els=explode("@",$this->destinationPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
                 $_user='destination';
             }
-    
+
             if (count($caller_els)== 2) {
                 $this->destinationPrint=$_user.'@'.$caller_els[1];
             } else {
@@ -3489,13 +3489,13 @@ class CDR_opensips extends CDR {
             }
 
             $caller_els=explode("@",$this->cNumberPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
                 $_user='dialedNumber';
             }
-    
+
             if (count($caller_els)== 2) {
                 $this->cNumberPrint=$_user.'@'.$caller_els[1];
             } else {
@@ -3503,13 +3503,13 @@ class CDR_opensips extends CDR {
             }
 
             $caller_els=explode("@",$this->RemoteAddressPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
                 $_user='remoteAddress';
             }
-    
+
             if (count($caller_els)== 2) {
                 $this->RemoteAddressPrint=$_user.'@'.$caller_els[1];
             } else {
@@ -3518,7 +3518,7 @@ class CDR_opensips extends CDR {
 
             // Canonical URI
             $caller_els=explode("@",$this->CanonicalURIPrint);
-    
+
             if (is_numeric($caller_els[0]) && strlen($caller_els[0]>3)) {
                 $_user=substr($caller_els[0],0,strlen($caller_els[0])-3).'xxx';
             } else {
@@ -4031,7 +4031,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
         $j=0;
         $z=0;
 
-        
+
         if ($rows>0)  {
 
             if ($call_id && $ReNormalize) {
@@ -4151,7 +4151,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
 
                     $rr=floor($found/2);
                     $mod=$found-$rr*2;
-                
+
                     if ($mod ==0) {
                         $inout_color="lightgrey";
                     } else {
@@ -4174,7 +4174,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                         } else {
                             $traceValue="empty";
                         }
-                        
+
                     } else if ($this->group_byOrig==$this->aNumberField) {
                         # Normalize Called Station Id
                         $N=$this->NormalizeNumber($mygroup);
@@ -4285,12 +4285,12 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                         </table>
                         ";
                      }
-            
+
                 } else {
                     if (!$this->export) {
                        // printf ("<div class='alert alert-info'><i style='font-size:13px' class='icon-info-sign'></i> For more information about each call click on its Id column.</div>");
                     }
-                
+
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
@@ -4336,7 +4336,7 @@ class CDRS_opensips_mongo extends CDRS_opensips {
                     </table>
                     ";
                  }
-        
+
             }
 
             $this->showPagination($this->next,$maxrows);
@@ -4389,18 +4389,18 @@ class SIP_trace {
                                        "password"    => $soapEngines[$this->soapEngineId]['password'],
                                        "admin"       => true
                                        );
-    
+
                 $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
-        
+
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
-    
+
                 // Instantiate the SOAP client
                 $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
-    
+
                 $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-    
+
                 if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
                     $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
                 }
@@ -4438,7 +4438,7 @@ class SIP_trace {
             if (!is_array($this->SIPProxies)) {
                 return false;
             }
-    
+
             if (in_array($ip,array_keys($this->SIPProxies))) {
                 return true;
             }
@@ -4463,7 +4463,7 @@ class SIP_trace {
         if ($this->enableThor) {
             // get trace using soap request
             if (!$proxyIP || !$callid || !$fromtag) return false;
-    
+
             if (!is_object($this->soapclient)) {
                 print "Error: soap client is not defined.";
                 return false;
@@ -4477,29 +4477,29 @@ class SIP_trace {
                           'toTag'   => $totag
                           );
             $this->soapclient->addHeader($this->SoapAuth);
-    
+
             $result     = $this->soapclient->getSipTrace($filter);
-    
+
             if (PEAR::isError($result)) {
                 $error_msg   = $result->getMessage();
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
-    
+
                 printf("<font color=red>Error from %s: %s (%s)</font>",$this->SOAPurl,
                 $error_fault->detail->exception->errorstring,
                 $error_fault->detail->exception->errorcode
                 );
                 return false;
             }
-    
+
             $columns=0;
 
             $traces=json_decode($result);
 
             $trace_array=array();
-    
+
             foreach ($traces as $_trace) {
-    
+
                 if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->to_ip,$m)) {
                     $toip      = $m[2];
                     $transport = $m[1];
@@ -4513,7 +4513,7 @@ class SIP_trace {
                     $transport = 'udp';
                     $toport    = '5060';
                 }
-    
+
                 if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$_trace->from_ip,$m)) {
                     $fromip    = $m[2];
                     $fromport  = $m[3];
@@ -4523,32 +4523,32 @@ class SIP_trace {
                 } else {
                     $fromip    = $_trace->from_ip;
                 }
-    
+
                 if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
                     $this->seen_ip[$toip]++;
                 }
-    
+
                 if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
                     $this->seen_ip[$fromip]++;
                 }
-    
+
                 if (!$this->column[$fromip]) {
                     $this->column[$fromip] = $columns+1;
                     $this->column_port[$fromip]=$fromport;
                     $columns++;
                 }
-    
+
                 if (!$this->column[$toip]) {
                     $this->column[$toip]   = $columns+1;
                     $this->column_port[$toip]=$toport;
                     $columns++;
                 }
-    
+
                 preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$_trace->time_stamp,$m);
                 $timestamp = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
-    
+
                 $idx=$proxyIP.'_'.$_trace->id;
-    
+
                 $trace_array[$idx]=
                             array (
                                    'id'         => $idx,
@@ -4566,7 +4566,7 @@ class SIP_trace {
                                    'md5'        => md5($_trace->message)
                                    );
             }
-    
+
             $this->trace_array=$trace_array;
             $this->rows = count($this->trace_array);
 
@@ -4582,18 +4582,18 @@ class SIP_trace {
             from %s where callid = '%s' order by id asc",
             addslashes($this->table),
             addslashes($callid));
-    
+
             if (!$this->db->query($query)) {
                 printf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
                 return false;
             }
-    
+
             $this->rows = $this->db->num_rows();
-    
+
             $columns = 0;
-    
+
             while ($this->db->next_record()) {
-    
+
                 if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/",$this->db->f('toip'),$m)) {
                     $toip      = $m[2];
                     $transport = $m[1];
@@ -4622,7 +4622,7 @@ class SIP_trace {
                 if (!$this->seen_ip[$toip] && $this->isProxy($toip)) {
                     $this->seen_ip[$toip]++;
                 }
-    
+
                 if (!$this->seen_ip[$fromip] && $this->isProxy($fromip)) {
                     $this->seen_ip[$fromip]++;
                 }
@@ -4632,13 +4632,13 @@ class SIP_trace {
                     $this->column_port[$fromip]=$fromport;
                     $columns++;
                 }
-    
+
                 if (!$this->column[$toip]) {
                     $this->column[$toip]=$columns+1;
                     $this->column_port[$toip]=$toport;
                     $columns++;
                 }
-    
+
                 $this->trace_array[$this->db->f('id')]=
                             array (
                                    'id'        => $this->db->f('id'),
@@ -4718,7 +4718,7 @@ class SIP_trace {
         //     </select>
         //     <input type=hidden name=action value=toggleVisibility>
         //     ";
-            
+
             print "URLs for this trace: <a href=$fullURL>HTML</a> | <a href=$fullURL&format=text>TEXT</a></td>";
         //} else {
         //    print "";
@@ -4866,7 +4866,7 @@ class SIP_trace {
             if ($seen_msg[$md5]) continue;
 
             $SIPclass=substr($status,0,1);
-    
+
             if ($SIPclass=="6") {
                 $status_color="<font color=red>";
             } else if ($SIPclass=="5" ) {
@@ -5001,7 +5001,7 @@ class SIP_trace {
             ";
 
             $column_current=1;
-            
+
             while ($column_current <= count($this->column)) {
 
                 if ($arrow_possition==$column_current) {
@@ -5114,8 +5114,8 @@ class SIP_trace {
             $msg=nl2br(htmlentities($msg));
 
             print "
-                $status_color $msg 
-            
+                $status_color $msg
+
             </div></div></div>";
 
             print "
@@ -5189,7 +5189,7 @@ class SIP_trace {
 
         $query=sprintf("select id as min, time_stamp from %s order by id ASC limit 1",
                        addslashes($this->table));
-        
+
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
                 $this->db->next_record();
@@ -5312,18 +5312,18 @@ class Media_trace {
                                        "password"    => $soapEngines[$this->soapEngineId]['password'],
                                        "admin"       => true
                                        );
-    
+
                 $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
-        
+
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
-    
+
                 // Instantiate the SOAP client
                 $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
-    
+
                 $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-    
+
             } else {
                 print "Error: soapEngineID not defined in datasource $this->cdr_source";
                 return false;
@@ -5352,27 +5352,27 @@ class Media_trace {
                 print "<p><font color=red>Error: proxyIP or callid or fromtag are not defined</font>";
                 return false;
             }
-    
+
             if (!is_object($this->soapclient)) {
                 print "<p><font color=red>Error: soap client is not defined</font>";
                 return false;
             }
-    
+
             $filter=array('nodeIp'  => $proxyIP,
                           'callId'  => $callid,
                           'fromTag' => $fromtag,
                           'toTag'   => $totag
                           );
-    
+
             $this->soapclient->addHeader($this->SoapAuth);
-    
+
             $result     = $this->soapclient->getMediaTrace($filter);
-    
+
             if (PEAR::isError($result)) {
                 $error_msg   = $result->getMessage();
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
-    
+
                 if ($error_fault->detail->exception->errorcode != 1060) {
                     printf("<font color=red>Error from %s: %s (%s)</font>",
                     $this->SOAPurl,
@@ -5382,7 +5382,7 @@ class Media_trace {
                 }
                 return false;
             }
-    
+
             $this->info = json_decode($result);
 
         } else {
@@ -5403,7 +5403,7 @@ class Media_trace {
                 printf ("<p><font color=red>Database error for query %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
                 return false;
             }
-    
+
             if ($this->db->num_rows()) {
                 $this->db->next_record();
                 $this->info = json_decode($this->db->f('info'));
@@ -5530,7 +5530,7 @@ class Media_trace {
                 $w_start_p  = ($w_legend_bar/$w_start_time)* 100;
             }
             //printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
-            
+
             if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
 
                 print "<tr><td width=$w_text class=border>$_val->media_type</td>";
@@ -5598,9 +5598,9 @@ function isThorNode($ip,$sip_proxy) {
     if (!$socket) {
         return false;
     }
-    
+
     $request=sprintf("is_online %s as sip_proxy",$ip);
-    
+
     if (fputs($socket,"$request\r\n") !== false) {
         $ret = trim(fgets($socket,4096));
         fclose($socket);
