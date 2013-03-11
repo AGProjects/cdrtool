@@ -3,7 +3,7 @@
     Copyright (c) 2007-2011 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
-    
+
     This library provide the functions for managing properties
     of SIP Accounts retrieved from NGNPro
 
@@ -299,7 +299,7 @@ class SipSettings {
         } else {
             $_comment='';
         }
- 
+
         $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
                                     "WEBName" =>sprintf (_("Reject Anonymous")),
                                     "WEBComment"=>$_comment,
@@ -1037,7 +1037,7 @@ class SipSettings {
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount($owner);
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -1045,7 +1045,7 @@ class SipSettings {
             printf ("<p><font color=red>Error (CustomerPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
- 
+
         $this->owner_information=array(
                                "username"            => $result->username,
                                "password"            => $result->password,
@@ -1204,10 +1204,10 @@ class SipSettings {
             dprint_r($_aliasObject);
 
             dprint("deleteAlias");
- 
+
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->deleteAlias($_aliasObject);
- 
+
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -1293,7 +1293,7 @@ class SipSettings {
                 }
             }
         }
-    
+
         print "</span></div></div>
             </div>
         ";
@@ -1517,7 +1517,7 @@ class SipSettings {
                                                 "ResellerMayEditIt"=>1,
                                                 "ResellerMaySeeIt"=>1
                                                 );
-        
+
                 if ($this->sms_access) {
                     $this->availableGroups['sms']  = array("Group"=>"sms",
                                                     "WEBName" =>sprintf(_("Mobile SMS")),
@@ -1526,7 +1526,7 @@ class SipSettings {
                                                     "ResellerMayEditIt"=>0,
                                                     "ResellerMaySeeIt"=>1
                                                     );
-    
+
                 }
 
                 if ($this->require_proof_of_identity) {
@@ -1545,7 +1545,7 @@ class SipSettings {
 
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->reseller));
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -1819,9 +1819,9 @@ class SipSettings {
         <div class='pull-right'>
         <ul class=\"nav nav-tabs\">
         ";
-    
+
         $items=0;
-    
+
         while (list($k,$v)= each($this->tabs)) {
             if ($this->tab==$k) {
                 $_class='active selected_tab';
@@ -1897,7 +1897,7 @@ class SipSettings {
             <tr>
             <td colspan=3>
             ";
-            
+
             if ($account->login_type!='subscriber') {
                 print "<p>";
                 printf ("<font color=red>Daily Credit Exceeded</font>");
@@ -1906,11 +1906,11 @@ class SipSettings {
                 $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
                 syslog(LOG_NOTICE, $log);
             }
-            
+
             print "</td>
             </tr>
             ";
-            
+
             return false;
         }
 
@@ -1953,12 +1953,12 @@ class SipSettings {
         if ($payment_processor->fraudDetected()) {
             $chapter=sprintf(_("Payments"));
             $this->showChapter($chapter);
-            
+
             print "
             <tr>
             <td colspan=3>
             ";
-            
+
             if ($account->login_type!='subscriber') {
                 print "<p>";
                 printf ("<font color=red>%s</font>",$this->fraud_reason);
@@ -1967,11 +1967,11 @@ class SipSettings {
                 $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
                 syslog(LOG_NOTICE, $log);
             }
-            
+
             print "</td>
             </tr>
             ";
-            
+
             return false;
         }
 
@@ -2038,7 +2038,7 @@ class SipSettings {
                 $fp=fopen($_FILES['tmpfile']['tmp_name'], "r");
                 $content=fread($fp, $_FILES['tmpfile']['size']);
                 fclose($fp);
-    
+
                 $query=sprintf("insert into subscriber_docs (
                 `name`,
                 `username`,
@@ -2100,7 +2100,7 @@ class SipSettings {
 
                 $mime->addAttachment($content, $_FILES['tmpfile']['type'],$_FILES['tmpfile']['name'],'false');
 
-                $body = $mime->get();     
+                $body = $mime->get();
                 $hdrs = $mime->headers($hdrs);
 
                 $mail =& Mail::factory('mail');
@@ -2117,7 +2117,7 @@ class SipSettings {
             addslashes($this->username),
             addslashes($this->domain)
             );
-    
+
             if (!$this->db->query($query)) {
                 print "<font color=red>";
                 printf ("Error deleting record: %s (%s)", $this->db->Error,$this->db->Errno);
@@ -2230,7 +2230,7 @@ class SipSettings {
             <input type='hidden' name='task' value='upload'>
             <input type='hidden' name='MAX_FILE_SIZE' value=$max_file_size>
             ";
-    
+
             print "
             <tr class=even>
             <td>";
@@ -2244,7 +2244,7 @@ class SipSettings {
             </td>
             </tr>
             ";
-    
+
             print "
             <tr class=odd>
             <td>";
@@ -2269,7 +2269,7 @@ class SipSettings {
                 <td colspan=2>
                 ";
                 printf("<input type=text size=15 name='mobile_number' value='%s'> %s",$_REQUEST['mobile_number'],_("International format starting with +"));
-        
+
                 print "
                 </td>
                 </tr>
@@ -2285,12 +2285,12 @@ class SipSettings {
             <td colspan=2>
             ";
             printf("<input type=text size=5 name='last_digits' value='%s'>",$_REQUEST['last_digits']);
-    
+
             print "
             </td>
             </tr>
             ";
-    
+
             print "
             <tr class=odd>
             <td colspan=3>
@@ -2423,7 +2423,7 @@ class SipSettings {
               <td>$this->rpid</td>
             </tr>
             ";
-        
+
 
         $t=0;
         foreach($this->enums as $e)  {
@@ -2431,7 +2431,7 @@ class SipSettings {
 
             $rr=floor($t/2);
             $mod=$t-$rr*2;
-    
+
             if ($mod ==0) {
                 $_class='odd';
             } else {
@@ -2452,7 +2452,7 @@ class SipSettings {
 	}
         $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
- 
+
         print "
         <div class=row-fluid>
         <div class=span12>";
@@ -2461,28 +2461,28 @@ class SipSettings {
             </div>
             </div>
         ");
- 
+
         $t=0;
- 
+
         print "
         <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
         ";
- 
+
         foreach($this->aliases as $a)  {
             $t++;
- 
+
             $rr=floor($t/2);
             $mod=$t-$rr*2;
-    
+
             if ($mod ==0) {
                 $_class='even';
             } else {
                 $_class='odd';
             }
- 
+
             print "
             <div class='control-group $_class'>
- 
+
               <label for=aliases[] class=control-label>";
                 print _("SIP Alias");
                 print "
@@ -2492,7 +2492,7 @@ class SipSettings {
             </div>
             ";
         }
- 
+
         print "
         <div class='control-ground $_class'>
           <label for=aliases[] class=control-label>";
@@ -2511,8 +2511,8 @@ class SipSettings {
         print '" onClick=saveHandler(this)>
               </div>
             </div>
-           '; 
-        
+           ';
+
         print $this->hiddenElements;
 
         print "
@@ -2523,7 +2523,7 @@ class SipSettings {
 
             if ($this->enrollment_url) {
                 include($this->enrollment_configuration);
-    
+
                 if (is_array($enrollment)) {
                     $chapter=sprintf(_("TLS Certificate"));
                     $this->showChapter($chapter);
@@ -2646,32 +2646,32 @@ class SipSettings {
         if (!$_REQUEST['ddi_action']) {
             $chapter=sprintf(_("Registered Numbers"));
             $this->showChapter($chapter);
-    
+
             print "
             <tr class=odd>
             <td colspan=2>";
-    
-    
+
+
             $numbers=$did_processor->getOrders($this->account);
-    
+
             if (count($numbers)) {
                 print "<table border=0>";
                 printf ("<tr bgcolor=lightgray><td>Number</td><td>Country</td><td>Expire Date</td><td>Order</td><td>Action</td></tr>");
-    
+
                 foreach (array_keys($numbers) as $_number) {
                     $t++;
-        
+
                     $rr=floor($t/2);
                     $mod=$t-$rr*2;
-            
+
                     if ($mod ==0) {
                         $_class='odd';
                     } else {
                         $_class='even';
                     }
-        
+
                     $form=sprintf("
-                    
+
                     <select name=period>");
                     $form.=sprintf ("<option value=1>1 %s",_("Month"));
                     $form.=sprintf ("<option value=3>3 %s",_("Months"));
@@ -2679,23 +2679,23 @@ class SipSettings {
                     $form.=sprintf ("<option value=12>12 %s",_("Months"));
                     $form.=sprintf ("<option value=24>24 %s",_("Months"));
                     $form.="</select>";
-            
+
                     $form.=$this->hiddenElements;
-    
+
                     $form.=sprintf ("<input type=hidden name='number' value='%s'>",$_number);
                     $form.=sprintf ("<input type=submit name='ddi_action' value='Renew'>");
                     $form.=sprintf ("<input type=submit name='ddi_action' value='Drop'>");
-    
+
                     printf ("<tr class=$_class><td valign=top>+%s</td><td valign=top>%s</td><td valign=top>%s</td><td valign=top>%s</td><form method=post><td>%s</td></form></tr>",$_number,$numbers[$_number]['country_name'],$numbers[$_number]['did_expire_date_gmt'],$numbers[$_number]['order_id'],$form);
                 }
                 print "</table>";
             }
-    
+
             print "
             </td>
             </tr>
             ";
-    
+
         }
 
 		if ($prefixes = $did_processor->getPrefixes()) {
@@ -2703,7 +2703,7 @@ class SipSettings {
 
                 $chapter=sprintf(_("Register New Number"));
                 $this->showChapter($chapter);
-        
+
                 print "
                 <tr class=odd>
                 <td colspan=2>";
@@ -2764,7 +2764,7 @@ class SipSettings {
             } else if ($_REQUEST['ddi_action'] == 'Renew' && $_REQUEST['number'] && $_REQUEST['period']) {
                 $chapter=sprintf(_("Renew Number"));
                 $this->showChapter($chapter);
-        
+
                 print "
                 <tr class=odd>
                 <td colspan=2>";
@@ -2785,7 +2785,7 @@ class SipSettings {
             } else if ($_REQUEST['ddi_action'] == 'Drop' && $_REQUEST['number']) {
             	$chapter=sprintf(_("Cancel Number"));
                 $this->showChapter($chapter);
-        
+
                 print "
                 <tr class=odd>
                 <td colspan=2>";
@@ -2803,19 +2803,19 @@ class SipSettings {
             } else {
             	$chapter=sprintf(_("Register New Number"));
                 $this->showChapter($chapter);
-        
+
                 print "
                 <tr class=odd>
                 <td colspan=2>";
                 print "
                 <form method=post>";
-        
+
                 print _("Select a region where you want to have a telephone number: ");
                 print "<p>";
 
 
                 print "<select name=prefix>";
-                
+
                 foreach (array_keys($prefixes) as $prefix) {
 
                 	if (!$found_country && $this->owner_information['country'] == $prefixes[$prefix]['country_iso']) {
@@ -2831,12 +2831,12 @@ class SipSettings {
                         printf ("<option value='%s' %s>%s %s (+%s) - Monthy %s USD",$prefix,$selected,$prefixes[$prefix]['country_name'],$prefixes[$prefix]['city_name'],$prefix,$prefixes[$prefix]['monthly']);
                     }
                 }
-    
+
                 print "</select>";
-        
+
                 print "<p>";
                 print _("Select the duration for which you want to use the telephone number: ");
-        
+
                 print "<p>";
                 print "<select name=period>";
                 printf ("<option value=1>1 %s",_("Month"));
@@ -2845,7 +2845,7 @@ class SipSettings {
                 printf ("<option value=12>12 %s",_("Months"));
                 printf ("<option value=24>24 %s",_("Months"));
                 print "</select>";
-        
+
                 print $this->hiddenElements;
 
                 print "<p>";
@@ -3020,30 +3020,30 @@ class SipSettings {
         $this->showChapter($chapter);
 
         if ($this->login_type != "subscriber" ) {
-    
+
             print "
             <div class='control-group even'>
             <label class='control-label' for='first_name'>";
             print _("First Name");
             print "
             </label>";
-    
+
             print "<div class=\"controls\"><input class=input-medium type=text size=15 name=first_name value=\"$this->firstName\">";
-    
+
             print "
             </div>
             </div>
             ";
-    
+
             print "
             <div class='control-group odd'>
             <label class='control-label' for='last_name'>";
             print _("Last Name");
             print "</label>
             <div class='controls'>";
-    
+
             print "<input class=input-medium type=text size=15 name=last_name value=\"$this->lastName\">";
-    
+
             print "
             </div>
             </div>
@@ -3181,7 +3181,7 @@ class SipSettings {
         }
 
         if (in_array("free-pstn",$this->groups)) {
- 
+
             if (in_array("quota",$this->groups)) {
                 $_class="alert alert-error";
             } else {
@@ -3197,7 +3197,7 @@ class SipSettings {
                 print "
                 </label>
                 <div class='controls'><div class='input-prepend'>";
-    
+
                 printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'></div><span class='help-inline muted'>",$this->currency,$this->quota);
                 //print "<div class=span10>";
                 if ($this->quota || in_array("quota",$this->groups)) {
@@ -3210,7 +3210,7 @@ class SipSettings {
                 }
 
                 print "</span> ";
-     
+
 
                 if ($this->pstn_changes_allowed) {
                     print "<label class='checkbox inline'>";
@@ -3219,7 +3219,7 @@ class SipSettings {
                     print _("Un-block");
                     print "</label>";
                 }
-    
+
                 print "</div></div>
                 </div>
                 ";
@@ -3244,7 +3244,7 @@ class SipSettings {
                 print "</span></div>
                 </div>
                 ";
-                
+
             }
         }
 
@@ -3253,7 +3253,7 @@ class SipSettings {
             if ($this->prepaid) $checked_box_prepaid="checked";
 
             if (!$this->prepaid_changes_allowed) $disabled_box_prepaid   = "disabled=true";
-    
+
             print "
             <div class='control-group'>
             <label class=control-label for=prepaid>";
@@ -3445,7 +3445,7 @@ class SipSettings {
         $this->showExtraGroups();
 
         $this->showOwner();
-        
+
         $this->showQuickDial();
 
         $this->showMobileNumber();
@@ -3461,13 +3461,13 @@ class SipSettings {
         <div class='controls'>
         <div class='input-append'>
         ");
- 
+
         print "<input rel='popover' class=input-medium name=timeout title=\"\" data-original-title='";
         print _("No-answer Timeout");
         print "' data-trigger=\"focus\" data-toggle=\"popover\" data-content=\"";
         print _("Used to determined after how many seconds the Forwarding action for this condition will occur");
         printf ("\" value='%d' size=3 type=number max=\"900\"><span class='add-on'>s</span>",$this->timeout);
- 
+
         print "
         </div>
         </div>
@@ -3593,7 +3593,7 @@ class SipSettings {
         <div class=controls>
         <label class=checkbox>
         <input type=checkbox value=1 name=voicemail $checked_voicemail $disabled_box>";
-        
+
 
         if ($this->voicemail['Account'] &&
             ($this->login_type != 'subscriber')) {
@@ -3647,19 +3647,19 @@ class SipSettings {
                 print "
                 <div class='control-group even'>
                 <label for=voicemail_password class=control-label>";
-    
+
                 print _("Password");
                 print "</label>
                 <div class=controls>
                 ";
-    
+
                 printf ("<input class=input-medium type=text size=15 name=voicemail_password value=\"%s\">",$this->voicemail['Password']);
-    
+
                 print "
                 </div>
                 </div>
                 ";
-    
+
                 if ($this->voicemail_access_number) {
                    print "
                        <div class=row-fluid>
@@ -3721,13 +3721,13 @@ class SipSettings {
 
                 $rr=floor($j/2);
                 $mod=$j-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
                     $_class='even';
                 }
-    
+
                 print "<tr><td align=center>";
                 printf ("<img src='%s/30/%s' border=0>",$this->SipUAImagesPath,$UAImage);
                 print "</td>";
@@ -3760,7 +3760,7 @@ class SipSettings {
 
                 print "</td><td>$expires</td>";
                 print "</tr>";
-                
+
             }
             print "</table></div>";
         }
@@ -3845,7 +3845,7 @@ class SipSettings {
 
                 $rr=floor($found/2);
                 $mod=$found-$rr*2;
-        
+
                 if ($mod == 0) {
                     $_class='odd';
                 } else {
@@ -3927,7 +3927,7 @@ class SipSettings {
                 $this->somethingChanged=1;
                 $this->voicemailOptionsHaveChanged=1;
             }
-    
+
             if ($last_name && $this->lastName != $last_name) {
                 $result->lastName = $last_name;
                 $this->lastName  = $last_name;
@@ -4028,7 +4028,7 @@ class SipSettings {
 
                 	if (!in_array($key,$this->groups) && $val) {
                     	$this->setPreference('last_sip_quota',strval($this->quota));
-                    
+
                         $last_sip_quota=$this->Preferences['last_sip_quota'];
                         if ($last_sip_quota) {
                             $result->quota=intval($last_sip_quota);
@@ -4046,16 +4046,16 @@ class SipSettings {
 
                 } else if ($key == 'blocked') {
                     if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
-    
+
                         if ($val && $val != $this->Preferences['blocked_by']) {
                             $this->setPreference('blocked_by',$val);
                             $this->somethingChanged=1;
-    
+
                         } else if (!$val && in_array($key,$this->groups)) {
                             $this->somethingChanged=1;
                             $this->setPreference('blocked_by','');
                         }
-    
+
                         if ($val) $newACLarray[]=trim($key);
 
                     } else if ($this->login_type == 'customer' ) {
@@ -4068,7 +4068,7 @@ class SipSettings {
                                 $this->somethingChanged=1;
                                 $this->setPreference('blocked_by','');
                             }
-       
+
                             if ($val) $newACLarray[]=trim($key);
                         } else {
                             // copy old setting if exists
@@ -4079,13 +4079,13 @@ class SipSettings {
                      }
                 } else if ($key == 'sms') {
                     if ($this->sms_changes_allowed) {
-    
+
                         if (!$val && in_array($key,$this->groups)) {
                             $this->somethingChanged=1;
                         } else if ($val && !in_array($key,$this->groups)) {
                             $this->somethingChanged=1;
                         }
-    
+
                         if ($val) $newACLarray[]=trim($key);
                      } else {
                         // copy old setting if exists
@@ -4449,7 +4449,7 @@ class SipSettings {
         if ($divert_changed) {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
-    
+
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -4564,7 +4564,7 @@ class SipSettings {
 
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
-    
+
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -4599,7 +4599,7 @@ class SipSettings {
         if ($diversions_have_changed) {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
-    
+
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -4621,12 +4621,12 @@ class SipSettings {
                        "password" => $this->voicemail['Password'],
                        "options"  => $this->voicemail['Options']
                        );
- 
+
         dprint_r($account);
- 
+
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->updateAccount($account);
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
             $error_fault=$result->getFault();
@@ -4635,7 +4635,7 @@ class SipSettings {
             printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             return false;
         }
- 
+
         return true;
     }
 
@@ -4643,7 +4643,7 @@ class SipSettings {
         dprint("addVoicemail()");
 
         $password=$this->RandomPassword();
-        
+
         $_account      = array("sipId"    => $this->sipId,
                                "name"     => $this->fullName,
                                "password" => $password,
@@ -4670,7 +4670,7 @@ class SipSettings {
 
     function deleteVoicemail() {
         dprint("deleteVoicemail()");
-        
+
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->deleteAccount($this->sipId);
 
@@ -4738,7 +4738,7 @@ class SipSettings {
             print "
             <tr>
             <td colspan=2 align=left> ";
-    
+
             if ($issuer=='subscriber'){
                 if ($prepaidCard && $prepaidId) {
                     if ($result = $this->addBalanceSubscriber($prepaidCard,$prepaidId)) {
@@ -4752,7 +4752,7 @@ class SipSettings {
                 if ($_REQUEST['task'] == 'change_balance') {
                     $description = $_REQUEST['description'];
                     $value       = $_REQUEST['value'];
-        
+
                     if (strlen($value) && $result = $this->addBalanceReseller($value,$description)) {
                         print "<p><font color=green>";
                         printf (_("Old balance was %s, new balance is %s. "),$result->old_balance, $result->new_balance);
@@ -4781,18 +4781,18 @@ class SipSettings {
                     }
                 }
             }
-    
+
             if ($_done && $_REQUEST['notify']) {
                 $subject=sprintf ("SIP Account %s balance update",$this->account);
-        
+
                 $body="Your SIP Account balance has been updated. ".
                 "For more details go to $this->sip_settings_page?tab=credit";
-        
+
                 if (mail($this->email, $subject, $body, "From: $this->support_email")) {
                     printf (_("Subscriber has been notified at %s."), $this->email);
                 }
             }
-    
+
             print "
             </td>
             </tr>
@@ -4804,7 +4804,7 @@ class SipSettings {
         if ($this->prepaidAccount) {
             $chapter=sprintf(_("Current Balance"));
             $this->showChapter($chapter);
-    
+
             print "
             <div class=row-fluid>
             <div class=span12>";
@@ -4814,7 +4814,7 @@ class SipSettings {
             print "</div>
             </div>
             ";
-    
+
             $this->showChangeBalanceReseller();
             $this->showChangeBalanceSubscriber();
             $this->showBalanceHistory();
@@ -4855,29 +4855,29 @@ class SipSettings {
             </div>
         </form>
         ";
-     
+
         $transactions = $this->getPaymentIds();
 
         if (count($transactions)) {
             $chapter=sprintf(_("Refund Transaction"));
             $this->showChapter($chapter);
-    
+
             print "
             <form class='form-inline' action=$this->url method=post>
             <input type=hidden name=tab value=credit>
             <input type=hidden name=issuer value=reseller>
             <input type=hidden name=task value=refund>
             ";
-    
+
             print _("Transaction Id");
-    
+
             print "
             <select class=span2 name=transaction> ";
             foreach (array_keys($transactions) as $tran) {
                 $t=array('id' => $tran, 'value' => $transactions[$tran]);
                 printf ("<option value='%s'>%s",base64_encode(json_encode($t)),$tran);
             }
-    
+
             print "
             </select>
             ";
@@ -5008,7 +5008,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
 
         $result     = $this->SipPort->getCreditHistory($this->sipId,200);
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -5027,7 +5027,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
 
         $result     = $this->SipPort->getCreditHistory($this->sipId,200);
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -5160,7 +5160,7 @@ class SipSettings {
 
             $rr=floor($found/2);
             $mod=$found-$rr*2;
-    
+
             if ($mod ==0) {
                 $_class='odd';
             } else {
@@ -5228,7 +5228,7 @@ class SipSettings {
         print "
         </table>
         ";
-        
+
         if ($found) {
             if (!$this->isEmbedded()) {
                 print "<p class='form-actions'><a class=btn href=$this->url&tab=credit&action=get_balance_history&csv=1 target=_new data-original-title='";
@@ -5520,16 +5520,16 @@ class SipSettings {
 
     function enum2tel($enum_text) {
         // transform enum style domain name in forward telephone number
-    
+
         $enum_text=trim($enum_text);
-    
+
         if (preg_match("/^\+\d+$/",$enum_text)) {
             return $enum_text;
         }
-    
+
         $z=0;
         $tel_text="";
-    
+
         while ($z < strlen($enum_text)) {
             $char = substr($enum_text,$z,1);
             if (preg_match("/[a-zA-Z]/",$char)) {
@@ -5541,7 +5541,7 @@ class SipSettings {
                 $z++;
             }
         }
-    
+
         if ($tel_text) {
             $tel_text="+".$tel_text;
             return ($tel_text);
@@ -5738,7 +5738,7 @@ class SipSettings {
             $this->showChapter($chapter);
 
             $calltime=normalizeTime($this->duration);
-    
+
             print "
             <tr>
               <td class=cell>";
@@ -5758,7 +5758,7 @@ class SipSettings {
               </td>
             </tr>
             ";
-    
+
             print "
             <tr>
               <td>";
@@ -5781,7 +5781,7 @@ class SipSettings {
         if (count($this->calls_received)) {
             $chapter=sprintf(_("Incoming"));
             $this->showChapter($chapter);
-            
+
             $j=0;
             print "<table class='table table-striped table-condensed'>";
             foreach (array_keys($this->calls_received) as $call) {
@@ -5814,7 +5814,7 @@ class SipSettings {
 
                 $rr=floor($j/2);
                 $mod=$j-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
@@ -5836,7 +5836,7 @@ class SipSettings {
             }
             print "</table>";
         }
-        
+
         if (count($this->calls_placed)) {
             $chapter=sprintf(_("Outgoing"));
             $this->showChapter($chapter);
@@ -5882,7 +5882,7 @@ class SipSettings {
 
                 $rr=floor($j/2);
                 $mod=$j-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
@@ -6096,7 +6096,7 @@ class SipSettings {
         dprint("deletePhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
- 
+
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -6216,10 +6216,10 @@ class SipSettings {
             $this->addPhonebookEntry();
             unset($task);
         }
-        
+
         $this->getPhoneBookEntries();
         $maxrowsperpage=250;
-    
+
         $url_string=$this->url."&tab=contacts";
 
         print "
@@ -6250,7 +6250,7 @@ class SipSettings {
 
             //-->
         </script>
-            
+
         <form class=form-inline name=contacts action=$this->url method=post>
         <input type=hidden name=tab value=contacts>
         <div class='control-group'>
@@ -6262,9 +6262,9 @@ class SipSettings {
         ";
 
         if (count($this->PhonebookEntries) || $task=="search"){
-    
+
             $selected[$group]="selected";
-    
+
             print "<select class=span2 name=group>";
             print "<option value=\"\">";
             print _('Group');
@@ -6273,14 +6273,14 @@ class SipSettings {
             }
             print "<option value=\"\">------";
             printf ("<option value=\"empty\" %s>%s",$selected['empty'],_("No group"));
-    
+
             print "</select>";
-    
+
             print "<input class='btn btn-primary' type=submit onClick='changeAction(\"search\")' value=";
             print _("Search");
             print ">";
         }
-        
+
         print "<input class='btn' type=submit onclick='changeAction(\"add\")' value=";
         print _("Add");
         print "></div><span class=help-inline>";
@@ -6318,14 +6318,14 @@ class SipSettings {
             print _("Action");
             print "</th>";
             print "</tr></thead>";
-    
+
             foreach(array_keys($this->PhonebookEntries) as $_entry) {
-        
+
                 $found=$i+1;
 
                 $rr=floor($found/2);
                 $mod=$found-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
@@ -6399,9 +6399,9 @@ class SipSettings {
                 </form>
                 </tr>";
                 $i++;
-    
+
             }
-    
+
             print "</table>";
             print "
             </td>
@@ -6449,7 +6449,7 @@ class SipSettings {
         $found=0;
 
         foreach (array_keys($this->PhonebookEntries) as $_entry) {
-    
+
             $fname    = $this->PhonebookEntries[$_entry]->firstName;
             $lname    = $this->PhonebookEntries[$_entry]->lastName;
             $uri      = $this->PhonebookEntries[$_entry]->uri;
@@ -6541,7 +6541,7 @@ class SipSettings {
 
         if ($this->chat_replication_backend == 'mysql') {
             $this->db = new DB_CDRTool();
-     
+
             $where="";
             if ($_REQUEST['except_uuid']) {
                 $where.= sprintf(" and uuid <> '%s'", addslashes($_REQUEST['except_uuid']));
@@ -6562,7 +6562,7 @@ class SipSettings {
             } else {
                 $limit = 5000;
             }
-     
+
             $query=sprintf("select * from client_journal where account = '%s' %s order by timestamp ASC limit %d",  addslashes($this->account), $where, $limit);
             if (!$this->db->query($query)) {
                 $this->journalEntries['error_message'] = 'Database Failure';
@@ -6572,7 +6572,7 @@ class SipSettings {
                 $this->journalEntries['success'] = true;
                 $this->journalEntries['rows'] = $this->db->num_rows();
             }
-     
+
             if ($this->db->num_rows()) {
                 while ($this->db->next_record()) {
                     $entry = array(
@@ -6720,7 +6720,7 @@ class SipSettings {
                                            'data'       => $entry,
                                            'ip_address' => $_SERVER['REMOTE_ADDR']
                                            );
-     
+
                         $this->mongo_table_rw->insert($mongo_query);
                         if ($mongo_query['_id']) {
                             $mongo_id = strval($mongo_query['_id']);
@@ -6740,7 +6740,7 @@ class SipSettings {
                                                'account'    => $this->account,
                                                'journal_id' => $row->journal_id
                                                );
-         
+
                             $this->mongo_table_rw->remove($mongo_query);
                             $result['results'][]=array('id'         => NULL,
                                                        'journal_id' => $row->journal_id
@@ -7265,7 +7265,7 @@ class SipSettings {
             if (count($this->acceptRules['groups'])>2) {
                 printf ("<input style='vertical-align: top;' type=radio name=%s value=2 %s class=hidden>",$_name,$_checked_groups);
                 $i=0;
-    
+
                 foreach(array_keys($this->acceptRules['groups']) as $_group) {
                     $i++;
                     if (preg_match("/(everybody|nobody)/",$this->acceptRules['groups'][$_group])) continue;
@@ -7275,7 +7275,7 @@ class SipSettings {
                     } else {
                         $_checked="";
                     }
-    
+
                     $_name="groups_".$profile."[]";
                     printf ("<input style='vertical-align: top;' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s> %s ",
                     $_name,
@@ -7336,7 +7336,7 @@ class SipSettings {
 
                 $rr=floor($j/2);
                 $mod=$j-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
@@ -7370,7 +7370,7 @@ class SipSettings {
                onClick=saveHandler(this)>
             ";
         print "</div></div>";
-        
+
         print "
             <input type=hidden name=action value=\"set reject\">
         ";
@@ -7522,25 +7522,25 @@ class SipSettings {
         if ($tpl_html) {
             $bodyhtml = $smarty->fetch($tpl_html);
         }
-        
+
         include_once 'Mail.php';
         include_once 'Mail/mime.php' ;
-        
+
         $hdrs = array(
             'From'    => $this->support_email,
             'Subject' => $subject
         );
-        
+
         $crlf = "\n";
         $mime = new Mail_mime($crlf);
 
         $mime->setTXTBody($bodyt);
-        
+
         if ($tpl_html) {
           $mime->setHTMLBody($bodyhtml);
         }
 
-        $body = $mime->get();     
+        $body = $mime->get();
         $hdrs = $mime->headers($hdrs);
 
         $mail =& Mail::factory('mail');
@@ -7775,7 +7775,7 @@ class SipSettings {
         $uri=preg_replace("/.*sips?:([^;><=]+).*/", "\$1", $uri);
         return urlencode($uri);
     }
-    
+
     function showUpgradeTab () {
     }
 
@@ -7840,7 +7840,7 @@ class SipSettings {
     }
 
     function getFileTemplate($name, $type="file") {
-    
+
         dprint("getFileTemplate(name=$name, type=$type, path=$this->templates_path)");
 
         if ($type=='logo') {
@@ -7869,7 +7869,7 @@ class SipSettings {
             }
         }
     }
-    
+
     function getEmailTemplate($reseller, $language='en') {
         $file = "sip_settings_email_$language.tpl";
         $file2 = "sip_settings_email.tpl";
@@ -8154,7 +8154,7 @@ class SipSettings {
                 return $image;
             }
         }
-    
+
         return "unknown.png";
     }
 
@@ -8311,15 +8311,15 @@ class SipSettings {
 
     function changeLanguage($lang='en',$domain='cdrtool') {
         // run dpkg-reconfigure locales and select support languages .utf8
-    
+
         $lang = $this->languageCodeFor(isset($lang) ? $lang : 'en');
         $lang.='.utf8';
-        setlocale(LC_ALL, $lang); 
+        setlocale(LC_ALL, $lang);
         bindtextdomain($domain, '/var/www/CDRTool/po/locale');
         bind_textdomain_codeset($domain,'UTF-8');
         textdomain($domain);
     }
-    
+
     // return full language code for given 2 letter language code
     function languageCodeFor($lang='en') {
         $lang = isset($lang) ? strtolower($lang) : 'en';
@@ -8333,7 +8333,7 @@ class SipSettings {
 
     function showDirectorySearchForm () {
         print "
-        
+
         <form class='form-inline' action=$this->url method=post>
         <input type=hidden name=tab value='contacts'>
         ";
@@ -8445,7 +8445,7 @@ class SipSettings {
             <thead>
             <tr>
             <td bgcolor=white></td>";
-    
+
             print "<th><b>";
             print _('Display Name');
             print "</b></th>";
@@ -8474,13 +8474,13 @@ class SipSettings {
 
                 $rr=floor($index/2);
                 $mod=$index-$rr*2;
-        
+
                 if ($mod ==0) {
                     $_class='odd';
                 } else {
                     $_class='even';
                 }
-    
+
                 $i++;
                 $name=$account->firstName.' '.$account->lastName;
                 $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
@@ -8512,9 +8512,9 @@ class SipSettings {
             }
 
             print "</table>";
-    
+
             $this->showPagination($maxrows);
-    
+
             return true;
         }
     }
@@ -8548,7 +8548,7 @@ class SipSettings {
 
             printf ("<a href='%s&next=%s'>Previous</a> ",$url,$mod_show_next);
         }
-        
+
         print "
         </td>
         <td>
@@ -8579,7 +8579,7 @@ function lookupGeoLocation($ip) {
             "O1" => "N/A",
             "AP" => "N/A",
             "GB" => "UK");
-        
+
         if (array_key_exists($_loc['country_code'],$country_transition)) {
             $_loc['country_code'] = $country_transition[$_loc['country_code']];
         }
@@ -8602,2114 +8602,2114 @@ function get_region($country, $region) {
     } else {
         $full_region='';
     }
-    return $full_region; 
+    return $full_region;
 }
 
 function get_time_zone($country, $region) {
-      switch ($country) { 
+      switch ($country) {
     case "US":
-        switch ($region) { 
+        switch ($region) {
       case "AL":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "AK":
           $timezone = "America/Anchorage";
-          break; 
+          break;
       case "AZ":
           $timezone = "America/Phoenix";
-          break; 
+          break;
       case "AR":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "CA":
           $timezone = "America/Los_Angeles";
-          break; 
+          break;
       case "CO":
           $timezone = "America/Denver";
-          break; 
+          break;
       case "CT":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "DE":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "DC":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "FL":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "GA":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "HI":
           $timezone = "Pacific/Honolulu";
-          break; 
+          break;
       case "ID":
           $timezone = "America/Denver";
-          break; 
+          break;
       case "IL":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "IN":
           $timezone = "America/Indianapolis";
-          break; 
+          break;
       case "IA":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "KS":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "KY":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "LA":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "ME":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "MD":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "MA":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "MI":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "MN":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "MS":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "MO":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "MT":
           $timezone = "America/Denver";
-          break; 
+          break;
       case "NE":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "NV":
           $timezone = "America/Los_Angeles";
-          break; 
+          break;
       case "NH":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "NJ":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "NM":
           $timezone = "America/Denver";
-          break; 
+          break;
       case "NY":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "NC":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "ND":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "OH":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "OK":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "OR":
           $timezone = "America/Los_Angeles";
-          break; 
+          break;
       case "PA":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "RI":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "SC":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "SD":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "TN":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "TX":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "UT":
           $timezone = "America/Denver";
-          break; 
+          break;
       case "VT":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "VA":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "WA":
           $timezone = "America/Los_Angeles";
-          break; 
+          break;
       case "WV":
           $timezone = "America/New_York";
-          break; 
+          break;
       case "WI":
           $timezone = "America/Chicago";
-          break; 
+          break;
       case "WY":
           $timezone = "America/Denver";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "CA":
-        switch ($region) { 
+        switch ($region) {
       case "AB":
           $timezone = "America/Edmonton";
-          break; 
+          break;
       case "BC":
           $timezone = "America/Vancouver";
-          break; 
+          break;
       case "MB":
           $timezone = "America/Winnipeg";
-          break; 
+          break;
       case "NB":
           $timezone = "America/Halifax";
-          break; 
+          break;
       case "NL":
           $timezone = "America/St_Johns";
-          break; 
+          break;
       case "NT":
           $timezone = "America/Yellowknife";
-          break; 
+          break;
       case "NS":
           $timezone = "America/Halifax";
-          break; 
+          break;
       case "NU":
           $timezone = "America/Rankin_Inlet";
-          break; 
+          break;
       case "ON":
           $timezone = "America/Rainy_River";
-          break; 
+          break;
       case "PE":
           $timezone = "America/Halifax";
-          break; 
+          break;
       case "QC":
           $timezone = "America/Montreal";
-          break; 
+          break;
       case "SK":
           $timezone = "America/Regina";
-          break; 
+          break;
       case "YT":
           $timezone = "America/Whitehorse";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "AU":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Australia/Canberra";
-          break; 
+          break;
       case "02":
           $timezone = "Australia/NSW";
-          break; 
+          break;
       case "03":
           $timezone = "Australia/North";
-          break; 
+          break;
       case "04":
           $timezone = "Australia/Queensland";
-          break; 
+          break;
       case "05":
           $timezone = "Australia/South";
-          break; 
+          break;
       case "06":
           $timezone = "Australia/Tasmania";
-          break; 
+          break;
       case "07":
           $timezone = "Australia/Victoria";
-          break; 
+          break;
       case "08":
           $timezone = "Australia/West";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "AS":
         $timezone = "US/Samoa";
-        break; 
+        break;
     case "CI":
         $timezone = "Africa/Abidjan";
-        break; 
+        break;
     case "GH":
         $timezone = "Africa/Accra";
-        break; 
+        break;
     case "DZ":
         $timezone = "Africa/Algiers";
-        break; 
+        break;
     case "ER":
         $timezone = "Africa/Asmera";
-        break; 
+        break;
     case "ML":
         $timezone = "Africa/Bamako";
-        break; 
+        break;
     case "CF":
         $timezone = "Africa/Bangui";
-        break; 
+        break;
     case "GM":
         $timezone = "Africa/Banjul";
-        break; 
+        break;
     case "GW":
         $timezone = "Africa/Bissau";
-        break; 
+        break;
     case "CG":
         $timezone = "Africa/Brazzaville";
-        break; 
+        break;
     case "BI":
         $timezone = "Africa/Bujumbura";
-        break; 
+        break;
     case "EG":
         $timezone = "Africa/Cairo";
-        break; 
+        break;
     case "MA":
         $timezone = "Africa/Casablanca";
-        break; 
+        break;
     case "GN":
         $timezone = "Africa/Conakry";
-        break; 
+        break;
     case "SN":
         $timezone = "Africa/Dakar";
-        break; 
+        break;
     case "DJ":
         $timezone = "Africa/Djibouti";
-        break; 
+        break;
     case "SL":
         $timezone = "Africa/Freetown";
-        break; 
+        break;
     case "BW":
         $timezone = "Africa/Gaborone";
-        break; 
+        break;
     case "ZW":
         $timezone = "Africa/Harare";
-        break; 
+        break;
     case "ZA":
         $timezone = "Africa/Johannesburg";
-        break; 
+        break;
     case "UG":
         $timezone = "Africa/Kampala";
-        break; 
+        break;
     case "SD":
         $timezone = "Africa/Khartoum";
-        break; 
+        break;
     case "RW":
         $timezone = "Africa/Kigali";
-        break; 
+        break;
     case "NG":
         $timezone = "Africa/Lagos";
-        break; 
+        break;
     case "GA":
         $timezone = "Africa/Libreville";
-        break; 
+        break;
     case "TG":
         $timezone = "Africa/Lome";
-        break; 
+        break;
     case "AO":
         $timezone = "Africa/Luanda";
-        break; 
+        break;
     case "ZM":
         $timezone = "Africa/Lusaka";
-        break; 
+        break;
     case "GQ":
         $timezone = "Africa/Malabo";
-        break; 
+        break;
     case "MZ":
         $timezone = "Africa/Maputo";
-        break; 
+        break;
     case "LS":
         $timezone = "Africa/Maseru";
-        break; 
+        break;
     case "SZ":
         $timezone = "Africa/Mbabane";
-        break; 
+        break;
     case "SO":
         $timezone = "Africa/Mogadishu";
-        break; 
+        break;
     case "LR":
         $timezone = "Africa/Monrovia";
-        break; 
+        break;
     case "KE":
         $timezone = "Africa/Nairobi";
-        break; 
+        break;
     case "TD":
         $timezone = "Africa/Ndjamena";
-        break; 
+        break;
     case "NE":
         $timezone = "Africa/Niamey";
-        break; 
+        break;
     case "MR":
         $timezone = "Africa/Nouakchott";
-        break; 
+        break;
     case "BF":
         $timezone = "Africa/Ouagadougou";
-        break; 
+        break;
     case "ST":
         $timezone = "Africa/Sao_Tome";
-        break; 
+        break;
     case "LY":
         $timezone = "Africa/Tripoli";
-        break; 
+        break;
     case "TN":
         $timezone = "Africa/Tunis";
-        break; 
+        break;
     case "AI":
         $timezone = "America/Anguilla";
-        break; 
+        break;
     case "AG":
         $timezone = "America/Antigua";
-        break; 
+        break;
     case "AW":
         $timezone = "America/Aruba";
-        break; 
+        break;
     case "BB":
         $timezone = "America/Barbados";
-        break; 
+        break;
     case "BZ":
         $timezone = "America/Belize";
-        break; 
+        break;
     case "CO":
         $timezone = "America/Bogota";
-        break; 
+        break;
     case "VE":
         $timezone = "America/Caracas";
-        break; 
+        break;
     case "KY":
         $timezone = "America/Cayman";
-        break; 
+        break;
     case "CR":
         $timezone = "America/Costa_Rica";
-        break; 
+        break;
     case "DM":
         $timezone = "America/Dominica";
-        break; 
+        break;
     case "SV":
         $timezone = "America/El_Salvador";
-        break; 
+        break;
     case "GD":
         $timezone = "America/Grenada";
-        break; 
+        break;
     case "FR":
         $timezone = "Europe/Paris";
-        break; 
+        break;
     case "GP":
         $timezone = "America/Guadeloupe";
-        break; 
+        break;
     case "GT":
         $timezone = "America/Guatemala";
-        break; 
+        break;
     case "GY":
         $timezone = "America/Guyana";
-        break; 
+        break;
     case "CU":
         $timezone = "America/Havana";
-        break; 
+        break;
     case "JM":
         $timezone = "America/Jamaica";
-        break; 
+        break;
     case "BO":
         $timezone = "America/La_Paz";
-        break; 
+        break;
     case "PE":
         $timezone = "America/Lima";
-        break; 
+        break;
     case "NI":
         $timezone = "America/Managua";
-        break; 
+        break;
     case "MQ":
         $timezone = "America/Martinique";
-        break; 
+        break;
     case "UY":
         $timezone = "America/Montevideo";
-        break; 
+        break;
     case "MS":
         $timezone = "America/Montserrat";
-        break; 
+        break;
     case "BS":
         $timezone = "America/Nassau";
-        break; 
+        break;
     case "PA":
         $timezone = "America/Panama";
-        break; 
+        break;
     case "SR":
         $timezone = "America/Paramaribo";
-        break; 
+        break;
     case "PR":
         $timezone = "America/Puerto_Rico";
-        break; 
+        break;
     case "KN":
         $timezone = "America/St_Kitts";
-        break; 
+        break;
     case "LC":
         $timezone = "America/St_Lucia";
-        break; 
+        break;
     case "VC":
         $timezone = "America/St_Vincent";
-        break; 
+        break;
     case "HN":
         $timezone = "America/Tegucigalpa";
-        break; 
+        break;
     case "YE":
         $timezone = "Asia/Aden";
-        break; 
+        break;
     case "JO":
         $timezone = "Asia/Amman";
-        break; 
+        break;
     case "TM":
         $timezone = "Asia/Ashgabat";
-        break; 
+        break;
     case "IQ":
         $timezone = "Asia/Baghdad";
-        break; 
+        break;
     case "BH":
         $timezone = "Asia/Bahrain";
-        break; 
+        break;
     case "AZ":
         $timezone = "Asia/Baku";
-        break; 
+        break;
     case "TH":
         $timezone = "Asia/Bangkok";
-        break; 
+        break;
     case "LB":
         $timezone = "Asia/Beirut";
-        break; 
+        break;
     case "KG":
         $timezone = "Asia/Bishkek";
-        break; 
+        break;
     case "BN":
         $timezone = "Asia/Brunei";
-        break; 
+        break;
     case "IN":
         $timezone = "Asia/Calcutta";
-        break; 
+        break;
     case "MN":
         $timezone = "Asia/Choibalsan";
-        break; 
+        break;
     case "LK":
         $timezone = "Asia/Colombo";
-        break; 
+        break;
     case "BD":
         $timezone = "Asia/Dhaka";
-        break; 
+        break;
     case "AE":
         $timezone = "Asia/Dubai";
-        break; 
+        break;
     case "TJ":
         $timezone = "Asia/Dushanbe";
-        break; 
+        break;
     case "HK":
         $timezone = "Asia/Hong_Kong";
-        break; 
+        break;
     case "TR":
         $timezone = "Asia/Istanbul";
-        break; 
+        break;
     case "IL":
         $timezone = "Asia/Jerusalem";
-        break; 
+        break;
     case "AF":
         $timezone = "Asia/Kabul";
-        break; 
+        break;
     case "PK":
         $timezone = "Asia/Karachi";
-        break; 
+        break;
     case "NP":
         $timezone = "Asia/Katmandu";
-        break; 
+        break;
     case "KW":
         $timezone = "Asia/Kuwait";
-        break; 
+        break;
     case "MO":
         $timezone = "Asia/Macao";
-        break; 
+        break;
     case "PH":
         $timezone = "Asia/Manila";
-        break; 
+        break;
     case "OM":
         $timezone = "Asia/Muscat";
-        break; 
+        break;
     case "CY":
         $timezone = "Asia/Nicosia";
-        break; 
+        break;
     case "KP":
         $timezone = "Asia/Pyongyang";
-        break; 
+        break;
     case "QA":
         $timezone = "Asia/Qatar";
-        break; 
+        break;
     case "MM":
         $timezone = "Asia/Rangoon";
-        break; 
+        break;
     case "SA":
         $timezone = "Asia/Riyadh";
-        break; 
+        break;
     case "KR":
         $timezone = "Asia/Seoul";
-        break; 
+        break;
     case "SG":
         $timezone = "Asia/Singapore";
-        break; 
+        break;
     case "TW":
         $timezone = "Asia/Taipei";
-        break; 
+        break;
     case "GE":
         $timezone = "Asia/Tbilisi";
-        break; 
+        break;
     case "BT":
         $timezone = "Asia/Thimphu";
-        break; 
+        break;
     case "JP":
         $timezone = "Asia/Tokyo";
-        break; 
+        break;
     case "LA":
         $timezone = "Asia/Vientiane";
-        break; 
+        break;
     case "AM":
         $timezone = "Asia/Yerevan";
-        break; 
+        break;
     case "BM":
         $timezone = "Atlantic/Bermuda";
-        break; 
+        break;
     case "CV":
         $timezone = "Atlantic/Cape_Verde";
-        break; 
+        break;
     case "FO":
         $timezone = "Atlantic/Faeroe";
-        break; 
+        break;
     case "IS":
         $timezone = "Atlantic/Reykjavik";
-        break; 
+        break;
     case "GS":
         $timezone = "Atlantic/South_Georgia";
-        break; 
+        break;
     case "SH":
         $timezone = "Atlantic/St_Helena";
-        break; 
+        break;
     case "CL":
         $timezone = "Chile/Continental";
-        break; 
+        break;
     case "NL":
         $timezone = "Europe/Amsterdam";
-        break; 
+        break;
     case "AD":
         $timezone = "Europe/Andorra";
-        break; 
+        break;
     case "GR":
         $timezone = "Europe/Athens";
-        break; 
+        break;
     case "YU":
         $timezone = "Europe/Belgrade";
-        break; 
+        break;
     case "DE":
         $timezone = "Europe/Berlin";
-        break; 
+        break;
     case "SK":
         $timezone = "Europe/Bratislava";
-        break; 
+        break;
     case "BE":
         $timezone = "Europe/Brussels";
-        break; 
+        break;
     case "RO":
         $timezone = "Europe/Bucharest";
-        break; 
+        break;
     case "HU":
         $timezone = "Europe/Budapest";
-        break; 
+        break;
     case "DK":
         $timezone = "Europe/Copenhagen";
-        break; 
+        break;
     case "IE":
         $timezone = "Europe/Dublin";
-        break; 
+        break;
     case "GI":
         $timezone = "Europe/Gibraltar";
-        break; 
+        break;
     case "FI":
         $timezone = "Europe/Helsinki";
-        break; 
+        break;
     case "SI":
         $timezone = "Europe/Ljubljana";
-        break; 
+        break;
     case "GB":
         $timezone = "Europe/London";
-        break; 
+        break;
     case "LU":
         $timezone = "Europe/Luxembourg";
-        break; 
+        break;
     case "MT":
         $timezone = "Europe/Malta";
-        break; 
+        break;
     case "BY":
         $timezone = "Europe/Minsk";
-        break; 
+        break;
     case "MC":
         $timezone = "Europe/Monaco";
-        break; 
+        break;
     case "NO":
         $timezone = "Europe/Oslo";
-        break; 
+        break;
     case "CZ":
         $timezone = "Europe/Prague";
-        break; 
+        break;
     case "LV":
         $timezone = "Europe/Riga";
-        break; 
+        break;
     case "IT":
         $timezone = "Europe/Rome";
-        break; 
+        break;
     case "SM":
         $timezone = "Europe/San_Marino";
-        break; 
+        break;
     case "BA":
         $timezone = "Europe/Sarajevo";
-        break; 
+        break;
     case "MK":
         $timezone = "Europe/Skopje";
-        break; 
+        break;
     case "BG":
         $timezone = "Europe/Sofia";
-        break; 
+        break;
     case "SE":
         $timezone = "Europe/Stockholm";
-        break; 
+        break;
     case "EE":
         $timezone = "Europe/Tallinn";
-        break; 
+        break;
     case "AL":
         $timezone = "Europe/Tirane";
-        break; 
+        break;
     case "LI":
         $timezone = "Europe/Vaduz";
-        break; 
+        break;
     case "VA":
         $timezone = "Europe/Vatican";
-        break; 
+        break;
     case "AT":
         $timezone = "Europe/Vienna";
-        break; 
+        break;
     case "LT":
         $timezone = "Europe/Vilnius";
-        break; 
+        break;
     case "PL":
         $timezone = "Europe/Warsaw";
-        break; 
+        break;
     case "HR":
         $timezone = "Europe/Zagreb";
-        break; 
+        break;
     case "IR":
         $timezone = "Asia/Tehran";
-        break; 
+        break;
     case "MG":
         $timezone = "Indian/Antananarivo";
-        break; 
+        break;
     case "CX":
         $timezone = "Indian/Christmas";
-        break; 
+        break;
     case "CC":
         $timezone = "Indian/Cocos";
-        break; 
+        break;
     case "KM":
         $timezone = "Indian/Comoro";
-        break; 
+        break;
     case "MV":
         $timezone = "Indian/Maldives";
-        break; 
+        break;
     case "MU":
         $timezone = "Indian/Mauritius";
-        break; 
+        break;
     case "YT":
         $timezone = "Indian/Mayotte";
-        break; 
+        break;
     case "RE":
         $timezone = "Indian/Reunion";
-        break; 
+        break;
     case "FJ":
         $timezone = "Pacific/Fiji";
-        break; 
+        break;
     case "TV":
         $timezone = "Pacific/Funafuti";
-        break; 
+        break;
     case "GU":
         $timezone = "Pacific/Guam";
-        break; 
+        break;
     case "NR":
         $timezone = "Pacific/Nauru";
-        break; 
+        break;
     case "NU":
         $timezone = "Pacific/Niue";
-        break; 
+        break;
     case "NF":
         $timezone = "Pacific/Norfolk";
-        break; 
+        break;
     case "PW":
         $timezone = "Pacific/Palau";
-        break; 
+        break;
     case "PN":
         $timezone = "Pacific/Pitcairn";
-        break; 
+        break;
     case "CK":
         $timezone = "Pacific/Rarotonga";
-        break; 
+        break;
     case "WS":
         $timezone = "Pacific/Samoa";
-        break; 
+        break;
     case "KI":
         $timezone = "Pacific/Tarawa";
-        break; 
+        break;
     case "TO":
         $timezone = "Pacific/Tongatapu";
-        break; 
+        break;
     case "WF":
         $timezone = "Pacific/Wallis";
-        break; 
+        break;
     case "TZ":
         $timezone = "Africa/Dar_es_Salaam";
-        break; 
+        break;
     case "VN":
         $timezone = "Asia/Phnom_Penh";
-        break; 
+        break;
     case "KH":
         $timezone = "Asia/Phnom_Penh";
-        break; 
+        break;
     case "CM":
         $timezone = "Africa/Lagos";
-        break; 
+        break;
     case "DO":
         $timezone = "America/Santo_Domingo";
-        break; 
+        break;
     case "ET":
         $timezone = "Africa/Addis_Ababa";
-        break; 
+        break;
     case "FX":
         $timezone = "Europe/Paris";
-        break; 
+        break;
     case "HT":
         $timezone = "America/Port-au-Prince";
-        break; 
+        break;
     case "CH":
         $timezone = "Europe/Zurich";
-        break; 
+        break;
     case "AN":
         $timezone = "America/Curacao";
-        break; 
+        break;
     case "BJ":
         $timezone = "Africa/Porto-Novo";
-        break; 
+        break;
     case "EH":
         $timezone = "Africa/El_Aaiun";
-        break; 
+        break;
     case "FK":
         $timezone = "Atlantic/Stanley";
-        break; 
+        break;
     case "GF":
         $timezone = "America/Cayenne";
-        break; 
+        break;
     case "IO":
         $timezone = "Indian/Chagos";
-        break; 
+        break;
     case "MD":
         $timezone = "Europe/Chisinau";
-        break; 
+        break;
     case "MP":
         $timezone = "Pacific/Saipan";
-        break; 
+        break;
     case "MW":
         $timezone = "Africa/Blantyre";
-        break; 
+        break;
     case "NA":
         $timezone = "Africa/Windhoek";
-        break; 
+        break;
     case "NC":
         $timezone = "Pacific/Noumea";
-        break; 
+        break;
     case "PG":
         $timezone = "Pacific/Port_Moresby";
-        break; 
+        break;
     case "PM":
         $timezone = "America/Miquelon";
-        break; 
+        break;
     case "PS":
         $timezone = "Asia/Gaza";
-        break; 
+        break;
     case "PY":
         $timezone = "America/Asuncion";
-        break; 
+        break;
     case "SB":
         $timezone = "Pacific/Guadalcanal";
-        break; 
+        break;
     case "SC":
         $timezone = "Indian/Mahe";
-        break; 
+        break;
     case "SJ":
         $timezone = "Arctic/Longyearbyen";
-        break; 
+        break;
     case "SY":
         $timezone = "Asia/Damascus";
-        break; 
+        break;
     case "TC":
         $timezone = "America/Grand_Turk";
-        break; 
+        break;
     case "TF":
         $timezone = "Indian/Kerguelen";
-        break; 
+        break;
     case "TK":
         $timezone = "Pacific/Fakaofo";
-        break; 
+        break;
     case "TT":
         $timezone = "America/Port_of_Spain";
-        break; 
+        break;
     case "VG":
         $timezone = "America/Tortola";
-        break; 
+        break;
     case "VI":
         $timezone = "America/St_Thomas";
-        break; 
+        break;
     case "VU":
         $timezone = "Pacific/Efate";
-        break; 
+        break;
     case "RS":
         $timezone = "Europe/Belgrade";
-        break; 
+        break;
     case "ME":
         $timezone = "Europe/Podgorica";
-        break; 
+        break;
     case "AX":
         $timezone = "Europe/Mariehamn";
-        break; 
+        break;
     case "GG":
         $timezone = "Europe/Guernsey";
-        break; 
+        break;
     case "IM":
         $timezone = "Europe/Isle_of_Man";
-        break; 
+        break;
     case "JE":
         $timezone = "Europe/Jersey";
-        break; 
+        break;
     case "BL":
         $timezone = "America/St_Barthelemy";
-        break; 
+        break;
     case "MF":
         $timezone = "America/Marigot";
-        break; 
+        break;
     case "AR":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "02":
           $timezone = "America/Argentina/Catamarca";
-          break; 
+          break;
       case "03":
           $timezone = "America/Argentina/Tucuman";
-          break; 
+          break;
       case "04":
           $timezone = "America/Argentina/Rio_Gallegos";
-          break; 
+          break;
       case "05":
           $timezone = "America/Argentina/Cordoba";
-          break; 
+          break;
       case "06":
           $timezone = "America/Argentina/Tucuman";
-          break; 
+          break;
       case "07":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "08":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "09":
           $timezone = "America/Argentina/Tucuman";
-          break; 
+          break;
       case "10":
           $timezone = "America/Argentina/Jujuy";
-          break; 
+          break;
       case "11":
           $timezone = "America/Argentina/San_Luis";
-          break; 
+          break;
       case "12":
           $timezone = "America/Argentina/La_Rioja";
-          break; 
+          break;
       case "13":
           $timezone = "America/Argentina/Mendoza";
-          break; 
+          break;
       case "14":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "15":
           $timezone = "America/Argentina/San_Luis";
-          break; 
+          break;
       case "16":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "17":
           $timezone = "America/Argentina/Salta";
-          break; 
+          break;
       case "18":
           $timezone = "America/Argentina/San_Juan";
-          break; 
+          break;
       case "19":
           $timezone = "America/Argentina/San_Luis";
-          break; 
+          break;
       case "20":
           $timezone = "America/Argentina/Rio_Gallegos";
-          break; 
+          break;
       case "21":
           $timezone = "America/Argentina/Buenos_Aires";
-          break; 
+          break;
       case "22":
           $timezone = "America/Argentina/Catamarca";
-          break; 
+          break;
       case "23":
           $timezone = "America/Argentina/Ushuaia";
-          break; 
+          break;
       case "24":
           $timezone = "America/Argentina/Tucuman";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "BR":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "America/Rio_Branco";
-          break; 
+          break;
       case "02":
           $timezone = "America/Maceio";
-          break; 
+          break;
       case "03":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "04":
           $timezone = "America/Manaus";
-          break; 
+          break;
       case "05":
           $timezone = "America/Bahia";
-          break; 
+          break;
       case "06":
           $timezone = "America/Fortaleza";
-          break; 
+          break;
       case "07":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "08":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "11":
           $timezone = "America/Campo_Grande";
-          break; 
+          break;
       case "13":
           $timezone = "America/Belem";
-          break; 
+          break;
       case "14":
           $timezone = "America/Cuiaba";
-          break; 
+          break;
       case "15":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "16":
           $timezone = "America/Belem";
-          break; 
+          break;
       case "17":
           $timezone = "America/Recife";
-          break; 
+          break;
       case "18":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "20":
           $timezone = "America/Fortaleza";
-          break; 
+          break;
       case "21":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "22":
           $timezone = "America/Recife";
-          break; 
+          break;
       case "23":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "24":
           $timezone = "America/Porto_Velho";
-          break; 
+          break;
       case "25":
           $timezone = "America/Boa_Vista";
-          break; 
+          break;
       case "26":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "27":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "28":
           $timezone = "America/Maceio";
-          break; 
+          break;
       case "29":
           $timezone = "America/Sao_Paulo";
-          break; 
+          break;
       case "30":
           $timezone = "America/Recife";
-          break; 
+          break;
       case "31":
           $timezone = "America/Araguaina";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "CD":
-        switch ($region) { 
+        switch ($region) {
       case "02":
           $timezone = "Africa/Kinshasa";
-          break; 
+          break;
       case "05":
           $timezone = "Africa/Lubumbashi";
-          break; 
+          break;
       case "06":
           $timezone = "Africa/Kinshasa";
-          break; 
+          break;
       case "08":
           $timezone = "Africa/Kinshasa";
-          break; 
+          break;
       case "10":
           $timezone = "Africa/Lubumbashi";
-          break; 
+          break;
       case "11":
           $timezone = "Africa/Lubumbashi";
-          break; 
+          break;
       case "12":
           $timezone = "Africa/Lubumbashi";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "CN":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "04":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "05":
           $timezone = "Asia/Harbin";
-          break; 
+          break;
       case "06":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "07":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "08":
           $timezone = "Asia/Harbin";
-          break; 
+          break;
       case "09":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "10":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "11":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "12":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Urumqi";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "15":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "16":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "18":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "19":
           $timezone = "Asia/Harbin";
-          break; 
+          break;
       case "20":
           $timezone = "Asia/Harbin";
-          break; 
+          break;
       case "21":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "22":
           $timezone = "Asia/Harbin";
-          break; 
+          break;
       case "23":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "24":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "25":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "26":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "28":
           $timezone = "Asia/Shanghai";
-          break; 
+          break;
       case "29":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "30":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "31":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "32":
           $timezone = "Asia/Chongqing";
-          break; 
+          break;
       case "33":
           $timezone = "Asia/Chongqing";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "EC":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Pacific/Galapagos";
-          break; 
+          break;
       case "02":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "03":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "04":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "05":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "06":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "07":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "08":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "09":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "10":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "11":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "12":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "13":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "14":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "15":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "17":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "18":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "19":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "20":
           $timezone = "America/Guayaquil";
-          break; 
+          break;
       case "22":
           $timezone = "America/Guayaquil";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "ES":
-        switch ($region) { 
+        switch ($region) {
       case "07":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "27":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "29":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "31":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "32":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "34":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "39":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "51":
           $timezone = "Africa/Ceuta";
-          break; 
+          break;
       case "52":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "53":
           $timezone = "Atlantic/Canary";
-          break; 
+          break;
       case "54":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "55":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "56":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "57":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "58":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "59":
           $timezone = "Europe/Madrid";
-          break; 
+          break;
       case "60":
           $timezone = "Europe/Madrid";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "GL":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "America/Thule";
-          break; 
+          break;
       case "02":
           $timezone = "America/Godthab";
-          break; 
+          break;
       case "03":
           $timezone = "America/Godthab";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "ID":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Asia/Pontianak";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "04":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "05":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "06":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "07":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "08":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "09":
           $timezone = "Asia/Jayapura";
-          break; 
+          break;
       case "10":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "11":
           $timezone = "Asia/Pontianak";
-          break; 
+          break;
       case "12":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "15":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "16":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "17":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "18":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "19":
           $timezone = "Asia/Pontianak";
-          break; 
+          break;
       case "20":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "21":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "22":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "23":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "24":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "25":
           $timezone = "Asia/Pontianak";
-          break; 
+          break;
       case "26":
           $timezone = "Asia/Pontianak";
-          break; 
+          break;
       case "30":
           $timezone = "Asia/Jakarta";
-          break; 
+          break;
       case "31":
           $timezone = "Asia/Makassar";
-          break; 
+          break;
       case "33":
           $timezone = "Asia/Jakarta";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "KZ":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Asia/Almaty";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Almaty";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "04":
           $timezone = "Asia/Aqtobe";
-          break; 
+          break;
       case "05":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "06":
           $timezone = "Asia/Aqtau";
-          break; 
+          break;
       case "07":
           $timezone = "Asia/Oral";
-          break; 
+          break;
       case "08":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "09":
           $timezone = "Asia/Aqtau";
-          break; 
+          break;
       case "10":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "11":
           $timezone = "Asia/Almaty";
-          break; 
+          break;
       case "12":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Aqtobe";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Qyzylorda";
-          break; 
+          break;
       case "15":
           $timezone = "Asia/Almaty";
-          break; 
+          break;
       case "16":
           $timezone = "Asia/Aqtobe";
-          break; 
+          break;
       case "17":
           $timezone = "Asia/Almaty";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "MX":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "02":
           $timezone = "America/Tijuana";
-          break; 
+          break;
       case "03":
           $timezone = "America/Hermosillo";
-          break; 
+          break;
       case "04":
           $timezone = "America/Merida";
-          break; 
+          break;
       case "05":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "06":
           $timezone = "America/Chihuahua";
-          break; 
+          break;
       case "07":
           $timezone = "America/Monterrey";
-          break; 
+          break;
       case "08":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "09":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "10":
           $timezone = "America/Mazatlan";
-          break; 
+          break;
       case "11":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "12":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "13":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "14":
           $timezone = "America/Mazatlan";
-          break; 
+          break;
       case "15":
           $timezone = "America/Chihuahua";
-          break; 
+          break;
       case "16":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "17":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "18":
           $timezone = "America/Mazatlan";
-          break; 
+          break;
       case "19":
           $timezone = "America/Monterrey";
-          break; 
+          break;
       case "20":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "21":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "22":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "23":
           $timezone = "America/Cancun";
-          break; 
+          break;
       case "24":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "25":
           $timezone = "America/Mazatlan";
-          break; 
+          break;
       case "26":
           $timezone = "America/Hermosillo";
-          break; 
+          break;
       case "27":
           $timezone = "America/Merida";
-          break; 
+          break;
       case "28":
           $timezone = "America/Monterrey";
-          break; 
+          break;
       case "29":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "30":
           $timezone = "America/Mexico_City";
-          break; 
+          break;
       case "31":
           $timezone = "America/Merida";
-          break; 
+          break;
       case "32":
           $timezone = "America/Monterrey";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "MY":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "04":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "05":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "06":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "07":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "08":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "09":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "11":
           $timezone = "Asia/Kuching";
-          break; 
+          break;
       case "12":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Kuala_Lumpur";
-          break; 
+          break;
       case "15":
           $timezone = "Asia/Kuching";
-          break; 
+          break;
       case "16":
           $timezone = "Asia/Kuching";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "NZ":
-        switch ($region) { 
+        switch ($region) {
       case "85":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "E7":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "E8":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "E9":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F1":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F2":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F3":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F4":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F5":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F7":
           $timezone = "Pacific/Chatham";
-          break; 
+          break;
       case "F8":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "F9":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "G1":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "G2":
           $timezone = "Pacific/Auckland";
-          break; 
+          break;
       case "G3":
           $timezone = "Pacific/Auckland";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "PT":
-        switch ($region) { 
+        switch ($region) {
       case "02":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "03":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "04":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "05":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "06":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "07":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "08":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "09":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "10":
           $timezone = "Atlantic/Madeira";
-          break; 
+          break;
       case "11":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "13":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "14":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "16":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "17":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "18":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "19":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "20":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "21":
           $timezone = "Europe/Lisbon";
-          break; 
+          break;
       case "22":
           $timezone = "Europe/Lisbon";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "RU":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Novokuznetsk";
-          break; 
+          break;
       case "04":
           $timezone = "Asia/Novosibirsk";
-          break; 
+          break;
       case "05":
           $timezone = "Asia/Vladivostok";
-          break; 
+          break;
       case "06":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "07":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "08":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "09":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "10":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "11":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "15":
           $timezone = "Asia/Anadyr";
-          break; 
+          break;
       case "16":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "17":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "18":
           $timezone = "Asia/Krasnoyarsk";
-          break; 
+          break;
       case "20":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "21":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "22":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "23":
           $timezone = "Europe/Kaliningrad";
-          break; 
+          break;
       case "24":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "25":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "26":
           $timezone = "Asia/Kamchatka";
-          break; 
+          break;
       case "27":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "28":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "29":
           $timezone = "Asia/Novokuznetsk";
-          break; 
+          break;
       case "30":
           $timezone = "Asia/Vladivostok";
-          break; 
+          break;
       case "31":
           $timezone = "Asia/Krasnoyarsk";
-          break; 
+          break;
       case "32":
           $timezone = "Asia/Omsk";
-          break; 
+          break;
       case "33":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "34":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "35":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "36":
           $timezone = "Asia/Anadyr";
-          break; 
+          break;
       case "37":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "38":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "39":
           $timezone = "Asia/Krasnoyarsk";
-          break; 
+          break;
       case "40":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "41":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "42":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "43":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "44":
           $timezone = "Asia/Magadan";
-          break; 
+          break;
       case "45":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "46":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "47":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "48":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "49":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "50":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "51":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "52":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "53":
           $timezone = "Asia/Novosibirsk";
-          break; 
+          break;
       case "54":
           $timezone = "Asia/Omsk";
-          break; 
+          break;
       case "55":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "56":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "57":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "58":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "59":
           $timezone = "Asia/Vladivostok";
-          break; 
+          break;
       case "60":
           $timezone = "Europe/Kaliningrad";
-          break; 
+          break;
       case "61":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "62":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "63":
           $timezone = "Asia/Yakutsk";
-          break; 
+          break;
       case "64":
           $timezone = "Asia/Sakhalin";
-          break; 
+          break;
       case "65":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "66":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "67":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "68":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "69":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "70":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "71":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "72":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "73":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "74":
           $timezone = "Asia/Krasnoyarsk";
-          break; 
+          break;
       case "75":
           $timezone = "Asia/Novosibirsk";
-          break; 
+          break;
       case "76":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "77":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "78":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "79":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "80":
           $timezone = "Asia/Yekaterinburg";
-          break; 
+          break;
       case "81":
           $timezone = "Europe/Samara";
-          break; 
+          break;
       case "82":
           $timezone = "Asia/Irkutsk";
-          break; 
+          break;
       case "83":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "84":
           $timezone = "Europe/Volgograd";
-          break; 
+          break;
       case "85":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "86":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "87":
           $timezone = "Asia/Novosibirsk";
-          break; 
+          break;
       case "88":
           $timezone = "Europe/Moscow";
-          break; 
+          break;
       case "89":
           $timezone = "Asia/Vladivostok";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "UA":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "02":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "03":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "04":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "05":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "06":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "07":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "08":
           $timezone = "Europe/Simferopol";
-          break; 
+          break;
       case "09":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "10":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "11":
           $timezone = "Europe/Simferopol";
-          break; 
+          break;
       case "13":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "14":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "15":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "16":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "17":
           $timezone = "Europe/Simferopol";
-          break; 
+          break;
       case "18":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "19":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "20":
           $timezone = "Europe/Simferopol";
-          break; 
+          break;
       case "21":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "22":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "23":
           $timezone = "Europe/Kiev";
-          break; 
+          break;
       case "24":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "25":
           $timezone = "Europe/Uzhgorod";
-          break; 
+          break;
       case "26":
           $timezone = "Europe/Zaporozhye";
-          break; 
+          break;
       case "27":
           $timezone = "Europe/Kiev";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "UZ":
-        switch ($region) { 
+        switch ($region) {
       case "01":
           $timezone = "Asia/Tashkent";
-          break; 
+          break;
       case "02":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "03":
           $timezone = "Asia/Tashkent";
-          break; 
+          break;
       case "06":
           $timezone = "Asia/Tashkent";
-          break; 
+          break;
       case "07":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "08":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "09":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "10":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "12":
           $timezone = "Asia/Samarkand";
-          break; 
+          break;
       case "13":
           $timezone = "Asia/Tashkent";
-          break; 
+          break;
       case "14":
           $timezone = "Asia/Tashkent";
-          break; 
-      } 
-      break; 
+          break;
+      }
+      break;
     case "TL":
         $timezone = "Asia/Dili";
-        break; 
+        break;
     case "PF":
         $timezone = "Pacific/Marquesas";
-        break; 
-      } 
-      return $timezone; 
+        break;
+      }
+      return $timezone;
 }
 
 function normalizeURI($uri) {
@@ -10785,9 +10785,9 @@ function getSipThorHomeNode ($account,$sip_proxy) {
     if (!$socket) {
         return false;
     }
-    
+
     $request=sprintf("lookup sip_proxy for %s",$account);
-    
+
     if (fputs($socket,"$request\r\n") !== false) {
         $ret = fgets($socket,4096);
     }
@@ -10869,7 +10869,7 @@ function getSipAccountFromX509Certificate() {
 function getSipAccountFromHTTPDigest () {
 
     require("/etc/cdrtool/enrollment/config.ini");
- 
+
     if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
         $log= 'Error: Missing nonce in enrollment settings';
         syslog(LOG_NOTICE, $log);
@@ -10904,7 +10904,7 @@ function getSipAccountFromHTTPDigest () {
         //syslog(LOG_NOTICE, sprintf ("SIP settings page: sent auth request for realm %s to %s", $realm, $_SERVER['REMOTE_ADDR']));
         die();
     }
-    
+
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
         !isset($data['username'])) {
@@ -10996,7 +10996,7 @@ function getSipAccountFromHTTPDigest () {
 
     $A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
     $valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
-    
+
     if ($data['response'] != $valid_response) {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
@@ -11506,7 +11506,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         if ($divert_changed) {
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result     = $SipSettings->SipPort->setCallDiversions($SipSettings->sipId,$new_diversions);
-    
+
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
@@ -11541,7 +11541,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
     if (!$_REQUEST['export']) {
         $SipSettings->showAccount();
-    
+
         print "
         </body>
         </html>
@@ -11694,7 +11694,7 @@ class Enrollment {
             print (json_encode($return));
             return false;
         }
-        
+
         if (!$_REQUEST['password']) {
             $return=array('success'       => false,
                           'error'         => 'value_error',
@@ -11733,7 +11733,7 @@ class Enrollment {
             $_customer_class          = $this->CustomerSoapEngine->records_class;
             $this->customerRecords    = new $_customer_class($this->CustomerSoapEngine);
             $this->customerRecords->html=false;
-    
+
             $properties=$this->customerRecords->setInitialCredits(array('sip_credit'         => 1,
                                                                         'sip_alias_credit'   => 1,
                                                                         'email_credit'       => 1
@@ -11784,13 +11784,13 @@ class Enrollment {
             $_customer_created=false;
 
             $j=0;
-    
+
             while ($j < 3) {
-    
+
                 $username.=RandomString(4);
-    
+
                 $customer['username']=$username;
-    
+
                 if (!$result = $this->customerRecords->addRecord($customer)) {
                     if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
                         $return=array('success'       => false,
@@ -11804,10 +11804,10 @@ class Enrollment {
                     $_customer_created=true;
                     break;
                 }
-    
+
                 $j++;
             }
-    
+
             if (!$_customer_created) {
 
                 if ($this->sipRecords->soap_error_description) {
@@ -11825,9 +11825,9 @@ class Enrollment {
             } else {
                 $this->log_action("Owner account created (". $customer['username'].")");
             }
-    
+
             $owner=$result->id;
-    
+
             if (!$owner) {
                 $return=array('success'       => false,
                               'error'         => 'internal_error',
@@ -11941,12 +11941,12 @@ class Enrollment {
                     return false;
                 }
             }
-    
+
                 // Generic code for all sip settings pages
-    
+
             if ($this->create_voicemail || $this->send_email_notification) {
                 if ($SipSettings = new $this->sipClass($sip_address,$this->sipLoginCredentials,$this->soapEngines)) {
-    
+
                     if ($this->create_voicemail) {
                         // Add voicemail account
                         $this->log_action("Add voicemail account ($sip_address)");
@@ -11973,7 +11973,7 @@ class Enrollment {
                                     'owner'   => intval($owner),
                                     'value'   => $_REQUEST['email']
                                     );
-        
+
                 $this->emailRecords->addRecord($emailAlias);
 			}
 
@@ -12133,9 +12133,9 @@ class PaypalProcessor {
             <tr>
             <td colspan=3>
             ";
-            
+
             print 'Invalid account data';
-            
+
             print "
             </td>
             </tr>
@@ -12149,9 +12149,9 @@ class PaypalProcessor {
             <tr>
             <td colspan=3>
             ";
-            
+
             print 'Invalid basket data';
-            
+
             print "
             </td>
             </tr>
@@ -12162,11 +12162,11 @@ class PaypalProcessor {
         if (is_array($this->test_credit_cards) && in_array($_POST['creditCardNumber'], $this->test_credit_cards)) {
 	        $this->CardProcessor->environment='sandbox';
         }
-        
+
         $this->CardProcessor->chapter_class  = 'chapter';
         $this->CardProcessor->odd_row_class  = 'oddc';
         $this->CardProcessor->even_row_class = 'evenc';
-        
+
         $this->CardProcessor->note = $this->account->account;
         $this->CardProcessor->account = $this->account->account;
 
@@ -12174,72 +12174,72 @@ class PaypalProcessor {
 
         // set hidden elements we need to preserve in the shopping cart application
         $this->CardProcessor->hidden_elements = $this->account->hiddenElements;
-        
+
         // load shopping items
         $this->CardProcessor->cart_items=$basket;
 
         // load user information from owner information if available otherwise from sip account settings
-        
+
         if ($this->account->owner_information['firstName']) {
 	    	$this->CardProcessor->user_account['FirstName']=$this->account->owner_information['firstName'];
     	} else {
         	$this->CardProcessor->user_account['FirstName']=$this->account->firstName;
         }
-        
+
         if ($this->account->owner_information['lastName']) {
         	$this->CardProcessor->user_account['LastName']=$this->account->owner_information['lastName'];
         } else {
         	$this->CardProcessor->user_account['LastName']=$this->account->lastName;
         }
-        
+
         if ($this->account->owner_information['email']) {
         	$this->CardProcessor->user_account['Email']=$this->account->owner_information['email'];
         } else {
         	$this->CardProcessor->user_account['Email']=$this->account->email;
         }
-        
+
         if ($this->account->owner_information['address'] && $this->account->owner_information['address']!= 'Unknown') {
         	$this->CardProcessor->user_account['Address1']=$this->account->owner_information['address'];
         } else {
         	$this->CardProcessor->user_account['Address1']='';
         }
-        
+
         if ($this->account->owner_information['city'] && $this->account->owner_information['city']!= 'Unknown') {
         	$this->CardProcessor->user_account['City']=$this->account->owner_information['city'];
         } else {
         	$this->CardProcessor->user_account['City']='';
         }
-        
+
         if ($this->account->owner_information['country'] && $this->account->owner_information['country']!= 'Unknown') {
         	$this->CardProcessor->user_account['Country']=$this->account->owner_information['country'];
         } else {
 	        $this->CardProcessor->user_account['Country']='';
         }
-        
+
         if ($this->account->owner_information['state'] && $this->account->owner_information['state']!= 'Unknown') {
     	    $this->CardProcessor->user_account['State']=$this->account->owner_information['state'];
         } else {
         	$this->CardProcessor->user_account['State']='';
         }
-        
+
         if ($this->account->owner_information['postcode'] && $this->account->owner_information['postcode']!= 'Unknown') {
 	        $this->CardProcessor->user_account['PostCode']=$this->account->owner_information['postcode'];
         } else {
     	    $this->CardProcessor->user_account['PostCode']='';
         }
-        
+
         if ($_REQUEST['purchase'] == '1' ) {
             $chapter=sprintf(_("Transaction Results"));
             $this->account->showChapter($chapter);
-            
+
             print "
             <tr>
             <td colspan=3>
             ";
-            
+
             // ensure that submit requests are coming only from the current page
             if ($_SERVER['HTTP_REFERER'] == $this->CardProcessor->getPageURL()) {
-                    
+
                 // check submitted values
                 $errors = $this->CardProcessor->checkForm($_POST);
                 if (count($errors) > 0){
@@ -12253,46 +12253,46 @@ class PaypalProcessor {
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                
+
                 // process the payment
                 $b=time();
-                
+
                 $pay_process_results = $this->CardProcessor->processPayment($_POST);
                 if(count($pay_process_results['error']) > 0){
                     // there was a problem with payment
                     // show error and stop
-                    
+
                     if ($pay_process_results['error']['field'] == 'reload') {
                         print $pay_process_results['error']['desc'];
                     } else {
                         print $this->CardProcessor->displayProcessErrors($pay_process_results['error']);
                     }
-                    
+
                     $e=time();
                     $d=$e-$b;
-                    
+
                     $log=sprintf("CC transaction for %s failed with error: %s (%s) after %d seconds",
                     $this->account->account,
                     $pay_process_results['error']['short_message'],
                     $pay_process_results['error']['error_code'],
                     $d
                     );
-                    
+
                     syslog(LOG_NOTICE, $log);
-                    
+
                     return false;
                 } else {
-                
+
                     $e=time();
                     $d=$e-$b;
-                    
+
                     $log=sprintf("CC transaction %s for %s completed succesfully in %d seconds",
                     $pay_process_results['success']['desc']->TransactionID,
                     $this->account->account,
                     $d
                     );
                     syslog(LOG_NOTICE, $log);
-                    
+
                     print "<p>";
                     print _("Transaction completed sucessfully. ");
 
@@ -12300,28 +12300,28 @@ class PaypalProcessor {
                     if ($this->CardProcessor->environment!='sandbox' && $this->account->first_transaction) {
                         print "<p>";
                         print _("This is your first payment. ");
-                        
+
                         print "<p>";
                         print _("Please allow the time to check the validity of your transaction before activating your Credit. ");
-                        
+
                         print "<p>";
                         print _("You can speed up the validation process by sending a copy of an utility bill (electriciy, gas or TV) that displays your address. ");
-                        
+
                         print "<p>";
                         printf (_("For questions related to your payments or to request a refund please email to <i>%s</i> and mention your transaction id <b>%s</b>. "),
                         $this->account->billing_email,
                         $pay_process_results['success']['desc']->TransactionID
                         );
-                        
+
                         $this->make_credit_checks=true;
-                    
+
                     } else {
                        print "<p>";
                        print _("You may check your new balance in the Credit tab. ");
                     }
                     */
                 }
-                
+
                 if ($this->account->Preferences['ip'] && $_loc=geoip_record_by_name($this->account->Preferences['ip'])) {
                     $enrollment_location=$_loc['country_name'].'/'.$_loc['city'];
                 } else if ($this->account->Preferences['ip'] && $_loc=geoip_country_name_by_name($this->account->Preferences['ip'])) {
@@ -12329,7 +12329,7 @@ class PaypalProcessor {
                 } else {
                     $enrollment_location='Unknown';
                 }
-                
+
                 if ($_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR'])) {
                     $transaction_location=$_loc['country_name'].'/'.$_loc['city'];
                 } else if ($_loc=geoip_country_name_by_name($_SERVER['REMOTE_ADDR'])) {
@@ -12337,13 +12337,13 @@ class PaypalProcessor {
                 } else {
                     $transaction_location='Unknown';
                 }
-                
+
                 if ($this->account->Preferences['timezone']) {
                     $timezone=$this->account->Preferences['timezone'];
                 } else {
                     $timezone='Unknown';
                 }
-                
+
                 $extra_information=array(
                                          'Account Page'         => $this->account->admin_url_absolute,
                                          'Account First Name'   => $this->account->firstName,
@@ -12360,7 +12360,7 @@ class PaypalProcessor {
                 if ($result) {
                     $extra_information['Invoice Page']=sprintf("https://admin.ag-projects.com/admin/invoice.phtml?iId=%d&adminonly=1",$result['invoice']);
                 }
-                
+
                 if ($this->CardProcessor->saveOrder($_POST,$pay_process_results,$extra_information)) {
 
                     $this->transaction_results=array('success' => true,
@@ -12368,39 +12368,39 @@ class PaypalProcessor {
                                                      );
 
                     return true;
-                
+
                 } else {
                     $log=sprintf("Error: SIP Account %s - CC transaction %s failed to save order",$this->account->account, $this->CardProcessor->transaction_data['TRANSACTION_ID']);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                
+
             } else {
                 print _("Invalid CC Request");
                 return false;
             }
-            
+
             print "
             </td>
             </tr>
             ";
-        
+
         } else {
-            
+
             print "
             <tr>
             <td colspan=3>
             ";
-            
+
             // print the submit form
             $arr_form_page_objects = $this->CardProcessor->showSubmitForm();
             print $arr_form_page_objects['page_body_content'];
-            
+
             print "
             </td>
             </tr>
             ";
-            
+
     	}
 
     }
@@ -12668,7 +12668,7 @@ class DIDProcessor {
             }
 
         }
-        
+
     }
 
     function renewOrder($data) {
@@ -12708,7 +12708,7 @@ class DIDProcessor {
 
             print $query;
         }
-        
+
     }
 
     function cancelOrder($data) {
@@ -12741,7 +12741,7 @@ class DIDProcessor {
 
             print $query;
         }
-        
+
     }
 
     function getOrders($sip_address) {
@@ -12766,7 +12766,7 @@ class DIDProcessor {
                                                            'did_setup' => $this->db->f('did_setup'),
                                                            'did_monthly' => $this->db->f('did_monthly')
                                                            );
-    
+
         	}
         }
 
