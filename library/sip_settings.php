@@ -3630,7 +3630,7 @@ class SipSettings {
 
                 print "<td>";
                 print "<i>$user_agent</i>";
-                if ($transport == 'tls') print "<img src=images/lock15.gif border=0><br>";
+                if ($transport == 'tls') print "&nbsp;<i class='icon-lock'></i>";
                 print "<br><span class='label label-info'>";
                 print _("Location");
                 print "</span>";
