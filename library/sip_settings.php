@@ -3319,12 +3319,12 @@ class SipSettings {
 
             } else if ($key=="free-pstn") {
                 print "<label class=checkbox>
-                <input type=checkbox value=1 name=$key $checked_box[$key] $disabled_box>
+                <input type='checkbox' value=1 class='inline' name=$key $checked_box[$key] $disabled_box>
                 ";
 
                 if ($this->pstn_changes_allowed) {
-                    print "$elementComment</label>";
-                    print "<input id='rpid_input'style='display:inline-block' class=input-medium type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
+                    print "$elementComment";
+                    print "<input id='rpid_input'style='display:inline-block' class=input-medium type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\"></label>";
                 } else {
                     if ($this->rpid) {
                         print "$elementComment: $this->rpid </label>";
