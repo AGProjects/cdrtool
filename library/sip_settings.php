@@ -151,7 +151,7 @@ class SipSettings {
                                      )
                          );
 
-	var $pstn_termination_price_page = 'sip_rates_body.html';
+    var $pstn_termination_price_page = 'sip_rates_body.html';
     var $append_domain_to_xcap_root = false;
     var $blink_download_url   = "https://blink.sipthor.net/download.phtml?download";
     var $ownerCredentials = array();
@@ -161,6 +161,7 @@ class SipSettings {
     var $require_proof_of_identity = true;
     var $call_limit_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
     var $ip_access_list_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
+    var $create_certificate = false;
 
     function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
 
@@ -2841,13 +2842,15 @@ class SipSettings {
 
     function render_download_applet() {
 
-		$this->valid_os=array('nt','mac');
+        $this->valid_os=array('nt','mac');
 
         require("browser.php");
         $os=browser_detection('os');
 
-        if ($_passport = $this->generateCertificate()) {
-        	$_account['passport']       = $_passport;
+        if ($this->create_certificate) {
+            if ($_passport = $this->generateCertificate()) {
+                    $_account['passport']       = $_passport;
+            }
         }
 
         $_account['sip_address']    = $this->account;
@@ -2865,8 +2868,12 @@ class SipSettings {
                 $_account['msrp_relay']        = $enrollment['msrp_relay'];
                 $_account['conference_server'] = $enrollment['conference_server'];
                 $_account['settings_url']      = $enrollment['settings_url'];
-                $_account['ldap_hostname']     = $enrollment['ldap_hostname'];
-                $_account['ldap_dn']           = $enrollment['ldap_dn'];
+                if ($enrollment['ldap_hostname']) {
+                    $_account['ldap_hostname']     = $enrollment['ldap_hostname'];
+                }
+                if ($enrollment['ldap_dn']) {
+                    $_account['ldap_dn']           = $enrollment['ldap_dn'];
+                }
             }
         }
 
@@ -4153,7 +4160,7 @@ class SipSettings {
 
         	if (!$result->quota) $result->quota=0;
 
-             //dprint_r($result);
+            //dprint_r($result);
 
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->updateAccount($result);
@@ -10936,14 +10943,14 @@ class Enrollment {
     var $create_voicemail           = false;
     var $send_email_notification    = true;
     var $create_email_alias         = false;
-	var $create_customer            = true;
+    var $create_customer            = true;
     var $timezones                  = array();
     var $default_timezone           = 'Europe/Amsterdam';
     var $configuration_file         = '/etc/cdrtool/enrollment/config.ini';
     var $allow_pstn                 = 1;
     var $quota                      = 50;
     var $prepaid                    = 1;
-    var $create_certificate         = 1;
+    var $create_certificate         = 0;
     var $customer_belongs_to_reseller = false;
 
     function Enrollment() {
@@ -10997,7 +11004,7 @@ class Enrollment {
         	$this->groups = array();
         }
 
-		$this->reseller       = $this->enrollment['reseller'];
+        $this->reseller       = $this->enrollment['reseller'];
         $this->outbound_proxy = $this->enrollment['outbound_proxy'];
         $this->xcap_root      = $this->enrollment['xcap_root'];
         $this->msrp_relay     = $this->enrollment['msrp_relay'];
@@ -11345,7 +11352,6 @@ class Enrollment {
 
             if ($this->ldap_hostname) {
                 $return['ldap_hostname']  = $this->ldap_hostname;
-                $return['ldap_dn']        = $this->ldap_dn;
             }
 
             if ($this->ldap_dn) {
@@ -11371,6 +11377,26 @@ class Enrollment {
 
     function generateCertificate($sip_address,$email,$password) {
         if (!$this->init) return false;
+
+        if (!is_array($this->enrollment)) {
+            print _("Error: missing enrollment settings");
+            return false;
+        }
+
+        if (!$this->enrollment['ca_conf']) {
+            //print _("Error: missing enrollment ca_conf settings");
+            return false;
+        }
+
+        if (!$this->enrollment['ca_crt']) {
+            //print _("Error: missing enrollment ca_crt settings");
+            return false;
+        }
+
+        if (!$this->enrollment['ca_key']) {
+            //print _("Error: missing enrollment ca_key settings");
+            return false;
+        }
 
     	$config = array(
     		'config'           => $this->enrollment['ca_conf'],
