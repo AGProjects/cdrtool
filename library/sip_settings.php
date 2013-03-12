@@ -5768,7 +5768,7 @@ class SipSettings {
               </label>
               <div class=controls>
               <textarea class=input-medium rel=popover title data-original-title='Access List Examples' data-trigger='focus' data-toggle=\"popover\" data-content=\"";
-                print _("You can limit here the IP addresses allowed to use the SIP account as an anti-fraud measure. You may enter a list of network addresses in CIDR format seprated by spaces. <br>Example:<dl><dt>0.0.0.0/0</dt><dd> means any address can be used for the account</dd><dt>1.2.3.4/32</dt><dd> will limit the account to one address 1.2.3.4</dd <dt>1.2.3.0/24</dt><dd>while will limit the account to 1.2.3.0 IP C class (any address between 1.2.3.0 1.2.3.255)</dd>");
+                print _("You can limit here the IP addresses allowed to use the SIP account as an anti-fraud measure. You may enter a list of network addresses in CIDR format separated by spaces. <p>Examples:<dl><dt>0.0.0.0/0</dt><dd> means any address is allowed</dd><dt>1.2.3.4/32</dt><dd> means only one address 1.2.3.4 is allowed</dd><dt>1.2.3.0/24</dt><dd> means only the 254 IP addresses from the C class 1.2.3.0 are allowed</dd>");
                 printf ("\" cols=60 rows=1 name=ip_access_list>%s</textarea>
               </div>
             </div>
