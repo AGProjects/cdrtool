@@ -1254,7 +1254,7 @@ class SipSettings {
             if ($this->enable_thor) {
                 print " ";
                 if ($this->isEmbedded()) {
-                   print "<i class=\"icon-home icon-white\"></i>";
+                   print "<i class=\"icon-home icon-white\"></i> ";
                     print _("Home Node");
                 } else {
                     print "<a href=\"http://www.ag-projects.com/SIPThor.html\" target=_new>";
