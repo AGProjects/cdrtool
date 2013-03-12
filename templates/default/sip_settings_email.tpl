@@ -17,10 +17,10 @@ phone or receive voicemail by email.
 How to use your SIP account:
 
 1. You may use a SIP hardware phone 
-   or download X-lite, a free software phone for
+   or download Blink SIP software client for
    Windows, MacOSX or Linux from:
    
-   http://www.counterpath.com/x-lite.html
+   http://icanblink.com
 
 2. Setup your SIP device as follows:
 

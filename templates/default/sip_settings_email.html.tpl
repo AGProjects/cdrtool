@@ -82,9 +82,9 @@
                                 </p>
                                 <ol>
                                 <li>You may use a SIP hardware phone 
-                                   or download X-lite, a free software phone for
+                                   or download Blink SIP software client for
                                    Windows, MacOSX or Linux from:
-                                   <a href='http://www.counterpath.com/x-lite.html'>X-lite</a>
+                                   <a href='http://icanblink.com'>Blink</a>
                                 </li>
 
                                 <li>Setup your SIP device as follows:
