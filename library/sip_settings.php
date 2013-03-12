@@ -3372,7 +3372,11 @@ class SipSettings {
         <div class='input-append'>
         ");
  
-        printf ("<input class=input-medium name=timeout value='%d' size=3 type=text><span class='add-on'>s</span>",$this->timeout);
+        print "<input rel='popover' class=input-medium name=timeout title=\"\" data-original-title='";
+        print _("No-answer Timeout");
+        print "' data-trigger=\"focus\" data-toggle=\"popover\" data-content=\"";
+        print _("Used to determined after how many seconds the Forwarding action for this condition will occur");
+        printf ("\" value='%d' size=3 type=text><span class='add-on'>s</span>",$this->timeout);
  
         print "
         </div>
@@ -3586,14 +3590,18 @@ class SipSettings {
           //print "<input type=hidden name=owner value=\"$this->owner\">";
           return true;
         }
-            print "
-            <div class='control-group'>
-            <label for=owner class=control-label>";
-            print _("Owner");
-            print "</label>
-            <div class=controls>
-            <input class=input-medium type=text name=owner size=7 value=\"$this->owner\">
-            ";
+
+        print "
+        <div class='control-group'>
+        <label for=owner class=control-label>";
+        print _("Owner");
+        print "</label>
+        <div class=controls>
+        <input class=input-medium type=text name=owner size=7  rel='popover' title data-original-title='";
+        print _("Owner");
+        print "' data-trigger=\"focus\" data-toggle=\"popover\" data-content=\"";
+        print _("Used to link the SIP account to the customer details stored in another database like the platform customer database. Only integer values are allowed.");
+        print "\" value=\"$this->owner\">";
             print "
             </div>
             </div>
@@ -5583,10 +5591,14 @@ class SipSettings {
             <div class=control-group>
               <label class=control-label>";
                 print _("PSTN Call Limit");
-                printf ("
+                print "
               </label>
               <div class=controls>
-                <input class=input-medium type=text size=3 name=callLimit value='%s'> %s
+              <input class=input-medium rel=popover type=text size=3 name=callLimit title data-original-title='";
+             print _("PSTN Call limit");
+             print "' data-trigger='focus' data-toggle=\"popover\" data-content=\"";
+             print "Used as anti-fraud measure for limiting the maximum number of outgoing concurrent calls to PSTN numbers.";
+             printf ("\" value='%s'> %s
               </div>
             </div>
             ",$this->callLimit, $limit_text);
