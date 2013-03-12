@@ -5,14 +5,23 @@
 !function ($) {
 
   $(function(){
+    jQuery.fn.exists = function(){return this.length>0;}
 
-    $('#timepicker1').timepicker();
-    $('#timepicker2').timepicker();
+    if ( $('#timepicker1').exists()) {
+        $('#timepicker1').timepicker();
+    }
 
-    $('#begin_date').datepicker();    
+    if ( $('#timepicker2').exists()) {
+        $('#timepicker2').timepicker();
+    }
 
-    $('#end_date').datepicker();
+    if ( $('#begin_date').exists()) {
+        $('#begin_date').datepicker();    
+    }
 
+    if ( $('#end_date').exists()) {
+        $('#end_date').datepicker();
+    }
     $('tr[rel=tooltip]').tooltip()
 
     $('.tooltip-test').tooltip()
@@ -41,7 +50,15 @@
         e.preventDefault()
       })
 
-    $('fileupload').fileupload()
+    $("textarea[rel=popover]")
+      .popover()
+      .click(function(e) {
+        e.preventDefault()
+      })
+
+   if ($('fileupload').exists()){
+        $('fileupload').fileupload()
+   }
 
     if ( $('#download_password').exists()) {
         $('#download_password').click(function(){

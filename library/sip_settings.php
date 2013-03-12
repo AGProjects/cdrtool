@@ -5745,10 +5745,12 @@ class SipSettings {
             <div class='control-group odd'>
               <label class='control-label'>";
                 print _("IP Access List");
-                printf ("
+                print "
               </label>
               <div class=controls>
-                <textarea class=input-medium cols=60 rows=1 name=ip_access_list>%s</textarea>
+              <textarea class=input-medium rel=popover title data-original-title='ACL examples' data-trigger='focus' data-toggle=\"popover\" data-content=\"";
+                print _("A custom ACL can be set here. It will override tha global ACL if set.<br>Examples:<br><strong>0.0.0.0/0</strong><br> means any address can be used for the account<br><strong>1.2.3.4/32</strong><br> will limit the account to 1.2.3.4");
+                printf ("\" cols=60 rows=1 name=ip_access_list>%s</textarea>
               </div>
             </div>
             ",$this->ip_access_list);
