@@ -2875,13 +2875,11 @@ class SipSettings {
         if (in_array($os,$this->valid_os)) {
         	print "<tr><td>";
 
-            printf (_("Download and install <a href=http://icanblink.com target=blink>Blink</a> preconfigured with your SIP account:"));
-
-	        print "</td></tr>";
-
-        	print "<tr><td>";
+            printf (_("Download and install <a href=%s target=blink>%s</a> preconfigured with your SIP account:"), $this->blink_download_url, $this->show_download_tab);
+	    print "</td></tr>";
+            print "<tr><td>";
             printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
-            <param name='label_text' value='Download Blink'>
+            <param name='label_text' value='Download'>
             <param name='click_label_text' value='Downloading...'>
             <param name='download_url' value='%s'>
             <param name='file_name' value=''>
@@ -2897,25 +2895,26 @@ class SipSettings {
         	print "<tr><td>";
 
             print "<p>";
-            printf (_("To download Blink visit <a href='%s' target=blink>%s</a>"),'http://icanblink.com/download.phtml','http://icanblink.co/download.phtml');
+            printf (_("To download %s visit <a href='%s' target=blink>%s</a>"),$this->show_download_tab, $this->blink_download_url, $this->blink_download_url);
         	print "</td></tr>";
         }
 
         print "<tr><td>";
 
-        printf (_("If you have already installed Blink, you can configure it to use your SIP account:"));
+        printf (_("If you have already installed %s, you can configure it to use your SIP account:"), $this->show_download_tab);
 
         print "</td></tr>";
         print "<tr><td>";
 
         printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
-        <param name='label_text' value='Configure Blink with this account'> 
-        <param name='click_label_text' value='Please restart Blink now!'>
-        <param name='download_url' value=''> 
-        <param name='file_name' value=''> 
-        <param name='file_content' value='%s'> 
+        <param name='label_text' value='Configure this account'>
+        <param name='click_label_text' value='Please restart %s now!'>
+        <param name='download_url' value=''>
+        <param name='file_name' value=''>
+        <param name='file_content' value='%s'>
         </applet>",
         rand(),
+        $this->show_download_tab,
         urlencode(json_encode($_account))
         );
 
