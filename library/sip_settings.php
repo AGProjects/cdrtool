@@ -3324,14 +3324,17 @@ class SipSettings {
                 }
 
             } else if ($key=="free-pstn") {
-                print "<label class='checkbox inline' style=\"padding-top: 1px;\">
-                <input type='checkbox' value=1 class='inline' name=$key $checked_box[$key] $disabled_box>
-                ";
 
                 if ($this->pstn_changes_allowed) {
+                    print "<label class='checkbox inline' style=\"padding-top: 1px; line-height:14px\">
+                        <input type='checkbox' value=1 class='inline' name=$key $checked_box[$key] $disabled_box>
+                    ";
                     print "$elementComment";
                     print "</label> <input id='rpid_input'style='display:inline-block' class=input-medium type=text size=15 maxsize=15 name=rpid value=\"$this->rpid\">";
                 } else {
+                    print "<label class='checkbox inline' style=\"padding-top: 5px; line-height:14px\">
+                        <input type='checkbox' value=1 class='inline' name=$key $checked_box[$key] $disabled_box>
+                    ";
                     if ($this->rpid) {
                         print "$elementComment: $this->rpid </label>";
                     } else {
