@@ -1,3 +1,37 @@
+cdrtool (9.1) unstable; urgency=low
+
+  [ Web Interface ]
+
+  * Reworked network overview for MSP platform
+  * Fixed notification of missed calls
+  * Changed SIP login page to use bootstrap
+  * Fixed various minor layout issues
+  * Fixed login from sip accounts with encrypted passwords
+  * Fixed currency display
+  * Replaced date/time selection with date-/timepicker
+  * Added examples to ACL/Owner and PSTN call limit in sip settings page
+
+  [ Rating Engine ]
+
+  * Fixed import logic
+  * Added option to skip usage stats per datasource
+  * Improved logging
+  * Changed included radius config to use client generated
+    Event-Timestamp instead of radius server generated timestamp
+  * Fixed various queries for searching calls
+
+  [ NGNPro client ]
+
+  * Improved logging
+  * Updated DNS templates
+  * Added import/export for sip domains
+  * Added import/export for DNS zones
+  * Fixed sending multiple passwords reminders
+  * Fixed enrollment bugs
+  * Update example emails
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Fri, 15 Mar 2013 10:36:35 +0100
+
 cdrtool (9.0.1) unstable; urgency=low
 
   [ Rating Engine ]
