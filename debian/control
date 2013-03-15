@@ -2,6 +2,7 @@ Source: cdrtool
 Section: web
 Priority: optional
 Maintainer: Adrian Georgescu <ag@ag-projects.com>
+Uploaders: Tijmen de Mes <tijmen@ag-projects.com>
 Build-Depends-Indep: debhelper (>= 4.1.16)
 Standards-Version: 3.8.0
 
