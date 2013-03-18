@@ -15,7 +15,7 @@ class CDRTool_Session extends Session {
   var $allowcache_expires     = "5";
   var $lifetime       = 0;                 ## 0 = do session cookies, else minutes
   var $that_class     = "CDRTool_CT_Sql"; ## name of data storage container
-  var $gc_probability = 5;  
+  var $gc_probability = 5;
 }
 
 class CDRTool_User extends User {
@@ -29,7 +29,7 @@ class CDRTool_Auth extends Auth {
   var $lifetime       =  240;
   var $database_class = "DB_CDRTool";
   var $database_table = "auth_user";
-  
+
   function auth_loginform() {
     global $sess;
     global $_PHPLIB;
@@ -54,7 +54,7 @@ class CDRTool_Auth extends Auth {
 
     if ($this->db->num_rows()) {
         $this->db->next_record();
-    
+
         $spam_login_ip    = $this->db->f('ip');
         $spam_login_tries = $this->db->f('tries');
         $spam_login_stamp = $this->db->f('stamp');
@@ -100,12 +100,12 @@ class CDRTool_Auth extends Auth {
 
         }
 
-        $new_stamp=time();		
+        $new_stamp=time();
         $query=sprintf("update spam
         set tries = tries + 1
         where ip =  '%s' ",addslashes($_SERVER['REMOTE_ADDR']));
         $this->db->query($query);
-    
+
         print "
         <html>
         <body>
@@ -139,14 +139,14 @@ class CDRTool_Auth extends Auth {
     if(isset($username)) {
       $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
     }
-        
+
     $uid = false;
 
     if ($username) {
         $username=trim($username);
         if (preg_match ("/\@/",$username)) {
             $a=explode("@",$username);
-        
+
             $domainAuth = new DomainAuthLocal();
 
             $ret=$domainAuth->validate($a[0],$a[1],$password,$response);
@@ -166,7 +166,7 @@ class CDRTool_Auth extends Auth {
             }
 
             return $ret[0];
-            
+
         } else {
             $query = sprintf("select * from auth_user where username = '%s' and expire > NOW()", addslashes($username));
             $this->db->query($query);
@@ -183,7 +183,7 @@ class CDRTool_Auth extends Auth {
                     print "<p>Sending OneTimePassword ";
                     $random_otp=random_passwd_gen();
                     $expire_otp= date("Y-m-d H:i:s", mktime(date("H"),date("i")+$interval,0,date("m") ,date("d"),date("Y")));
-        
+
                     $update=sprintf("update auth_user set otp_passwd='%s', otp_expire = '%s' where username = '%s'",
                     addslashes($random_otp),
                     addslashes($expire_otp),
@@ -216,13 +216,13 @@ class CDRTool_Auth extends Auth {
             "       and expire > NOW()    " ,
             addslashes($this->database_table),
             addslashes($username)));
-        
+
             $this->db->next_record();
             $uid   		        = $this->db->f("user_id");
             $perm  		        = $this->db->f("perms");
             if ($CDRTool['provider']['clear_text_passwords']!=1) {
 
-                // Update hashed pass if none set and we need hashed ones 
+                // Update hashed pass if none set and we need hashed ones
                 if ( $this->db->f("password_hashed") == '' && $this->db->f("password") != '') {
                     $newpassmd5=md5($this->db->f("password"));
                     $this->db->query(sprintf(
@@ -281,7 +281,7 @@ class CDRTool_Auth extends Auth {
             }
 
             $CDRTool['impersonate'] = $this->db->f('impersonate');
-            
+
             if ($this->db->f('afterDateFilter') && $this->db->f('afterDateFilter') != "0000-00-00") {
             	$CDRTool['filter']['after_date']=$this->db->f('afterDateFilter');
             }
@@ -289,29 +289,29 @@ class CDRTool_Auth extends Auth {
 			if ($CDRTool['filter']['customer']) {
                 // get soap credentials from NGNPro database
                 global $soapEngines ;
-    
+
                 require_once('SOAP/Client.php');
                 require("/etc/cdrtool/ngnpro_engines.inc");
                 require_once("ngnpro_soap_library.php");
-        
+
                 $this->SOAPlogin=array(
                                        "username" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['username'],
                                        "password" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['password'],
                                        "admin"    => true
                 );
-        
+
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
-        
+
                 $this->CustomerPort  = new WebService_NGNPro_CustomerPort($soapEngines[$CDRTool['ngnpro_reseller_engine']]['url']);
                 $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
                 $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-    
+
                 $filter  = array('customer' => intval($CDRTool['filter']['customer']));
                 $range   = array('start' => 0,'count' => 1);
                 $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
                 $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
-        
+
                 // Call function
                 $this->CustomerPort->addHeader($this->SoapAuth);
                 $result     = $this->CustomerPort->getCustomers($Query);
@@ -330,7 +330,7 @@ class CDRTool_Auth extends Auth {
                             $range   = array('start' => 0,'count' => 1);
                             $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
                             $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
-                    
+
                             // Call function
 			                $this->CustomerPort->addHeader($this->SoapAuth);
                             $result     = $this->CustomerPort->getCustomers($Query);
@@ -361,7 +361,7 @@ class CDRTool_Auth extends Auth {
 
             $expected_response = md5("$username:$pass_md5:$challenge");
             $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
-        
+
             ## True when JS is disabled
             if ($response == "") {
                 if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
@@ -452,7 +452,7 @@ class SIP_Subscriber_Auth extends Auth {
 
     include("sip_login.phtml");
   }
-  
+
   function auth_validatelogin() {
         global $SIP;
 
@@ -550,7 +550,7 @@ class SIP_Subscriber_Auth extends Auth {
 function otp_sms($tel,$message,$hideoutput) {
     $tel=preg_replace("/[^0-9]/","",$tel);
     $tel="+".$tel;
-    
+
     $message=substr($message,0,135);
 
     if (!$tel || !$message) return 0;
@@ -579,13 +579,13 @@ function random_passwd_gen() {
                "n","p","r","s","t","w",
                "x","y","1","2","3","4",
                "5","6","7","8","9");
-    
+
     while($i < 5) {
         srand((double)microtime()*1000000);
         $randval = rand(0,28);
         $random_otp="$random_otp"."$alf[$randval]";
         $i++;
-    }	      
+    }
     return $random_otp;
 }
 
@@ -635,7 +635,7 @@ class OpenSIPS_DomainAuth {
                   addslashes($password),
                   addslashes($ha1)
                   );
-    
+
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
             $uid = $this->userDB->f('username');
@@ -661,7 +661,7 @@ class SipThor_DomainAuth {
                   addslashes($user),
                   addslashes($domain)
                   );
-        
+
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
 
@@ -697,24 +697,24 @@ class pageLayout {
 
         global $username, $otp_error, $CDRTool;
         $auth=$parentAuth;
-        
+
         print "
         <script language=javascript src=md5.js></script>
         <script language=javascript>
-        
+
           function doChallengeResponse() {
             str = document.login.username.value + \":\" +
                   MD5(document.login.password.value) + \":\" +
                   document.login.challenge.value;
-        
+
             document.login.response.value = MD5(str);
             document.login.password.value = \"\";
             document.login.submit();
           }
-        
+
         </script>
         ";
-        
+
         $url=$auth->url();
         print "
             <div id=wrapper2>
@@ -737,7 +737,7 @@ class pageLayout {
         } else {
             $sampleLoginDomain="sip2sip.info";
         }
-        
+
         $web_username=$auth->auth["uname"];
         print "
         <div class=control-group>
@@ -745,9 +745,9 @@ class pageLayout {
             Username
             </label>
             <div class=controls>
-            <input rel='popover' 
+            <input rel='popover'
             placeholder='Please identify yourself'
-            data-original-title='User name types supported' 
+            data-original-title='User name types supported'
             data-content='        <ul>
         <li>Subscriber account<br>(e.g. $sampleLoginSubscriber)</li>
         <li>Domain account<br>(e.g. $sampleLoginDomain)</li>
@@ -778,7 +778,7 @@ class pageLayout {
                    $otp_error
                   </p>
                 ";
-                
+
                 $spam=new DB_CDRTool;
 
                 $query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER[REMOTE_ADDR]));
@@ -793,13 +793,13 @@ class pageLayout {
                     tries = tries +1 where ip = '%s'", addslashes($_SERVER[REMOTE_ADDR]));
                 }
                 $spam->query($query);
-            
+
             } else {
                 print "Please fill in your One Time Password!";
             }
         }
 
-        
+
         print "
             <div class='well well-small'>
             <div class=row-fluid>
@@ -816,7 +816,7 @@ class pageLayout {
         </div></div></div>
         </div>
         ";
-        
+
         print "<input type=\"hidden\" name=\"response\"  value=\"\">";
         print "<input type=\"hidden\" name=\"challenge\" value=\"$challenge\">";
         print "
@@ -833,10 +833,10 @@ class pageLayout {
         </script>
         ";
     }
- 
+
     function showHeader($title='') {
     }
- 
+
     function showTopMenu($title='') {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
         $version=trim(file_get_contents('version'));
@@ -850,10 +850,10 @@ class pageLayout {
                         <span class="icon-bar"></span>
                    </a>
                         ';
-        
+
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=$CDRTool['provider']['timezone'];
-        
+
         if (is_readable($CDRTool['Path']."/images/logo.gif")) {
             printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
         } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
@@ -884,7 +884,7 @@ class pageLayout {
             <div class="nav-collapse">
                 <ul class="nav">';
 
-        if ($perm->have_perm("callsearch")) {  
+        if ($perm->have_perm("callsearch")) {
             print "
                     <li><a href=callsearch.phtml>CDR</a></li>";
         }
@@ -906,7 +906,7 @@ class pageLayout {
             print "
                     <li><a href=sip_usage.phtml>Usage</a></li>";
         }
-        
+
         if ($perm->have_perm("admin")) {
             print "<li><a href=mysql_replication_status.phtml>Replication</a></li>";
         }
@@ -914,7 +914,7 @@ class pageLayout {
         if ($perm->have_perm("provisioning")) {
             print "<li><a href=provisioning.phtml>Provisioning</a></li>";
         }
-        
+
         print "<li><a href=accounts.phtml>Accounts</a></li>";
         print "<li><a href=log.phtml>Logs</a></li>";
         print '
@@ -960,19 +960,19 @@ class pageLayout {
         //     print "<td align=right>";
         //     print "</td></tr>
         //     </table>
-        //     "; 
-        
+        //     ";
+
         // print "<table width=100%>
         // <tr>
         // <td align=left>
         // <table border=0 width=100%>
         // <tr>
-        // "; 
+        // ";
 
-        // if ($perm->have_perm("callsearch")) {  
+        // if ($perm->have_perm("callsearch")) {
         //     print " <td class=tab><a href=callsearch.phtml>CDRs</a></td> ";
         // }
-        
+
         // if ($perm->have_perm("rates")) {
         //     print " <td class=tab><a href=rating_tables.phtml>Rating</a></td>";
         //     print " <td class=tab><a href=rating_tables.phtml?table=prepaid>Prepaid</a></td>";
@@ -984,7 +984,7 @@ class pageLayout {
         //     print " <td class=tab><a href=media_sessions.phtml>Sessions</a></td>";
         //     print " <td class=tab><a href=status/usage/index.phtml target=usage>Usage</a></td>";
         // }
-        
+
         // if ($perm->have_perm("admin")) {
         //     print " <td class=tab><a href=mysql_replication_status.phtml>Replication</a></td>";
         // }
@@ -992,10 +992,10 @@ class pageLayout {
         // if ($perm->have_perm("provisioning")) {
         //     print " <td class=tab><a href=provisioning.phtml>Provisioning</a></td>";
         // }
-        
+
         // print " <td class=tab><a href=accounts.phtml>Accounts</a></td>";
         // print " <td class=tab><a href=log.phtml>Logs</a></td>";
-        
+
         // $now_print=Date("Y-m-d H:i:s",time());
         // $tz=$CDRTool['provider']['timezone'];
         // //print " <td>$now_print | <a href=doc/changelog target=changelog>v. $version</a></td>";
@@ -1019,7 +1019,7 @@ class pageLayout {
 
     function showTopMenuSubscriber($title="") {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-    
+
         $version=trim(file_get_contents(version));
         print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
         <tr>
@@ -1061,12 +1061,12 @@ class pageLayout {
         <p>
         ";
     }
- 
+
     function showLegalNotice () {
         global $loginname, $CDRTool;
- 
+
         $CDRTool_company=$CDRTool[provider][name];
- 
+
         $legalNotice="Legal Notice".
         "\n\n".
         "This software is intended for the use of $CDRTool_company, ".
@@ -1117,8 +1117,8 @@ class pageLayout {
         </form>
         </div>
         ";
-    }   
- 
+    }
+
     function showFooter() {
         global $CDRTool;
         if (!$CDRTool['filter']['aNumber'] && !$this->hasAGProjectslogo) {
@@ -1145,7 +1145,7 @@ class pageLayout {
          <h1>Logout</h1>
          <p>
          You have been logged in as $loginname.</b>
-         <p> 
+         <p>
          You have been logged out.
        <br>
        <br>
@@ -1166,7 +1166,7 @@ function changeLanguage($lang='en',$domain='cdrtool') {
 
     $lang = languageCodeFor(isset($lang) ? $lang : 'en');
     $lang.='.utf8';
-    setlocale(LC_ALL, $lang); 
+    setlocale(LC_ALL, $lang);
     bindtextdomain($domain, '/var/www/CDRTool/po/locale');
     bind_textdomain_codeset($domain,'UTF-8');
     textdomain($domain);
@@ -1200,18 +1200,18 @@ function RandomString($len=11) {
 }
 
 function RandomNumber($len=5,$skipzero=false) {
-	
+
     $alf=array("1","2","3","4","5",
                "9","8","7","6");
     if (!$skipzero) $alf[]="0";
-    
+
     $i=0;
     while($i < $len) {
         srand((double)microtime()*1000000);
         $randval = rand(0,9);
         $string="$string"."$alf[$randval]";
         $i++;
-    }          
+    }
     return $string;
 }
 
@@ -1226,14 +1226,14 @@ function sec2hms ($duration) {
     $duration_print="";
 
     $duration_hour=floor($sum1/3600);
-    
+
     if ($duration_hour > 0) {
         $sum1=$sum1-($duration_hour*3600);
         $duration_print="$duration_hour:";
     }
-    
+
     $duration_min=floor($sum1/60);
-    
+
     if ($duration_min > 0) {
         $sum1=$sum1-($duration_min*60);
         if ($duration_min < 10) {
@@ -1248,9 +1248,9 @@ function sec2hms ($duration) {
         $duration_sec="0"."$sum1";
     } else {
         $duration_sec=$sum1;
-    } 
-    
-    $duration_print="$duration_print"."$duration_sec";		
+    }
+
+    $duration_print="$duration_print"."$duration_sec";
     return $duration_print;
 }
 
@@ -1260,12 +1260,12 @@ function get_location($ip) {
     $geo_location['city'] = '' ;
     $geo_location['code'] = '';
     $geo_location['region'] = '';
-    
+
     if ($_loc=geoip_record_by_name($ip)) {
         if ($_loc['city']) {
-            $geo_location['city'] = $_loc['city']; 
-        }    
-        $geo_location['country'] = $_loc['country_name']; 
+            $geo_location['city'] = $_loc['city'];
+        }
+        $geo_location['country'] = $_loc['country_name'];
         $geo_location['code']    = $_loc['country_code'];
         $geo_location['region']  = $_loc['region'];
     }
