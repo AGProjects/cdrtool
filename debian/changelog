@@ -1,3 +1,11 @@
+cdrtool (9.1.1) unstable; urgency=low
+
+  [ Web Interface ] 
+
+  * Updated subscriber CDR view to bootstrap
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Mon, 18 Mar 2013 11:43:33 +0100
+
 cdrtool (9.1) unstable; urgency=low
 
   [ Web Interface ]
