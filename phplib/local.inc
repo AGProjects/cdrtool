@@ -1021,45 +1021,63 @@ class pageLayout {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
 
         $version=trim(file_get_contents(version));
-        print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>
-        <tr>
-        <td>
-            <table width=100%>
-            </tr>
-            <td>";
-            print "<h1>$title";
-            print " ";
-            print $DATASOURCES[$cdr_source]['name'];
-            print "</h1><p>";
-            print "<td align=right>";
-            print "</td></tr>
-            </table>
-            "; 
-        
-        print "<table width=100%>
-        <tr>
-        <td align=left>
-        "; 
-        if ($perm->have_perm("callsearch")) {  
-            print " <a href=callsearch.phtml>Call detail records</a>";
-        } 
-        
+
         $now_print=Date("Y-m-d H:i:s",time());
         $tz=getenv('TZ');
-        print " | $now_print ($tz) | v. $version";
-        print "
-        </td>
-        <td align=right>
-        ";
-        printf ("<a href=logout.phtml target=_top><b>Logout %s</b></a>",$CDRTool['loginName']);
-        print "
-        </tr>
-        </table>
-        </td>
-        </tr>
-        </table>
-        <p>
-        ";
+
+        print '
+        <div class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                   </a>
+                        ';
+        print "<a class=\"brand\" href=http://cdrtool.ag-projects.com target=agprojects>CDRTool</a>";
+
+        print'
+            <div id="menu" class="btn-group pull-right">
+                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+                    <i class="icon-user"></i> ';
+        print $CDRTool['loginName'];
+        print '
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                <li>
+                    <a style="font-size: 11px" href="http://cdrtool.ag-projects.com" target=changelog>About v. ';
+        print "$version";
+        print '     </a></li>
+                    <li class="divider"></li>
+                    <li><a href=logout.phtml target=_top>Logout</a></li>
+                </ul>
+            </div>
+            <div class="nav-collapse">
+                <ul class="nav">';
+
+        if ($perm->have_perm("callsearch")) {
+            print "
+                    <li><a href=callsearch.phtml>Call cetail records</a></li>";
+        }
+
+        print '
+                </ul>
+              </div><!--/.nav-collapse -->
+            </div>
+          </div>
+        </div>';
+
+
+        print "<div class='container-fluid' ><div class='main'>";
+        print "<div class=\"page-header\">";
+        print "<h1>";
+        print "$title";
+        print $DATASOURCES[$cdr_source]['name'];
+        print "</h1></div>";
+
+
     }
 
     function showLegalNotice () {

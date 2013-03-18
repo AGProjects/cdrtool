@@ -975,7 +975,7 @@ class CDRS_opensips extends CDRS {
         $this->f->start("","POST","","","datasource");
 
         print "
-        <table cellpadding=5 CELLSPACING=0 border=6 width=100% align=center>
+        <table id='search' class='table table-bordered table-condensed' cellpadding=5 width=100% align=center>
         ";
         $this->showDataSources ($this->f);
         $this->showDateTimeElements ($this->f);
