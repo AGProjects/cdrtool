@@ -1059,7 +1059,7 @@ class pageLayout {
 
         if ($perm->have_perm("callsearch")) {
             print "
-                    <li><a href=callsearch.phtml>Call cetail records</a></li>";
+                    <li><a href=callsearch.phtml>Call detail records</a></li>";
         }
 
         print '
