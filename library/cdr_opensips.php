@@ -4642,38 +4642,38 @@ class SIP_trace {
         <div class=span9>
         <form class=form-inline method=post name=visibility>
         ";
-        if ($this->isAuthorized) {
-            $key="callid-".trim($callid).trim($fromtag);
+        // if ($this->isAuthorized) {
+        //     $key="callid-".trim($callid).trim($fromtag);
 
-            $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
-            $this->cdrtool->query($query);
+        //     $query=sprintf("select * from memcache where `key` = '%s'",addslashes($key));
+        //     $this->cdrtool->query($query);
 
             $basicURL = $protocolURL.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
 
-            if ($this->cdrtool->num_rows()) {
-                $selected_toggleVisibility['public']="selected";
-                $fullURL=$basicURL."&public=1";
-                $color2="lightblue";
-            } else {
-                $selected_toggleVisibility['private']="selected";
-                $fullURL=$basicURL;
-            }
+        //     if ($this->cdrtool->num_rows()) {
+        //         $selected_toggleVisibility['public']="selected";
+        //         $fullURL=$basicURL."&public=1";
+        //         $color2="lightblue";
+        //     } else {
+        //         $selected_toggleVisibility['private']="selected";
+                 $fullURL=$basicURL;
+        //     }
 
-            print "
+        //     print "
 
-            This SIP trace is visible
+        //     This SIP trace is visible
 
-            <select class=span3 name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
-            <option $selected_toggleVisibility[public] value=1>without authorization
-            <option $selected_toggleVisibility[private] value=0>only to authorized users
-            </select>
-            <input type=hidden name=action value=toggleVisibility>
-            ";
+        //     <select class=span3 name=toggleVisibility onChange=\"document.visibility.submit.disabled = true; location.href = '$basicURL&action=toggleVisibility&toggleVisibility=' + this.options[this.selectedIndex].value\">
+        //     <option $selected_toggleVisibility[public] value=1>without authorization
+        //     <option $selected_toggleVisibility[private] value=0>only to authorized users
+        //     </select>
+        //     <input type=hidden name=action value=toggleVisibility>
+        //     ";
             
             print "URLs for this trace: <a href=$fullURL>HTML</a> | <a href=$fullURL&format=text>TEXT</a></td>";
-        } else {
-            print "";
-        }
+        //} else {
+        //    print "";
+        //}
 
         if ($this->mediaTrace) {
             $this->mediaTraceLink=sprintf("<p class=pull-right><a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'mediatrace',
