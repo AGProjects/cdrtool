@@ -2963,7 +2963,7 @@ class SipSettings {
                 }
             }
         }
-        if ($_account['password']=='' && $store_clear_text_passwords=='false') {
+        if ($_account['password']=='' && $this->store_clear_text_passwords=='false') {
             print "<script language=\"javascript\" src=\"md5.js\"></script>";
             print "<form id='password_download' class='form-horizontal' action=''><p>";
             print _("Please enter your SIP account password: ");
