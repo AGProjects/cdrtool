@@ -16,29 +16,29 @@
     }
 
     if ( $('#begin_date').exists()) {
-        $('#begin_date').datepicker();    
+        $('#begin_date').datepicker();
     }
 
     if ( $('#end_date').exists()) {
         $('#end_date').datepicker();
     }
-    $('tr[rel=tooltip]').tooltip()
+    $('tr[rel=tooltip]').tooltip();
 
-    $('.tooltip-test').tooltip()
-    $('.popover-test').popover()
+    $('.tooltip-test').tooltip();
+    $('.popover-test').popover();
 
     // popover demo
     $("select[rel=popover]")
       .popover()
       .click(function(e) {
-        e.preventDefault()
-      })
+        e.preventDefault();
+      });
 
     $("a[rel=popover]")
       .popover()
       .click(function(e) {
-        e.preventDefault()
-      })
+        e.preventDefault();
+      });
 
 
    $("button[rel=popover]")
@@ -47,14 +47,14 @@
     $("input[rel=popover]")
       .popover()
       .click(function(e) {
-        e.preventDefault()
-      })
+        e.preventDefault();
+      });
 
     $("textarea[rel=popover]")
       .popover()
       .click(function(e) {
-        e.preventDefault()
-      })
+        e.preventDefault();
+      });
 
    if ($('fileupload').exists()){
         $('fileupload').fileupload();
