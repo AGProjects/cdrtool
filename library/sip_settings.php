@@ -2656,7 +2656,7 @@ class SipSettings {
 
     function showDownloadTab() {
 
-        $chapter=sprintf(_("SIP Client"));
+        $chapter=sprintf(_("SIP Client download"));
         $this->showChapter($chapter);
 
         print "
@@ -2963,14 +2963,36 @@ class SipSettings {
                 }
             }
         }
+        if ($_account['password']=='' && $store_clear_text_passwords=='false') {
+            print "<script language=\"javascript\" src=\"md5.js\"></script>";
+            print "<form id='password_download' class='form-horizontal' action=''><p>";
+            print _("Please enter your SIP account password: ");
+            print "</p><div id='pass_group' class=control-group>";
+            print "<label class=control-label>";
+            print _("Password");
+            print "</label>";
+            print "<div id='controls_password' class=controls>";
+            print "<input class='input' type='password' id='password' name='password' placeholder='";
+            print _("Enter your password");
+            print "''>";
+            print "</div></div>";
+            print "<input type='hidden' id='ha1' value='".$this->result->ha1."'>";
+            print "<input type='hidden' id='ha1b' value='".$this->result->ha1b."'>";
+            print "<input type='hidden' id='username' value='".$this->result->id->username."'>";
+            print "<input type='hidden' id='domain' value='".$this->result->id->domain."'>";
+            print "<div class='form-actions'>";
+            print "<button id='download_password' class='btn btn-primary'>Continue</button>";
+            print "</div></form>";
+            $class='hide';
+        }
 
-        print "<table border=0>";
+        print "<div class=$class id='java_buttons'><table border=0>";
 
         if (in_array($os,$this->valid_os)) {
-        	print "<tr><td>";
+            print "<tr><td>";
 
             printf (_("Download and install <a href=%s target=blink>%s</a> preconfigured with your SIP account:"), $this->blink_download_url, $this->show_download_tab);
-	    print "</td></tr>";
+            print "</td></tr>";
             print "<tr><td>";
             printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
             <param name='label_text' value='Download'>
@@ -2981,7 +3003,7 @@ class SipSettings {
             </applet>",
             rand(),
             $this->blink_download_url,
-            urlencode(json_encode($_account))
+            rawurlencode(json_encode($_account))
             );
         	print "</td></tr>";
 
@@ -3018,6 +3040,7 @@ class SipSettings {
         print "<p>";
         printf ("Notes. ");
         print _("<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime Environment</a> (JRE) must be activated in the web browser. ");
+        print "</div>";
     }
 
     function showFooter() {
