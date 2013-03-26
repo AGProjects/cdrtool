@@ -57,7 +57,7 @@
       })
 
    if ($('fileupload').exists()){
-        $('fileupload').fileupload()
+        $('fileupload').fileupload();
    }
 
     if ( $('#download_password').exists()) {
@@ -72,23 +72,16 @@
                 password;
 
             var ha_calc = MD5(str);
-            //console.log(username+" "+ha1+" "+ha_calc);
 
             if (ha1 === ha_calc) {
                 $('#java_buttons').removeClass('hide');
                 $('#password_download').addClass('hide');
-                console.log($('[name=file_content]').val());
                 var content = decodeURIComponent($('[name=file_content]').val());
-                //content = decodeURIComponent(content);
-                console.log(content);
                 var obj= $.parseJSON(content);
                 obj.password=password;
-                console.log(obj);
                 var new_content= JSON.stringify(obj);
-                console.log(new_content);
                 new_content= encodeURIComponent(new_content);
                 $('[name=file_content]').val(new_content);
-                console.log(new_content);
             } else {
                 $('#pass_group').addClass('error');
                 $('#help-text').remove();
