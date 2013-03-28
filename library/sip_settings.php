@@ -2963,27 +2963,46 @@ class SipSettings {
                 }
             }
         }
-        if ($_account['password']=='' && $this->store_clear_text_passwords=='false') {
-            print "<script language=\"javascript\" src=\"md5.js\"></script>";
-            print "<form id='password_download' class='form-horizontal' action=''><p>";
-            print _("Please enter your SIP account password: ");
-            print "</p><div id='pass_group' class=control-group>";
-            print "<label class=control-label>";
-            print _("Password");
-            print "</label>";
-            print "<div id='controls_password' class=controls>";
-            print "<input class='input' type='password' id='password' name='password' placeholder='";
-            print _("Enter your password");
-            print "''>";
-            print "</div></div>";
-            print "<input type='hidden' id='ha1' value='".$this->result->ha1."'>";
-            print "<input type='hidden' id='ha1b' value='".$this->result->ha1b."'>";
-            print "<input type='hidden' id='username' value='".$this->result->id->username."'>";
-            print "<input type='hidden' id='domain' value='".$this->result->id->domain."'>";
-            print "<div class='form-actions'>";
-            print "<button id='download_password' class='btn btn-primary'>Continue</button>";
-            print "</div></form>";
-            $class='hide';
+
+        if ($this->store_clear_text_passwords=='false') {
+                $match_password=false;
+
+                if ($_REQUEST['password']) {
+                    $str=$this->result->id->username.":".$this->result->id->domain.":".$_REQUEST['password'];
+                    if (md5($str) == $this->result->ha1) {
+                        $_account['password']=$_REQUEST['password'];
+                        $match_password=true;
+                    }
+                }
+
+                if (!$match_password){
+                    print "<form method='POST' id='password_download' class='form-horizontal' action='$this->url'><p>";
+                    print _("Please enter your SIP account password: ");
+                    if ($_REQUEST['password'] || $_REQUEST['continue']) {
+                        print "</p><div id='pass_group' class='control-group error'>";
+                    } else {
+                        print "</p><div id='pass_group' class=control-group>";
+                    }
+                    print "<label class=control-label>";
+                    print _("Password");
+                    print "</label>";
+                    print "<div id='controls_password' class=controls>";
+                    print "<input class='input' type='password' id='password' name='password' placeholder='";
+                    print _("Enter your password");
+                    print "'' value='";
+                    print $_REQUEST['password'];
+                    print "'>";
+                    if ($_REQUEST['password'] || $_REQUEST['continue']) {
+                        print "<span id=\"help-text\" class=\"help-inline\">Entered password does not match your account</span>";
+                    }
+                    print "</div></div>";
+                    print "<input type='hidden' name='tab' value='download'>";
+                    print "<div class='form-actions'>";
+                    print "<input type=submit value='Continue' class='btn btn-primary'>";
+                    print "<input type='hidden' name='continue' value='1'>";
+                    print "</div></form>";
+                    $class='hide';
+                }
         }
 
         print "<div class=$class id='java_buttons'><table border=0>";

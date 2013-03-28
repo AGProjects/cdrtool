@@ -60,37 +60,37 @@
         $('fileupload').fileupload();
    }
 
-    if ( $('#download_password').exists()) {
-        $('#download_password').click(function(){
-            var password = $('#password').val();
-            var ha1 = $('#ha1').val();
-            var ha1b = $('#ha1b').val();
-            var username = $('#username').val();
-            var domain = $('#domain').val();
-            var str = username + ":"+
-                domain + ":" +
-                password;
+    // if ( $('#download_password').exists()) {
+    //     $('#download_password').click(function(){
+    //         var password = $('#password').val();
+    //         var ha1 = $('#ha1').val();
+    //         var ha1b = $('#ha1b').val();
+    //         var username = $('#username').val();
+    //         var domain = $('#domain').val();
+    //         var str = username + ":"+
+    //             domain + ":" +
+    //             password;
 
-            var ha_calc = MD5(str);
+    //         var ha_calc = MD5(str);
 
-            if (ha1 === ha_calc) {
-                $('#java_buttons').removeClass('hide');
-                $('#password_download').addClass('hide');
-                var content = decodeURIComponent($('[name=file_content]').val());
-                var obj= $.parseJSON(content);
-                obj.password=password;
-                var new_content= JSON.stringify(obj);
-                new_content= encodeURIComponent(new_content);
-                $('[name=file_content]').val(new_content);
-            } else {
-                $('#pass_group').addClass('error');
-                $('#help-text').remove();
-                $('#controls_password').append('<span id="help-text" class="help-inline">Entered password does not match your account</span>');
-            }
+    //         if (ha1 === ha_calc) {
+    //             $('#java_buttons').removeClass('hide');
+    //             $('#password_download').addClass('hide');
+    //             var content = decodeURIComponent($('[name=file_content]').val());
+    //             var obj= $.parseJSON(content);
+    //             obj.password=password;
+    //             var new_content= JSON.stringify(obj);
+    //             new_content= encodeURIComponent(new_content);
+    //             $('[name=file_content]').val(new_content);
+    //         } else {
+    //             $('#pass_group').addClass('error');
+    //             $('#help-text').remove();
+    //             $('#controls_password').append('<span id="help-text" class="help-inline">Entered password does not match your account</span>');
+    //         }
 
-            return false;
-        });
-    }
+    //         return false;
+    //     });
+    // }
 
     // request built javascript
     $('.download-btn').on('click', function () {
