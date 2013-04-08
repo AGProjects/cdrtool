@@ -1500,6 +1500,7 @@ class CDRS_opensips extends CDRS {
                         $this->NormalizeCDRS($where,$cdr_table);
                         if (!$this->export && $this->status['normalized'] ) {
                             print "<div class=\"alert alert-info\">";
+                            print "<i class='icon-info-sign'></i> ";
                             printf ("<b><span class=\"alert-heading\">%d</span></b> CDRs normalized. ",$this->status['normalized']);
                             if ($this->status['cached_keys']['saved_keys']) {
                                 printf ("Quota usage updated for <b><span class=\"alert-heading\">%d</span></b> accounts. ",$this->status['cached_keys']['saved_keys']);
