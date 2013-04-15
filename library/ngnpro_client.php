@@ -3330,18 +3330,174 @@ class SipAccounts extends Records {
 
     }
 
-    function getAccountsForPasswordReminder($maximum_accounts=5) {
+    function showPasswordReminderUpdateFormEncrypted($id, $account) {
 
-		$accounts=array();
+        if ($account) {
+            printf ("
+            <div class=row-fluid><div id='wrapper2'><div class=\"page-header\"><h2>");
 
-    	$filter  = array('email' => $this->filters['email']);
+            print _("Update passwords");
+            print "<small>";
+            print " (for ";
+            print $account;
+            print ")</small></h2></div><div class=row-fluid>";
 
-		if ($_REQUEST['sip_filter']) {
+            print _("<p>Please choose new passwords for your account, if you leave them empty no change will be performed</p>");
+
+            print "</div><div>";
+            print "<form class='form-horizontal' method=post>";
+            print "<div class=control-group>";
+            print "<label class=control-label>";
+            print _("SIP Account Password");
+            print "</label>";
+            print "<div class=controls><div class='input-prepend'>";
+            print "<span class=\"add-on\"><i class=\"icon-key\"></i></span>";
+            print "<input size=35 name='sip_password' type='password' value=''>";
+            print "</div></div></div>";
+
+            print "<div class=control-group>";
+            print "<label class=control-label>";
+            print _("Web Password");
+            print "</label>";
+            print "<div class='controls'><div class='input-prepend'>";
+            print "<span class=\"add-on\"><i class=\"icon-key\"></i></span>";
+            print "<input rel='popover' title='' data-original-title='Web password' data-trigger='focus' data-toggle='popover' data-content='";
+            print _("<strong>Optional</strong> password to allow access to the SIP settings page");
+            print "'type=text size=35 name='web_password' type='password' value=''>";
+            print "</div></div></div>";
+            print "  <div class=\"control-group\"><div class=\"controls\">";
+            printf ("
+                <button class='btn btn-primary' type=submit>Submit</button></div></div>
+            </form></div>
+            ");
+        }
+    }
+
+    function showPasswordReminderFormEncrypted($accounts=array()) {
+        printf ("
+        <div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>");
+
+        print _("Login account reminder/Password Reset");
+        print "</h2></div><div class=row-fluid>
+            <form class='form-reminder' method=post>";
+
+        //print _("<p>Please fill in the SIP account and e-mail address used during the registration of the SIP account to receive a login reminder and a possiblity to reset your passwords.</p>");
+
+        if (count($accounts) < 1 && $_REQUEST['sip_filter'] && $_REQUEST['email_filter']) {
+            printf ("
+                <div class=\"alert alert-error\"><strong>");
+            print _("Error");
+            print "</strong><br /> ";
+            print _("The email adress does not match email address in the SIP account, or the SIP account does not exist.");
+            print "<br/>";
+            print _("An email has not been sent.");
+            print "</div>";
+        } else if(count($accounts) < 1 && $_REQUEST['email_filter']) {
+            printf ("
+                <div class=\"alert alert-error\"><strong>");
+            print _("Error");
+            print "</strong>: ";
+            print _("The email adress does not match the email address in any SIP account.");
+            print "<br/>";
+            print _("An email has not been sent.");
+            print "</div>";
+        }
+        print "
+            <input rel='popover' title='' data-original-title='SIP Account' data-trigger='focus' data-toggle='popover' data-content='";
+        print _("If known, please fill in the SIP account name to receive a password reminder");
+        printf ("' type=text size=35 class='input-block-level' name='sip_filter' value='%s' placeholder='",
+            $_REQUEST['sip_filter']);
+        print _("SIP Account");
+        print "'>";
+        print "<input rel='popover' title='' data-original-title='Email address' data-trigger='focus' data-toggle='popover' data-content='";
+        print _("Please fill in the e-mail address used during the registration of the SIP account ");
+        printf ("' type=text size=35 name='email_filter' class='input-block-level' value='%s' placeholder='",
+        $this->filters['email']);
+        print _("Email address");
+        print "'>";
+        print "<input type='hidden' name='password_reset' value='on'>";
+        printf ("
+            <button id='submit' class='btn btn-primary btn-large btn-block' type=submit>Submit</button>
+        </form></div>
+        ");
+
+        if(count($accounts) < 1 && $_REQUEST['sip_filter']) {
+            print "<script type=\"text/javascript\">
+            //$(document).ready(function () {
+                $('[name=email_filter]').focus();
+                $('[name=email_filter]').popover('show');
+                //console.log($('[name=email_filter]').val);
+            //}
+            </script>";
+        }
+
+    }
+
+    function getAccountsForPasswordReminderEncrypted($maximum_accounts=5) {
+
+        $accounts=array();
+
+        //$filter  = array('email' => $this->filters['email']);
+
+        if ($_REQUEST['sip_filter']) {
             list($username,$domain)=explode('@',trim($_REQUEST['sip_filter']));
             if ($username && $domain) {
-    			$filter  = array('username' => $username,
-                                 'domain'   => $domain
+                $filter  = array('username' => $username,
+                                 'domain'   => $domain,
+                                 'email' => $this->filters['email']
                                  );
+            }
+        } else {
+            $filter  = array('email' => $this->filters['email']);
+        }
+
+        $range   = array('start' => 0,
+                         'count' => $maximum_accounts);
+
+        $orderBy = array('attribute' => 'changeDate',
+                         'direction' => 'DESC');
+
+        $Query   = array('filter'  => $filter,
+                         'orderBy' => $orderBy,
+                         'range'   => $range);
+
+        $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $result  = $this->SoapEngine->soapclient->getAccounts($Query);
+
+        if (PEAR::isError($result)) {
+            $error_msg  = $result->getMessage();
+            $error_fault= $result->getFault();
+            $error_code = $result->getCode();
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            syslog(LOG_NOTICE, $log);
+        } else {
+            $i=0;
+
+            while ($i < $result->total)  {
+                if (!$result->accounts[$i]) break;
+                $account = $result->accounts[$i];
+                $accounts[]=array('username'=> $account->id->username,
+                                  'domain'  => $account->id->domain
+                                  );
+                $i++;
+            }
+        }
+
+        return $accounts;
+    }
+
+    function getAccountsForPasswordReminder($maximum_accounts=5) {
+
+        $accounts=array();
+
+        $filter  = array('email' => $this->filters['email']);
+
+        if ($_REQUEST['sip_filter']) {
+            list($username,$domain)=explode('@',trim($_REQUEST['sip_filter']));
+            if ($username && $domain) {
+                $filter  = array( 'username' => $username,
+                                  'domain'   => $domain
+                );
             }
         }
 
@@ -3357,7 +3513,7 @@ class SipAccounts extends Records {
         
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
-        
+
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();

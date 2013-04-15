@@ -21,7 +21,7 @@ class SipSettings {
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $showSoapConnectionInfo    = false;
-	var $store_clear_text_passwords=true;
+    var $store_clear_text_passwords=true;
 
     // these variables can be overwritten per soap engine
     // and subsequently by reseller properties
@@ -4068,14 +4068,14 @@ class SipSettings {
         }
 
         if ($web_password) {
-        	if (!$this->store_clear_text_passwords) {
-            	$web_password_new=$web_password;
+            if ($this->store_clear_text_passwords) {
+                $web_password_new=$web_password;
             } else {
                 $md1=strtolower($this->username).':'.strtolower($this->domain).':'.$web_password;
                 $md2=strtolower($this->username).'@'.strtolower($this->domain).':'.strtolower($this->domain).':'.$web_password;
                 $web_password_new=md5($md1).':'.md5($md2);
             }
-            $this->setPreference('web_password',$web_password);
+            $this->setPreference('web_password',$web_password_new);
             $this->somethingChanged=1;
         }
 
@@ -7185,6 +7185,10 @@ class SipSettings {
 
         $subject = sprintf("SIP Account settings %s",$this->account);
 
+        //if ($_REQUEST['sip_filter'] == '1') {
+        //    $identifier = $this->RandomIdentifier();
+        //}
+
         $tpl = $this->getEmailTemplate($this->reseller, $this->Preferences['language']);
 
         if (!$tpl && !$skip_html) {
@@ -7242,10 +7246,94 @@ class SipSettings {
 
         $mail =& Mail::factory('mail');
 
-        if ($mail->send($this->email, $hdrs, $body) && !$skip_html) {
-            print "<p>";
-            printf (_("SIP settings have been sent to %s"), $this->email);
+        //dprint_r($_REQUEST);
+
+        if ($mail->send($this->email, $hdrs, $body)) {
+            if (!$skip_html) {
+                  print "<p>";
+                  printf (_("SIP settings have been sent to %s"), $this->email);
+            }
+            if ($_REQUEST['password_reset'] == 'on') {
+                $this->sendPasswordReset($skip_html);
+            }
+            return 1;
         }
+    }
+
+    function sendPasswordReset($skip_html=False) {
+        dprint ("SipSettings->sendPasswordEmail($this->email)");
+
+        $identifier = $this->RandomIdentifier();
+        $this->db = new DB_CDRTool();
+
+        $this->ip = $_SERVER['REMOTE_ADDR'];
+        $insert_data = array (
+            'sip_account'   => $this->account,
+            'email'         => $this->email,
+            'ip'            => $this->ip
+        );
+
+        $this->expire=date("Y-m-d H:i:s",strtotime("+30 minutes"));
+        $query=sprintf("insert into memcache set `key`='email_%s', `value`='%s', `expire`='%s'",
+            $identifier,
+            json_encode($insert_data),
+            $this->expire );
+
+        $this->db->query($query);
+        $this->identifier = $identifier;
+
+        dprint("$query <br> Identifier: $identifier");
+
+        if (!$this->email && !$skip_html) {
+            print "<p><font color=blue>";
+            print _("Please fill in the e-mail address. ");
+            print "</font>";
+            return false;
+        }
+
+        $subject = sprintf("Password reset for %s",$this->account);
+
+        $tpl_html = $this->getEmailPasswordTemplateHTML($this->reseller, $this->Preferences['language']);
+
+        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+        include_once(SMARTY_DIR . 'Smarty.class.php');
+
+        $smarty = new Smarty;
+        $smarty->template_dir = '.';
+
+        //$smarty->use_sub_dirs = true;
+        //$smarty->cache_dir = 'templates_c';
+
+        $smarty->assign('client', $this);
+
+        $bodyhtml = $smarty->fetch($tpl_html);
+
+        include_once 'Mail.php';
+        include_once 'Mail/mime.php' ;
+
+        $hdrs = array(
+            'From'    => $this->support_email,
+            'Subject' => $subject
+        );
+
+        $crlf = "\n";
+        $mime = new Mail_mime($crlf);
+
+        $mime->setHTMLBody($bodyhtml);
+
+        $body = $mime->get();
+        $hdrs = $mime->headers($hdrs);
+
+        $mail =& Mail::factory('mail');
+
+        //dprint_r($_REQUEST);
+
+        if ($mail->send($this->email, $hdrs, $body) && !$skip_html) {
+            print "<li>";
+            printf (_("Password reset has been sent to %s"), $this->email);
+            print "</li>";
+        }
+        return 1;
     }
 
     function checkSettings() {
@@ -7298,6 +7386,15 @@ class SipSettings {
             $i++;
         }
         return $string;
+    }
+
+    function RandomIdentifier($length=30) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[rand(0, strlen($characters) - 1)];
+        }
+        return $randomString;
     }
 
     function cleanURI($uri) {
@@ -7421,6 +7518,25 @@ class SipSettings {
     function getEmailTemplateHTML($reseller, $language='en') {
         $file = "sip_settings_email_$language.html.tpl";
         $file2 = "sip_settings_email.html.tpl";
+
+        //print("templates_path = $this->templates_path");
+
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
+        } else {
+            return false;
+        }
+    }
+
+    function getEmailPasswordTemplateHTML($reseller, $language='en') {
+        $file = "password_reminder_$language.html.tpl";
+        $file2 = "password_reminder.html.tpl";
 
         //print("templates_path = $this->templates_path");
 

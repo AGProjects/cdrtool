@@ -134,23 +134,24 @@ class CDRTool_Auth extends Auth {
     $password    = $_POST["password"];
     $challenge   = $_POST["challenge"];
     $response    = $_POST["response"];
+    $response_ha1    = $_POST["response_ha1"];
     $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+    //dprint_r("response: $response");
 
     if(isset($username)) {
       $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
     }
 
     $uid = false;
-
     if ($username) {
         $username=trim($username);
         if (preg_match ("/\@/",$username)) {
             $a=explode("@",$username);
-
             $domainAuth = new DomainAuthLocal();
 
-            $ret=$domainAuth->validate($a[0],$a[1],$password,$response);
-
+            $ret=$domainAuth->validate($a[0],$a[1],$password,$response_ha1);
+            //dprint("here");
+            //dprint_r($ret);
             if ($ret[0]) {
                 foreach ($ret[2] as $allowedDS) {
                     $CDRTool[dataSourcesAllowed][]=$allowedDS;
@@ -362,6 +363,7 @@ class CDRTool_Auth extends Auth {
             $expected_response = md5("$username:$pass_md5:$challenge");
             $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
 
+            //print_r($result);
             ## True when JS is disabled
             if ($response == "") {
                 if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
@@ -531,7 +533,19 @@ class SIP_Subscriber_Auth extends Auth {
         $SIP['customer'] = $result->customer;
         $SIP['reseller'] = $result->reseller;
 
+        $parts=explode(':',$pass_md5);
+
+        dprint_r($result);
+        dprint($expected_response);
+        dprint($parts['0']);
+
         if ($result->ha1 && $result->ha1 == $response_ha1) {
+            $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
+            syslog(LOG_NOTICE, $log);
+            return true;
+        }
+
+        if ($pass_md5 && $parts[0] == $response_ha1) {
             $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
             syslog(LOG_NOTICE, $log);
             return true;
@@ -667,21 +681,46 @@ class SipThor_DomainAuth {
 
             $profile=json_decode($this->userDB->f('profile'),'true');
 
+            $check_password = $profile['password'];
+
+            $check_password_ha1=$profile['ha1'];
+
             if ($profile['properties']['web_password']) {
-                $check_password = $profile['properties']['web_password'];
-            } else {
-                $check_password = $profile['password'];
+                $web_pass=$profile['properties']['web_password'];
+                if(strstr($web_pass,":")){
+                   $split=explode(":",$web_pass);
+                    //if (preg_match('/^[a-f0-9]{32}$/', split[0])) {
+                        $check_web_password=$split[0];
+                    //}
+                } else {
+                    $check_web_password = $profile['properties']['web_password'];
+                }
             }
 
             $check_password_md5 = md5("$check_password");
-            $expected_response = md5("$user@$domain:$check_password_md5:$challenge");
 
-            if ($expected_response == $response) {
+            $expected_response_pass = md5("$user:$domain:$check_password");
+            $expected_response_pass_ha1 = md5("$user:$domain:$check_password_ha1");
+            $expected_response_web = $check_password;
+
+            //dprint($expected_response_pass_ha1);
+
+            if ($expected_response_pass == $response) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
             } else if ($check_password == $password) {
+                $uid = $this->userDB->f('username');
+                if ($uid) {
+                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+                }
+            } else if ($expected_response_web == $response) {
+                $uid = $this->userDB->f('username');
+                if ($uid) {
+                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+                }
+            } else if ($expected_response_pass_ha1 == $response) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
@@ -702,12 +741,23 @@ class pageLayout {
         <script language=javascript src=md5.js></script>
         <script language=javascript>
 
+
           function doChallengeResponse() {
             str = document.login.username.value + \":\" +
                   MD5(document.login.password.value) + \":\" +
                   document.login.challenge.value;
-
             document.login.response.value = MD5(str);
+
+            items = document.login.username.value.split(\"@\");
+            if (items.length == 2) {
+               username = items[0];
+               domain = items[1];
+            } else {
+               username = domain = \"\";
+            }
+            str = username + \":\" + domain + \":\" + document.login.password.value;
+
+            document.login.response_ha1.value = MD5(str);
             document.login.password.value = \"\";
             document.login.submit();
           }
@@ -766,6 +816,7 @@ class pageLayout {
          </div>
           <div class='controls'>
             <input onClick=\"doChallengeResponse(); return false;\" type=submit name=submitbtn class='btn btn-primary' value=\"Login\">
+            <input type=\"hidden\" name=\"response_ha1\"  value=\"\">
             </div>
             <br>
         ";
