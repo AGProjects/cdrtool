@@ -3289,7 +3289,7 @@ class CDR_opensips extends CDR {
         </tr>
         <tr class=extrainfo id='row$found'>
         <td></td>
-        <td colspan=13>$this->cdr_details</th>
+        <td colspan=13>$this->cdr_details</td>
         </tr>
 
         ";
@@ -3350,7 +3350,7 @@ class CDR_opensips extends CDR {
             if ($this->normalized) $found_print.='N';
 
             print "
-            <tr bgcolor=$inout_color>
+            <tr rel=tooltip data-placement='bottom' data-original-title='For more information about this call click the row.'>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
             <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime $timezone_print</nobr></td>
             <td valign=top><nobr>$this->aNumberPrint</nobr></td>
@@ -3370,7 +3370,7 @@ class CDR_opensips extends CDR {
             </tr>
             ";
             print "
-            <tr>
+            <tr class=extrainfo id='row$found'>
             <td></td>
             <td colspan=11>$this->cdr_details</td>
             </tr>
