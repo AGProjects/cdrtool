@@ -758,8 +758,10 @@ class pageLayout {
             str = username + \":\" + domain + \":\" + document.login.password.value;
 
             document.login.response_ha1.value = MD5(str);
-            document.login.password.value = \"\";
-            document.login.submit();
+            //var pass= document.login.password.value;
+            return false ;
+            //document.login.submit();
+            //document.login.password.value = \"\";
           }
 
         </script>
@@ -774,7 +776,7 @@ class pageLayout {
 	$logo=$CDRTool['tld']."/images/CDRTool.png";
         print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a></center><br>";
         print "
-        <form  class=form-horizontal action=\"$url\" method=post name=login>
+        <form class=form-horizontal action=\"$url\" method=post name=login onsubmit='doChallengeResponse();'>
         <p>
         ";
         if ($CDRTool[provider][sampleLoginSubscriber]) {
@@ -815,7 +817,7 @@ class pageLayout {
             </div>
          </div>
           <div class='controls'>
-            <input onClick=\"doChallengeResponse(); return false;\" type=submit name=submitbtn class='btn btn-primary' value=\"Login\">
+            <input type=submit name=submitbtn class='btn btn-primary' value=\"Login\">
             <input type=\"hidden\" name=\"response_ha1\"  value=\"\">
             </div>
             <br>
