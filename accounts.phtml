@@ -48,6 +48,9 @@ $uid             = $_REQUEST['uid'];
 $check           = $_REQUEST['check'];
 $mailsettings    = $_REQUEST['mailsettings'];
 
+$otp_yubikey     = $_REQUEST["yubikey"];
+$auth_method     = $_REQUEST["auth_method"];
+
 $db        		 = new DB_CDRTool;
 
 $layout = new pageLayoutLocal();
@@ -87,13 +90,17 @@ if ($action == "edit" && $id) {
                 name             = '%s',
                 organization     = '%s',
                 tel              = '%s',
-                email            = '%s'
+                email            = '%s',
+                yubikey          = '%s',
+                auth_method      = '%s'
                 ",
                 addslashes($username),
                 addslashes($name),
                 addslashes($organization),
                 addslashes($tel),
-                addslashes($email)
+                addslashes($email),
+                addslashes($otp_yubikey),
+                addslashes($auth_method)
                 );
                 if (strlen($password)) {
                     if ($CDRTool['provider']['clear_text_passwords'] != 1 ) {
@@ -192,7 +199,7 @@ if ($action == "edit" && $id) {
         dprint($query);
         $db->query($query);
         $db->next_record();
-        
+
         $username	      = $db->f('username');
         $name		      = $db->f('name');
         $email		      = $db->f('email');
@@ -210,6 +217,8 @@ if ($action == "edit" && $id) {
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
         $impersonate      = $db->f('impersonate');
+        $yubikey          = $db->f('yubikey');
+        $auth_method      = $db->f('auth_method');
 
         showForm($id);
     }
@@ -265,11 +274,15 @@ if ($action == "edit" && $id) {
                 cscodeFilter,
                 gatewayFilter,
                 afterDateFilter,
-                impersonate
+                impersonate,
+                yubikey,
+                auth_method
                 ) values (
                 '%s',
                 '%s',
                 '',
+                '%s',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -304,7 +317,9 @@ if ($action == "edit" && $id) {
                 addslashes($cscodeFilter),
                 addslashes($gatewayFilter),
                 addslashes($afterDateFilter),
-                addslashes($impersonate)
+                addslashes($impersonate),
+                addslashes($yubikey),
+                addslashes($auth_method)
                 );
             } else {
                 $query=sprintf("insert into auth_user
@@ -325,8 +340,12 @@ if ($action == "edit" && $id) {
                 cscodeFilter,
                 gatewayFilter,
                 afterDateFilter,
-                impersonate
+                impersonate,
+                yubikey,
+                auth_method
                 ) values (
+                '%s',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -363,7 +382,9 @@ if ($action == "edit" && $id) {
                 addslashes($cscodeFilter),
                 addslashes($gatewayFilter),
                 addslashes($afterDateFilter),
-                addslashes($impersonate)
+                addslashes($impersonate),
+                addslashes($yubikey),
+                addslashes($auth_method)
                 );
             }
             dprint($query);

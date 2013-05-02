@@ -720,3 +720,8 @@ CREATE TABLE `client_journal` (
   KEY `uuid_idx` (`uuid`)
 );
 
+9.1.2
+alter table auth_user add column auth_method int(2);
+
+alter table auth_user add column yubikey varchar(12);
+

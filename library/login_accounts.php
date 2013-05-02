@@ -12,7 +12,7 @@ function check_telephone($tel,$country) {
         return 1;
 }
 # subscriber form
-$f = new form; 
+$f = new form;
 
 $f->add_element(array(	"name"=>"username",
 			"type"=>"text",
@@ -111,6 +111,15 @@ $f->add_element(array(	"name"=>"expire",
 			"type"=>"text",
 			"size"=>"11"
 			));
+
+$f->add_element(array(  "name"=>"yubikey",
+                "type"=>"text",
+                "size"=>"12",
+                "minlength"=>"12",
+                "maxlength"=>"12",
+                "valid_regex"=>"^[a-zA-Z0-9|_|-]*$"
+                ));
+
 $blocked_els=array(
                 array("label"=>"","value"=>"0"),
                 array("label"=>gettext("Blocked"),"value"=>"1")
@@ -144,6 +153,18 @@ $f->add_element(array("type"=>"select",
 			        )
             );
 
+$f->add_element(array("type"=>"select",
+                      "name"=>"auth_method",
+                      "options"=> array(
+                                    array("label"=>"User+Password+Yubikey","value"=>"7"),
+                                    array("label"=>"User+Yubikey","value"=>"5"),
+                                    array("label"=>"Yubikey","value"=>"4"),
+                                  ),
+                      "multiple"=>"0",
+                      "value"=>""
+              )
+            );
+
 
 function showForm($id="") {
     global $CDRTool, $verbose, $perm, $auth, $sess, $cdr, $f,
@@ -159,10 +180,10 @@ function showForm($id="") {
 
     $f->load_defaults();
     $f->start("","GET","","", "","form-horizontal");
-    
+
     print "<input type=hidden name=check value=yes>";
     print "<input type=hidden name=action value=\"$action\">";
-    
+
     if ($frzall) {
         $f->freeze();
     }
@@ -180,7 +201,7 @@ function showForm($id="") {
             $f->freeze($ff);
         }
 
-    
+
     print "
     <div class=\"row-fluid\">
     <div class=\"span6\">
@@ -192,16 +213,16 @@ function showForm($id="") {
     print ":</font>
     </p>
     ";
-    
+
     $f->show_element("action","");
-    
+
     if ($id) {
             $f->add_element(array("type"=>"hidden",
                                   "name"=>"id",
                                   "value"=>"$id"
                             ));
     }
-    
+
     print "
       <div class=\"control-group\">
       <label class='control-label'>
@@ -219,7 +240,7 @@ function showForm($id="") {
     </div>
     </div>
     ";
-    
+
     print "
       <div class=\"control-group\">
       <label class='control-label'>
@@ -234,7 +255,7 @@ function showForm($id="") {
     </div>
     </div>
     ";
-    
+
     print "
       <div class=\"control-group\">
       <label class='control-label'>
@@ -244,13 +265,13 @@ function showForm($id="") {
       <div class='controls'>
       <font color=$formelcolor>
     ";
-    $f->show_element("email",""); 
+    $f->show_element("email","");
     print "
     </div>
     </div>
     ";
-    
-    
+
+
     print "
       <div class=\"control-group\">
       <label class='control-label'>
@@ -260,7 +281,7 @@ function showForm($id="") {
       <div class='controls'>
       <font color=$labelcolor>
     ";
-    $f->show_element("tel","");        
+    $f->show_element("tel","");
     print "
     </div>
     </div>
@@ -269,19 +290,19 @@ function showForm($id="") {
       <div class=\"control-group\">
       <label class='control-label'>
     ";
-    
+
     print _("Username");
     print " <font color=orange>*</font></label>
       <div class='controls'><font color=$labelcolor>
     ";
-    
-    $f->show_element("username",""); 
-    
+
+    $f->show_element("username","");
+
     print "
     </div>
     </div>
     ";
-    
+
     print "
       <div class=\"control-group\">
       <label class='control-label'>
@@ -296,6 +317,36 @@ function showForm($id="") {
     ";
 
     print "
+      <div class=\"control-group\">
+      <label class='control-label'>
+    ";
+    print _("Yubikey");
+    print "</label>
+    <div class='controls'>
+      <font color=$formelcolor>
+    ";
+    $f->show_element("yubikey","");
+    print "
+    </div>
+    </div>
+    ";
+
+    print "
+      <div class=\"control-group\">
+      <label class='control-label'>
+    ";
+    print _("Yubikey Authentication Method");
+    print "</label>
+    <div class='controls'>
+      <font color=$formelcolor>
+    ";
+    $f->show_element("auth_method","");
+    print "
+    </div>
+    </div>
+    ";
+
+    print "
           <div class=\"control-group\">
             <label class='control-label'>
               <font color=$labelcolor>
@@ -305,7 +356,7 @@ function showForm($id="") {
            print "<input type=checkbox name=mailsettings value=1> ";
            print "
            </div>
-           </div>    
+           </div>
            ";
 
     if ($perm->have_perm("admin")) {
@@ -320,7 +371,7 @@ function showForm($id="") {
         $f->show_element("expire","");
         print "
            </div>
-           </div>  
+           </div>
         ";
 
         print "
@@ -332,8 +383,8 @@ function showForm($id="") {
            $f->show_element("impersonate","");
            print "
            </font>
-           </div>  
-           </div>  
+           </div>
+           </div>
            ";
            print "
               <div class=\"control-group\">
@@ -344,13 +395,13 @@ function showForm($id="") {
            print "<input type=checkbox name=delete value=1>";
            print "
            </font>
-           </div>  
-           </div>  
+           </div>
+           </div>
            ";
 
            /*
            print "
-           <tr>   
+           <tr>
            <td valign=top><font color=$labelcolor>
            Lock </td>
            <td colspan=2 valign=top><font color=$labelcolor>
@@ -358,15 +409,15 @@ function showForm($id="") {
                    $f->show_element("blocked","");
            print "
            </font>
-           </td>  
-           </tr>  
+           </td>
+           </tr>
            ";
            */
            print "
-            <hr> 
+            <hr>
            ";
     }
-    
+
     print "
     </div>";
 
@@ -386,7 +437,7 @@ function showForm($id="") {
      $f->show_element("sources","");
      print "
      </div></div>";
- 
+
      print "
       <hr noshade size=1>
       <p>
@@ -485,7 +536,7 @@ function accountList() {
         <td> $expire
         </tr>
         ";
-        
+
         $j++;
     }
 

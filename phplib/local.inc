@@ -137,19 +137,29 @@ class CDRTool_Auth extends Auth {
     $response_ha1    = $_POST["response_ha1"];
     $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
     //dprint_r("response: $response");
+    $otp_yubikey = $_POST["yubikey"];
+
+    $yubi_id = substr($otp_yubikey, 0, 12);
+
+    $use_yubikey=0;
+    if (stream_resolve_include_path('Auth/Yubico.php')) {
+        require_once 'Auth/Yubico.php';
+        $use_yubikey=1;
+    }
 
     if(isset($username)) {
       $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
     }
 
     $uid = false;
-    if ($username) {
+
+    if ($username || $use_yubikey ) {
         $username=trim($username);
         if (preg_match ("/\@/",$username)) {
             $a=explode("@",$username);
             $domainAuth = new DomainAuthLocal();
 
-            $ret=$domainAuth->validate($a[0],$a[1],$password,$response_ha1);
+            $ret=$domainAuth->validate($a[0],$a[1],$password,$response_ha1, $otp_yubikey);
             //dprint("here");
             //dprint_r($ret);
             if ($ret[0]) {
@@ -169,7 +179,7 @@ class CDRTool_Auth extends Auth {
             return $ret[0];
 
         } else {
-            $query = sprintf("select * from auth_user where username = '%s' and expire > NOW()", addslashes($username));
+            $query = sprintf("select * from auth_user where (username = '%s' or yubikey='%s') and expire > NOW()", addslashes($username),addslashes($yubi_id));
             $this->db->query($query);
             $this->db->next_record();
             $otp_enabled_db =$this->db->f('otp_enable');
@@ -213,14 +223,20 @@ class CDRTool_Auth extends Auth {
             select *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp ,
             UNIX_TIMESTAMP() as timestamp_now  ".
             "       from %s ".
-            "       where username = '%s' " .
+            "       where (username = '%s'  or " .
+            "       yubikey='%s') ".
             "       and expire > NOW()    " ,
             addslashes($this->database_table),
-            addslashes($username)));
+            addslashes($username),
+            addslashes($yubi_id)));
 
             $this->db->next_record();
-            $uid   		        = $this->db->f("user_id");
-            $perm  		        = $this->db->f("perms");
+            $uid            = $this->db->f("user_id");
+            $perm           = $this->db->f("perms");
+            $yubikey        = $this->db->f("yubikey");
+            $auth_method    = $this->db->f("auth_method");
+            $user_db   = $this->db->f("username");
+
             if ($CDRTool['provider']['clear_text_passwords']!=1) {
 
                 // Update hashed pass if none set and we need hashed ones
@@ -363,13 +379,33 @@ class CDRTool_Auth extends Auth {
             $expected_response = md5("$username:$pass_md5:$challenge");
             $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
 
+            if ($use_yubikey == 1){
+                $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
+                $auth = $yubi->verify($otp_yubikey);
+            }
+
             //print_r($result);
             ## True when JS is disabled
             if ($response == "") {
                 if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
                     $password=md5($password);
                 }
-                if ($password == $pass || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)) {
+                if ($password == $pass ||
+                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7') ||
+                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5') ||
+                    (!PEAR::isError($auth) && $auth_method =='4' )  ||
+                    ($password == $otp_passwd && $timestamp_otp > $timestamp_now)) {
+                    $log=sprintf("CDRTool %s %s", $auth_method, $_SERVER['REMOTE_ADDR']);
+                    syslog(LOG_NOTICE, $log);
+                    if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
+                        $this->db->query(sprintf(
+                        "UPDATE %s".
+                        " set yubikey='%s'".
+                        " where username='%s'",
+                        addslashes($this->database_table),
+                        addslashes($otp_yubikey),
+                        addslashes($username)));
+                    }
                     $this->auth["perm"] = $perm;
                     return $uid;
                 } else {
@@ -379,7 +415,24 @@ class CDRTool_Auth extends Auth {
                 ## Response is set, JS is enabled
                 // we check if either otp or normal password match
                 //print "<p>$response == $expected_response <p>$response == $expect_otp";
-                if ($expected_response == $response || ($response == $expect_otp && $timestamp_otp > $timestamp_now)) {
+                if (
+                    $expected_response == $response ||
+                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7') ||
+                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5') ||
+                    (!PEAR::isError($auth) && $auth_method =='4' ) ||
+                    ($response == $expect_otp && $timestamp_otp > $timestamp_now) ) {
+
+                    $log=sprintf("CDRTool %s %s", $auth_method, $_SERVER['REMOTE_ADDR']);
+                    syslog(LOG_NOTICE, $log);
+                    if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
+                        $this->db->query(sprintf(
+                        "UPDATE %s".
+                        " set yubikey='%s'".
+                        " where username='%s'",
+                        addslashes($this->database_table),
+                        addslashes($otp_yubikey),
+                        addslashes($username)));
+                    }
                     $this->auth["perm"] = $perm;
                     return $uid;
                 } else {
@@ -387,7 +440,40 @@ class CDRTool_Auth extends Auth {
                 }
             }
     	}
-  	}
+  	} else {
+        if ($use_yubikey == 1){
+            $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
+            $auth = $yubi->verify($otp_yubikey);
+            $yubi_id = substr($otp_yubikey, 0, 12);
+
+            if (!PEAR::isError($auth)) {
+                $this->db->query(sprintf("
+                    select *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp ,
+                    UNIX_TIMESTAMP() as timestamp_now  ".
+                    "       from %s ".
+                    "       where yubikey = '%s' " .
+                    "       and expire > NOW()    " ,
+                    addslashes($this->database_table),
+                    addslashes($yubi_id)));
+
+                $this->db->next_record();
+                $username           = $this->db->f("username");
+                $this->auth["uname"]=$username;
+                $uid                = $this->db->f("user_id");
+                $perm               = $this->db->f("perms");
+                $auth_method        = $this->db->f("auth_method");
+
+                $log=sprintf("CDRTool %s %s %s", $auth_method, $username, $_SERVER['REMOTE_ADDR']);
+                syslog(LOG_NOTICE, $log);
+
+
+
+
+                $this->auth["perm"] = $perm;
+                return $uid;
+            }
+        }
+    }
 
   }
 
@@ -667,7 +753,7 @@ class SipThor_DomainAuth {
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate ($user, $domain, $password,$response) {
+    function validate ($user, $domain, $password,$response,$otp_yubkikey) {
     	$query = sprintf("SELECT * FROM sip_accounts
                   WHERE username = '%s'
                   AND     domain = '%s'
@@ -695,6 +781,13 @@ class SipThor_DomainAuth {
                 } else {
                     $check_web_password = $profile['properties']['web_password'];
                 }
+            }
+
+            if ($CDRTool[provider][yubikey]==1  && $profile['properties']['yubikey']) {
+                $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
+                $yubikey=$profile['properties']['yubikey'];
+                $auth = $yubi->verify($otp_yubikey);
+                $yubi_id = substr($otp_yubikey, 0, 12);
             }
 
             $check_password_md5 = md5("$check_password");
@@ -725,6 +818,12 @@ class SipThor_DomainAuth {
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
+            } else if (!PEAR::isError($auth) && $yubikey == $yubi_id ) {
+                $uid = $this->userDB->f('username');
+                if ($uid) {
+                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+                }
+
             }
         }
     }
@@ -815,7 +914,21 @@ class pageLayout {
           <div class=controls>
             <input type=password name=password size=40 maxlength=32>
             </div>
-         </div>
+         </div>";
+
+        //dprint_r($CDRTool);
+        if ($CDRTool[provider][yubikey]==1 ) {
+            print "
+        <div class=control-group>
+            <label class=control-label>
+            Yubikey</label>
+            <div class=controls>
+                <input type=text name=yubikey size=40>
+            </div>
+        </div>";
+        }
+
+        print "
           <div class='controls'>
             <input type=submit name=submitbtn class='btn btn-primary' value=\"Login\">
             <input type=\"hidden\" name=\"response_ha1\"  value=\"\">
