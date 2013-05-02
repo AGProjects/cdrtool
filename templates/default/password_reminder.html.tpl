@@ -85,7 +85,7 @@
                                 <p class='alert' style='padding: 8px 35px 8px 14px; margin-bottom: 14px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); background-color: #fcf8e3; border: 1px solid #fbeed5; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; color: #c09853;'><strong>The possibility to change the password will be active for 30 mins from {$client->expire}</strong>
                                 </p>
                                 <p>
-                                    Click <a href="http://mdns.sipthor.net/sip_login_reminder_enc.phtml?id={$client->identifier}">this</a> link to go to the password reset page.
+                                    Click <a href="http://mdns.sipthor.net/sip_login_reminder.phtml?id={$client->identifier}">this</a> link to go to the password reset page.
                                 </p>
                             </td>
                         </tr>

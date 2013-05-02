@@ -58,15 +58,17 @@ if ($_REQUEST['id']){
             $RECORDS->showPasswordReminderUpdateFormEncrypted($_REQUEST['id'],$account['sip_account']);
         } else {
             $SipSettings = new SipSettings($account['sip_account'],$login_credentials,$soapEngines);
-            //dprint_r($SipSettings);
+            dprint_r($SipSettings->result);
 
             if($_REQUEST['sip_password']){
                 //print "$SipSettings->password";
                 if ($SipSettings->store_clear_text_passwords) {
                     $SipSettings->result->password=$_REQUEST['sip_password'];
                 } else {
-                    $md1=strtolower($SipSettings->result->username).':'.strtolower($SipSettings->result->domain).':'.$sip_password;
-                    $md2=strtolower($SipSettings->result->username).'@'.strtolower($SipSettings->result->domain).':'.strtolower($SipSettings->result->domain).':'.$_REQUEST['sip_password'];
+                    $md1=strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$sip_password;
+                    dprint($md1);
+                    dprint(md5($md1));
+                    $md2=strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['sip_password'];
                     $SipSettings->result->password=md5($md1).':'.md5($md2);
                 }
 
@@ -77,8 +79,8 @@ if ($_REQUEST['id']){
                 if ($SipSettings->store_clear_text_passwords) {
                     $web_password_new=$web_password;
                 } else {
-                    $md1=strtolower($SipSettings->result->username).':'.strtolower($SipSettings->result->domain).':'.$_REQUEST['web_password'];
-                    $md2=strtolower($SipSettings->result->username).'@'.strtolower($SipSettings->result->domain).':'.strtolower($SipSettings->result->domain).':'.$_REQUEST['web_password'];
+                    $md1=strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
+                    $md2=strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
                     $web_password_new=md5($md1).':'.md5($md2);
                 }
 
@@ -110,7 +112,7 @@ if ($_REQUEST['id']){
             dprint_r($SipSettings->result);
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result     = $SipSettings->SipPort->updateAccount($SipSettings->result);
-            //dprint_r($SipSettings->result);
+            dprint_r($SipSettings->result);
             print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
             print _("Update passwords");
 
