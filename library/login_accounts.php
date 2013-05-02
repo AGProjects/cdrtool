@@ -156,8 +156,8 @@ $f->add_element(array("type"=>"select",
 $f->add_element(array("type"=>"select",
                       "name"=>"auth_method",
                       "options"=> array(
-                                    array("label"=>"User+Password+Yubikey","value"=>"7"),
-                                    array("label"=>"User+Yubikey","value"=>"5"),
+                                    array("label"=>"Username+Password+Yubikey","value"=>"7"),
+                                    array("label"=>"Username+Yubikey","value"=>"5"),
                                     array("label"=>"Yubikey","value"=>"4"),
                                   ),
                       "multiple"=>"0",
@@ -335,7 +335,7 @@ function showForm($id="") {
       <div class=\"control-group\">
       <label class='control-label'>
     ";
-    print _("Yubikey Authentication Method");
+    print _("Yubikey usage");
     print "</label>
     <div class='controls'>
       <font color=$formelcolor>
