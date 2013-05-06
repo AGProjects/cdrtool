@@ -927,8 +927,8 @@ class pageLayout {
             data-original-title='OTP hardware authentication'
             data-content=\"With this field you can login using a hardware OTP device called 'yubikey'.<br>
             If you login  the first time with the username, password and OTP key, the key identifier is stored into you account.<br>
-            For info and purchase of this key see <a href='http://www.yubico.com' target=\"_blank\">http://www.yubico.com</a>
-            \" type=text name=yubikey size=40>
+            For info and purchase of this key see <a href='http://www.yubico.com' target='_blank'>http://www.yubico.com</a>
+           \" type=text name=yubikey size=40>
             </div>
         </div>";
         }
