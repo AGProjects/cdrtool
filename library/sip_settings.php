@@ -619,6 +619,10 @@ class SipSettings {
             $this->store_clear_text_passwords=$this->soapEngines[$this->sip_engine]['store_clear_text_passwords'];
         }
 
+        if (strlen($this->soapEngines[$this->sip_engine]['show_barring_tab'])) {
+            $this->show_barring_tab=$this->soapEngines[$this->sip_engine]['show_barring_tab'];
+        }
+
         if (strlen($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
             $this->disable_extra_groups=$this->soapEngines[$this->sip_engine]['disable_extra_groups'];
         }
