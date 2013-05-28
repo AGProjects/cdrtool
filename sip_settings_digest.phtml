@@ -15,7 +15,6 @@ require('sip_settings.php');
 if ($credentials=getSipAccountFromHTTPDigest()) {
     $account	 = $credentials['account'];
     $sip_engine  = $credentials['engine'];
-    
     $reseller  	 = $credentials['reseller'];
     $customer  	 = $credentials['customer'];
     $login_type  = "subscriber";
@@ -31,9 +30,9 @@ if ($CDRTool['sip_settings_class']) {
 $_reseller_class=$_class.$reseller;
 
 if (class_exists($_reseller_class)) {
-	$SipSettings_class=$_reseller_class;
+    $SipSettings_class=$_reseller_class;
 } else {
-	$SipSettings_class=$_class;
+    $SipSettings_class=$_class;
 }
 
 $login_credentials=array(

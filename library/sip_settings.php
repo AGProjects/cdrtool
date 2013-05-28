@@ -55,7 +55,7 @@ class SipSettings {
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
-	var $show_barring_tab   = false;
+    var $show_barring_tab   = false;
     var $show_payments_tab  = false;
     var $show_tls_section   = false;
     var $show_support_tab   = false;
@@ -67,7 +67,7 @@ class SipSettings {
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
 
-	var $payment_processor_class = false;
+    var $payment_processor_class = false;
     var $did_processor_class = false;
 
     var $show_download_tab    = 'Blink';     // set it to name of the tab or false to disable it
@@ -136,7 +136,7 @@ class SipSettings {
     var $sip_settings_api_url= false;
     var $journalEntries      = array();
     var $chat_replication_backend = 'mysql';   // mongo or mysql
-	var $owner_information   =array();
+    var $owner_information   =array();
 
     var $languages=array("en"=>array('name'=>"English",
                                      'timezone'=>''
@@ -204,9 +204,9 @@ class SipSettings {
         $this->settingsPage       = $_SERVER['PHP_SELF'];
 
         if ($_REQUEST['tab']) {
-        	$this->tab                = $_REQUEST['tab'];
+            $this->tab                = $_REQUEST['tab'];
         } else {
-        	$this->tab                = $this->first_tab;
+            $this->tab                = $this->first_tab;
         }
 
         $this->initSoapClient();
@@ -214,7 +214,7 @@ class SipSettings {
         $this->getAccount($account);
 
         if ($this->tab=='calls' && !$_REQUEST['export']) {
-        	$this->auto_refesh_tab=180;
+            $this->auto_refesh_tab=180;
         }
 
         $this->admin_url      = $this->settingsPage."?account=$this->account&adminonly=1&reseller=$this->reseller&sip_engine=$this->sip_engine";
@@ -342,11 +342,11 @@ class SipSettings {
         }
 
         if ($this->show_did_tab) {
-        	$this->tabs['did']=_("DID");
+            $this->tabs['did']=_("DID");
         }
 
-		if (!$this->isEmbedded() && $this->show_download_tab) {
-        	$this->tabs['download'] = $this->show_download_tab;
+	if (!$this->isEmbedded() && $this->show_download_tab) {
+            $this->tabs['download'] = $this->show_download_tab;
         }
 
         $this->acceptDailyProfiles=array('127' => _('Every day'),
@@ -393,19 +393,20 @@ class SipSettings {
                                     "FBUS"=>$this->FBUS_access_number,
                                     "FNOL"=>$this->FNOL_access_number
                                     );
-        if ($this->prepaid) {
+
+        if ($this->prepaid && $this->pstn_access) {
             $this->tabs['credit']=_("Credit");
         }
 
-		$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
+	$_protocol=preg_match("/^(https?:\/\/)/",$_SERVER['SCRIPT_URI'],$m);
         $this->absolute_url=$m[1].$_SERVER['HTTP_HOST'].$this->url;
 
         if ($this->prepaid && $this->show_payments_tab) {
-        	$this->tabs['payments']=_("Payments");
+           $this->tabs['payments']=_("Payments");
         }
 
         if ($this->show_support_tab) {
-        	$this->tabs['support'] = 'Support';
+           $this->tabs['support'] = 'Support';
         }
 
     }
@@ -419,19 +420,19 @@ class SipSettings {
         $this->SOAPversion=$this->soapEngines[$this->sip_engine]['version'];
 
         if ($this->soapEngines[$this->sip_engine]['enrollment_url']) {
-        	$this->enrollment_url =$this->soapEngines[$this->sip_engine]['enrollment_url'];
+            $this->enrollment_url =$this->soapEngines[$this->sip_engine]['enrollment_url'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['chat_replication_backend']) {
-        	$this->chat_replication_backend = $this->soapEngines[$this->sip_engine]['chat_replication_backend'];
+            $this->chat_replication_backend = $this->soapEngines[$this->sip_engine]['chat_replication_backend'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['mongo_db']) {
-        	$this->mongo_db = $this->soapEngines[$this->sip_engine]['mongo_db'];
+            $this->mongo_db = $this->soapEngines[$this->sip_engine]['mongo_db'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['sip_settings_api_url']) {
-        	$this->sip_settings_api_url =$this->soapEngines[$this->sip_engine]['sip_settings_api_url'];
+            $this->sip_settings_api_url =$this->soapEngines[$this->sip_engine]['sip_settings_api_url'];
         }
 
         if (strlen($this->loginCredentials['soapUsername'])) {
@@ -841,15 +842,15 @@ class SipSettings {
         $this->groups         = $result->groups;
         $this->createDate     = $result->createDate;
         $this->web_password   = $this->Preferences['web_password'];
-        $this->quickdial = $result->quickdialPrefix;
-        $this->timeout   = intval($result->timeout);
-        $this->quota     = $result->quota;
-        $this->prepaid   = intval($result->prepaid);
-        $this->region    = $result->region;
+        $this->quickdial      = $result->quickdialPrefix;
+        $this->timeout        = intval($result->timeout);
+        $this->quota          = $result->quota;
+        $this->prepaid        = intval($result->prepaid);
+        $this->region         = $result->region;
 
-        $this->account   = $this->username."@".$this->domain;
-        $this->fullName  = $this->firstName." ".$this->lastName;
-        $this->name      = $this->firstName; // used by smarty
+        $this->account        = $this->username."@".$this->domain;
+        $this->fullName       = $this->firstName." ".$this->lastName;
+        $this->name           = $this->firstName; // used by smarty
 
         $this->yuibikey         = $result->Preferences['yubikey'];
 
@@ -1376,20 +1377,23 @@ class SipSettings {
             $this->pstn_changes_allowed = false;
             return;
         } else {
+            if ($this->login_type == 'admin') {
+                $this->pstn_changes_allowed = true;
+                return;
             // for a reseller we need to check if a subaccount is allowed
-            if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
-                if ($this->resellerProperties['pstn_access']) {
-                	dprint("is reseller");
-                	$this->pstn_changes_allowed = true;
+            } else if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
+                if ($this->resellerProperties['pstn_changes']) {
+                    dprint("is reseller");
+                    $this->pstn_changes_allowed = true;
                 }
                 return;
             } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
-                if ($this->resellerProperties['pstn_access']) {
-                	dprint("impersonate reseller");
-                	$this->pstn_changes_allowed = true;
+                if ($this->resellerProperties['pstn_changes']) {
+                   dprint("impersonate reseller");
+                   $this->pstn_changes_allowed = true;
                 }
                 return;
-            } else if ($this->resellerProperties['pstn_access'] && $this->customerProperties['pstn_access']) {
+            } else if ($this->resellerProperties['pstn_changes'] && $this->customerProperties['pstn_changes']) {
                 $this->pstn_changes_allowed = true;
                 return;
             }
@@ -1435,9 +1439,11 @@ class SipSettings {
             $this->prepaid_changes_allowed = false;
             return;
         } else {
-
+            if ($this->login_type == 'admin') {
+                $this->prepaid_changes_allowed = true;
+                return;
             // for a reseller we need to check if a subaccount is allowed
-            if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
+            } else if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
                 dprint("is reseller");
                 if ($this->resellerProperties['prepaid_changes']) {
                     $this->prepaid_changes_allowed = true;
@@ -1511,23 +1517,25 @@ class SipSettings {
                                             "ResellerMayEditIt"=>1,
                                             "ResellerMaySeeIt"=>1
                                             );
-                $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
-                                                "WEBName" =>sprintf(_("Rate on net")),
-                                                "SubscriberMayEditIt"=>0,
-                                                "SubscriberMaySeeIt"=>0,
-                                                "ResellerMayEditIt"=>1,
-                                                "ResellerMaySeeIt"=>1
-                                                );
-
-                if ($this->sms_access) {
-                    $this->availableGroups['sms']  = array("Group"=>"sms",
-                                                    "WEBName" =>sprintf(_("Mobile SMS")),
+                if ($this->pstn_access) {
+                    $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
+                                                    "WEBName" =>sprintf(_("Rate on net")),
                                                     "SubscriberMayEditIt"=>0,
-                                                    "SubscriberMaySeeIt"=>1,
-                                                    "ResellerMayEditIt"=>0,
+                                                    "SubscriberMaySeeIt"=>0,
+                                                    "ResellerMayEditIt"=>1,
                                                     "ResellerMaySeeIt"=>1
                                                     );
-
+    
+                    if ($this->sms_access) {
+                        $this->availableGroups['sms']  = array("Group"=>"sms",
+                                                        "WEBName" =>sprintf(_("Mobile SMS")),
+                                                        "SubscriberMayEditIt"=>0,
+                                                        "SubscriberMaySeeIt"=>1,
+                                                        "ResellerMayEditIt"=>0,
+                                                        "ResellerMaySeeIt"=>1
+                                                        );
+    
+                    }
                 }
 
                 if ($this->require_proof_of_identity) {
@@ -1687,26 +1695,26 @@ class SipSettings {
                             "ResellerMayEditIt"=>1,
                             "ResellerMaySeeIt"=>1
                             );
+            $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
+                                    "WEBName" =>sprintf(_("Rate on net")),
+                                    "SubscriberMayEditIt"=>0,
+                                    "SubscriberMaySeeIt"=>0,
+                                    "ResellerMayEditIt"=>1,
+                                    "ResellerMaySeeIt"=>1
+                                    );
+    
+            if ($this->sms_access) {
+                $this->availableGroups['sms']  = array("Group"=>"sms",
+                                                "WEBName" =>sprintf(_("Mobile SMS")),
+                                                "SubscriberMayEditIt"=>0,
+                                                "SubscriberMaySeeIt"=>1,
+                                                "ResellerMayEditIt"=>0,
+                                                "ResellerMaySeeIt"=>1
+                                                );
+    
+            }
         }
 
-        $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
-                                "WEBName" =>sprintf(_("Rate on net")),
-                                "SubscriberMayEditIt"=>0,
-                                "SubscriberMaySeeIt"=>0,
-                                "ResellerMayEditIt"=>1,
-                                "ResellerMaySeeIt"=>1
-                                );
-
-        if ($this->sms_access) {
-            $this->availableGroups['sms']  = array("Group"=>"sms",
-                                            "WEBName" =>sprintf(_("Mobile SMS")),
-                                            "SubscriberMayEditIt"=>0,
-                                            "SubscriberMaySeeIt"=>1,
-                                            "ResellerMayEditIt"=>0,
-                                            "ResellerMaySeeIt"=>1
-                                            );
-
-        }
     }
 
     function getDiversions() {
@@ -2035,7 +2043,7 @@ class SipSettings {
         $chapter=sprintf(_("Proof of Identity"));
         $this->showChapter($chapter);
 
-		if ($_REQUEST['task'] == 'upload') {
+	if ($_REQUEST['task'] == 'upload') {
             if (!$_FILES['tmpfile']['tmp_name']) {
                 print "<font color=red>";
                 printf (_("Error: Please specify a file"));
@@ -2138,7 +2146,7 @@ class SipSettings {
             }
         }
 
-  		if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
+  	if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
             $query=sprintf("delete from subscriber_docs
             where username = '%s'
             and domain = '%s'
@@ -2171,20 +2179,15 @@ class SipSettings {
         if ($this->db->num_rows()) {
 
             print "
-            <tr>
-            <td colspan=3>
-            ";
+                <div class=row-fluid>
+                <table class='table table-condensed table-striped'>";
 
-	        if (!in_array("payments",$this->groups)) {
+	    if (!in_array("payments",$this->groups)) {
                 print "<p>";
                 print _("Credit Card payments will be activated after your identity is verified. ");
             }
 
-            print "<p>";
-            print "<table border=0>
-            ";
-
-            printf ("<tr bgcolor=lightgrey><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
+            printf ("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
             _("Name"),
             _("Document"),
             _("Type"),
@@ -2194,7 +2197,7 @@ class SipSettings {
             _("Mobile Number")
             );
 
-			if ($this->login_type != 'subscriber') {
+	    if ($this->login_type != 'subscriber') {
                 print "<td>";
                 print _("Actions");
                 print "</td>";
@@ -2217,7 +2220,7 @@ class SipSettings {
             $this->db->f('mobile_number')
             );
 
-			if ($this->login_type != 'subscriber') {
+	    if ($this->login_type != 'subscriber') {
                 if ($_REQUEST['task'] == 'delete_identity_proof' && !$_REQUEST['confirm']){
                     $delete_url=$this->url.'&tab=payments&task=delete_identity_proof&confirm=1';
                     printf ("<td align=right><a href='%s'>%s</a></td>",$delete_url,_("Confirm"));
@@ -2228,19 +2231,17 @@ class SipSettings {
             }
 
             printf ("</tr>");
-
             print "
             </table>
-            </td>
-            </tr>
+            </div>
             ";
 
         } else {
             print "
-            <tr>
-            <td colspan=3>
-            <p>";
+                <div class=row-fluid>
+                ";
 
+            print "<p>";
             print _("Credit Card payments are available only to verified customers. ");
 
             print "<p>";
@@ -2261,7 +2262,10 @@ class SipSettings {
             ";
 
             print "
-            <tr class=even>
+                <table class='table table-condensed table-striped'>";
+
+            print "
+            <tr>
             <td>";
             print _("Name printed on the Credit Card");
             print "
@@ -2275,7 +2279,7 @@ class SipSettings {
             ";
 
             print "
-            <tr class=odd>
+            <tr>
             <td>";
             print _("Scanned copy of your Passport or Driver License");
             print "
@@ -2290,7 +2294,7 @@ class SipSettings {
 
             if (in_array("free-pstn",$this->groups)) {
                 print "
-                <tr class=even>
+                <tr>
                 <td>";
                 print _("Mobile Number");
                 print "
@@ -2306,7 +2310,7 @@ class SipSettings {
             }
 
             print "
-            <tr class=even>
+            <tr>
             <td>";
             print _("Last 4 digits on your Credit Card");
             print "
@@ -2321,15 +2325,15 @@ class SipSettings {
             ";
 
             print "
-            <tr class=odd>
+            <tr>
             <td colspan=3>
             ";
             print "
             <input type=submit value=";
             print _("Save");
             print ">
-            </td>
-            </tr>
+            </table>
+            </div>
             </form>
             ";
 
@@ -2562,10 +2566,10 @@ class SipSettings {
                     print _("X.509 Format");
                     printf ("
                     </td>
-                    <td><a href=%s&action=get_crt>%s.crt</a>
+                    <td><a href=%s&action=get_crt>Certificate</a>
                     </td>
                     </tr>
-                    ",$this->url, $this->account);
+                    ",$this->url);
 
                     /*
                     print "
@@ -2574,12 +2578,12 @@ class SipSettings {
                     print _("PKCS#12 store format");
                     printf ("
                     </td>
-                    <td><a href=%s&action=get_p12>%s.p12</a>
+                    <td><a href=%s&action=get_p12>Certificate</a>
                     </td>
                     </tr>
                     <tr>
                       <td height=3 colspan=2></td>
-                    </tr>",$this->url, $this->account);
+                    </tr>",$this->url);
                     */
 
                 }
@@ -3221,75 +3225,75 @@ class SipSettings {
             ";
         }
 
-        if (in_array("free-pstn",$this->groups)) {
 
-            if (in_array("quota",$this->groups)) {
-                $_class="alert alert-error";
-            } else {
-                $_class="";
-            }
-
-            if ($this->pstn_changes_allowed) {
-                print "
+        if ($this->pstn_access) {
+            if (in_array("free-pstn",$this->groups)) {
+    
+                if (in_array("quota",$this->groups)) {
+                    $_class="alert alert-error";
+                } else {
+                    $_class="";
+                }
+    
+                if ($this->pstn_changes_allowed) {
+                    print "
+                        <div class='control-group'>
+                        <div class='$_class'>
+                        <label class=control-label>";
+                    print _("Quota");
+                    print "
+                    </label>
+                    <div class='controls'><div class='input-prepend'>";
+    
+                    printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'></div><span class='help-inline muted'>",$this->currency,$this->quota);
+                    //print "<div class=span10>";
+                    if ($this->quota || in_array("quota",$this->groups)) {
+                        $this->getCallStatistics();
+                        if ($this->thisMonth['price']) {
+                            printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
+                            printf (" / %d ",$this->thisMonth['calls']);
+                            print _("Calls ");
+                        }
+                    }
+    
+                    print "</span> ";
+    
+    
+                    if ($this->pstn_changes_allowed) {
+                        print "<label class='checkbox inline'>";
+                        print "
+                            <input type=checkbox name=quota_deblock value=1> ";
+                        print _("Un-block");
+                        print "</label>";
+                    }
+    
+                    print "</div></div>
+                    </div>
+                    ";
+                } else if ($this->quota) {
+                    print "
                     <div class='control-group'>
-                    <div class='$_class'>
-                    <label class=control-label>";
-                print _("Quota");
-                print "
-                </label>
-                <div class='controls'><div class='input-prepend'>";
-
-                printf ("<span class='add-on'>%s</span><input class=input-medium type=text size=6 maxsize=6 name=quota value='%s'></div><span class='help-inline muted'>",$this->currency,$this->quota);
-                //print "<div class=span10>";
-                if ($this->quota || in_array("quota",$this->groups)) {
+                        <label class=control-label>";
+                    print _("Quota");
+                    print "
+                        </label>
+                    <div class='controls $_class'>
+                        <span style='padding-top:5px; margin-bottom:5px;display:block;'>
+                    ";
+                    printf ("%s %s ",$this->quota,$this->currency);
                     $this->getCallStatistics();
                     if ($this->thisMonth['price']) {
                         printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
                         printf (" / %d ",$this->thisMonth['calls']);
-                        print _("Calls ");
+                        print _("Calls");
                     }
+    
+                    print "</span></div>
+                    </div>
+                    ";
+    
                 }
-
-                print "</span> ";
-
-
-                if ($this->pstn_changes_allowed) {
-                    print "<label class='checkbox inline'>";
-                    print "
-                        <input type=checkbox name=quota_deblock value=1> ";
-                    print _("Un-block");
-                    print "</label>";
-                }
-
-                print "</div></div>
-                </div>
-                ";
-            } else if ($this->quota) {
-                print "
-                <div class='control-group'>
-                    <label class=control-label>";
-                print _("Quota");
-                print "
-                    </label>
-                <div class='controls $_class'>
-                    <span style='padding-top:5px; margin-bottom:5px;display:block;'>
-                ";
-                printf ("%s %s ",$this->quota,$this->currency);
-                $this->getCallStatistics();
-                if ($this->thisMonth['price']) {
-                    printf (_("This month usage: %.2f %s"),$this->thisMonth['price'], $this->currency);
-                    printf (" / %d ",$this->thisMonth['calls']);
-                    print _("Calls");
-                }
-
-                print "</span></div>
-                </div>
-                ";
-
             }
-        }
-
-        if ($this->pstn_access) {
 
             if ($this->prepaid) $checked_box_prepaid="checked";
 
@@ -4000,7 +4004,7 @@ class SipSettings {
             if (strcmp($quota,$this->quota) != 0) {
                 if (!$quota) $quota=0;
                 $result->quota=intval($quota);
-                dprint ("change the quota");
+                dprint ("change the quota");
                 $this->somethingChanged=1;
             }
 
@@ -4012,13 +4016,21 @@ class SipSettings {
                 $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
             }
 
-			$rpid=trim($rpid);
+	    $rpid=trim($rpid);
             if (strcmp($rpid,$this->rpid) != 0) {
                 dprint ("change the rpid");
                 $result->rpid=$rpid;
                 $this->somethingChanged=1;
             }
 
+            if ($this->CallLimitChangePolicy()) {
+                if ($this->soapEngines[$this->sip_engine]['call_limit']) {
+                    if (isset($callLimit) && $this->callLimit != $callLimit) {
+                        $result->callLimit=intval($callLimit);
+                        $this->somethingChanged=1;
+                    }
+                }
+            }
         }
 
         $owner=intval($owner);
@@ -4146,7 +4158,7 @@ class SipSettings {
             }
         }
 
-		$foundGroupInAvailableGroups=array();
+	$foundGroupInAvailableGroups=array();
 
         $extra_groups=explode(' ',$_REQUEST['extra_groups']);
 
@@ -4254,15 +4266,6 @@ class SipSettings {
                 }
                 $result->acl=$ip_access_list;
                 $this->somethingChanged=1;
-            }
-        }
-
-        if ($this->CallLimitChangePolicy()) {
-            if ($this->soapEngines[$this->sip_engine]['call_limit']) {
-                if (isset($callLimit) && $this->callLimit != $callLimit) {
-                    $result->callLimit=intval($callLimit);
-                    $this->somethingChanged=1;
-                }
             }
         }
 
@@ -5730,10 +5733,15 @@ class SipSettings {
     }
 
     function showCallLimit() {
-        if (!$this->soapEngines[$this->sip_engine]['call_limit']) {
+        if (!$this->pstn_access) {
             return;
         }
+
         if (!in_array("free-pstn",$this->groups)) {
+            return;
+        }
+
+        if (!$this->soapEngines[$this->sip_engine]['call_limit']) {
             return;
         }
 
@@ -7705,9 +7713,9 @@ class SipSettings {
 
         $this->expire=date("Y-m-d H:i:s",strtotime("+30 minutes"));
         $query=sprintf("insert into memcache set `key`='email_%s', `value`='%s', `expire`='%s'",
-            $identifier,
-            json_encode($insert_data),
-            $this->expire );
+        $identifier,
+        json_encode($insert_data),
+        $this->expire );
 
         $this->db->query($query);
         $this->identifier = $identifier;
@@ -8244,8 +8252,8 @@ class SipSettings {
 
     function generateCertificate() {
 
-		global $enrollment;
-		include("/etc/cdrtool/enrollment/config.ini");
+        global $enrollment;
+	include("/etc/cdrtool/enrollment/config.ini");
 
         if (!is_array($enrollment)) {
             print _("Error: missing enrollment settings");
@@ -8254,6 +8262,10 @@ class SipSettings {
 
         if (!$enrollment['ca_conf']) {
             //print _("Error: missing enrollment ca_conf settings");
+            return false;
+        }
+
+        if (!$this->owner) {
             return false;
         }
 
@@ -8275,46 +8287,46 @@ class SipSettings {
     		'encrypt_key'      => false,
     	);
 
-		$dn = array(
-    		"countryName"            => "NL",
-	    	"stateOrProvinceName"    => "Noord Holland",
-    		"localityName"           => "Haarlem",
-    		"organizationName"       => "AG Projects",
-    		"organizationalUnitName" => "Blink",
-    		"commonName"             => $this->account,
-    		"emailAddress"           => $this->email
-		);
+        $dn = array(
+        "countryName"            => "NL",
+        "stateOrProvinceName"    => "Noord Holland",
+        "localityName"           => "Haarlem",
+        "organizationName"       => "AG Projects",
+        "organizationalUnitName" => "Blink",
+        "commonName"             => $this->owner,
+        "emailAddress"           => $this->email
+        );
 
-		$this->key = openssl_pkey_new($config);
+	$this->key = openssl_pkey_new($config);
         if ($this->key==FALSE) {
-			while (($e = openssl_error_string()) !== false) {
-				echo $e . "\n";
-				print "<br><br>";
-			}
+            while (($e = openssl_error_string()) !== false) {
+                    echo $e . "\n";
+                    print "<br><br>";
+            }
             return false;
-		}
-
-		$this->csr = openssl_csr_new($dn, $this->key);
+        }
+    
+        $this->csr = openssl_csr_new($dn, $this->key);
 
         if (!$this->csr) {
-			while (($e = openssl_error_string()) !== false) {
-				echo $e . "\n";
-				print "<br><br>";
-			}
+            while (($e = openssl_error_string()) !== false) {
+                    echo $e . "\n";
+                    print "<br><br>";
+            }
             return false;
-		}
+        }
 
-		$ca="file://".$enrollment['ca_crt'];
+        $ca="file://".$enrollment['ca_crt'];
 
-		$this->crt = openssl_csr_sign($this->csr, $ca, $enrollment['ca_key'], 3650, $config);
+        $this->crt = openssl_csr_sign($this->csr, $ca, $enrollment['ca_key'], 3650, $config);
 
-		if ($this->crt==FALSE) {
-			while (($e = openssl_error_string()) !== false) {
-				echo $e . "\n";
-				print "<br><br>";
-			}
+        if ($this->crt==FALSE) {
+            while (($e = openssl_error_string()) !== false) {
+                    echo $e . "\n";
+                    print "<br><br>";
+            }
             return false;
-		}
+        }
 
         openssl_csr_export    ($this->csr, $this->csr_out);
         openssl_pkey_export   ($this->key, $this->key_out, $this->password, $config);
@@ -8332,25 +8344,27 @@ class SipSettings {
     }
 
     function exportCertificateX509() {
+        if (!$this->owner) return;
         Header("Content-type: application/x-crt");
-        $header=sprintf("Content-Disposition: inline; filename=%s.crt",$this->account);
-		Header($header);
+        $header=sprintf("Content-Disposition: inline; filename=sipthor-owner-certificate-%s.crt",$this->owner);
+	Header($header);
         $cert=$this->generateCertificate();
         $crt=$cert['crt'].$cert['key'];
         print $crt;
     }
 
     function exportCertificateP12() {
+        if (!$this->owner) return;
         $cert=$this->generateCertificate();
         Header("Content-type: application/x-p12");
-        $header=sprintf("Content-Disposition: inline; filename=%s.p12",$this->account);
-		Header($header);
+        $header=sprintf("Content-Disposition: inline; filename=sipthor-owner-certificate-%s.p12",$this->owner);
+	Header($header);
         print $cert['p12'];
     }
 
     function isEmbedded() {
         // return true if page was loaded from non-session based web session
-		if ($_SERVER['SSL_CLIENT_CERT'] || $_SERVER['PHP_AUTH_DIGEST']) {
+	if ($_SERVER['SSL_CLIENT_CERT'] || $_SERVER['PHP_AUTH_DIGEST']) {
             return true;
         }
         return false;
@@ -10842,7 +10856,19 @@ function getSipThorHomeNode ($account,$sip_proxy) {
     return $ret;
 }
 
-function getSipAccountFromX509Certificate() {
+function getSipAccountFromX509Certificate($account='') {
+
+     if (!$account) {
+        print _('Error, please specify an account');
+        return false;
+     }
+
+     list($username, $domain) = explode("@",$account);
+
+     if (!$username || !$domain) {
+         print _("Invalid account provided");
+         return false;
+     }
 
      if (!$_SERVER[SSL_CLIENT_CERT]) {
      	print _("Error: No X.509 client certificate provided\n");
@@ -10854,27 +10880,14 @@ function getSipAccountFromX509Certificate() {
         return false;
      }
 
-     $username    = $cert['subject']['CN'];
-
-     $a=explode("@",$username);
-     $domain= $a[1];
-
-     if (count($a) !=2 ) {
-         print _("No SIP Address available. ");
-         return false;
-     }
-
      require("/etc/cdrtool/ngnpro_engines.inc");
 
-     global $domainFilters, $resellerFilters, $soapEngines ;
-
-     $credentials['account']    = $username;
+     global $domainFilters, $resellerFilters, $soapEngines;
 
      if ($domainFilters[$domain]['sip_engine']) {
          $credentials['engine']   = $domainFilters[$domain]['sip_engine'];
          $credentials['customer'] = $domainFilters[$domain]['customer'];
          $credentials['reseller'] = $domainFilters[$domain]['reseller'];
-
      } else if ($domainFilters['default']['sip_engine']) {
          $credentials['engine']=$domainFilters['default']['sip_engine'];
      } else {
@@ -10883,9 +10896,9 @@ function getSipAccountFromX509Certificate() {
      }
 
      $SOAPlogin=array(
-                            "username" => $soapEngines[$credentials['engine']]['username'],
-                            "password" => $soapEngines[$credentials['engine']]['password'],
-                            "admin"    => true
+                      "username" => $soapEngines[$credentials['engine']]['username'],
+                      "password" => $soapEngines[$credentials['engine']]['password'],
+                      "admin"    => true
      );
 
      $SoapAuth = array('auth', $SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -10897,7 +10910,29 @@ function getSipAccountFromX509Certificate() {
      $SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
      $SipPort->addHeader($SoapAuth);
 
-     $result     = $SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
+     // Filter
+     $filter=array('username' => $username,
+                   'domain'   => $domain,
+                   'owner'    => intval($cert['subject']['CN'])
+                   );
+
+     // Range
+     $range=array('start' => 0,
+                  'count' => 10
+                  );
+
+     $orderBy = array('attribute' => 'changeDate',
+                      'direction' => 'DESC'
+                      );
+
+     // Compose query
+     $Query=array('filter'  => $filter,
+                  'orderBy' => $orderBy,
+                  'range'   => $range
+                  );
+
+     // Call function
+     $result     = $SipPort->getAccounts($Query);
 
      if ((new PEAR)->isError($result)) {
          $error_msg  = $result->getMessage();
@@ -10907,6 +10942,11 @@ function getSipAccountFromX509Certificate() {
          return false;
      }
 
+     if ($result->total != 1) {
+         return false;
+     }
+
+     $credentials['account']  = $account;
      $credentials['customer'] = $result->customer;
      $credentials['reseller'] = $result->reseller;
 
@@ -11686,13 +11726,14 @@ class Enrollment {
         	$this->groups = array();
         }
 
-        $this->reseller       = $this->enrollment['reseller'];
-        $this->outbound_proxy = $this->enrollment['outbound_proxy'];
-        $this->xcap_root      = $this->enrollment['xcap_root'];
-        $this->msrp_relay     = $this->enrollment['msrp_relay'];
-        $this->settings_url   = $this->enrollment['settings_url'];
-        $this->ldap_hostname  = $this->enrollment['ldap_hostname'];
-        $this->ldap_dn        = $this->enrollment['ldap_dn'];
+        $this->reseller          = $this->enrollment['reseller'];
+        $this->outbound_proxy    = $this->enrollment['outbound_proxy'];
+        $this->xcap_root         = $this->enrollment['xcap_root'];
+        $this->msrp_relay        = $this->enrollment['msrp_relay'];
+        $this->settings_url      = $this->enrollment['settings_url'];
+        $this->ldap_hostname     = $this->enrollment['ldap_hostname'];
+        $this->ldap_dn           = $this->enrollment['ldap_dn'];
+        $this->conference_server = $this->enrollment['conference_server'];
 
         if ($this->enrollment['sip_class']) {
         	$this->sipClass = $this->enrollment['sip_class'];
@@ -12034,9 +12075,7 @@ class Enrollment {
                           'sip_address'    => $sip_address,
                           'email'          => $result->email,
                           'settings_url'   => $this->settings_url,
-                          'outbound_proxy' => $this->outbound_proxy,
-                          'xcap_root'      => $this->xcap_root,
-                          'msrp_relay'     => $this->msrp_relay
+                          'outbound_proxy' => $this->outbound_proxy
                           );
 
             if ($this->create_certificate) {
@@ -12051,16 +12090,17 @@ class Enrollment {
                 $return['ldap_dn']        = $this->ldap_dn;
             }
 
-                          /*
-                          'mdns_username'  => $customer['username'],
-                          'mdns_password'  => $customer['password'],
-                          'mdns_id'        => intval($owner),
-                          'outbound_proxy' => $this->outbound_proxy,
-                          'xcap_root'      => $this->xcap_root,
-                          'msrp_relay'     => $this->msrp_relay,
-                          'ldap_hostname'  => $this->ldap_hostname,
-                          'ldap_dn'        => $this->ldap_dn
-                          */
+            if ($this->msrp_relay) {
+                $return['msrp_relay']        = $this->msrp_relay;
+            }
+
+            if ($this->xcap_root) {
+                $return['xcap_root']        = $this->xcap_root;
+            }
+
+            if ($this->conference_server) {
+                $return['conference_server']        = $this->conference_server;
+            }
 
             print (json_encode($return));
 

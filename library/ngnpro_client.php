@@ -3128,7 +3128,7 @@ class SipAccounts extends Records {
         if (is_array($dictionary['groups'])) {
             $groups=$dictionary['groups'];
         } else {
-        	$groups=array();
+            $groups=array();
         }
 
         if (is_array($dictionary['ip_access_list'])) {
@@ -3167,16 +3167,25 @@ class SipAccounts extends Records {
         } else {
             $owner=intval($_REQUEST['owner']);
         }
+
+        if (!$owner) {
+            $owner = intval($customer);
+        }
+
         if (strlen($dictionary['quota'])) {
             $quota=intval($dictionary['quota']);
         } else {
             $quota=intval($_REQUEST['quota']);
         }
 
-        if (strlen($dictionary['prepaid'])) {
-            $prepaid=intval($dictionary['prepaid']);
+        if ($this->prepaidChangesAllowed()) {
+            if (strlen($dictionary['prepaid'])) {
+                $prepaid=intval($dictionary['prepaid']);
+            } else {
+                $prepaid=intval($_REQUEST['prepaid']);
+            }
         } else {
-            $prepaid=intval($_REQUEST['prepaid']);
+            $prepaid = 1;
         }
 
         if ($prepaid) {
@@ -3185,9 +3194,9 @@ class SipAccounts extends Records {
 
         if (!$email) {
             if ($username=="<autoincrement>") {
-        		$email='unknown@'.strtolower($domain);
+                $email='unknown@'.strtolower($domain);
             } else {
-        		$email=strtolower($username).'@'.strtolower($domain);
+                $email=strtolower($username).'@'.strtolower($domain);
             }
         }
 
@@ -3228,7 +3237,7 @@ class SipAccounts extends Records {
             $this->setCustomerProperties($_p);
         }
 
-		if (is_array($dictionary['properties'])) {
+	if (is_array($dictionary['properties'])) {
         	$properties=$dictionary['properties'];
         } else {
         	$properties=array();
@@ -3245,10 +3254,10 @@ class SipAccounts extends Records {
             $_reseller=$this->getResellerForDomain(strtolower($domain));
 
             if ($_reseller) {
-    			$reseller_properties=$this->getResellerProperties($_reseller,'store_clear_text_passwords');
+    	        $reseller_properties=$this->getResellerProperties($_reseller,'store_clear_text_passwords');
 
             	if (strlen($reseller_properties['store_clear_text_passwords'])) {
-                	$this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
+                    $this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
                 }
             }
         }
@@ -3669,23 +3678,44 @@ class SipAccounts extends Records {
         }
 
         foreach ($result as $_property) {
-        	$properties[$_property->name]=$_property->value;
+           $properties[$_property->name]=$_property->value;
         }
 
         return $properties;
 
     }
 
+    function pstnChangesAllowed() {
+
+        //dprint_r($this->loginProperties);
+	$_customer_pstn_changes=$this->getCustomerProperty('pstn_changes');
+        $_reseller_pstn_changes=$this->getCustomerProperty('pstn_changes');
+
+        if ($this->adminonly) {
+            return true;
+        } else if ($this->customer == $this->reseller && $_reseller_pstn_changes) {
+            return true;
+        } else if ($this->loginImpersonate == $this->reseller && $_reseller_pstn_changes) {
+            return true;
+        } else if ($_reseller_pstn_changes && $_customer_pstn_changes) {
+            return true;
+        }
+
+        return false;
+    }
+
     function prepaidChangesAllowed() {
 
         //dprint_r($this->loginProperties);
-		$_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
+	$_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
         $_reseller_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
 
-        if ($this->customer == $this->reseller && $_reseller_prepaid_changes) {
-        	return true;
+        if ($this->adminonly) {
+            return true;
+        } else if ($this->customer == $this->reseller && $_reseller_prepaid_changes) {
+            return true;
         } else if ($this->loginImpersonate == $this->reseller && $_reseller_prepaid_changes) {
-        	return true;
+            return true;
         } else if ($_reseller_prepaid_changes && $_customer_prepaid_changes) {
             return true;
         }
@@ -10621,6 +10651,7 @@ class Routes extends Records {
         print "
         <input class='btn btn-warning' type=submit name=action value=Add>
         ";
+
         print "<div class='input-prepend'><span class='add-on'>";
         printf (" Carrier ");
         print "</span>";
@@ -10933,7 +10964,7 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
-	                             'email_credit'        => array('name'      => 'Credit for E-mail aliases',
+	                         'email_credit'        => array('name'      => 'Credit for E-mail aliases',
                                                                'category'   => 'credit',
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
@@ -10953,11 +10984,16 @@ class Customers extends Records {
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
+                                 'pstn_changes'      => array('name'        => 'Pstn Changes',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'admin',
+                                                               'resellerMayManageForChildAccounts' => true
+                                                               ),
                                  'payment_processor_class'      => array('name'      => 'Payment Processor Class',
                                                                'category'   => 'sip',
                                                                'permission' => 'admin'
                                                                ),
-                                 'voicemail_server'    => array('name'      => 'Voicemail Server Address',
+                                 'voicemail_server'      => array('name'      => 'Voicemail Server Address',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
@@ -12785,7 +12821,7 @@ class Customers extends Records {
 
         foreach (array_keys($this->addFields) as $item) {
 
-            if ($dictionary[$item]) {
+        if ($dictionary[$item]) {
                 $customer[$item] = strip_tags(trim($dictionary[$item]));
             } else {
                 $item_form       = $item.'_form';
