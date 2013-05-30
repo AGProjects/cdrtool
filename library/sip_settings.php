@@ -88,6 +88,7 @@ class SipSettings {
                                            'blocked',
                                            'sip_password',
                                            'web_password',
+                                           'yubikey',
                                            'first_name',
                                            'last_name',
                                            'quota',
@@ -838,6 +839,8 @@ class SipSettings {
         $this->account   = $this->username."@".$this->domain;
         $this->fullName  = $this->firstName." ".$this->lastName;
         $this->name      = $this->firstName; // used by smarty
+
+        $this->yuibikey         = $result->Preferences['yubikey'];
 
         if ($this->soapEngines[$this->sip_engine]['call_limit']) {
             if ($result->callLimit) {
@@ -2954,6 +2957,12 @@ class SipSettings {
 
     function showSettingsTab() {
 
+        $use_yubikey=0;
+        if (stream_resolve_include_path('Auth/Yubico.php')) {
+            require_once 'Auth/Yubico.php';
+            $use_yubikey=1;
+        }
+
         $this->getVoicemail();
 
         print "
@@ -3031,6 +3040,29 @@ class SipSettings {
         </div>
         </div>
         ";
+
+        if ($use_yubikey == 1 ) {
+            print "
+            <div class='control-group odd'>
+            <label class='control-label' for='yubykey'>";
+            print _("Yubikey");
+            print "
+            </label>
+            <div class=controls>";
+
+            printf ("<input class=input-medium type=text size=12 maxlength=12 name=yubikey value=\"%s\"><span class=help-inline>",$this->Preferences['yubikey']) ;
+
+            print _("Enter yubikey to allow yubikey/username login to access this web page");
+
+            print "</span>
+            </div>
+            </div>
+            ";
+            //print '<pre>';
+            //print($this->Preferences['yubikey']);
+            //print_r($this);
+            //print '</pre>';
+        }
 
         print "
         <div class='control-group even'>
@@ -4080,6 +4112,12 @@ class SipSettings {
                 $web_password_new=md5($md1).':'.md5($md2);
             }
             $this->setPreference('web_password',$web_password_new);
+            $this->somethingChanged=1;
+        }
+
+
+        if ($yubikey && $this->Preferences['yubikey'] != $yubikey) {
+            $this->setPreference('yubikey',$yubikey);
             $this->somethingChanged=1;
         }
 

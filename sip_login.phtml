@@ -86,11 +86,41 @@ print "
                 <div class='controls'>
                     <input type="password" name="password" size=35 maxlength=50 class='span11'></td>
                     <input type="hidden" name="step" value=<?php print $step?>>
-                </div>
-            </div>
 
+<?php
 
-<?php $sess->hidden_session(); ?>
+$use_yubikey=0;
+if (stream_resolve_include_path('Auth/Yubico.php')) {
+    require_once 'Auth/Yubico.php';
+    $use_yubikey=1;
+}
+
+if ($use_yubikey == 1 ) {
+    print "</div></div>
+    <div class=control-group>
+    <label class=control-label>";
+    print _("Yubikey");
+    print "</label><div class=controls>";
+    print '
+        <input rel="popover" data-original-title="OTP hardware authentication" data-content="With this field you can login using a hardware OTP device called \'yubikey\'.&lt;br&gt;
+                <br/>
+                For info and purchase of this key see <a href=\'http://www.yubico.com\' target=\'_blank\'>http://www.yubico.com</a>" type="text" name="yubikey" size="35">
+        <p class="help-block"><a href=sip_login_reminder.phtml>';
+        print _("SIP address or password forgotten?");
+    print "
+    </a></p>
+    </div>
+    </div>";
+} else {
+    print '<p class="help-block"><a href=sip_login_reminder.phtml>';
+        print _("SIP address or password forgotten?");
+    print "
+    </a></p>
+    </div>
+    </div>";
+}
+
+$sess->hidden_session(); ?>
             <p class="help-block">
                 <a href=sip_login_reminder.phtml>
                     SIP address or password forgotten?

@@ -531,6 +531,7 @@ class SIP_Subscriber_Auth extends Auth {
     $challenge   = $_POST["challenge"];
     $step        = $_POST["step"];
     $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+    $yubikey_p   = $_POST['yubikey'];
 
     $sess->register("challenge");
 
@@ -549,6 +550,13 @@ class SIP_Subscriber_Auth extends Auth {
         $challenge   = $_POST["challenge"];
         $response    = $_POST["response"];
         $response_ha1= $_POST["response_ha1"];
+        $yubikey_p   = $_POST['yubikey'];
+
+        $use_yubikey=0;
+        if (stream_resolve_include_path('Auth/Yubico.php')) {
+            require_once 'Auth/Yubico.php';
+            $use_yubikey=1;
+        }
 
         if(isset($username)) {
             $this->auth["uname"]=$username;
@@ -609,6 +617,11 @@ class SIP_Subscriber_Auth extends Auth {
                 $web_password=$_property->value;
                 break;
             }
+
+            if ($_property->name == 'yubikey') {
+                $yubikey=$_property->value;
+                break;
+            }
         }
 
         if (!$web_password) $web_password=$result->password;
@@ -627,6 +640,18 @@ class SIP_Subscriber_Auth extends Auth {
 
         if ($result->ha1 && $result->ha1 == $response_ha1) {
             $log=sprintf("SIP settings page: %s logged in from %s", $username, $_SERVER['REMOTE_ADDR']);
+            syslog(LOG_NOTICE, $log);
+            return true;
+        }
+
+        if ($use_yubikey == 1) {
+            $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
+            $auth = $yubi->verify($yubikey_p);
+            $yubi_id = substr($yubikey_p, 0, 12);
+        }
+
+        if (!PEAR::isError($auth) && $yubikey == $yubi_id && $use_yubikey == 1) {
+            $log=sprintf("SIP settings page: %s logged in with yubikey from %s", $username, $_SERVER['REMOTE_ADDR']);
             syslog(LOG_NOTICE, $log);
             return true;
         }
@@ -753,7 +778,7 @@ class SipThor_DomainAuth {
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate ($user, $domain, $password,$response,$otp_yubkikey) {
+    function validate ($user, $domain, $password,$response,$otp_yubikey) {
     	$query = sprintf("SELECT * FROM sip_accounts
                   WHERE username = '%s'
                   AND     domain = '%s'
@@ -761,6 +786,12 @@ class SipThor_DomainAuth {
                   addslashes($user),
                   addslashes($domain)
                   );
+
+        $use_yubikey=0;
+        if (stream_resolve_include_path('Auth/Yubico.php')) {
+            require_once 'Auth/Yubico.php';
+            $use_yubikey=1;
+        }
 
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
@@ -783,7 +814,7 @@ class SipThor_DomainAuth {
                 }
             }
 
-            if ($CDRTool[provider][yubikey]==1  && $profile['properties']['yubikey']) {
+            if ($use_yubikey ==1  && $profile['properties']['yubikey']) {
                 $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
                 $yubikey=$profile['properties']['yubikey'];
                 $auth = $yubi->verify($otp_yubikey);
@@ -835,6 +866,12 @@ class pageLayout {
 
         global $username, $otp_error, $CDRTool;
         $auth=$parentAuth;
+
+        $use_yubikey=0;
+        if (stream_resolve_include_path('Auth/Yubico.php')) {
+            require_once 'Auth/Yubico.php';
+            $use_yubikey=1;
+        }
 
         print "
         <script language=javascript src=md5.js></script>
@@ -917,7 +954,7 @@ class pageLayout {
          </div>";
 
         //dprint_r($CDRTool);
-        if ($CDRTool[provider][yubikey]==1 ) {
+        if ($use_yubikey == 1 ) {
             print "
         <div class=control-group>
             <label class=control-label>
@@ -926,7 +963,7 @@ class pageLayout {
                 <input rel='popover'
             data-original-title='OTP hardware authentication'
             data-content=\"With this field you can login using a hardware OTP device called 'yubikey'.<br>
-            If you login  the first time with the username, password and OTP key, the key identifier is stored into you account.<br>
+            If you login the first time with a CDRTool account and the username, password and OTP key filled in, the key identifier is stored into you account.<br>
             For info and purchase of this key see <a href='http://www.yubico.com' target='_blank'>http://www.yubico.com</a>
            \" type=text name=yubikey size=40>
             </div>
