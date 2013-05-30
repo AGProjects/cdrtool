@@ -3045,7 +3045,7 @@ class SipSettings {
             print "
             <div class='control-group odd'>
             <label class='control-label' for='yubykey'>";
-            print _("Yubikey");
+            print _("Yubikey ID");
             print "
             </label>
             <div class=controls>";

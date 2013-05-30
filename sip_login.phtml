@@ -102,7 +102,8 @@ if ($use_yubikey == 1 ) {
     print _("Yubikey");
     print "</label><div class=controls>";
     print '
-        <input rel="popover" data-original-title="OTP hardware authentication" data-content="With this field you can login using a hardware OTP device called \'yubikey\'.&lt;br&gt;
+        <input rel="popover" data-trigger="hover" data-delay="1000" data-original-title="OTP hardware authentication" data-content="With this field you can login using a hardware OTP device called \'yubikey\'.<br/>
+    		You can set your yubikey-id in the SIP settings page after you login with your SIP account and password(s)  
                 <br/>
                 For info and purchase of this key see <a href=\'http://www.yubico.com\' target=\'_blank\'>http://www.yubico.com</a>" type="text" name="yubikey" size="35">
         <p class="help-block"><a href=sip_login_reminder.phtml>';
