@@ -105,6 +105,7 @@ class SipSettings {
                                            'accept_temporary_group',
                                            'accept_temporary_remain',
                                            'web_timestamp',
+                                           'web_password_reset',
                                            'acceptDailyStartTime',
                                            'acceptDailyStopTime',
                                            'acceptDailyGroup',
@@ -3090,8 +3091,11 @@ class SipSettings {
         if ($this->login_type == 'subscriber' && in_array("deny-password-change",$this->groups)) {
             print _("Password can be changed only by the operator");
         } else {
-            print "<input class=input-medium type=text size=15 name=sip_password><span class=help-inline>";
+            print '<input class=input-medium type=password size=15 name=sip_password rel="popover" title="" data-original-title="';
+            print _("Password");
+            print "\" data-trigger=\"focus\" data-toggle=\"popover\" data-content=\"";
             print _("Enter text to change the current password");
+            print "\">";
             printf ("\n\n<!-- \nSIP Account password: %s\n -->\n\n",$this->password);
         }
 
@@ -3106,13 +3110,22 @@ class SipSettings {
         print _("Web Password");
         print "
         </label>
-        <div class=controls>";
-
-        print "<input class=input-medium type=text size=15 name=web_password><span class=help-inline>";
+        <div class='controls'><div>";
+        
+        print '<input class=input-medium type=password size=15 name=web_password  rel="popover" title="" data-original-title="';
+        print _("Web Password");
+        print "\" data-trigger=\"focus\" data-toggle=\"popover button\" data-content=\"";
         print _("Enter text to change the password to access this web page");
+        print "\">";
+//        print '<span class=help-inline>';
+        print ' <label class="checkbox inline">';
+        print '<input type="checkbox" name="web_password_reset" value="1"> ';
+        print 'Remove web password';
+        print '</label>';
+        //print _("Enter text to change the password to access this web page");
 
-        print "</span>
-        </div>
+        print "
+        </div></div>
         </div>
         ";
 
@@ -4206,6 +4219,10 @@ class SipSettings {
             $this->somethingChanged=1;
         }
 
+        if ($web_password_reset) {
+            $this->setPreference('web_password','remove');
+            $this->somethingChanged=1;
+        }
 
         if ($this->Preferences['yubikey'] != $yubikey && !$this->isEmbedded()) {
             $this->setPreference('yubikey',$yubikey);
@@ -4728,8 +4745,10 @@ class SipSettings {
            $_prop=$this->properties[$_key];
             if ($_prop->name == $name) {
                 if (strlen($value)) {
-                    $newProperties[]=array('name'=> $name,
-                                           'value' => $value);
+                    if ($value != 'remove') {
+                        $newProperties[]=array('name'=> $name,
+                            'value' => $value);
+                    }
                 }
                 $found=1;
             } else {
@@ -11003,17 +11022,23 @@ function getSipAccountFromHTTPDigest () {
     $web_password='';
     foreach ($result->properties as $_property) {
         if ($_property->name == 'web_password') {
-            $web_password=$_property->value;
+            //$web_password = explode(":", $_property->value, -1);
+            $split=explode(":",$_property->value);
+            $web_password=$split['0'];
             break;
         }
     }
 
-    if ($web_password) {
-        $A1 = md5($data['username'] . ':' . $realm . ':' . $web_password);
+    if (!empty($web_password)) {
+        //$A1 = md5($data['username'] . ':' . $realm . ':' . $data['password']);
+        $A1 = $web_password;
         $login_type_log = 'web password';
-    } else if (strstr($data['username'], '@')) {
-        $A1 = md5($data['username'] . ':' . $realm . ':' . $result->password);
-        $login_type_log = 'cleartext legacy password';
+
+        $log=sprintf("TEST %s %s %s %s", $data['username'], $realm, $web_password , $data['nonce']);
+        syslog(LOG_NOTICE, $log);
+//    } else if (strstr($data['username'], '@')) {
+//        $A1 = md5($data['username'] . ':' . $realm . ':' . $result->password);
+//       $login_type_log = 'cleartext legacy password';
     } else if ($result->ha1) {
         $login_type_log = sprintf('encrypted password');
         $A1 = $result->ha1;
@@ -11024,8 +11049,8 @@ function getSipAccountFromHTTPDigest () {
 
     $A2 = md5($_SERVER['REQUEST_METHOD'].':'.$data['uri']);
     $valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
-
-    if ($data['response'] != $valid_response) {
+        
+    if ($data['response'] != $valid_response ) {
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
