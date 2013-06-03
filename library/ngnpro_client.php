@@ -3377,7 +3377,7 @@ class SipAccounts extends Records {
         printf ("
         <div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>");
 
-        print _("Login account reminder/Password Reset");
+        print _("Sip Account Reminder/Password Reset");
         print "</h2></div><div class=row-fluid>
             <form class='form-reminder' method=post>";
 
@@ -3413,11 +3413,11 @@ class SipAccounts extends Records {
         print _("Please fill in the e-mail address used during the registration of the SIP account ");
         printf ("' type=text size=35 name='email_filter' class='input-block-level' value='%s' placeholder='",
         $this->filters['email']);
-        print _("Email address");
+        print _("Email Address");
         print "'>";
         print "<input type='hidden' name='password_reset' value='on'>";
-        printf ("
-            <button id='submit' class='btn btn-primary btn-large btn-block' type=submit>Submit</button>
+        printf ("<center>
+            <button id='submit' class='btn btn-primary' type=submit>Send Reminder</button></center>
         </form></div>
         ");
 
