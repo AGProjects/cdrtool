@@ -20,10 +20,10 @@ $errorReporting = 1; 	// comment this out to enable PHP warnings
 error_reporting($errorReporting);
 
 ###########################################
-# Service provider information 
+# Service provider information
 $CDRTool['provider']['name']                    = "SIP provider";
 $CDRTool['provider']['service']                 = "SIP service";
-$CDRTool['provider']['timezone']                = "Europe/Amsterdam"; 
+$CDRTool['provider']['timezone']                = "Europe/Amsterdam";
 $CDRTool['provider']['fromEmail']               = "support@example.com";
 $CDRTool['provider']['toEmail']                 = "support@example.com";
 $CDRTool['provider']['sampleLoginSubscriber']   = "317100000@example.com";
@@ -39,7 +39,7 @@ $RatingEngine=array("socketIP"               => "IP.address.of.the.private.inter
                     "socketPort"             => "9024",
                     "cdr_source"             => "opensips_radius", // points to a defined DATASOURCE
                     "log_delay"              => 0.05,
-                    "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id 
+                    "split_rating_table"     => false, // when true individual rating tables are automatically created for each rate id
                     "csv_delimiter"          => ",",   // when importin CSV files
                     "priceDenominator"       => 10000, // e.g. 1 Eur = 10000 units
                     "priceDecimalDigits"     => 4,     // how many digits to round the prices to
@@ -160,7 +160,7 @@ $replicated_databases=array('cluster1'=>array(
                                                                'replication_password'=>'password'
                            )                                    )
                  );
-                 
+
 
 # To allow subscribers to login and access their own CDRs. See
 # OpenSIPS_DomainAuth from phplib/local.inc as example
@@ -187,7 +187,7 @@ $DATASOURCES=array(
 "opensips_radius"=>array(
                     "name"               => "OpenSIPS",
                     "class"              => "CDRS_opensips_custom",
-                    "db_class"           => array("DB_radius2","DB_radius"),  
+                    "db_class"           => array("DB_radius2","DB_radius"),
                     "table"              => "radacct",      // or "radacct".date("Ym") if sql.conf uses the mysql procedure to auto-rotate tables
                     "rating"             => "1",            // enable rating
                     "rateField"          => "Rate",         // which field stores the rating info
@@ -217,10 +217,10 @@ $DATASOURCES=array(
                                                   ),
                     "domainTranslation"  => array(
                                                   "gw02.domain.com"      => "pstn.domain.com" // translate Realm
-                                                  ), 
+                                                  ),
                     "domainTranslationDestination"  => array(
                                                  "gw02.domain.com"      => "pstn.domain.com" // translate destination
-                                                  ), 
+                                                  ),
                     "purgeCDRsAfter"     => 120,           // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
                     "db_registrar"       => "DB_opensips", // opensips location database
                     "enableThor"         => false,	   // set to true if using SIP Thor
@@ -232,7 +232,8 @@ $DATASOURCES=array(
                                                   "10.0.0.2",
                                                   "10.0.0.3"
                                                   ),  // where to get the active sessions from MediaRroxy 1.x
-                    "skipStatistics"     => 0         // Skip usage graphs
+                    "skipStatistics"     => 0,         // Skip usage graphs,
+                    "db_ngnpro_stats"    => "DB_CDRTool"   // Database for provisioning stats
                     ),
 "cisco"     =>array("name"               => "Cisco gateway",
                     "class"              => "CDRS_cisco",
@@ -272,7 +273,7 @@ $DATASOURCES=array(
                                             "SIP"=>"opensips_radius"
                     			    		),
                     "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
-                                                        
+
                     ),
 "sip_trace"   =>array(
                     "name"               => "SIP trace",
@@ -282,28 +283,28 @@ $DATASOURCES=array(
                     "SIPProxies"         => array("10.0.0.1"=>"SIP Proxy 1",
                                                  "10.0.0.2"=>"SIP Proxy 2"
                                                 ),
-                     "invisible"          => 1, // hide this datasource in call search page / datasource selection 
+                     "invisible"          => 1, // hide this datasource in call search page / datasource selection
                     "mediaTrace" => "media_trace"
                     ),
-                    
+
 "sip_trace_thor"   =>array(
                     "name"               => "SIP trace Thor",
                     "enableThor"         => true,
-                    "soapEngineId"       => "sipthor",   
+                    "soapEngineId"       => "sipthor",
                     "mediaTrace"         => "media_trace_thor",
-                    "invisible"          => 1, 
+                    "invisible"          => 1,
                     ),
 "media_trace"   =>array(
                     "name"               => "Media trace",
                     "db_class"           => "DB_mediaproxy",
                     "enableThor"         => false,
-                    "invisible"          => 1 
+                    "invisible"          => 1
                     ),
 "media_trace_thor"  =>array(
                     "name"               => "Media trace Thor",
                     "enableThor"         => true,
                     "soapEngineId"       => "sipthor",
-                    "invisible"          => 1 
+                    "invisible"          => 1
                     )
 );
 
@@ -314,7 +315,7 @@ $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
 if ($_SERVER['REMOTE_ADDR']=="10.0.0.1") {
-    // display debug information only from this host 
+    // display debug information only from this host
     //$verbose=1;
 } else {
     // prevent set of verbose via post/get
