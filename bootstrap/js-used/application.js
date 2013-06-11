@@ -31,6 +31,12 @@
         e.preventDefault()
       })
 
+    $("button[rel=popover]")
+      .popover()
+      .click(function(e) {
+        e.preventDefault();
+      });
+
     $("input[rel=popover]")
       .popover()
       .click(function(e) {
@@ -66,7 +72,7 @@
       }
       })
     })
-  })
+  });
 
 // Modified from the original jsonpi https://github.com/benvinegar/jquery-jsonpi
 $.ajaxTransport('jsonpi', function(opts, originalOptions, jqXHR) {
@@ -98,6 +104,78 @@ $.ajaxTransport('jsonpi', function(opts, originalOptions, jqXHR) {
       form.appendTo('body').submit()
     }
   }
-})
+});
+
+Highcharts.theme = {
+
+    chart: {
+        backgroundColor: 'transparent',
+        plotBackgroundColor: 'transparent',
+        plotShadow: false,
+        plotBorderWidth: 0
+    },
+    title: {
+        style: {
+            color: '#5177bd',
+            font: 'bold 16px Verdana, Arial,Telex, sans-serif'
+        }
+    },
+    subtitle: {
+        style: {
+            color: '#5177bd',
+            font: 'bold 12px Verdana, Arial,Telex, sans-serif'
+        }
+    },
+    xAxis: {
+        minorTickInterval: 'auto',
+        lineColor: '#000',
+        lineWidth: 1,
+        tickWidth: 1,
+        tickColor: '#000',
+        labels: {
+            style: {
+                color: '#000',
+                font: '10px Verdana, Arial,Telex, sans-serif'
+            }
+        },
+    },
+    yAxis: {
+        minorTickInterval: 'auto',
+        lineColor: '#000',
+        lineWidth: 1,
+        tickWidth: 1,
+        tickColor: '#000',
+        labels: {
+            style: {
+                color: '#000',
+                font: '10px Verdana, Arial,Telex, sans-serif'
+            }
+        },
+    },
+    legend: {
+        itemStyle: {
+            font: '11px Verdana, Arial,Telex, sans-serif',
+            color: '#333'
+        },
+        itemHoverStyle: {
+            color: '#039'
+        },
+        itemHiddenStyle: {
+            color: 'gray'
+        }
+    },
+
+
+    navigation: {
+        buttonOptions: {
+            theme: {
+                stroke: '#e6e6e6'
+            }
+        }
+    }
+};
+
+// Apply the theme
+var highchartsOptions = Highcharts.setOptions(Highcharts.theme);
 
 }(window.jQuery)

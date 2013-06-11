@@ -1,0 +1,51 @@
+<?
+require("/etc/cdrtool/global.inc");
+page_open(
+    array("sess" => "CDRTool_Session",
+          "auth" => "CDRTool_Auth",
+          "perm" => "CDRTool_Perm"
+          ));
+
+require("provisioning_statistics.php");
+$perm->check("statistics");
+
+$title="Provisioning usage statistics";
+include("header.phtml");
+
+global $CDRTool;
+if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+
+$layout = new pageLayoutLocal();
+$layout->showTopMenu($title);
+
+$num=0;
+
+foreach (array_keys($DATASOURCES) as $datasource) {
+    if ($DATASOURCES[$datasource]['db_ngnpro_stats']) {
+        $stats= new ProvisioningStatistics();
+
+        list($data,$data1) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        $categories = $stats->getCategories($data);
+        $second_categories = $stats->getSecondCategories($data);
+
+        $requests = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        $requests_time = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats']);
+
+        $period = $stats->getPeriod($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        print "<div class='alert alert-success'><center>$period[2] requests between ".$period[0]." and ".$period[1]."</center></div>";
+
+        print "<div class='row-fluid' style='min-height:350px'>";
+        $stats->printChartDonut("Top 5 distribution of request types",'',$num,$categories, $second_categories,$data1);
+        print "</div>";
+        print "<div class='row-fluid' style='min-height:280px'>";
+        $stats->printChartLine($num,$requests,$requests_time);
+        print "</div>";
+        $num++;
+    }
+}
+
+$layout->showFooter();
+
+page_close();
+
+?>

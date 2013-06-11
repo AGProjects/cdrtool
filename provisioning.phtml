@@ -20,7 +20,7 @@ page_open(
                   "perm" => "CDRTool_Perm")
          );
 
-$title="Platform provisioning";
+$title="Provisioning";
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
@@ -134,7 +134,7 @@ if ($_REQUEST['generatorId']) {
 
 if (!$export) {
     $layout->showFooter();
-    
+
     print "
     </body>
     </html>
