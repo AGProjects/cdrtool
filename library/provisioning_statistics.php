@@ -206,7 +206,7 @@ class ProvisioningStatistics {
 
                     }
 
-                    new_methods.sort();
+                    //new_methods.sort();
                     $('#sub_container$num').fadeIn();
                     renderSubPie(new_methods[0].parentId+':'+new_methods[0].name+' by IP', total_data[new_methods[0].parentId][new_methods[0].name]);
 
