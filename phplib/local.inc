@@ -1218,7 +1218,7 @@ class pageLayout
         // Dirty hack
 
         if ($title == 'Provisioning' && $perm->have_perm("provisioning")) {
-            print "<div class=pull-right><a class='btn btn-info' href='provisioning_status.phtml'>Usage statistics</a>";
+            print "<div class=pull-right><a class='btn btn-info' href='provisioning_status.phtml'> <i class='icon-bar-chart'></i> Usage statistics</a>";
         }
         print "</h1></div>";
         // print "<table width=100% cellpadding=5 CELLSPACING=0 border=5 align=center>

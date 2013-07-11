@@ -19,8 +19,8 @@ class ProvisioningStatistics {
         if (!class_exists($class)) return array();
 
         $db = new $class();
-
-        $query = "select substring_index(function,':',1) as port,count(*) as number from ngnpro_logs group by port order by number desc limit 0, 5";
+        $start = (float) array_sum(explode(' ',microtime()));
+        $query = "select substring_index(function,':',1) as port, total as number from ngnpro_logs_new_functions group by port order by number desc limit 0, 5";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -39,7 +39,7 @@ class ProvisioningStatistics {
         }
 
         foreach($temp as $key=> $value) {
-            $query = "select count(*)as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs where function like '$key:%' group by function order by number desc limit 0,5 ;";
+            $query = "select total as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_new_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
             dprint("$query");
 
             if (!$db->query($query))  {
@@ -55,22 +55,29 @@ class ProvisioningStatistics {
                  $requests[$db->f('port')]['total'] = $requests[$db->f('port')]['total'] + intval($db->f('number'));
             }
 
-            $query ="select count(*) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method, ip from ngnpro_logs group by ip,function order by number desc";
-            dprint("$query");
+        }
+        $end = (float) array_sum(explode(' ',microtime()));
+        dprint("Processing time: ". sprintf("%.4f", ($end-$start))." seconds<br>");
 
-            if (!$db->query($query))  {
-                $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
-                print $log;
-                syslog(LOG_NOTICE, $log);
-                return array();
-            }
+        $start = (float) array_sum(explode(' ',microtime()));
+        $query ="select total as number, function, ip from ngnpro_logs_new_functions group by ip,function order by number desc";
+        dprint("$query");
 
-            if (!$db->num_rows()) return array();
-            while ($db->next_record()) {
-                 $requests_ip[$db->f('port')][$db->f('method')][$db->f('ip')] = intval($db->f('number'));
-            }
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
         }
 
+        if (!$db->num_rows()) return array();
+        while ($db->next_record()) {
+            list($port,$method) = explode(":", $db->f('function'));
+            $requests_ip[$port][$method][$db->f('ip')] = intval($db->f('number'));
+        }
+
+        $end = (float) array_sum(explode(' ',microtime()));
+        dprint("Processing time for getTopRequestsProvisioningNew: ". sprintf("%.4f", ($end-$start))." seconds");
         return array($requests,$requests_ip);
     }
 
@@ -83,7 +90,7 @@ class ProvisioningStatistics {
 
         $db = new $class();
 
-        $query = "select MIN(date) as min_date,MAX(date) as max_date, count(*) as total from ngnpro_logs";
+        $query = "select MIN(date) as min_date,MAX(date) as max_date, sum(total) as total from ngnpro_logs_new";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -335,15 +342,15 @@ class ProvisioningStatistics {
         print $chart;
     }
 
-    function getRequestsProvisioning($class) {
+    function getRequestsProvisioning($class,$days) {
         global $CDRTool;
         $requests = array();
-
+        $period = '300';
         if (!class_exists($class)) return array();
 
         $db = new $class();
 
-        $query = "select count(*) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300";
+        $query = "select sum(total) as number,date from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 300";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -356,21 +363,31 @@ class ProvisioningStatistics {
         if (!$db->num_rows()) return array();
 
         while ($db->next_record()) {
-            $requests[] = array($db->f('date'),intval($db->f('number')));
+            $requests[] = array($db->f('date'),(intval($db->f('number')))/5);
         }
 
         return json_encode($requests);
     }
 
-   function getRequestsTime($class) {
+   function getRequestsTime($class, $days) {
         global $CDRTool;
         $requests = array();
+        $period = '300';
 
         if (!class_exists($class)) return array();
-
+        $start = (float) array_sum(explode(' ',microtime()));
         $db = new $class();
 
-        $query = "select count(*) as number, date,sum(execution_time) as total from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300";
+        if ($days <= 10) {
+            $period='600';
+        } else if ($days <= 20) {
+             $period='1200';
+        } else if ($days > 20) {
+             $period='2400';
+        }
+
+        #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
+        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 300 order by date";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -383,14 +400,20 @@ class ProvisioningStatistics {
         if (!$db->num_rows()) return array();
 
         while ($db->next_record()) {
-            $requests[] = array($db->f('date'),(floatval($db->f('total'))/intval($db->f('number'))*1000));
+            $total= $db->f('data');
+            $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
         }
-
+        $end = (float) array_sum(explode(' ',microtime()));
+        dprint("<br>Processing time for getRequestsTime: ". sprintf("%.4f", ($end-$start))." seconds<br>");
+        // echo "<pre>";
+        // print_r($requests);
+        // echo "</pre>";
         return json_encode($requests);
     }
 
     function printChartLine($num,$requests,$requests_time) {
 
+        $num=$num+1;
         $chart = "
             <script type=\"text/javascript\">
             $(function () {
@@ -399,7 +422,7 @@ class ProvisioningStatistics {
                 for (var j = 0; j < requests.length; j++) {
                     var t = requests[j][0].split(/[- :]/);
                     requests[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
-                    requests[j][1] = requests[j][1]/5;
+                    //requests[j][1] = requests[j][1]/5;
                 }
 
                 var request_time = $requests_time;
@@ -408,13 +431,14 @@ class ProvisioningStatistics {
                     var t = request_time[j][0].split(/[- :]/);
                     request_time[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
                 }
-                //console.log(requests);
+                console.log(requests);
 
                 $('#container_line$num').highcharts({
                     chart : {
                         type     : 'spline',
                         zoomType : 'x',
                         height   : 280,
+                        marginRight: 80
                     },
                     credits : {
                         enabled : false
@@ -428,6 +452,7 @@ class ProvisioningStatistics {
                             text : null
                         },
                         minRange : 3600000,
+                        endOnTick: true,
                     },
                     plotOptions : {
                         spline  : {
@@ -457,12 +482,14 @@ class ProvisioningStatistics {
                     series: [{
                         name: 'Requests per minute',
                         data: requests
-                    },{
+                    }
+                    ,{
                         name: 'Average execution time',
                         data: request_time,
                         color: '#8A0808',
                         yAxis: 1,
-                    }],
+                    }
+                    ],
                 });
             });
             </script>

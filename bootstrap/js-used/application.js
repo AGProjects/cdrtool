@@ -126,6 +126,7 @@ Highcharts.theme = {
     },
     xAxis: {
         minorTickInterval: 'auto',
+        //majorTickInterval: '',
         lineColor: '#000',
         lineWidth: 1,
         tickWidth: 1,

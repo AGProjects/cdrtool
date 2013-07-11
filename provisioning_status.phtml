@@ -24,21 +24,28 @@ foreach (array_keys($DATASOURCES) as $datasource) {
     if ($DATASOURCES[$datasource]['db_ngnpro_stats']) {
         $stats= new ProvisioningStatistics();
 
-        list($data,$data1) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
-        $categories = $stats->getCategories($data);
-        $second_categories = $stats->getSecondCategories($data);
+        list($datan,$datan1) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
 
-        $requests = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
-        $requests_time = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        $categories = $stats->getCategories($datan);
+        $second_categories = $stats->getSecondCategories($datan);
 
         $period = $stats->getPeriod($DATASOURCES[$datasource]['db_ngnpro_stats']);
+//flush();
+        $date1 = new DateTime($period[0]);
+        $date2 = new DateTime($period[1]);
+        $interval = $date1->diff($date2);
+
+        $requests_time_new = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days);
+        $requests_new = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days);
+
         print "<div class='alert alert-success'><center>$period[2] requests between ".$period[0]." and ".$period[1]."</center></div>";
 
         print "<div class='row-fluid' style='min-height:350px'>";
-        $stats->printChartDonut("Top 5 distribution of request types",'',$num,$categories, $second_categories,$data1);
+        $stats->printChartDonut("Top 5 distribution of request types",'',$num+2,$categories, $second_categories,$datan1);
         print "</div>";
         print "<div class='row-fluid' style='min-height:280px'>";
-        $stats->printChartLine($num,$requests,$requests_time);
+        //$stats->printChartLine($num,$requests,$requests_time);
+        $stats->printChartLine($num,$requests_new,$requests_time_new);
         print "</div>";
         $num++;
     }
