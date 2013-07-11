@@ -20,7 +20,7 @@ class ProvisioningStatistics {
 
         $db = new $class();
         $start = (float) array_sum(explode(' ',microtime()));
-        $query = "select substring_index(function,':',1) as port, total as number from ngnpro_logs_new_functions group by port order by number desc limit 0, 5";
+        $query = "select substring_index(function,':',1) as port, total as number from ngnpro_logs_functions group by port order by number desc limit 0, 5";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -39,7 +39,7 @@ class ProvisioningStatistics {
         }
 
         foreach($temp as $key=> $value) {
-            $query = "select total as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_new_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
+            $query = "select total as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
             dprint("$query");
 
             if (!$db->query($query))  {
@@ -60,7 +60,7 @@ class ProvisioningStatistics {
         dprint("Processing time: ". sprintf("%.4f", ($end-$start))." seconds<br>");
 
         $start = (float) array_sum(explode(' ',microtime()));
-        $query ="select total as number, function, ip from ngnpro_logs_new_functions group by ip,function order by number desc";
+        $query ="select total as number, function, ip from ngnpro_logs_functions group by ip,function order by number desc";
         dprint("$query");
 
         if (!$db->query($query))  {
@@ -90,7 +90,7 @@ class ProvisioningStatistics {
 
         $db = new $class();
 
-        $query = "select MIN(date) as min_date,MAX(date) as max_date, sum(total) as total from ngnpro_logs_new";
+        $query = "select MIN(date) as min_date,MAX(date) as max_date, sum(total) as total from ngnpro_logs";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -350,7 +350,7 @@ class ProvisioningStatistics {
 
         $db = new $class();
 
-        $query = "select sum(total) as number,date from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 300";
+        $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -387,7 +387,7 @@ class ProvisioningStatistics {
         }
 
         #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
-        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 300 order by date";
+        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300 order by date";
         dprint($query);
 
         if (!$db->query($query))  {

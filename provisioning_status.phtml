@@ -30,7 +30,7 @@ foreach (array_keys($DATASOURCES) as $datasource) {
         $second_categories = $stats->getSecondCategories($datan);
 
         $period = $stats->getPeriod($DATASOURCES[$datasource]['db_ngnpro_stats']);
-//flush();
+
         $date1 = new DateTime($period[0]);
         $date2 = new DateTime($period[1]);
         $interval = $date1->diff($date2);
