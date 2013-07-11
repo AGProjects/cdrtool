@@ -5783,6 +5783,7 @@ class SipSettings {
                 $duration    = normalizeTime($this->calls_placed[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
                 $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['startTime']);
+                $stopTime    = $this->calls_placed[$call]['stopTime'];
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
@@ -5808,6 +5809,9 @@ class SipSettings {
                 } else {
                     $_class='even';
                 }
+                if (!$stopTime) {
+                    $duration = _('In progress');
+                }
 
                 print "
                 <tr class=$_class>
@@ -5828,7 +5832,7 @@ class SipSettings {
 
     }
 
-    function getHistory () {
+    function getHistory ($status='all') {
         dprint("getHistory()");
 
         $fromDate=time()-3600*24*14; // last two weeks
@@ -5861,6 +5865,9 @@ class SipSettings {
             foreach ($apps as $app) {
                 $media[]=trim($app);
             }
+            if (!$callStructure->stopTime && $status == 'completed') {
+                continue;
+            }
             $this->calls_received[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
@@ -5884,7 +5891,9 @@ class SipSettings {
             foreach ($apps as $app) {
                 $media[]=trim($app);
             }
-
+            if (!$callStructure->stopTime && $status == 'completed') {
+                continue;
+            }
             $this->calls_placed[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->toURI),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
@@ -10769,7 +10778,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         print json_encode($SipSettings->rejectMembers);
         return true;
     } else if ($_REQUEST['action'] == 'get_history'){
-        $SipSettings->getHistory();
+        $SipSettings->getHistory('completed');
         print json_encode($SipSettings->call_history);
         return true;
     } else if ($_REQUEST['action'] == 'get_voicemail'){
