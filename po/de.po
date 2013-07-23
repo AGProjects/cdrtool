@@ -2,404 +2,398 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-01 12:51+0100\n"
+"POT-Creation-Date: 2013-07-22 12:24+0200\n"
 "PO-Revision-Date: 2012-11-01 14:35+0100\n"
 "Last-Translator: Thomas Martin <tmartin@bel-apps.com>\n"
 "Language-Team: language@ag-projects.com\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.5.4\n"
 
 #. define_syslog_variables();
-#: /var/www/CDRTool/library/sip_settings.php:182
+#: /var/www/CDRTool/library/sip_settings.php:172
 msgid "unlimited"
 msgstr "unbegrenzt"
 
-#: /var/www/CDRTool/library/sip_settings.php:208
+#: /var/www/CDRTool/library/sip_settings.php:198
 msgid "Error: missing sip_engine in login credentials"
 msgstr "Fehler: Fehlende sip_engine beim Login"
 
-#: /var/www/CDRTool/library/sip_settings.php:283
+#: /var/www/CDRTool/library/sip_settings.php:273
 #, php-format
 msgid "Status"
 msgstr "Status"
 
-#: /var/www/CDRTool/library/sip_settings.php:291
+#: /var/www/CDRTool/library/sip_settings.php:281
 #, php-format
 msgid "Deny password change"
 msgstr "Passwortänderung ablehnen"
 
-#: /var/www/CDRTool/library/sip_settings.php:302
-#: /var/www/CDRTool/library/sip_settings.php:307
+#: /var/www/CDRTool/library/sip_settings.php:292
+#: /var/www/CDRTool/library/sip_settings.php:297
 #, php-format
 msgid "Dial %s to change"
 msgstr "Zum Ändern %s wählen"
 
-#: /var/www/CDRTool/library/sip_settings.php:313
+#: /var/www/CDRTool/library/sip_settings.php:303
 #, php-format
 msgid "Reject Anonymous"
 msgstr "Anonyme Anrufe ablehnen"
 
-#: /var/www/CDRTool/library/sip_settings.php:321
+#: /var/www/CDRTool/library/sip_settings.php:311
 #, php-format
 msgid "Email Missed Calls"
 msgstr "Liste verpasster Anrufe per Email verschicken"
 
-#: /var/www/CDRTool/library/sip_settings.php:337
+#: /var/www/CDRTool/library/sip_settings.php:327
 msgid "Identity"
 msgstr "Identität"
 
-#: /var/www/CDRTool/library/sip_settings.php:338
+#: /var/www/CDRTool/library/sip_settings.php:328
 msgid "Devices"
 msgstr "Geräte"
 
-#: /var/www/CDRTool/library/sip_settings.php:339
+#: /var/www/CDRTool/library/sip_settings.php:329
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: /var/www/CDRTool/library/sip_settings.php:340
+#: /var/www/CDRTool/library/sip_settings.php:330
 msgid "Forwarding"
 msgstr "Weiterleitung"
 
-#: /var/www/CDRTool/library/sip_settings.php:341
+#: /var/www/CDRTool/library/sip_settings.php:331
 msgid "DND"
 msgstr "Rufsperren"
 
-#: /var/www/CDRTool/library/sip_settings.php:342
+#: /var/www/CDRTool/library/sip_settings.php:332
 msgid "Contacts"
 msgstr "Kontakte"
 
-#: /var/www/CDRTool/library/sip_settings.php:343
+#: /var/www/CDRTool/library/sip_settings.php:333
 msgid "History"
 msgstr "Verlauf"
 
-#: /var/www/CDRTool/library/sip_settings.php:348
-#: /var/www/CDRTool/library/sip_settings.php:3447
-#: /etc/cdrtool/local/sip_settings.php:913
+#: /var/www/CDRTool/library/sip_settings.php:338
+#: /var/www/CDRTool/library/sip_settings.php:3503
+#: /etc/cdrtool/local/sip_settings.php:936
 msgid "Barring"
 msgstr "Sperrung"
 
-#: /var/www/CDRTool/library/sip_settings.php:354
-#: /var/www/CDRTool/library/sip_settings.php:3438
-msgid "Presence"
-msgstr "Anwesenheit"
-
-#: /var/www/CDRTool/library/sip_settings.php:359
+#: /var/www/CDRTool/library/sip_settings.php:343
 msgid "DID"
 msgstr "DID"
 
-#: /var/www/CDRTool/library/sip_settings.php:366
+#: /var/www/CDRTool/library/sip_settings.php:350
 msgid "Every day"
 msgstr "Jeden Tag"
 
-#: /var/www/CDRTool/library/sip_settings.php:367
+#: /var/www/CDRTool/library/sip_settings.php:351
 msgid "Weekday"
 msgstr "Wochentag"
 
-#: /var/www/CDRTool/library/sip_settings.php:368
+#: /var/www/CDRTool/library/sip_settings.php:352
 msgid "Weekend"
 msgstr "Wochenende"
 
-#: /var/www/CDRTool/library/sip_settings.php:369
+#: /var/www/CDRTool/library/sip_settings.php:353
 msgid "Monday"
 msgstr "Montag"
 
-#: /var/www/CDRTool/library/sip_settings.php:370
+#: /var/www/CDRTool/library/sip_settings.php:354
 msgid "Tuesday"
 msgstr "Dienstag"
 
-#: /var/www/CDRTool/library/sip_settings.php:371
+#: /var/www/CDRTool/library/sip_settings.php:355
 msgid "Wednesday"
 msgstr "Mittwoch"
 
-#: /var/www/CDRTool/library/sip_settings.php:372
+#: /var/www/CDRTool/library/sip_settings.php:356
 msgid "Thursday"
 msgstr "Donnerstag"
 
-#: /var/www/CDRTool/library/sip_settings.php:373
+#: /var/www/CDRTool/library/sip_settings.php:357
 msgid "Friday"
 msgstr "Freitag"
 
-#: /var/www/CDRTool/library/sip_settings.php:374
+#: /var/www/CDRTool/library/sip_settings.php:358
 msgid "Saturday"
 msgstr "Samstag"
 
-#: /var/www/CDRTool/library/sip_settings.php:375
+#: /var/www/CDRTool/library/sip_settings.php:359
 msgid "Sunday"
 msgstr "Sonntag"
 
-#: /var/www/CDRTool/library/sip_settings.php:379
+#: /var/www/CDRTool/library/sip_settings.php:363
 #, php-format
 msgid "VIP"
 msgstr "VIP"
 
-#: /var/www/CDRTool/library/sip_settings.php:380
+#: /var/www/CDRTool/library/sip_settings.php:364
 #, php-format
 msgid "Business"
 msgstr "Geschäftlich"
 
-#: /var/www/CDRTool/library/sip_settings.php:381
+#: /var/www/CDRTool/library/sip_settings.php:365
 #, php-format
 msgid "Coworkers"
 msgstr "Kollegen"
 
-#: /var/www/CDRTool/library/sip_settings.php:382
+#: /var/www/CDRTool/library/sip_settings.php:366
 #, php-format
 msgid "Friends"
 msgstr "Freunde"
 
-#: /var/www/CDRTool/library/sip_settings.php:383
+#: /var/www/CDRTool/library/sip_settings.php:367
 #, php-format
 msgid "Family"
 msgstr "Familie"
 
-#: /var/www/CDRTool/library/sip_settings.php:387
+#: /var/www/CDRTool/library/sip_settings.php:371
 #, php-format
 msgid "All Calls"
 msgstr "Alle Anrufe"
 
-#: /var/www/CDRTool/library/sip_settings.php:388
-#: /var/www/CDRTool/library/sip_settings.php:399
+#: /var/www/CDRTool/library/sip_settings.php:372
+#: /var/www/CDRTool/library/sip_settings.php:383
 #, php-format
 msgid "If Not-Online"
 msgstr "Wenn Nicht-Online"
 
-#: /var/www/CDRTool/library/sip_settings.php:389
-#: /var/www/CDRTool/library/sip_settings.php:400
+#: /var/www/CDRTool/library/sip_settings.php:373
+#: /var/www/CDRTool/library/sip_settings.php:384
 #, php-format
 msgid "If Busy"
 msgstr "Wenn besetzt"
 
-#: /var/www/CDRTool/library/sip_settings.php:390
-#: /var/www/CDRTool/library/sip_settings.php:401
+#: /var/www/CDRTool/library/sip_settings.php:374
+#: /var/www/CDRTool/library/sip_settings.php:385
 #, php-format
 msgid "If No-Answer"
 msgstr "Wenn keine Antwort"
 
-#: /var/www/CDRTool/library/sip_settings.php:391
-#: /var/www/CDRTool/library/sip_settings.php:395
-#: /var/www/CDRTool/library/sip_settings.php:402
+#: /var/www/CDRTool/library/sip_settings.php:375
+#: /var/www/CDRTool/library/sip_settings.php:379
+#: /var/www/CDRTool/library/sip_settings.php:386
 #, php-format
 msgid "If Unavailable"
 msgstr "Wenn nicht verfügbar"
 
-#: /var/www/CDRTool/library/sip_settings.php:411
+#: /var/www/CDRTool/library/sip_settings.php:396
 msgid "Credit"
 msgstr "Guthaben"
 
-#: /var/www/CDRTool/library/sip_settings.php:418
-#: /var/www/CDRTool/library/sip_settings.php:1895
-#: /var/www/CDRTool/library/sip_settings.php:1977
+#: /var/www/CDRTool/library/sip_settings.php:403
+#: /var/www/CDRTool/library/sip_settings.php:1865
+#: /var/www/CDRTool/library/sip_settings.php:1947
 #, php-format
 msgid "Payments"
 msgstr "Zahlungen"
 
-#: /var/www/CDRTool/library/sip_settings.php:931
+#: /var/www/CDRTool/library/sip_settings.php:894
 msgid "Error: SIP Account information cannot be retrieved. "
 msgstr "Fehler: SIP Konto-Informationen können nicht abgerufen werden."
 
-#: /var/www/CDRTool/library/sip_settings.php:1297
-#: /etc/cdrtool/local/sip_settings.php:1209
+#: /var/www/CDRTool/library/sip_settings.php:1260
+#: /etc/cdrtool/local/sip_settings.php:1232
 msgid "Logout"
 msgstr "Abmelden"
 
-#: /var/www/CDRTool/library/sip_settings.php:1304
+#: /var/www/CDRTool/library/sip_settings.php:1267
 msgid "Home Node"
 msgstr "Ihr Server"
 
-#: /var/www/CDRTool/library/sip_settings.php:1307
+#: /var/www/CDRTool/library/sip_settings.php:1270
 msgid "SIP Thor Node"
 msgstr "SIP Thor Server"
 
-#: /var/www/CDRTool/library/sip_settings.php:1315
+#: /var/www/CDRTool/library/sip_settings.php:1278
 msgid "Unknown"
 msgstr "Unbekannt"
 
-#: /var/www/CDRTool/library/sip_settings.php:1329
+#: /var/www/CDRTool/library/sip_settings.php:1292
 msgid "No diversion"
 msgstr "Keine Umleitung"
 
-#: /var/www/CDRTool/library/sip_settings.php:1350
-#: /var/www/CDRTool/library/sip_settings.php:1362
+#: /var/www/CDRTool/library/sip_settings.php:1313
+#: /var/www/CDRTool/library/sip_settings.php:1325
 #, php-format
 msgid "Tel %s"
 msgstr "Tel. %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:1378
+#: /var/www/CDRTool/library/sip_settings.php:1341
 #, php-format
 msgid "Mobile %s"
 msgstr "Mobile %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:1387
+#: /var/www/CDRTool/library/sip_settings.php:1350
 #, php-format
 msgid "Other"
 msgstr "Andere"
 
-#: /var/www/CDRTool/library/sip_settings.php:1522
-#: /var/www/CDRTool/library/sip_settings.php:1698
+#: /var/www/CDRTool/library/sip_settings.php:1490
+#: /var/www/CDRTool/library/sip_settings.php:1668
 #, php-format
 msgid "PSTN Access"
 msgstr "PSTN-Zugang"
 
-#: /var/www/CDRTool/library/sip_settings.php:1523
-#: /var/www/CDRTool/library/sip_settings.php:1699
-#: /var/www/CDRTool/library/sip_settings.php:2444
-#: /etc/cdrtool/local/sip_settings.php:1026
+#: /var/www/CDRTool/library/sip_settings.php:1491
+#: /var/www/CDRTool/library/sip_settings.php:1669
+#: /var/www/CDRTool/library/sip_settings.php:2410
+#: /etc/cdrtool/local/sip_settings.php:1049
 #, php-format
 msgid "Caller-ID"
 msgstr "Anrufer-ID"
 
-#: /var/www/CDRTool/library/sip_settings.php:1530
-#: /var/www/CDRTool/library/sip_settings.php:1706
+#: /var/www/CDRTool/library/sip_settings.php:1498
+#: /var/www/CDRTool/library/sip_settings.php:1676
 #, php-format
 msgid "PSTN Privacy"
 msgstr "PSTN Privatsphäre"
 
-#: /var/www/CDRTool/library/sip_settings.php:1538
-#: /var/www/CDRTool/library/sip_settings.php:1716
+#: /var/www/CDRTool/library/sip_settings.php:1507
+#: /var/www/CDRTool/library/sip_settings.php:1684
 #, php-format
 msgid "Rate on net"
 msgstr "Netzinterne Tarife"
 
-#: /var/www/CDRTool/library/sip_settings.php:1547
-#: /var/www/CDRTool/library/sip_settings.php:1725
+#: /var/www/CDRTool/library/sip_settings.php:1516
+#: /var/www/CDRTool/library/sip_settings.php:1693
 #, php-format
 msgid "Mobile SMS"
 msgstr "Mobile SMS"
 
-#: /var/www/CDRTool/library/sip_settings.php:1558
+#: /var/www/CDRTool/library/sip_settings.php:1528
 #, php-format
 msgid "CC Payments"
 msgstr "Kreditkarten Zahlungen"
 
-#: /var/www/CDRTool/library/sip_settings.php:1817
-#: /var/www/CDRTool/library/sip_settings.php:3541
-#: /var/www/CDRTool/library/sip_settings.php:3889
+#: /var/www/CDRTool/library/sip_settings.php:1787
+#: /var/www/CDRTool/library/sip_settings.php:3597
+#: /var/www/CDRTool/library/sip_settings.php:3949
 #, php-format
 msgid "Voice Mailbox"
 msgstr "Anrufbeantworter"
 
-#: /var/www/CDRTool/library/sip_settings.php:1887
+#: /var/www/CDRTool/library/sip_settings.php:1857
 #, php-format
 msgid "Price list"
 msgstr "Preisliste"
 
-#: /var/www/CDRTool/library/sip_settings.php:1905
+#: /var/www/CDRTool/library/sip_settings.php:1875
 msgid "You must set the Owner to enable Credit Card Payments. "
 msgstr ""
 "Sie müssen einen Besitzer festlegen, um Kreditkarten-Zahlungen zu "
 "ermöglichen."
 
-#: /var/www/CDRTool/library/sip_settings.php:1929
-#: /var/www/CDRTool/library/sip_settings.php:1989
+#: /var/www/CDRTool/library/sip_settings.php:1899
+#: /var/www/CDRTool/library/sip_settings.php:1959
 msgid "Page Not Available"
 msgstr "Seite nicht verfügbar"
 
-#: /var/www/CDRTool/library/sip_settings.php:1951
+#: /var/www/CDRTool/library/sip_settings.php:1921
 #, php-format
 msgid ""
 "Calling to telephone numbers is possible at the costs set forth in the <a "
 "href=%s&tab=payments&task=showprices>Price List</a>. "
 msgstr ""
 "Aufruf zu Nummern ins offentliche Telefonnetz sind möglich. Die Kosten "
-"finden Sie in der <a href=%s> Preisliste </ a>."
+"finden Sie in der <a href=%s> Preisliste </a>."
 
-#: /var/www/CDRTool/library/sip_settings.php:1953
-
+#: /var/www/CDRTool/library/sip_settings.php:1923
 msgid "You can purchase credit with a Credit Card. "
 msgstr "Guthaben mit der Kreditkarte aufladen. "
 
-#: /var/www/CDRTool/library/sip_settings.php:2003
-
+#: /var/www/CDRTool/library/sip_settings.php:1973
 msgid "Prepaid Credit"
 msgstr "Prepaid Karte"
 
-#: /var/www/CDRTool/library/sip_settings.php:2029
+#: /var/www/CDRTool/library/sip_settings.php:1999
 #, php-format
 msgid "Proof of Identity"
 msgstr "Identitätsnachweis"
 
-#: /var/www/CDRTool/library/sip_settings.php:2035
+#: /var/www/CDRTool/library/sip_settings.php:2005
 #, php-format
 msgid "Error: Please specify a file"
 msgstr "Fehler: Bitte geben Sie eine Datei an"
 
-#: /var/www/CDRTool/library/sip_settings.php:2040
+#: /var/www/CDRTool/library/sip_settings.php:2010
 #, php-format
 msgid "Error: Please enter the name printed on the Credit Card"
 msgstr ""
 "Fehler: Bitte geben Sie den Namen ein, wie er auf der Kreditkarte gedruckt "
 "ist"
 
-#: /var/www/CDRTool/library/sip_settings.php:2045
+#: /var/www/CDRTool/library/sip_settings.php:2015
 #, php-format
 msgid "Error: Last digits must be numeric"
 msgstr "Fehler: Letzte Ziffern müssen numerisch sein"
 
-#: /var/www/CDRTool/library/sip_settings.php:2051
+#: /var/www/CDRTool/library/sip_settings.php:2021
 #, php-format
 msgid "Error: Mobile Number must be in international format starting with +"
 msgstr ""
 "Fehler: Mobile Number muss im internationalen Format sein, beginnend mit +"
 
-#: /var/www/CDRTool/library/sip_settings.php:2056
+#: /var/www/CDRTool/library/sip_settings.php:2026
 #, php-format
 msgid "Error: Maximum file size is %s"
 msgstr "Fehler: Die maximale Dateigröße ist %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:2174
+#: /var/www/CDRTool/library/sip_settings.php:2143
 msgid ""
 "Credit Card payments will be activated after your identity is verified. "
 msgstr ""
 "Zahlungen per Kreditkarte werden aktiviert, nachdem Ihre Identität überprüft "
 "ist."
 
-#: /var/www/CDRTool/library/sip_settings.php:2182
+#: /var/www/CDRTool/library/sip_settings.php:2147
 msgid "Name"
 msgstr "Name"
 
-#: /var/www/CDRTool/library/sip_settings.php:2183
+#: /var/www/CDRTool/library/sip_settings.php:2148
 msgid "Document"
 msgstr "Dokument"
 
-#: /var/www/CDRTool/library/sip_settings.php:2184
+#: /var/www/CDRTool/library/sip_settings.php:2149
 msgid "Type"
 msgstr "Karten Typ"
 
-#: /var/www/CDRTool/library/sip_settings.php:2185
+#: /var/www/CDRTool/library/sip_settings.php:2150
 msgid "Size"
 msgstr "Größe"
 
-#: /var/www/CDRTool/library/sip_settings.php:2186
-#: /var/www/CDRTool/library/sip_settings.php:5168
+#: /var/www/CDRTool/library/sip_settings.php:2151
+#: /var/www/CDRTool/library/sip_settings.php:5252
 msgid "Date"
 msgstr "Datum"
 
-#: /var/www/CDRTool/library/sip_settings.php:2187
+#: /var/www/CDRTool/library/sip_settings.php:2152
 msgid "Last digits"
 msgstr "Letzte Ziffern"
 
-#: /var/www/CDRTool/library/sip_settings.php:2188
-#: /var/www/CDRTool/library/sip_settings.php:2289
-#: /var/www/CDRTool/library/sip_settings.php:5505
+#: /var/www/CDRTool/library/sip_settings.php:2153
+#: /var/www/CDRTool/library/sip_settings.php:2255
+#: /var/www/CDRTool/library/sip_settings.php:5589
 msgid "Mobile Number"
 msgstr "Handy Nummer"
 
-#: /var/www/CDRTool/library/sip_settings.php:2193
+#: /var/www/CDRTool/library/sip_settings.php:2158
 msgid "Actions"
 msgstr "Aktionen"
 
-#: /var/www/CDRTool/library/sip_settings.php:2217
-#: /var/www/CDRTool/library/sip_settings.php:6271
+#: /var/www/CDRTool/library/sip_settings.php:2182
+#: /var/www/CDRTool/library/sip_settings.php:6375
 msgid "Confirm"
 msgstr "Bestätigen"
 
-#: /var/www/CDRTool/library/sip_settings.php:2238
+#: /var/www/CDRTool/library/sip_settings.php:2201
 msgid "Credit Card payments are available only to verified customers. "
 msgstr "Zahlungen per Kreditkarte sind nur für geprüfte Kunden verfügbar."
 
-#: /var/www/CDRTool/library/sip_settings.php:2241
+#: /var/www/CDRTool/library/sip_settings.php:2204
 #, php-format
 msgid ""
 "To become verified, upload a copy of your passport or driving license that "
@@ -408,7 +402,7 @@ msgstr ""
 "Um verifiziert zu werden, laden Sie eine Kopie des Reisepasses, Ausweises "
 "oder Führerscheins hoch, der auf den Kreditkarten Inhaber ausgestellt ist."
 
-#: /var/www/CDRTool/library/sip_settings.php:2243
+#: /var/www/CDRTool/library/sip_settings.php:2206
 #, php-format
 msgid ""
 "This copy will be kept on your profile until the credit card transaction has "
@@ -417,232 +411,248 @@ msgstr ""
 "Diese Kopie wird in Ihrem Profil aufbewahrt, bis die Kreditkarten-"
 "Transaktion genehmigt worden ist."
 
-#: /var/www/CDRTool/library/sip_settings.php:2260
+#: /var/www/CDRTool/library/sip_settings.php:2226
 msgid "Name printed on the Credit Card"
 msgstr "Name wie er auf der Kredit Karte steht"
 
-#: /var/www/CDRTool/library/sip_settings.php:2274
+#: /var/www/CDRTool/library/sip_settings.php:2240
 msgid "Scanned copy of your Passport or Driver License"
 msgstr "Gescannte Kopie von Reisepasse, Ausweis oder Führerschein"
 
-#: /var/www/CDRTool/library/sip_settings.php:2294
-#: /var/www/CDRTool/library/sip_settings.php:5511
+#: /var/www/CDRTool/library/sip_settings.php:2260
+#: /var/www/CDRTool/library/sip_settings.php:5595
 msgid "International format starting with +"
 msgstr "Internationales Format beginnend mit +"
 
-#: /var/www/CDRTool/library/sip_settings.php:2305
+#: /var/www/CDRTool/library/sip_settings.php:2271
 msgid "Last 4 digits on your Credit Card"
 msgstr "Die letzten 4 Stellen Ihrer Kreditkarte"
 
-#: /var/www/CDRTool/library/sip_settings.php:2323
-#: /var/www/CDRTool/library/sip_settings.php:3480
-#: /var/www/CDRTool/library/sip_settings.php:3519
-#: /var/www/CDRTool/library/sip_settings.php:3826
-#: /var/www/CDRTool/library/sip_settings.php:7091
-#: /var/www/CDRTool/library/sip_settings.php:7155
-#: /var/www/CDRTool/library/sip_settings.php:7559
-#: /etc/cdrtool/local/sip_settings.php:946
+#: /var/www/CDRTool/library/sip_settings.php:2289
+#: /var/www/CDRTool/library/sip_settings.php:3536
+#: /var/www/CDRTool/library/sip_settings.php:3575
+#: /var/www/CDRTool/library/sip_settings.php:3886
+#: /var/www/CDRTool/library/sip_settings.php:7294
+#: /var/www/CDRTool/library/sip_settings.php:7358
+#: /etc/cdrtool/local/sip_settings.php:969
 msgid "Save"
 msgstr "Sichern"
 
-#: /var/www/CDRTool/library/sip_settings.php:2371
-#: /var/www/CDRTool/library/sip_settings.php:3000
-#: /etc/cdrtool/local/sip_settings.php:474
-#: /etc/cdrtool/local/sip_settings.php:965
+#: /var/www/CDRTool/library/sip_settings.php:2337
+#: /var/www/CDRTool/library/sip_settings.php:3019
+#: /etc/cdrtool/local/sip_settings.php:495
+#: /etc/cdrtool/local/sip_settings.php:988
 #, php-format
 msgid "SIP Account"
 msgstr "SIP Konto"
 
-#: /var/www/CDRTool/library/sip_settings.php:2380
-#: /var/www/CDRTool/library/sip_settings.php:6193
-#: /var/www/CDRTool/library/sip_settings.php:7137
-#: /var/www/CDRTool/library/sip_settings.php:7148
-#: /var/www/CDRTool/library/sip_settings.php:8271
-#: /etc/cdrtool/local/sip_settings.php:974
+#: /var/www/CDRTool/library/sip_settings.php:2346
+#: /var/www/CDRTool/library/sip_settings.php:6297
+#: /var/www/CDRTool/library/sip_settings.php:7340
+#: /var/www/CDRTool/library/sip_settings.php:7351
+#: /var/www/CDRTool/library/sip_settings.php:8236
+#: /etc/cdrtool/local/sip_settings.php:997
 msgid "SIP Address"
 msgstr "SIP Adresse"
 
-#: /var/www/CDRTool/library/sip_settings.php:2400
-#: /etc/cdrtool/local/sip_settings.php:994
-#: /etc/cdrtool/local/sip_settings.php:1811
+#: /var/www/CDRTool/library/sip_settings.php:2366
+#: /etc/cdrtool/local/sip_settings.php:1017
 msgid "Username"
 msgstr "Benutzername"
 
-#: /var/www/CDRTool/library/sip_settings.php:2407
-#: /etc/cdrtool/local/sip_settings.php:1001
+#: /var/www/CDRTool/library/sip_settings.php:2373
+#: /etc/cdrtool/local/sip_settings.php:1024
 msgid "Domain/Realm"
 msgstr "Domain"
 
-#: /var/www/CDRTool/library/sip_settings.php:2415
-#: /etc/cdrtool/local/sip_settings.php:1009
+#: /var/www/CDRTool/library/sip_settings.php:2381
+#: /etc/cdrtool/local/sip_settings.php:1032
 msgid "Outbound Proxy"
 msgstr "Ausgehender Proxy"
 
-#: /var/www/CDRTool/library/sip_settings.php:2425
+#: /var/www/CDRTool/library/sip_settings.php:2391
 msgid "XCAP Root"
 msgstr "XCAP Root"
 
-#: /var/www/CDRTool/library/sip_settings.php:2437
-#: /etc/cdrtool/local/sip_settings.php:1019
+#: /var/www/CDRTool/library/sip_settings.php:2403
+#: /etc/cdrtool/local/sip_settings.php:1042
 #, php-format
 msgid "PSTN"
 msgstr "PSTN"
 
-#: /var/www/CDRTool/library/sip_settings.php:2467
-#: /etc/cdrtool/local/sip_settings.php:1049
+#: /var/www/CDRTool/library/sip_settings.php:2433
+#: /etc/cdrtool/local/sip_settings.php:1072
 msgid "Phone Number"
 msgstr "Telefon-Nr"
 
-#: /var/www/CDRTool/library/sip_settings.php:2476
-#: /etc/cdrtool/local/sip_settings.php:1058
+#: /var/www/CDRTool/library/sip_settings.php:2442
+#: /etc/cdrtool/local/sip_settings.php:1081
 #, php-format
 msgid "Aliases"
 msgstr "Aliase"
 
-#: /var/www/CDRTool/library/sip_settings.php:2482
-#: /etc/cdrtool/local/sip_settings.php:1064
+#: /var/www/CDRTool/library/sip_settings.php:2448
+#: /etc/cdrtool/local/sip_settings.php:1087
 #, php-format
 msgid "You may create new aliases for incoming calls"
 msgstr "Sie können für eingehende Anrufe neue Aliasnamen erstellen"
 
-#: /var/www/CDRTool/library/sip_settings.php:2510
-#: /etc/cdrtool/local/sip_settings.php:1092
+#: /var/www/CDRTool/library/sip_settings.php:2476
+#: /etc/cdrtool/local/sip_settings.php:1115
 msgid "SIP Alias"
 msgstr "SIP-Alias"
 
-#: /var/www/CDRTool/library/sip_settings.php:2522
-#: /etc/cdrtool/local/sip_settings.php:1104
+#: /var/www/CDRTool/library/sip_settings.php:2488
+#: /etc/cdrtool/local/sip_settings.php:1127
 msgid "New SIP Alias"
 msgstr "Neues SIP-Alias"
 
-#: /var/www/CDRTool/library/sip_settings.php:2533
-#: /etc/cdrtool/local/sip_settings.php:1115
+#: /var/www/CDRTool/library/sip_settings.php:2499
+#: /etc/cdrtool/local/sip_settings.php:1138
 msgid "Save aliases"
 msgstr "Aliase speichern"
 
-#: /var/www/CDRTool/library/sip_settings.php:2550
-#: /etc/cdrtool/local/sip_settings.php:1132
+#: /var/www/CDRTool/library/sip_settings.php:2516
+#: /etc/cdrtool/local/sip_settings.php:1155
 #, php-format
 msgid "TLS Certificate"
 msgstr "TLS-Zertifikat"
 
-#: /var/www/CDRTool/library/sip_settings.php:2555
-#: /etc/cdrtool/local/sip_settings.php:1137
+#: /var/www/CDRTool/library/sip_settings.php:2521
+#: /etc/cdrtool/local/sip_settings.php:1160
 msgid "X.509 Format"
 msgstr "X.509-Format"
 
-#: /var/www/CDRTool/library/sip_settings.php:2590
-#: /etc/cdrtool/local/sip_settings.php:1172
+#: /var/www/CDRTool/library/sip_settings.php:2556
+#: /etc/cdrtool/local/sip_settings.php:1195
 #, php-format
 msgid "Email SIP Account information to %s"
 msgstr "SIP-Konto Informationen an %s mailen"
 
-#: /var/www/CDRTool/library/sip_settings.php:2595
-#: /etc/cdrtool/local/sip_settings.php:1177
+#: /var/www/CDRTool/library/sip_settings.php:2561
+#: /etc/cdrtool/local/sip_settings.php:1200
 msgid "Send"
 msgstr "Senden"
 
-#: /var/www/CDRTool/library/sip_settings.php:2601
-#: /etc/cdrtool/local/sip_settings.php:1183
+#: /var/www/CDRTool/library/sip_settings.php:2567
+#: /etc/cdrtool/local/sip_settings.php:1206
 #, php-format
 msgid "Login using SIP credentials at <a href=%s>%s</a>"
 msgstr "Login mit SIP-Anmeldeinformationen unter <a href=%s>%s</a>"
 
-#: /var/www/CDRTool/library/sip_settings.php:2618
-#, php-format
-msgid "SIP Client"
+#: /var/www/CDRTool/library/sip_settings.php:2584
+#, fuzzy, php-format
+msgid "SIP Client download"
 msgstr "SIP-Alias"
 
-#: /var/www/CDRTool/library/sip_settings.php:2639
+#: /var/www/CDRTool/library/sip_settings.php:2605
 #, php-format
 msgid "Registered Numbers"
 msgstr "Registrierte SIP-Geräte"
 
-#: /var/www/CDRTool/library/sip_settings.php:2668
-#: /var/www/CDRTool/library/sip_settings.php:2834
+#: /var/www/CDRTool/library/sip_settings.php:2634
+#: /var/www/CDRTool/library/sip_settings.php:2800
 msgid "Month"
 msgstr "Monat"
 
-#: /var/www/CDRTool/library/sip_settings.php:2669
-#: /var/www/CDRTool/library/sip_settings.php:2670
-#: /var/www/CDRTool/library/sip_settings.php:2671
-#: /var/www/CDRTool/library/sip_settings.php:2672
-#: /var/www/CDRTool/library/sip_settings.php:2835
-#: /var/www/CDRTool/library/sip_settings.php:2836
-#: /var/www/CDRTool/library/sip_settings.php:2837
-#: /var/www/CDRTool/library/sip_settings.php:2838
+#: /var/www/CDRTool/library/sip_settings.php:2635
+#: /var/www/CDRTool/library/sip_settings.php:2636
+#: /var/www/CDRTool/library/sip_settings.php:2637
+#: /var/www/CDRTool/library/sip_settings.php:2638
+#: /var/www/CDRTool/library/sip_settings.php:2801
+#: /var/www/CDRTool/library/sip_settings.php:2802
+#: /var/www/CDRTool/library/sip_settings.php:2803
+#: /var/www/CDRTool/library/sip_settings.php:2804
 msgid "Months"
 msgstr "Monate"
 
-#: /var/www/CDRTool/library/sip_settings.php:2696
-#: /var/www/CDRTool/library/sip_settings.php:2796
+#: /var/www/CDRTool/library/sip_settings.php:2662
+#: /var/www/CDRTool/library/sip_settings.php:2762
 #, php-format
 msgid "Register New Number"
 msgstr "New Nummer registrieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:2706
+#: /var/www/CDRTool/library/sip_settings.php:2672
 #, php-format
 msgid "Telephone Number (+%s %s) for %d months"
 msgstr "Telefonnummer (+%s %s) für %d Monate"
 
-#: /var/www/CDRTool/library/sip_settings.php:2757
+#: /var/www/CDRTool/library/sip_settings.php:2723
 #, php-format
 msgid "Renew Number"
 msgstr "Telefon-Nr"
 
-#: /var/www/CDRTool/library/sip_settings.php:2778
+#: /var/www/CDRTool/library/sip_settings.php:2744
 #, php-format
 msgid "Cancel Number"
 msgstr "Nummer verwerfen"
 
-#: /var/www/CDRTool/library/sip_settings.php:2805
+#: /var/www/CDRTool/library/sip_settings.php:2771
 msgid "Select a region where you want to have a telephone number: "
 msgstr "Wählen Sie die Wunschregion für Ihre Telefonnummer:"
 
-#: /var/www/CDRTool/library/sip_settings.php:2830
+#: /var/www/CDRTool/library/sip_settings.php:2796
 msgid "Select the duration for which you want to use the telephone number: "
 msgstr "Wählen Sie die Gültigkeitdauer für Ihre Telefonnummer"
 
-#: /var/www/CDRTool/library/sip_settings.php:2868
+#: /var/www/CDRTool/library/sip_settings.php:2834
 #, php-format
 msgid "Support"
 msgstr "Hilfe"
 
-#: /var/www/CDRTool/library/sip_settings.php:2876
+#: /var/www/CDRTool/library/sip_settings.php:2842
 #, php-format
 msgid "To request support you may send an e-mail to %s"
 msgstr "Für weitere Hilfe senden Sie eine Email an %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:2880
+#: /var/www/CDRTool/library/sip_settings.php:2846
 #, php-format
 msgid "For more information visit %s"
 msgstr "Für weitere Informationen besuchen Sie %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:2925
-#, php-format
+#: /var/www/CDRTool/library/sip_settings.php:2905
+msgid "Please enter your SIP account password: "
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:2912
+#: /var/www/CDRTool/library/sip_settings.php:3057
+#: /var/www/CDRTool/library/sip_settings.php:3066
+#: /var/www/CDRTool/library/sip_settings.php:3663
+#: /etc/cdrtool/local/sip_settings.php:533
+#: /etc/cdrtool/local/sip_settings.php:1862
+msgid "Password"
+msgstr "Passwort"
+
+#: /var/www/CDRTool/library/sip_settings.php:2916
+#, fuzzy
+msgid "Enter your password"
+msgstr "Neues Passwort eingeben"
+
+#: /var/www/CDRTool/library/sip_settings.php:2938
+#, fuzzy, php-format
 msgid ""
-"Download and install <a href=http://icanblink.com target=blink>Blink</a> "
-"preconfigured with your SIP account:"
+"Download and install <a href=%s target=blink>%s</a> preconfigured with your "
+"SIP account:"
 msgstr ""
 "Sie können <a href=http://icanblink.com target=blink>Blink</a> konfiguriert "
 "mit Ihrem SIP Konto herunter laden und installieren: "
 
-#: /var/www/CDRTool/library/sip_settings.php:2947
-#, php-format
-msgid "To download Blink visit <a href='%s' target=blink>%s</a>"
+#: /var/www/CDRTool/library/sip_settings.php:2958
+#, fuzzy, php-format
+msgid "To download %s visit <a href='%s' target=blink>%s</a>"
 msgstr ""
 "Um Blink herunter zu laden besuchen Sie <a href='%s' target=blink>%s</a>"
 
-#: /var/www/CDRTool/library/sip_settings.php:2953
-#, php-format
+#: /var/www/CDRTool/library/sip_settings.php:2964
+#, fuzzy, php-format
 msgid ""
-"If you have already installed Blink, you can configure it to use your SIP "
+"If you have already installed %s, you can configure it to use your SIP "
 "account:"
 msgstr ""
 "Wenn Sie Blink bereits installiert haben, können Sie es für Ihr SIP Konto "
 "konfigurieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:2974
+#: /var/www/CDRTool/library/sip_settings.php:2986
 msgid ""
 "<a href='http://www.java.com/en/download/manual.jsp'>Java Runtime "
 "Environment</a> (JRE) must be activated in the web browser. "
@@ -650,454 +660,498 @@ msgstr ""
 "<a href='http://www.java.com/en/download/manual.jsp'>Java Laufzeit Umgebung</"
 "a> (JRE) muss im Web-Browser aktiviert werden. "
 
-#: /var/www/CDRTool/library/sip_settings.php:3008
-#: /var/www/CDRTool/library/sip_settings.php:8161
-#: /etc/cdrtool/local/sip_settings.php:482
+#: /var/www/CDRTool/library/sip_settings.php:3027
+#: /var/www/CDRTool/library/sip_settings.php:8126
+#: /etc/cdrtool/local/sip_settings.php:503
 #: /var/www/CDRTool/library/cc_processor.php:519
 msgid "First Name"
 msgstr "Vorname"
 
-#: /var/www/CDRTool/library/sip_settings.php:3022
-#: /var/www/CDRTool/library/sip_settings.php:8166
-#: /etc/cdrtool/local/sip_settings.php:496
+#: /var/www/CDRTool/library/sip_settings.php:3041
+#: /var/www/CDRTool/library/sip_settings.php:8131
+#: /etc/cdrtool/local/sip_settings.php:517
 #: /var/www/CDRTool/library/cc_processor.php:521
 msgid "Last Name"
 msgstr "Nachname"
 
-#: /var/www/CDRTool/library/sip_settings.php:3038
-#: /var/www/CDRTool/library/sip_settings.php:3607
-#: /etc/cdrtool/local/sip_settings.php:512
-msgid "Password"
-msgstr "Passwort"
-
-#: /var/www/CDRTool/library/sip_settings.php:3044
-#: /etc/cdrtool/local/sip_settings.php:518
+#: /var/www/CDRTool/library/sip_settings.php:3063
+#: /etc/cdrtool/local/sip_settings.php:539
 msgid "Password can be changed only by the operator"
 msgstr "Das Passwort kann nur durch einen Administrator geändert werden"
 
-#: /var/www/CDRTool/library/sip_settings.php:3047
-#: /etc/cdrtool/local/sip_settings.php:521
+#: /var/www/CDRTool/library/sip_settings.php:3068
+#: /etc/cdrtool/local/sip_settings.php:542
 msgid "Enter text to change the current password"
 msgstr "Neues Passwort eingeben"
 
-#: /var/www/CDRTool/library/sip_settings.php:3059
-#: /etc/cdrtool/local/sip_settings.php:533
+#: /var/www/CDRTool/library/sip_settings.php:3081
+#: /var/www/CDRTool/library/sip_settings.php:3087
+#: /etc/cdrtool/local/sip_settings.php:554
 msgid "Web Password"
 msgstr "Web Passwort"
 
-#: /var/www/CDRTool/library/sip_settings.php:3065
-#: /etc/cdrtool/local/sip_settings.php:539
+#: /var/www/CDRTool/library/sip_settings.php:3089
+#: /etc/cdrtool/local/sip_settings.php:560
 msgid "Enter text to change the password to access this web page"
 msgstr "Neues Passwort für diese Webseite eingeben"
 
-#: /var/www/CDRTool/library/sip_settings.php:3075
-#: /etc/cdrtool/local/sip_settings.php:549
+#: /var/www/CDRTool/library/sip_settings.php:3107
+#: /var/www/CDRTool/library/sip_settings.php:3113
+msgid "Yubikey"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:3115
+msgid ""
+"Enter <strong>Yubikey id</strong> to allow SIP Account + Yubikey login to "
+"access this webpage.<br /><br/>The Yubikey id is the first 12 digits of the "
+"string generated by the key.<br /><br/>It can be set by clicking in this "
+"text field and pressing your Yubikey."
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:3118
+msgid "Enter Yubikey id"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:3133
+#: /etc/cdrtool/local/sip_settings.php:570
 msgid "Language"
 msgstr "Sprache"
 
-#: /var/www/CDRTool/library/sip_settings.php:3098
-#: /var/www/CDRTool/library/sip_settings.php:7881
-#: /var/www/CDRTool/library/sip_settings.php:8274
-#: /etc/cdrtool/local/sip_settings.php:572
-#: /etc/cdrtool/local/sip_settings.php:2482
+#: /var/www/CDRTool/library/sip_settings.php:3156
+#: /var/www/CDRTool/library/sip_settings.php:7840
+#: /var/www/CDRTool/library/sip_settings.php:8239
+#: /etc/cdrtool/local/sip_settings.php:593
+#: /etc/cdrtool/local/sip_settings.php:2555
 msgid "Timezone"
 msgstr "Zeitzone"
 
-#: /var/www/CDRTool/library/sip_settings.php:3108
-#: /etc/cdrtool/local/sip_settings.php:582
+#: /var/www/CDRTool/library/sip_settings.php:3166
+#: /etc/cdrtool/local/sip_settings.php:603
 msgid "Local Time"
 msgstr "Lokal Zeit"
 
-#: /var/www/CDRTool/library/sip_settings.php:3119
-#: /var/www/CDRTool/library/sip_settings.php:3691
-#: /etc/cdrtool/local/sip_settings.php:593
+#: /var/www/CDRTool/library/sip_settings.php:3177
+#: /var/www/CDRTool/library/sip_settings.php:3751
+#: /etc/cdrtool/local/sip_settings.php:614
 msgid "Location"
 msgstr "Standort"
 
-#: /var/www/CDRTool/library/sip_settings.php:3150
-#: /var/www/CDRTool/library/sip_settings.php:3184
-#: /etc/cdrtool/local/sip_settings.php:624
-#: /etc/cdrtool/local/sip_settings.php:658
+#: /var/www/CDRTool/library/sip_settings.php:3210
+#: /var/www/CDRTool/library/sip_settings.php:3244
+#: /etc/cdrtool/local/sip_settings.php:645
+#: /etc/cdrtool/local/sip_settings.php:679
 msgid "Quota"
 msgstr "monatliches Limit"
 
-#: /var/www/CDRTool/library/sip_settings.php:3160
-#: /var/www/CDRTool/library/sip_settings.php:3193
-#: /etc/cdrtool/local/sip_settings.php:634
-#: /etc/cdrtool/local/sip_settings.php:667
+#: /var/www/CDRTool/library/sip_settings.php:3220
+#: /var/www/CDRTool/library/sip_settings.php:3253
+#: /etc/cdrtool/local/sip_settings.php:655
+#: /etc/cdrtool/local/sip_settings.php:688
 #, php-format
 msgid "This month usage: %.2f %s"
 msgstr "Diesen Monat Nutzung: %.2f %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:3162
-#: /etc/cdrtool/local/sip_settings.php:636
-
+#: /var/www/CDRTool/library/sip_settings.php:3222
+#: /etc/cdrtool/local/sip_settings.php:657
 msgid "Calls "
 msgstr "Anrufe"
 
-#: /var/www/CDRTool/library/sip_settings.php:3173
-#: /etc/cdrtool/local/sip_settings.php:645
+#: /var/www/CDRTool/library/sip_settings.php:3233
+#: /etc/cdrtool/local/sip_settings.php:666
 msgid "Un-block"
 msgstr "Entsperren"
 
-#: /var/www/CDRTool/library/sip_settings.php:3195
-#: /etc/cdrtool/local/sip_settings.php:669
+#: /var/www/CDRTool/library/sip_settings.php:3255
+#: /etc/cdrtool/local/sip_settings.php:690
 msgid "Calls"
 msgstr "Anrufe"
 
-#: /var/www/CDRTool/library/sip_settings.php:3214
-#: /etc/cdrtool/local/sip_settings.php:688
+#: /var/www/CDRTool/library/sip_settings.php:3272
+#: /etc/cdrtool/local/sip_settings.php:709
 msgid "Prepaid"
 msgstr "Prepaid"
 
-#: /var/www/CDRTool/library/sip_settings.php:3295
-#: /etc/cdrtool/local/sip_settings.php:769
+#: /var/www/CDRTool/library/sip_settings.php:3353
+#: /etc/cdrtool/local/sip_settings.php:792
 msgid "Blocked by Customer"
 msgstr "Blockiert von Kunden"
 
-#: /var/www/CDRTool/library/sip_settings.php:3298
-#: /var/www/CDRTool/library/sip_settings.php:3311
-#: /var/www/CDRTool/library/sip_settings.php:3344
-#: /etc/cdrtool/local/sip_settings.php:772
-#: /etc/cdrtool/local/sip_settings.php:785
-#: /etc/cdrtool/local/sip_settings.php:818
+#: /var/www/CDRTool/library/sip_settings.php:3356
+#: /var/www/CDRTool/library/sip_settings.php:3369
+#: /var/www/CDRTool/library/sip_settings.php:3402
+#: /etc/cdrtool/local/sip_settings.php:795
+#: /etc/cdrtool/local/sip_settings.php:808
+#: /etc/cdrtool/local/sip_settings.php:841
 msgid "Blocked by Reseller"
 msgstr "Blockiert von Reseller"
 
-#: /var/www/CDRTool/library/sip_settings.php:3309
-#: /var/www/CDRTool/library/sip_settings.php:3322
-#: /var/www/CDRTool/library/sip_settings.php:3339
-#: /var/www/CDRTool/library/sip_settings.php:3354
-#: /var/www/CDRTool/library/sip_settings.php:3363
-#: /etc/cdrtool/local/sip_settings.php:783
-#: /etc/cdrtool/local/sip_settings.php:796
-#: /etc/cdrtool/local/sip_settings.php:813
-#: /etc/cdrtool/local/sip_settings.php:828
-#: /etc/cdrtool/local/sip_settings.php:837
+#: /var/www/CDRTool/library/sip_settings.php:3367
+#: /var/www/CDRTool/library/sip_settings.php:3380
+#: /var/www/CDRTool/library/sip_settings.php:3397
+#: /var/www/CDRTool/library/sip_settings.php:3412
+#: /var/www/CDRTool/library/sip_settings.php:3421
+#: /etc/cdrtool/local/sip_settings.php:806
+#: /etc/cdrtool/local/sip_settings.php:819
+#: /etc/cdrtool/local/sip_settings.php:836
+#: /etc/cdrtool/local/sip_settings.php:851
+#: /etc/cdrtool/local/sip_settings.php:860
 msgid "Active"
 msgstr "Aktiv"
 
-#: /var/www/CDRTool/library/sip_settings.php:3324
-#: /var/www/CDRTool/library/sip_settings.php:3341
-#: /var/www/CDRTool/library/sip_settings.php:3356
-#: /var/www/CDRTool/library/sip_settings.php:3361
-#: /etc/cdrtool/local/sip_settings.php:798
-#: /etc/cdrtool/local/sip_settings.php:815
-#: /etc/cdrtool/local/sip_settings.php:830
-#: /etc/cdrtool/local/sip_settings.php:835
+#: /var/www/CDRTool/library/sip_settings.php:3382
+#: /var/www/CDRTool/library/sip_settings.php:3399
+#: /var/www/CDRTool/library/sip_settings.php:3414
+#: /var/www/CDRTool/library/sip_settings.php:3419
+#: /etc/cdrtool/local/sip_settings.php:821
+#: /etc/cdrtool/local/sip_settings.php:838
+#: /etc/cdrtool/local/sip_settings.php:853
+#: /etc/cdrtool/local/sip_settings.php:858
 msgid "Blocked"
 msgstr "Blockiert"
 
-#: /var/www/CDRTool/library/sip_settings.php:3409
-#: /etc/cdrtool/local/sip_settings.php:883
+#: /var/www/CDRTool/library/sip_settings.php:3470
+#: /var/www/CDRTool/library/sip_settings.php:3478
+#: /etc/cdrtool/local/sip_settings.php:906
 msgid "No-answer Timeout"
 msgstr "Timeout bei nicht Erreichbarkeit"
 
-#: /var/www/CDRTool/library/sip_settings.php:3427
-#: /etc/cdrtool/local/sip_settings.php:904
+#: /var/www/CDRTool/library/sip_settings.php:3480
+msgid ""
+"Used to determined after how many seconds the Forwarding action for this "
+"condition will occur"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:3492
+#: /etc/cdrtool/local/sip_settings.php:927
 msgid "Tabs"
 msgstr "Tabs"
 
-#: /var/www/CDRTool/library/sip_settings.php:3459
-#: /etc/cdrtool/local/sip_settings.php:926
+#: /var/www/CDRTool/library/sip_settings.php:3515
+#: /etc/cdrtool/local/sip_settings.php:949
 #, php-format
 msgid "Notifications Address"
 msgstr "Nachrichten werden weitergeleitet an"
 
-#: /var/www/CDRTool/library/sip_settings.php:3465
-#: /etc/cdrtool/local/sip_settings.php:932
+#: /var/www/CDRTool/library/sip_settings.php:3521
+#: /etc/cdrtool/local/sip_settings.php:955
 msgid "Email Address"
 msgstr "E-Mail Adresse"
 
-#: /var/www/CDRTool/library/sip_settings.php:3507
+#: /var/www/CDRTool/library/sip_settings.php:3563
 #, php-format
 msgid "Call Forwarding"
 msgstr "Anrufweiterleitung"
 
-#: /var/www/CDRTool/library/sip_settings.php:3547
+#: /var/www/CDRTool/library/sip_settings.php:3603
 msgid "Enable"
 msgstr "Aktivieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:3557
+#: /var/www/CDRTool/library/sip_settings.php:3613
 msgid "Mailbox"
 msgstr "Mailbox"
 
-#: /var/www/CDRTool/library/sip_settings.php:3572
+#: /var/www/CDRTool/library/sip_settings.php:3628
 msgid "Delivery"
 msgstr "Senden an"
 
-#: /var/www/CDRTool/library/sip_settings.php:3588
+#: /var/www/CDRTool/library/sip_settings.php:3644
 #, php-format
 msgid "Send voice messages by e-mail to %s"
 msgstr "Sprachnachrichten per E-Mail an %s senden"
 
-#: /var/www/CDRTool/library/sip_settings.php:3590
+#: /var/www/CDRTool/library/sip_settings.php:3646
 msgid "Send messages by e-mail and store messages on the server"
 msgstr "Sprachnachrichten per E-Mail an %s senden"
 
-#: /var/www/CDRTool/library/sip_settings.php:3593
+#: /var/www/CDRTool/library/sip_settings.php:3649
 #, php-format
 msgid "Voice messages are sent by email to %s"
 msgstr "Voice-Nachrichten werden per E-Mail an %s gesendet"
 
-#: /var/www/CDRTool/library/sip_settings.php:3625
+#: /var/www/CDRTool/library/sip_settings.php:3681
 #, php-format
 msgid "Dial %s to listen to your messages or change preferences. "
 msgstr ""
 "Wählen Sie %s, um Ihre Nachrichten zu hören oder Einstellungen ändern. "
 
-#: /var/www/CDRTool/library/sip_settings.php:3642
+#: /var/www/CDRTool/library/sip_settings.php:3699
+#: /var/www/CDRTool/library/sip_settings.php:3703
 msgid "Owner"
 msgstr "Eigentümer"
 
-#: /var/www/CDRTool/library/sip_settings.php:3657
+#: /var/www/CDRTool/library/sip_settings.php:3705
+msgid ""
+"Used to link the SIP account to the customer details stored in another "
+"database like the platform customer database. Only integer values are "
+"allowed."
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:3717
 #, php-format
 msgid "SIP Devices"
 msgstr "Geräte"
 
-#: /var/www/CDRTool/library/sip_settings.php:3765
+#: /var/www/CDRTool/library/sip_settings.php:3825
 #, php-format
 msgid "Barred Destinations"
 msgstr "Gesperrte Ziele"
 
-#: /var/www/CDRTool/library/sip_settings.php:3775
+#: /var/www/CDRTool/library/sip_settings.php:3835
 msgid "You can deny outbound calls to unwanted PSTN prefixes. "
 msgstr "Sie können ausgehende Anrufe zu unerwünschte Vorwahlen sperren"
 
-#: /var/www/CDRTool/library/sip_settings.php:3781
-#: /var/www/CDRTool/library/sip_settings.php:3811
+#: /var/www/CDRTool/library/sip_settings.php:3841
+#: /var/www/CDRTool/library/sip_settings.php:3871
 msgid "Destination Prefix"
 msgstr "Vorwahl"
 
-#: /var/www/CDRTool/library/sip_settings.php:3787
+#: /var/www/CDRTool/library/sip_settings.php:3847
 msgid "Example"
 msgstr "Beispiel"
 
-#: /var/www/CDRTool/library/sip_settings.php:4651
-#: /var/www/CDRTool/library/sip_settings.php:4663
-#: /var/www/CDRTool/library/sip_settings.php:4682
+#: /var/www/CDRTool/library/sip_settings.php:4735
+#: /var/www/CDRTool/library/sip_settings.php:4747
+#: /var/www/CDRTool/library/sip_settings.php:4766
 #, php-format
 msgid "Old balance was %s, new balance is %s. "
 msgstr "Alter Saldo war %s neuer Saldo ist %s. "
 
-#: /var/www/CDRTool/library/sip_settings.php:4697
+#: /var/www/CDRTool/library/sip_settings.php:4781
 #, php-format
 msgid "Subscriber has been notified at %s."
 msgstr "Teilnehmer wurde auf %s informiert."
 
-#: /var/www/CDRTool/library/sip_settings.php:4710
+#: /var/www/CDRTool/library/sip_settings.php:4794
 #, php-format
 msgid "Current Balance"
 msgstr "Aktueller Kontostand"
 
-#: /var/www/CDRTool/library/sip_settings.php:4716
+#: /var/www/CDRTool/library/sip_settings.php:4800
 msgid "Your current balance is"
 msgstr "Ihr Guthaben beträgt"
 
-#: /var/www/CDRTool/library/sip_settings.php:4733
+#: /var/www/CDRTool/library/sip_settings.php:4817
 #, php-format
 msgid "Add Balance"
 msgstr "Guthaben kaufen"
 
-#: /var/www/CDRTool/library/sip_settings.php:4746
-#: /var/www/CDRTool/library/sip_settings.php:5033
-#: /var/www/CDRTool/library/sip_settings.php:5174
+#: /var/www/CDRTool/library/sip_settings.php:4830
+#: /var/www/CDRTool/library/sip_settings.php:5117
+#: /var/www/CDRTool/library/sip_settings.php:5258
 msgid "Value"
 msgstr "Wert"
 
-#: /var/www/CDRTool/library/sip_settings.php:4749
-#: /var/www/CDRTool/library/sip_settings.php:5030
-#: /var/www/CDRTool/library/sip_settings.php:5172
+#: /var/www/CDRTool/library/sip_settings.php:4833
+#: /var/www/CDRTool/library/sip_settings.php:5114
+#: /var/www/CDRTool/library/sip_settings.php:5256
 msgid "Description"
 msgstr "Beschreibung"
 
-#: /var/www/CDRTool/library/sip_settings.php:4753
-#: /var/www/CDRTool/library/sip_settings.php:4843
+#: /var/www/CDRTool/library/sip_settings.php:4837
+#: /var/www/CDRTool/library/sip_settings.php:4927
 msgid "Notify"
 msgstr "Benachrichtigen"
 
-#: /var/www/CDRTool/library/sip_settings.php:4757
-#: /var/www/CDRTool/library/sip_settings.php:4849
-#: /var/www/CDRTool/library/sip_settings.php:6171
+#: /var/www/CDRTool/library/sip_settings.php:4841
+#: /var/www/CDRTool/library/sip_settings.php:4933
+#: /var/www/CDRTool/library/sip_settings.php:6275
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: /var/www/CDRTool/library/sip_settings.php:4767
+#: /var/www/CDRTool/library/sip_settings.php:4851
 #, php-format
 msgid "Refund Transaction"
 msgstr "Rückerstattungsvorgang"
 
-#: /var/www/CDRTool/library/sip_settings.php:4777
+#: /var/www/CDRTool/library/sip_settings.php:4861
 msgid "Transaction Id"
 msgstr "Transaktionsnummer"
 
-#: /var/www/CDRTool/library/sip_settings.php:4793
+#: /var/www/CDRTool/library/sip_settings.php:4877
 msgid "Refund"
 msgstr "Rückerstattung"
 
-#: /var/www/CDRTool/library/sip_settings.php:4809
+#: /var/www/CDRTool/library/sip_settings.php:4893
 #, php-format
 msgid "Prepaid Card"
 msgstr "Prepaid Karte"
 
-#: /var/www/CDRTool/library/sip_settings.php:4817
+#: /var/www/CDRTool/library/sip_settings.php:4901
 #, php-format
 msgid "To add Credit to your account using a Prepaid Card enter it below. "
 msgstr ""
 "Für die Gutschrift auf Ihrem Konto mit einer Prepaid-Karte geben Sie diese "
 "weiter unten ein."
 
-#: /var/www/CDRTool/library/sip_settings.php:4835
+#: /var/www/CDRTool/library/sip_settings.php:4919
 msgid "Card Id"
 msgstr "Karten ID"
 
-#: /var/www/CDRTool/library/sip_settings.php:4838
+#: /var/www/CDRTool/library/sip_settings.php:4922
 #: /var/www/CDRTool/library/cc_processor.php:525
 msgid "Card Number"
 msgstr "Kartennummer"
 
-#: /var/www/CDRTool/library/sip_settings.php:5001
+#: /var/www/CDRTool/library/sip_settings.php:5085
 #, php-format
 msgid "Balance History"
 msgstr "Salden Verlauf"
 
-#: /var/www/CDRTool/library/sip_settings.php:5013
+#: /var/www/CDRTool/library/sip_settings.php:5097
 #, php-format
 msgid "Today's transactions: %.2f credit, %.2f debit"
 msgstr "Heutige Transaktionen: %.2f Guthaben, %.2f Abbuchung"
 
-#: /var/www/CDRTool/library/sip_settings.php:5024
+#: /var/www/CDRTool/library/sip_settings.php:5108
 msgid "Date and Time"
 msgstr "Datum und Zeit"
 
-#: /var/www/CDRTool/library/sip_settings.php:5027
-#: /var/www/CDRTool/library/sip_settings.php:5170
-#: /var/www/CDRTool/library/sip_settings.php:6204
-#: /var/www/CDRTool/library/sip_settings.php:8277
+#: /var/www/CDRTool/library/sip_settings.php:5111
+#: /var/www/CDRTool/library/sip_settings.php:5254
+#: /var/www/CDRTool/library/sip_settings.php:6308
+#: /var/www/CDRTool/library/sip_settings.php:8242
 msgid "Action"
 msgstr "Aktion"
 
-#: /var/www/CDRTool/library/sip_settings.php:5036
+#: /var/www/CDRTool/library/sip_settings.php:5120
 msgid "Balance"
 msgstr "Saldo"
 
-#: /var/www/CDRTool/library/sip_settings.php:5112
+#: /var/www/CDRTool/library/sip_settings.php:5196
 msgid "Total Credit"
 msgstr "Gesamt Guthaben"
 
-#: /var/www/CDRTool/library/sip_settings.php:5128
+#: /var/www/CDRTool/library/sip_settings.php:5212
 msgid "Total Debit"
 msgstr "Gesamt Guthaben"
 
-#: /var/www/CDRTool/library/sip_settings.php:5140
-#: /var/www/CDRTool/library/sip_settings.php:5144
-#: /var/www/CDRTool/library/sip_settings.php:5148
-#: /var/www/CDRTool/library/sip_settings.php:5152
+#: /var/www/CDRTool/library/sip_settings.php:5224
+#: /var/www/CDRTool/library/sip_settings.php:5228
+#: /var/www/CDRTool/library/sip_settings.php:5232
+#: /var/www/CDRTool/library/sip_settings.php:5236
 msgid "Export"
 msgstr "Exportieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:5142
-#: /var/www/CDRTool/library/sip_settings.php:5150
+#: /var/www/CDRTool/library/sip_settings.php:5226
+#: /var/www/CDRTool/library/sip_settings.php:5234
 msgid "Export balance history in CSV format"
 msgstr "Saldenverlauf im CSV-Format exportieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:5164
+#: /var/www/CDRTool/library/sip_settings.php:5248
 msgid "Id"
 msgstr "ID"
 
-#: /var/www/CDRTool/library/sip_settings.php:5166
+#: /var/www/CDRTool/library/sip_settings.php:5250
+#: /etc/cdrtool/local/sip_settings.php:1845
 msgid "Account"
 msgstr "Konto"
 
-#: /var/www/CDRTool/library/sip_settings.php:5176
+#: /var/www/CDRTool/library/sip_settings.php:5260
 msgid "Final Balance"
 msgstr "Abschlusssaldo"
 
-#: /var/www/CDRTool/library/sip_settings.php:5287
-#: /var/www/CDRTool/library/sip_settings.php:5289
-#: /var/www/CDRTool/library/sip_settings.php:5291
-#: /var/www/CDRTool/library/sip_settings.php:5293
+#: /var/www/CDRTool/library/sip_settings.php:5371
+#: /var/www/CDRTool/library/sip_settings.php:5373
+#: /var/www/CDRTool/library/sip_settings.php:5375
+#: /var/www/CDRTool/library/sip_settings.php:5377
 msgid "Dial"
 msgstr "Wählen"
 
-#: /var/www/CDRTool/library/sip_settings.php:5293
+#: /var/www/CDRTool/library/sip_settings.php:5377
 msgid "Number"
 msgstr "Nummer"
 
-#: /var/www/CDRTool/library/sip_settings.php:5333
+#: /var/www/CDRTool/library/sip_settings.php:5417
 #, php-format
 msgid "Dial %s2*X where X = Number of Minutes, 0 to Reset"
 msgstr "Wählen %s2 * X, wobei X = Anzahl der Minuten, 0 = Zurücksetzen"
 
-#: /var/www/CDRTool/library/sip_settings.php:5460
-#: /etc/cdrtool/local/sip_settings.php:1768
+#: /var/www/CDRTool/library/sip_settings.php:5544
+#: /etc/cdrtool/local/sip_settings.php:1798
 msgid "Failed to open timezone file."
 msgstr "Zeitzone Datei konnte nicht geöffnet werden."
 
-#: /var/www/CDRTool/library/sip_settings.php:5484
+#: /var/www/CDRTool/library/sip_settings.php:5568
 msgid "Quick Dial"
 msgstr "Kurzwahl"
 
-#: /var/www/CDRTool/library/sip_settings.php:5492
+#: /var/www/CDRTool/library/sip_settings.php:5576
 #, php-format
 msgid "Prefix to auto-complete short numbers"
 msgstr "Vorwahl für die automatische Vervollständigung Kurzer Nummern"
 
-#: /var/www/CDRTool/library/sip_settings.php:5567
-#: /var/www/CDRTool/library/sip_settings.php:5579
-
+#: /var/www/CDRTool/library/sip_settings.php:5651
+#: /var/www/CDRTool/library/sip_settings.php:5663
 msgid "IP Access List"
 msgstr "PSTN-Zugang"
 
-#: /var/www/CDRTool/library/sip_settings.php:5598
+#: /var/www/CDRTool/library/sip_settings.php:5668
+msgid ""
+"You can limit here the IP addresses allowed to use the SIP account as an "
+"anti-fraud measure. You may enter a list of network addresses in CIDR format "
+"separated by spaces. <p>Examples:<dl><dt>0.0.0.0/0</dt><dd> means any "
+"address is allowed</dd><dt>1.2.3.4/32</dt><dd> means only one address "
+"1.2.3.4 is allowed</dd><dt>1.2.3.0/24</dt><dd> means only the 254 IP "
+"addresses from the C class 1.2.3.0 are allowed</dd>"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:5689
 #, php-format
 msgid "Default is %s"
 msgstr "Standard ist %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:5610
-#: /var/www/CDRTool/library/sip_settings.php:5622
-
+#: /var/www/CDRTool/library/sip_settings.php:5701
+#: /var/www/CDRTool/library/sip_settings.php:5713
 msgid "PSTN Call Limit"
 msgstr "Guthaben"
 
-#: /var/www/CDRTool/library/sip_settings.php:5638
+#: /var/www/CDRTool/library/sip_settings.php:5718
+#, fuzzy
+msgid "PSTN Call limit"
+msgstr "Guthaben"
+
+#: /var/www/CDRTool/library/sip_settings.php:5733
 #, php-format
 msgid "Call Statistics"
 msgstr "Anruf-Statistik"
 
-#: /var/www/CDRTool/library/sip_settings.php:5648
+#: /var/www/CDRTool/library/sip_settings.php:5743
 msgid "Summary"
 msgstr "Zusammenfassung"
 
-#: /var/www/CDRTool/library/sip_settings.php:5651
+#: /var/www/CDRTool/library/sip_settings.php:5746
 msgid "Usage Data"
 msgstr "Nutzungsdaten"
 
-#: /var/www/CDRTool/library/sip_settings.php:5656
+#: /var/www/CDRTool/library/sip_settings.php:5751
 #, php-format
 msgid "%s calls /  %s /  %s / %.2f %s"
 msgstr "%s Anrufe /%s / %s / %.2f %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:5666
+#: /var/www/CDRTool/library/sip_settings.php:5761
 msgid "First / Last Call"
 msgstr "Erster / Letzter Anruf"
 
-#: /var/www/CDRTool/library/sip_settings.php:5677
+#: /var/www/CDRTool/library/sip_settings.php:5772
 #, php-format
 msgid "Incoming"
 msgstr "Eingehend"
 
-#: /var/www/CDRTool/library/sip_settings.php:5737
+#: /var/www/CDRTool/library/sip_settings.php:5832
 #, php-format
 msgid "Outgoing"
 msgstr "Ausgehend"
 
-#: /var/www/CDRTool/library/sip_settings.php:6040
+#: /var/www/CDRTool/library/sip_settings.php:5884
+msgid "In progress"
+msgstr ""
+
+#: /var/www/CDRTool/library/sip_settings.php:6144
 #, php-format
 msgid "Directory"
 msgstr "Verzeichnis"
 
-#: /var/www/CDRTool/library/sip_settings.php:6046
+#: /var/www/CDRTool/library/sip_settings.php:6150
 msgid ""
 "To find other SIP Addresses fill in the First Name or the Last Name and "
 "click the Search button. "
@@ -1105,18 +1159,18 @@ msgstr ""
 "Um anderen SIP-Adressen zu finden, geben Sie den Vor- oder den Nachnamen ein "
 "und klicken Sie auf die Schaltfläche \"Suche\"."
 
-#: /var/www/CDRTool/library/sip_settings.php:6065
+#: /var/www/CDRTool/library/sip_settings.php:6169
 #, php-format
 msgid "Don't Disturb"
 msgstr "Bitte nicht stören"
 
-#: /var/www/CDRTool/library/sip_settings.php:6065
-#: /var/www/CDRTool/library/sip_settings.php:6931
+#: /var/www/CDRTool/library/sip_settings.php:6169
+#: /var/www/CDRTool/library/sip_settings.php:7134
 #, php-format
 msgid "Groups"
 msgstr "Gruppen"
 
-#: /var/www/CDRTool/library/sip_settings.php:6071
+#: /var/www/CDRTool/library/sip_settings.php:6175
 msgid ""
 "You can organize contacts into groups that can be used to accept incoming "
 "calls in Don't Disturb section. "
@@ -1124,59 +1178,58 @@ msgstr ""
 "Sie können Kontakte in Gruppen organisieren, um bestimmte Anrufe, trotz "
 "aktiver Rufsperre, zu akzeptieren. "
 
-#: /var/www/CDRTool/library/sip_settings.php:6145
+#: /var/www/CDRTool/library/sip_settings.php:6249
 msgid "Add sip address or search for contacts"
 msgstr "SIP Adresse hinzufügen oder nach Kontakten suchen"
 
-#: /var/www/CDRTool/library/sip_settings.php:6156
-#: /var/www/CDRTool/library/sip_settings.php:6201
+#: /var/www/CDRTool/library/sip_settings.php:6260
+#: /var/www/CDRTool/library/sip_settings.php:6305
 msgid "Group"
 msgstr "Gruppe"
 
-#: /var/www/CDRTool/library/sip_settings.php:6161
+#: /var/www/CDRTool/library/sip_settings.php:6265
 msgid "No group"
 msgstr "Keine Gruppe"
 
-#: /var/www/CDRTool/library/sip_settings.php:6166
-#: /var/www/CDRTool/library/sip_settings.php:8170
+#: /var/www/CDRTool/library/sip_settings.php:6270
+#: /var/www/CDRTool/library/sip_settings.php:8135
 msgid "Search"
 msgstr "Suche"
 
-#: /var/www/CDRTool/library/sip_settings.php:6173
+#: /var/www/CDRTool/library/sip_settings.php:6277
 msgid "(wildcard %)"
 msgstr "(Wildcard %)"
 
-#: /var/www/CDRTool/library/sip_settings.php:6198
-#: /var/www/CDRTool/library/sip_settings.php:8268
+#: /var/www/CDRTool/library/sip_settings.php:6302
+#: /var/www/CDRTool/library/sip_settings.php:8233
 msgid "Display Name"
 msgstr "Angezeigter Name"
 
-#: /var/www/CDRTool/library/sip_settings.php:6246
+#: /var/www/CDRTool/library/sip_settings.php:6350
 msgid "Update"
 msgstr "Aktualisieren"
 
-#: /var/www/CDRTool/library/sip_settings.php:6280
-#: /var/www/CDRTool/library/sip_settings.php:7519
+#: /var/www/CDRTool/library/sip_settings.php:6384
 msgid "Delete"
 msgstr "Bestätigen"
 
-#: /var/www/CDRTool/library/sip_settings.php:6725
+#: /var/www/CDRTool/library/sip_settings.php:6928
 #, php-format
 msgid "Do Not Disturb"
 msgstr "Nicht stören"
 
-#: /var/www/CDRTool/library/sip_settings.php:6742
+#: /var/www/CDRTool/library/sip_settings.php:6945
 msgid "You can reject calls depending on the time of day and Caller-ID. "
 msgstr "Sie können Anrufe je nach Tageszeit und Anrufer-ID ablehnen. "
 
-#: /var/www/CDRTool/library/sip_settings.php:6743
+#: /var/www/CDRTool/library/sip_settings.php:6946
 msgid ""
 "You can create custom groups in the Contacts page like Family or Coworkers. "
 msgstr ""
 "Sie können Gruppen, wie Familie, Mitarbeiter, etc. im Bereich Kontakte "
 "erstellen."
 
-#: /var/www/CDRTool/library/sip_settings.php:6746
+#: /var/www/CDRTool/library/sip_settings.php:6949
 msgid ""
 "Rejected calls are diverted based on the Unavailable condition in the Call "
 "Forwarding page. "
@@ -1184,7 +1237,7 @@ msgstr ""
 "Abgelehnte Anrufe werden auf der Grundlage der "
 "Anrufweiterleitungsbedingungen im Bereich \"Weiterleitung\" umgeleitet. "
 
-#: /var/www/CDRTool/library/sip_settings.php:6749
+#: /var/www/CDRTool/library/sip_settings.php:6952
 #, php-format
 msgid "Your current time is: %s"
 msgstr "Ihre aktuelle Zeitzone/Uhrzeit ist: %s"
@@ -1200,261 +1253,234 @@ msgstr "Ihre aktuelle Zeitzone/Uhrzeit ist: %s"
 #. print "</span></div>
 #. </div>
 #. ";
-#: /var/www/CDRTool/library/sip_settings.php:6794
-#: /var/www/CDRTool/library/sip_settings.php:7488
+#: /var/www/CDRTool/library/sip_settings.php:6997
 #, php-format
 msgid "Rules"
 msgstr "Regeln"
 
-#: /var/www/CDRTool/library/sip_settings.php:6806
-
+#: /var/www/CDRTool/library/sip_settings.php:7009
 msgid "Temporary"
 msgstr "Temporäre Regel"
 
-#: /var/www/CDRTool/library/sip_settings.php:6809
+#: /var/www/CDRTool/library/sip_settings.php:7012
 msgid "Duration"
 msgstr "Dauer"
 
-#: /var/www/CDRTool/library/sip_settings.php:6833
-
+#: /var/www/CDRTool/library/sip_settings.php:7036
 msgid "Temporary Rules"
 msgstr "Temporäre Regel"
 
-#: /var/www/CDRTool/library/sip_settings.php:6835
+#: /var/www/CDRTool/library/sip_settings.php:7038
 msgid "This will override the permanent rules for the chosen duration."
 msgstr ""
 "Dies setzt die permanenten Regeln für die gewählte Dauer ausser Kraft. "
 
-#: /var/www/CDRTool/library/sip_settings.php:6852
-
+#: /var/www/CDRTool/library/sip_settings.php:7055
 msgid "Minute(s)"
 msgstr "Minute(n)"
 
-#: /var/www/CDRTool/library/sip_settings.php:6879
-#: /var/www/CDRTool/library/sip_settings.php:7040
+#: /var/www/CDRTool/library/sip_settings.php:7082
+#: /var/www/CDRTool/library/sip_settings.php:7243
 msgid "Everybody"
 msgstr "Jeder"
 
-#: /var/www/CDRTool/library/sip_settings.php:6880
-#: /var/www/CDRTool/library/sip_settings.php:7041
+#: /var/www/CDRTool/library/sip_settings.php:7083
+#: /var/www/CDRTool/library/sip_settings.php:7244
 msgid "Nobody"
 msgstr "Niemand"
 
-#: /var/www/CDRTool/library/sip_settings.php:6922
-
+#: /var/www/CDRTool/library/sip_settings.php:7125
 msgid "Permanent"
 msgstr "Permanente Regeln"
 
-#: /var/www/CDRTool/library/sip_settings.php:6925
+#: /var/www/CDRTool/library/sip_settings.php:7128
 msgid "Days"
 msgstr "Tage"
 
-#: /var/www/CDRTool/library/sip_settings.php:6928
+#: /var/www/CDRTool/library/sip_settings.php:7131
 msgid "Time Interval"
 msgstr "Zeitintervall"
 
-#: /var/www/CDRTool/library/sip_settings.php:7105
+#: /var/www/CDRTool/library/sip_settings.php:7308
 #, php-format
 msgid "Rejected Callers"
 msgstr "Abgelehnte Anrufer"
 
-#: /var/www/CDRTool/library/sip_settings.php:7114
+#: /var/www/CDRTool/library/sip_settings.php:7317
 msgid ""
 "Use %Number@% to match PSTN numbers and user@domain to match SIP Addresses"
 msgstr ""
 "Verwenden Sie %Nummer@% für Telefon-Nummern und user@domain für SIP-Adressen"
 
-#: /var/www/CDRTool/library/sip_settings.php:7186
+#: /var/www/CDRTool/library/sip_settings.php:7389
+#: /var/www/CDRTool/library/sip_settings.php:7497
 msgid "Please fill in the e-mail address. "
 msgstr "Bitte geben Sie die E-Mail-Adresse an. "
 
-#: /var/www/CDRTool/library/sip_settings.php:7197
+#: /var/www/CDRTool/library/sip_settings.php:7404
 msgid "Error: no email template found"
 msgstr "Fehler: keine E-Mail-Vorlage gefunden"
 
-#: /var/www/CDRTool/library/sip_settings.php:7252
+#: /var/www/CDRTool/library/sip_settings.php:7462
 #, php-format
 msgid "SIP settings have been sent to %s"
 msgstr "SIP-Einstellungen wurden an %s gesendet"
 
-#: /var/www/CDRTool/library/sip_settings.php:7264
+#: /var/www/CDRTool/library/sip_settings.php:7541
+#, fuzzy, php-format
+msgid "Password reset has been sent to %s"
+msgstr "SIP-Einstellungen wurden an %s gesendet"
+
+#: /var/www/CDRTool/library/sip_settings.php:7555
 msgid "Invalid Expiration Period"
 msgstr "Ungültige Gültigkeitszeitraum"
 
-#: /var/www/CDRTool/library/sip_settings.php:7269
+#: /var/www/CDRTool/library/sip_settings.php:7560
 msgid "Invalid Quota"
 msgstr "Ungültige Quota"
 
-#: /var/www/CDRTool/library/sip_settings.php:7274
+#: /var/www/CDRTool/library/sip_settings.php:7565
 msgid "Missing Timezone"
 msgstr "Fehlende Zeitzone"
 
-#: /var/www/CDRTool/library/sip_settings.php:7279
+#: /var/www/CDRTool/library/sip_settings.php:7570
 msgid "Invalid E-mail Address"
 msgstr "Ungültige E-Mail-Adresse"
 
-#: /var/www/CDRTool/library/sip_settings.php:7357
+#: /var/www/CDRTool/library/sip_settings.php:7657
 #, php-format
 msgid "Today"
 msgstr "Heute"
 
-#: /var/www/CDRTool/library/sip_settings.php:7359
+#: /var/www/CDRTool/library/sip_settings.php:7659
 #, php-format
 msgid "Yesterday"
 msgstr "Gestern"
 
-#: /var/www/CDRTool/library/sip_settings.php:7390
-#: /var/www/CDRTool/library/sip_settings.php:7399
-#, php-format
-msgid "Activity"
-msgstr "Aktivität"
-
-#: /var/www/CDRTool/library/sip_settings.php:7396
-msgid "Note"
-msgstr "Hinweis"
-
-#: /var/www/CDRTool/library/sip_settings.php:7427
-#, php-format
-msgid "Watchers"
-msgstr "Beobachter"
-
-#: /var/www/CDRTool/library/sip_settings.php:7835
+#: /var/www/CDRTool/library/sip_settings.php:7794
 #, php-format
 msgid "Billing Profiles"
 msgstr "Rechnungs Profile"
 
-#: /var/www/CDRTool/library/sip_settings.php:7841
+#: /var/www/CDRTool/library/sip_settings.php:7800
 msgid "Weekdays"
 msgstr "Werktags"
 
-#: /var/www/CDRTool/library/sip_settings.php:7861
+#: /var/www/CDRTool/library/sip_settings.php:7820
 msgid "Weekends"
 msgstr "Wochenende"
 
-#: /var/www/CDRTool/library/sip_settings.php:8004
+#: /var/www/CDRTool/library/sip_settings.php:7963
 msgid "Extra Groups"
 msgstr "Extra Gruppen"
 
-#: /var/www/CDRTool/library/sip_settings.php:8022
+#: /var/www/CDRTool/library/sip_settings.php:7981
+#: /var/www/CDRTool/library/sip_settings.php:11763
 msgid "Error: missing enrollment settings"
 msgstr "Fehler: fehlende Registrierungseinstellungen"
 
-#: /var/www/CDRTool/library/sip_settings.php:8255
+#: /var/www/CDRTool/library/sip_settings.php:8220
 #, php-format
 msgid "%s contacts found. "
 msgstr "%s Kontakte gefunden."
 
-#: /var/www/CDRTool/library/sip_settings.php:10616
+#: /var/www/CDRTool/library/sip_settings.php:10581
+#, fuzzy
+msgid "Error, please specify an account"
+msgstr "Fehler: Bitte geben Sie eine Datei an"
+
+#: /var/www/CDRTool/library/sip_settings.php:10588
+#, fuzzy
+msgid "Invalid account provided"
+msgstr "Ungültige Nachname angegeben"
+
+#: /var/www/CDRTool/library/sip_settings.php:10593
 msgid "Error: No X.509 client certificate provided\n"
 msgstr "Fehler: Kein X.509 Client-Zertifikat gemäß\n"
 
-#: /var/www/CDRTool/library/sip_settings.php:10621
+#: /var/www/CDRTool/library/sip_settings.php:10598
 msgid "Error: Failed to parse X.509 client certificate\n"
 msgstr "Fehler: X.509 Client-Zertifikat konnte nicht gelesen werden\n"
 
-#: /var/www/CDRTool/library/sip_settings.php:10631
-msgid "No SIP Address available. "
-msgstr "Keine SIP-Adresse verfügbar. "
-
-#: /var/www/CDRTool/library/sip_settings.php:10888
+#: /var/www/CDRTool/library/sip_settings.php:10914
 #, php-format
 msgid "Error: %s"
 msgstr "Fehler: %s"
 
-#: /var/www/CDRTool/library/sip_settings.php:11067
+#: /var/www/CDRTool/library/sip_settings.php:11094
 #, php-format
 msgid "Do not disturb has been enabled for %d minutes"
 msgstr "\"Bitte nicht stören\" wurde für %d Minuten aktiviert"
 
-#: /var/www/CDRTool/library/sip_settings.php:11069
+#: /var/www/CDRTool/library/sip_settings.php:11096
 #, php-format
 msgid "Do not disturb has been enabled"
 msgstr "\"Bitte nicht stören\" wurde aktiviert"
 
-#: /var/www/CDRTool/library/sip_settings.php:11094
+#: /var/www/CDRTool/library/sip_settings.php:11121
 #, php-format
 msgid "Do not disturb has been disabled"
 msgstr "\"Bitte nicht stören\" wurde deaktiviert"
 
-#: /var/www/CDRTool/library/sip_settings.php:11114
+#: /var/www/CDRTool/library/sip_settings.php:11141
 #, php-format
 msgid "Caller-ID is now hidden for outgoing calls"
 msgstr "Anrufer-ID ist jetzt für abgehende Anrufe unsichtbar"
 
-#: /var/www/CDRTool/library/sip_settings.php:11132
-#: /var/www/CDRTool/library/sip_settings.php:11139
+#: /var/www/CDRTool/library/sip_settings.php:11159
+#: /var/www/CDRTool/library/sip_settings.php:11166
 #, php-format
 msgid "Caller-ID is now visible for outgoing calls"
 msgstr "Anrufer-ID ist jetzt für abgehende Anrufe sichtbar"
 
-#: /var/www/CDRTool/library/sip_settings.php:11178
+#: /var/www/CDRTool/library/sip_settings.php:11205
 #, php-format
 msgid "Added alias %s"
 msgstr "Alias % s hinzugefügt"
 
-#: /var/www/CDRTool/library/sip_settings.php:11260
+#: /var/www/CDRTool/library/sip_settings.php:11287
 #, php-format
 msgid "Changed diversions %s"
 msgstr "Umleitungen % s geändert"
 
-#: /var/www/CDRTool/library/sip_settings.php:11927
+#: /var/www/CDRTool/library/sip_settings.php:11973
 #, php-format
 msgid "Transaction Results"
 msgstr "Ergebnisse"
 
-#: /var/www/CDRTool/library/sip_settings.php:11992
+#: /var/www/CDRTool/library/sip_settings.php:12038
 msgid "Transaction completed sucessfully. "
 msgstr "Transaktion erfolgreich abgeschlossen. "
 
-#: /var/www/CDRTool/library/sip_settings.php:12074
-
+#: /var/www/CDRTool/library/sip_settings.php:12120
 msgid "Invalid CC Request"
 msgstr "Ungültige Anfrage"
 
-#: /etc/cdrtool/local/sip_settings.php:79
-
+#: /etc/cdrtool/local/sip_settings.php:82
 msgid "Error inserting article"
 msgstr "Fehler beim Speichern der Bestellung"
 
-#: /etc/cdrtool/local/sip_settings.php:155
-#: /etc/cdrtool/local/sip_settings.php:301
-#: /etc/cdrtool/local/sip_settings.php:1240
-#: /etc/cdrtool/local/sip_settings.php:1400
-#, php-format
-msgid "Credit Card"
-msgstr "Kredit Karten Details"
-
-#: /etc/cdrtool/local/sip_settings.php:164
-#: /etc/cdrtool/local/sip_settings.php:310
-#: /etc/cdrtool/local/sip_settings.php:1249
-#: /etc/cdrtool/local/sip_settings.php:1409
-#, php-format
-msgid "To add credit to your account go to <a href=%s>Payments</a> tab. "
-msgstr ""
-"Für die Gutschrift auf Ihrem Konto mit einer Prepaid-Karte geben Sie diese "
-"weiter unten ein."
-
-#: /etc/cdrtool/local/sip_settings.php:218
-#: /etc/cdrtool/local/sip_settings.php:362
-#: /etc/cdrtool/local/sip_settings.php:1301
+#: /etc/cdrtool/local/sip_settings.php:115
+#: /etc/cdrtool/local/sip_settings.php:383
+#: /etc/cdrtool/local/sip_settings.php:1324
 #, php-format
 msgid "Self Support"
 msgstr "Selbsthilfe"
 
-#: /etc/cdrtool/local/sip_settings.php:226
-#: /etc/cdrtool/local/sip_settings.php:373
-#: /etc/cdrtool/local/sip_settings.php:1312
+#: /etc/cdrtool/local/sip_settings.php:123
+#: /etc/cdrtool/local/sip_settings.php:394
+#: /etc/cdrtool/local/sip_settings.php:1335
 #, php-format
 msgid "For help about SIP2SIP service visit <a href=%s target=sip2sip>%s</a>"
 msgstr ""
 "Für Hilfe zum SIP2SIP Service besuchen Sie <a href=%s target=sip2sip>%s</a>"
 
-#: /etc/cdrtool/local/sip_settings.php:237
+#: /etc/cdrtool/local/sip_settings.php:134
 #, php-format
 msgid "More Help"
 msgstr "Weitere Hilfe"
 
-#: /etc/cdrtool/local/sip_settings.php:246
+#: /etc/cdrtool/local/sip_settings.php:143
 #, php-format
 msgid ""
 "To request support you may open an issue <a href='%s' "
@@ -1463,12 +1489,12 @@ msgstr ""
 "Für weitere Hilfe können Sie unter <a href='%s' target=support><b>here</b></"
 "a> einen neuen Vorgang erstellen."
 
-#: /etc/cdrtool/local/sip_settings.php:248
+#: /etc/cdrtool/local/sip_settings.php:145
 #, php-format
 msgid "Account Deletion"
 msgstr "Konto Löschen"
 
-#: /etc/cdrtool/local/sip_settings.php:252
+#: /etc/cdrtool/local/sip_settings.php:149
 msgid ""
 "Use the following credentials to login <a href=http://support.ag-projects."
 "com>here</a> and request the deletion of your SIP account:"
@@ -1476,8 +1502,26 @@ msgstr ""
 "Benutzen Sie zum Einloggen folgende Anmeldedaten <a href=http://support.ag-"
 "projects.com>here</a> und bitten Sie um Löschung Ihres SIP Kontos:"
 
-#: /etc/cdrtool/local/sip_settings.php:371
-#: /etc/cdrtool/local/sip_settings.php:1310
+#: /etc/cdrtool/local/sip_settings.php:228
+#: /etc/cdrtool/local/sip_settings.php:322
+#: /etc/cdrtool/local/sip_settings.php:1263
+#: /etc/cdrtool/local/sip_settings.php:1423
+#, php-format
+msgid "Credit Card"
+msgstr "Kredit Karten Details"
+
+#: /etc/cdrtool/local/sip_settings.php:237
+#: /etc/cdrtool/local/sip_settings.php:331
+#: /etc/cdrtool/local/sip_settings.php:1272
+#: /etc/cdrtool/local/sip_settings.php:1432
+#, php-format
+msgid "To add credit to your account go to <a href=%s>Payments</a> tab. "
+msgstr ""
+"Für die Gutschrift auf Ihrem Konto mit einer Prepaid-Karte geben Sie diese "
+"weiter unten ein."
+
+#: /etc/cdrtool/local/sip_settings.php:392
+#: /etc/cdrtool/local/sip_settings.php:1333
 #, php-format
 msgid ""
 "For help a about SIP2SIP service visit <a href=http://wiki.sip2sip."
@@ -1486,19 +1530,19 @@ msgstr ""
 "Für Hilfe zum SIP2SIP Service besuchen Sie <a href=http://wiki.sip2sip."
 "info>http://wiki.sip2sip.info</a>"
 
-#: /etc/cdrtool/local/sip_settings.php:383
-#: /etc/cdrtool/local/sip_settings.php:1322
+#: /etc/cdrtool/local/sip_settings.php:404
+#: /etc/cdrtool/local/sip_settings.php:1345
 #, php-format
 msgid "Need More Help?"
 msgstr "Benötigen Sie weitere Hilfe?"
 
-#: /etc/cdrtool/local/sip_settings.php:392
-#: /etc/cdrtool/local/sip_settings.php:1331
+#: /etc/cdrtool/local/sip_settings.php:413
+#: /etc/cdrtool/local/sip_settings.php:1354
 msgid "Additional support is provided by an external website. "
 msgstr "Weitere Hilfe finden Sie auf einer externen Internetseite."
 
-#: /etc/cdrtool/local/sip_settings.php:397
-#: /etc/cdrtool/local/sip_settings.php:1336
+#: /etc/cdrtool/local/sip_settings.php:418
+#: /etc/cdrtool/local/sip_settings.php:1359
 #, php-format
 msgid ""
 "Use your web browser and open a ticket at <a href=http://support.ag-projects."
@@ -1507,8 +1551,8 @@ msgstr ""
 "Benutzen Sie Ihren Web-Browser und öffnen Sie ein Ticket unter  <a "
 "href=http://support.ag-projects.com>http://support.ag-projects.com</a>"
 
-#: /etc/cdrtool/local/sip_settings.php:399
-#: /etc/cdrtool/local/sip_settings.php:1338
+#: /etc/cdrtool/local/sip_settings.php:420
+#: /etc/cdrtool/local/sip_settings.php:1361
 #, php-format
 msgid ""
 "Use your web browser and open a ticket at <a href='%s' target=support>%s</a>"
@@ -1516,13 +1560,13 @@ msgstr ""
 "Benutzen Sie Ihren Web-Browser und öffnen Sie ein Ticket unter <a href='%s' "
 "target=support>%s</a>"
 
-#: /etc/cdrtool/local/sip_settings.php:404
-#: /etc/cdrtool/local/sip_settings.php:1343
+#: /etc/cdrtool/local/sip_settings.php:425
+#: /etc/cdrtool/local/sip_settings.php:1366
 msgid "Use the following credentials to login to the support website:"
 msgstr ""
 "Benutzen Sie folgende Anmeldedaten um in den Supportbereich einzuloggen:"
 
-#: /etc/cdrtool/local/sip_settings.php:1391
+#: /etc/cdrtool/local/sip_settings.php:1414
 #, php-format
 msgid ""
 "Calling to PSTN numbers is possible at the costs set forth in the <a href="
@@ -1531,30 +1575,20 @@ msgstr ""
 "Aufruf zu Nummern ins offentliche Telefonnetz sind möglich. Die Kosten "
 "finden Sie in der <a href=%s> Preisliste </ a>."
 
-#: /etc/cdrtool/local/sip_settings.php:1750
-msgid "Did you already get your SIP address? "
-msgstr "Haben Sie bereits eine SIP Adresse?"
+#: /etc/cdrtool/local/sip_settings.php:1881
+#, fuzzy
+msgid "Confirm Password"
+msgstr "Passwort"
 
-#: /etc/cdrtool/local/sip_settings.php:1751
-msgid ""
-"You may access your account <a href=https://mdns.sipthor.net/sip_settings."
-"phtml>here</a>. "
-msgstr ""
-"Sie haben Zugang zu Ihrem Konto <a href=https://mdns.sipthor.net/"
-"sip_settings.phtml>here</a>."
-
-#: /etc/cdrtool/local/sip_settings.php:1831
-
+#: /etc/cdrtool/local/sip_settings.php:1899
 msgid "First name"
 msgstr "Vorname"
 
-#: /etc/cdrtool/local/sip_settings.php:1847
-
+#: /etc/cdrtool/local/sip_settings.php:1915
 msgid "Last name"
 msgstr "Nachname"
 
-#: /etc/cdrtool/local/sip_settings.php:1862
-
+#: /etc/cdrtool/local/sip_settings.php:1930
 msgid "E-mail"
 msgstr "Email"
 
@@ -1570,26 +1604,23 @@ msgstr "Email"
 #. <tr>
 #. <td align=left valign=top>
 #. ";
-#: /etc/cdrtool/local/sip_settings.php:1915
+#: /etc/cdrtool/local/sip_settings.php:1983
 msgid "Captcha"
 msgstr "Captcha"
 
-#: /etc/cdrtool/local/sip_settings.php:2431
-
+#: /etc/cdrtool/local/sip_settings.php:2504
 msgid "My first name"
 msgstr "Vorname"
 
-#: /etc/cdrtool/local/sip_settings.php:2448
-
+#: /etc/cdrtool/local/sip_settings.php:2521
 msgid "My last name"
 msgstr "Nachname"
 
-#: /etc/cdrtool/local/sip_settings.php:2464
-
+#: /etc/cdrtool/local/sip_settings.php:2537
 msgid "My e-mail address"
 msgstr "E-Mail Adresse"
 
-#: /etc/cdrtool/local/sip_settings.php:2500
+#: /etc/cdrtool/local/sip_settings.php:2573
 msgid "My domain name"
 msgstr "Mein Domain Name"
 
@@ -1715,7 +1746,6 @@ msgid "Transaction failed"
 msgstr "Die Transaktion ist fehlgeschlagen"
 
 #: /var/www/CDRTool/library/cc_processor.php:908
-
 msgid "Missing transaction key"
 msgstr "Fehlende Zeitzone"
 
@@ -1724,6 +1754,31 @@ msgid "Transaction already exists. Do not press the browser reload button."
 msgstr ""
 "Die Transaktion ist bereits aktive. Drücken Sie nicht den "
 "Aktualisierungsknopf Ihres Browsers."
+
+#~ msgid "Presence"
+#~ msgstr "Anwesenheit"
+
+#~ msgid "Activity"
+#~ msgstr "Aktivität"
+
+#~ msgid "Note"
+#~ msgstr "Hinweis"
+
+#~ msgid "Watchers"
+#~ msgstr "Beobachter"
+
+#~ msgid "No SIP Address available. "
+#~ msgstr "Keine SIP-Adresse verfügbar. "
+
+#~ msgid "Did you already get your SIP address? "
+#~ msgstr "Haben Sie bereits eine SIP Adresse?"
+
+#~ msgid ""
+#~ "You may access your account <a href=https://mdns.sipthor.net/sip_settings."
+#~ "phtml>here</a>. "
+#~ msgstr ""
+#~ "Sie haben Zugang zu Ihrem Konto <a href=https://mdns.sipthor.net/"
+#~ "sip_settings.phtml>here</a>."
 
 #~ msgid "Registered SIP Devices"
 #~ msgstr "Registrierte SIP-Geräte"
@@ -1779,4 +1834,3 @@ msgstr ""
 
 #~ msgid "PSTN Termination Credit"
 #~ msgstr "PSTN Kündigung Credit"
-
