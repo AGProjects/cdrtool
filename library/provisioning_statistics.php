@@ -350,7 +350,13 @@ class ProvisioningStatistics {
 
         $db = new $class();
 
-        $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300";
+        if ($days >= 10) {
+            $period='600';
+        } else if ($days >= 20) {
+             $period='900';
+        } 
+        
+        $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -363,7 +369,7 @@ class ProvisioningStatistics {
         if (!$db->num_rows()) return array();
 
         while ($db->next_record()) {
-            $requests[] = array($db->f('date'),(intval($db->f('number')))/5);
+            $requests[] = array($db->f('date'),(intval($db->f('number')))/($period/60));
         }
 
         return json_encode($requests);
@@ -378,16 +384,17 @@ class ProvisioningStatistics {
         $start = (float) array_sum(explode(' ',microtime()));
         $db = new $class();
 
-        if ($days <= 10) {
+        if ($days >= 10) {
             $period='600';
-        } else if ($days <= 20) {
-             $period='1200';
-        } else if ($days > 20) {
-             $period='2400';
-        }
+        } else if ($days >= 20) {
+             $period='900';
+        } 
+        //else if ($days > 20) {
+          //   $period='2400';
+       // }
 
         #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
-        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV 300 order by date";
+        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -481,13 +488,17 @@ class ProvisioningStatistics {
                     }],
                     series: [{
                         name: 'Requests per minute',
-                        data: requests
+                            data: requests,
+                            //enableMouseTracking: false,
+                            animation: false
                     }
                     ,{
                         name: 'Average execution time',
                         data: request_time,
                         color: '#8A0808',
                         yAxis: 1,
+                        //enableMouseTracking: false,
+                        animation: false
                     }
                     ],
                 });
