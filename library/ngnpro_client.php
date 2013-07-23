@@ -10709,8 +10709,11 @@ class Customers extends Records {
                                  'records_per_page'    => array('name'     => 'Records per page',
                                                                'category'  => 'web',
                                                                'permission'  => 'customer'
+                                                                ),
+                                             'yubikey' => array('name'=>'Yubikey',
+                                                                'category' =>'web',
+                                                                'permission' => 'customer'
                                                                )
-
                                  );
 
     var $FieldsReadOnly=array(
@@ -10767,7 +10770,7 @@ class Customers extends Records {
                                                      ),
                            'billingAddress' => array('type'=>'textarea',
                                                      'name'=>'Billing address'
-                                                     )
+                                                 ),
                               );
 
     var $addFields=array(
@@ -11487,7 +11490,7 @@ class Customers extends Records {
         <tr>
         <td align=left>";
         if ($_REQUEST['action'] != 'Delete' && $_REQUEST['action'] != 'Copy') {
-            print "<input type=submit name=action value=Update>";
+            print "<input class='btn' type=submit name=action value=Update>";
             printf (" E-mail <input class=checkbox type=checkbox name=notify value='1'> account information");
         }
 
@@ -11979,7 +11982,7 @@ class Customers extends Records {
 
                 if ($_property->name == $item) {
                     // update property
-
+                    
                     if ($_property->permission == 'admin') {
                         if ($this->login_credentials['login_type'] == 'admin') {
                             $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
@@ -11995,8 +11998,12 @@ class Customers extends Records {
                         }
                     } else {
                         $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        if ($_key == 'yubikey' && $_REQUEST[$var_name] != '') {
+                            $customer->properties[$_key]->value = substr($customer->properties[$_key]->value,0,12);
+                        }
                     }
 
+        
                     $updated_property[$item]++;
 
                     break;
@@ -12032,6 +12039,9 @@ class Customers extends Records {
                 }
 
                 if (strlen($var_value)) {
+                    if ($item == 'yubikey' ) {
+                        $var_value = substr($var_value,0,12);
+                    }
                     $customer->properties[] = array('name'       => $item,
                                                     'value'      => $var_value,
                                                     'category'   => $this->allProperties[$item]['category'],
