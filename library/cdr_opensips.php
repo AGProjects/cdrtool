@@ -1206,7 +1206,7 @@ class CDRS_opensips extends CDRS {
             if ($UserName_comp=="begin") {
                 $where .= sprintf(" and %s like '%s%s'", addslashes($this->usernameField), addslashes($UserName), '%');
             } elseif ($UserName_comp=="contain") {
-                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->usernameField), '%s', addslashes($UserName), '%');
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->usernameField), '%', addslashes($UserName), '%');
             } elseif ($UserName_comp=="equal") {
                 $where .= sprintf(" and %s = '%s'", addslashes($this->usernameField), addslashes($UserName));
             } else {
@@ -1229,7 +1229,7 @@ class CDRS_opensips extends CDRS {
             if ($a_number_comp=="begin") {
                 $where .= sprintf(" and %s like '%s%s'", addslashes($this->aNumberField), addslashes($a_number), '%');
             } elseif ($a_number_comp=="contain") {
-                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->aNumberField), '%s', addslashes($a_number), '%s');
+                $where .= sprintf(" and %s like '%s%s%s'", addslashes($this->aNumberField), '%', addslashes($a_number), '%');
             } elseif ($a_number_comp=="equal") {
                 $where .= sprintf(" and %s = '%s'", addslashes($this->aNumberField), addslashes($a_number));
             }
