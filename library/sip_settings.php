@@ -2506,7 +2506,8 @@ class SipSettings {
             </div>
            '; 
         
-	print $this->hiddenElements;
+        print $this->hiddenElements;
+
         print "
         </form>
         ";
@@ -2569,18 +2570,48 @@ class SipSettings {
         if ($this->sip_settings_page && $this->login_type != 'subscriber') {
             print "<p>";
             printf (_("Login using SIP credentials at <a href=%s>%s</a>"),$this->sip_settings_page,$this->sip_settings_page);
+            print "</p>";
         }
-
-        print "
-        </div>
-        ";
-
         print $this->hiddenElements;
-
         print "
-        </form>
+        </div></form>
         ";
+        if($this->sip_settings_page) {
+            $this->getbalancehistory();
 
+            if (count($this->balance_history) == "0"  || $this->login_type != 'subscriber') {
+                print "<form method=post><p>";
+                print "<input type=hidden name=action value=\"delete account\">";
+                $date1= new datetime($this->Preferences['account_delete_request']);
+                $today= new datetime('now');
+                if ($this->Preferences['account_delete_request'] && $this->login_type != 'subscriber' ) {
+                    print "<p>User made a deletion request on: ";
+                    print $this->Preferences['account_delete_request'];
+                    print "</p>";
+                }
+
+                if ($date1->diff($today)->d >= '2' || $this->Preferences['account_delete_request'] == '' || $this->login_type != 'subscriber' ) {
+                    print '<button data-original-title="';
+                    print _("Delete request");
+                    print "\" data-trigger=\"hover\" data-toggle=\"popover button\" data-content=\"";
+                    print " You may request the deletion of your account here. An email confirmation is required to validate the request.\"";
+                    print " rel='popover' class='btn btn-warning' type='submit'>";
+                    print _("Delete request");
+                } else {
+                    //print "<button rel='popover' class='btn btn-disabled'disabled type='submit'>";
+                    //printf (_("Account remove request is active"));
+                    print "A deletion request has been made on: ";
+                    print $this->Preferences['account_delete_request'];
+                }
+                print "</button></p>";
+            }
+            
+            print $this->hiddenElements;
+
+            print "
+            </form>
+            ";
+        }
     }
 
     function showDownloadTab() {
@@ -4100,6 +4131,11 @@ class SipSettings {
 
         if ($show_barring_tab != $this->Preferences['show_barring_tab'] ) {
             $this->setPreference("show_barring_tab",$show_barring_tab);
+            $this->somethingChanged=1;
+        }
+
+        if ($this->Preferences['account_delete_request'] ) {
+            $this->setPreference("account_delete_request",date('m/d/Y h:i:s a', time()));
             $this->somethingChanged=1;
         }
 
@@ -7332,6 +7368,84 @@ class SipSettings {
 
     }
 
+    function deleteAccount($skip_html=False) {
+        dprint ("SipSettings->deleteAccount($this->account, $this->email)");
+
+        $this->getBalanceHistory();
+
+        if (count($this->balance_history) != "0" && $this->login_type == 'subscriber') {
+            return false;
+        }
+
+        if (!$this->email && !$skip_html) {
+            print "<p><font color=blue>";
+            print _("Please fill in the e-mail address. ");
+            print "</font>";
+            return false;
+        }
+
+        $subject = sprintf("Removal of SIP account %s",$this->account);
+        //$this->expire_date = new DateTime('now');
+
+        $this->expire_date = date("Y-m-d H:i:s",strtotime("+2 days"));
+        $this->ip = $_SERVER['REMOTE_ADDR'];
+
+        $tpl_html = $this->getEmailDeleteTemplateHTML($this->reseller, $this->Preferences['language']);
+        //dprint("$tpl_html");
+        if (!$tpl_html && !$skip_html) {
+            print "<p><font color=red>";
+            print _("Error: no HTML email template found");
+            print "</font>";
+            return false;
+        }
+
+        //print "$tpl_html";
+        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+        include_once(SMARTY_DIR . 'Smarty.class.php');
+
+        $smarty = new Smarty;
+        $smarty->template_dir = '.';
+
+        //$smarty->use_sub_dirs = true;
+        //$smarty->cache_dir = 'templates_c';
+        $smarty->assign('client', $this);
+        //print"$this->sip_settings_page";
+        if ($tpl_html) {
+            $bodyhtml = $smarty->fetch($tpl_html);
+        }
+        include_once 'Mail.php';
+        include_once 'Mail/mime.php' ;
+
+        $hdrs = array(
+            'From'    => $this->support_email,
+            'Subject' => $subject,
+//            'Cc'      => $this->support_email
+        );
+        //dprint("1");
+        $crlf = "\n";
+        $mime = new Mail_mime($crlf);
+
+        if ($tpl_html) {
+          $mime->setHTMLBody($bodyhtml);
+        }
+
+        $body = $mime->get();
+        $hdrs = $mime->headers($hdrs);
+
+        $mail =& Mail::factory('mail');
+
+        if ($mail->send($this->email, $hdrs, $body)) {
+            if (!$skip_html) {
+                $this->Preferences['account_delete_request']=1;
+                $this->saveSettings();
+                $this->getAccount($this->account);
+                print "<p>";
+                printf (_("Removal email has been sent to %s"), $this->email);
+            }
+            return 1;
+        }
+    }
+
     function sendEmail($skip_html=False) {
         dprint ("SipSettings->sendEmail($this->email)");
 
@@ -7423,6 +7537,32 @@ class SipSettings {
             }
             return 1;
         }
+    }
+
+    function sendRemoveAccount() {
+        include_once('Mail.php');
+        include_once('Mail/mime.php');
+           
+        $this->ip = $_SERVER['REMOTE_ADDR'];
+        $subject=sprintf ("The account %s was removed from IP Address: %s",$this->account, $this->ip);
+
+        $hdrs = array(
+                'From'    => $this->support_email,
+                'Subject' => $subject
+                );
+
+        $crlf = "\n";
+        $mime = new Mail_mime($crlf);
+
+        $mime->setTXTBody($subject);
+        $mime->setHTMLBody($subject);
+
+        $body = $mime->get();
+        $hdrs = $mime->headers($hdrs);
+
+        $mail =& Mail::factory('mail');
+
+        $mail->send($this->support_email, $hdrs, $body);
     }
 
     function sendPasswordReset($skip_html=False) {
@@ -7693,6 +7833,25 @@ class SipSettings {
     function getEmailPasswordTemplateHTML($reseller, $language='en') {
         $file = "password_reminder_$language.html.tpl";
         $file2 = "password_reminder.html.tpl";
+
+        //print("templates_path = $this->templates_path");
+
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
+        } else {
+            return false;
+        }
+    }
+
+    function getEmailDeleteTemplateHTML($reseller, $language='en') {
+        $file = "delete_$language.html.tpl";
+        $file2 = "delete.html.tpl";
 
         //print("templates_path = $this->templates_path");
 
@@ -10799,6 +10958,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
         !strstr($_REQUEST['action'],'put_') &&
+        !strstr($_REQUEST['action'],'delete_') &&
         !strstr($_REQUEST['action'],'export_') &&
         !strstr($_REQUEST['action'],'add_')) {
         $title  = "$account";
@@ -10818,6 +10978,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         include($css);
         dprint("CSS file $css included");
     }
+
 
     if ($_REQUEST['action']=="save settings") {
         if ($SipSettings->checkSettings()) {
@@ -10844,6 +11005,44 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->setAliases();
     } else if ($_REQUEST['action']=="send email") {
         $SipSettings->sendEmail();
+    } else if ($_REQUEST['action']=="delete account") {
+        $SipSettings->deleteAccount();
+    } else if ($_REQUEST['action']=="delete_account") {
+       // print "<pre>";
+       // print_r($SipSettings->Preferences);
+        $date1= new datetime($SipSettings->Preferences['account_delete_request']);
+        $today= new datetime('now');
+        if ($date1->diff($today)->d <= '2' && $SipSettings->Preferences['account_delete_request'] ) {
+
+            $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+            $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
+
+            if (PEAR::isError($result)) {
+                $error_msg  = $result->getMessage();
+                $error_fault= $result->getFault();
+                $error_code = $result->getCode();
+                $_msg=sprintf ("Error (SipPort): %s (%s): %s",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $return=array('success'       => false,
+                            'error_message' => $_msg
+                            );
+                return false;
+            }  else {
+                printf("<p>The account %s has been removed</p>",$SipSettings->account);
+                $SipSettings->sendRemoveAccount();
+                //print "<script>var t1=setTimeout(window.location.href = 'sip_logout.phtml',5000);</script>"
+                print "<a href=sip_logout.phtml>";
+                print _("Click here to Logout");
+                print "</a>";
+                //$auth->logout();
+                //$sess->delete();
+                return true;
+            }
+        } else {
+            printf("The delete request for account %s has expired or is not valid",$SipSettings->account);
+            return false;
+        }
+        return true ;
+        //$SipSettings->deleteAccount();
     } else if ($_REQUEST['action']=="get_crt") {
         $SipSettings->exportCertificateX509();
         return true;

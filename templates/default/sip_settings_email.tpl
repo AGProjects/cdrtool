@@ -61,6 +61,8 @@ Your login details:
    Password: {$client->password}
 {/if}
 
+If you wish to delete your account, go to identity section of the account settings page.
+
 How to use your SIP account:
 
    - To test, call 3333, you should hear some music playing

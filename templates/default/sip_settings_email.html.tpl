@@ -186,6 +186,9 @@
                                     Password: {$client->password}
                                     {/if}
                                 </p>
+				<p>
+				If you wish to delete your account, go to identity section of the account settings page.
+				</p>
                                 <p>
                                 How to use your SIP account:
                                 </p>
