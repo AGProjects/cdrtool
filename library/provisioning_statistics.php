@@ -342,10 +342,46 @@ class ProvisioningStatistics {
         print $chart;
     }
 
+    function purge($class) {
+        global $CDRTool;
+        
+        if (!class_exists($class)) return array();
+
+        $db = new $class();
+        
+        $query = "insert into ngnpro_logs_summary (total, date,total_time) "
+                ."select sum(total) as number, date, sum(total_time) as data from ngnpro_logs "
+                ."where date < DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY UNIX_TIMESTAMP(date) DIV 3600 order by date";
+
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+        $query = "delete from ngnpro_logs "
+                ."where date < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+    }
+
     function getRequestsProvisioning($class,$days) {
         global $CDRTool;
         $requests = array();
         $period = '300';
+        $this->purge($class);
+
         if (!class_exists($class)) return array();
 
         $db = new $class();
@@ -356,6 +392,22 @@ class ProvisioningStatistics {
              $period='900';
         } 
         
+        $query = "select total as number,date from ngnpro_logs_summary";
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+        if (!$db->num_rows()) return array();
+
+        while ($db->next_record()) {
+            $requests[] = array($db->f('date'),(intval($db->f('number')))/60);
+        }
+
         $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period";
         dprint($query);
 
@@ -375,7 +427,8 @@ class ProvisioningStatistics {
         return json_encode($requests);
     }
 
-   function getRequestsTime($class, $days) {
+
+    function getRequestsTime($class, $days) {
         global $CDRTool;
         $requests = array();
         $period = '300';
@@ -393,6 +446,23 @@ class ProvisioningStatistics {
           //   $period='2400';
        // }
 
+        $query = "select total as number, date, total_time as data from ngnpro_logs_summary order by date";
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+        if (!$db->num_rows()) return array();
+
+        while ($db->next_record()) {
+            $total= $db->f('data');
+            $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+        }
+
         #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
         $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
         dprint($query);
@@ -408,7 +478,7 @@ class ProvisioningStatistics {
 
         while ($db->next_record()) {
             $total= $db->f('data');
-            $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+             $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
         }
         $end = (float) array_sum(explode(' ',microtime()));
         dprint("<br>Processing time for getRequestsTime: ". sprintf("%.4f", ($end-$start))." seconds<br>");
@@ -489,7 +559,7 @@ class ProvisioningStatistics {
                     series: [{
                         name: 'Requests per minute',
                             data: requests,
-                            //enableMouseTracking: false,
+                            enableMouseTracking: false,
                             animation: false
                     }
                     ,{
@@ -497,7 +567,7 @@ class ProvisioningStatistics {
                         data: request_time,
                         color: '#8A0808',
                         yAxis: 1,
-                        //enableMouseTracking: false,
+                        enableMouseTracking: false,
                         animation: false
                     }
                     ],
