@@ -6456,6 +6456,8 @@ class SipSettings {
         $this->journalEntries['success']       = false;
         $this->journalEntries['error_message'] = NULL;
         $this->journalEntries['results']       = array();
+        $return_summary = $_REQUEST['summary'];
+
         if ($this->chat_replication_backend == 'mysql') {
             $this->db = new DB_CDRTool();
      
@@ -6474,10 +6476,10 @@ class SipSettings {
             if ($_REQUEST['after_timestamp']) {
                 $where.= sprintf(" and timestamp > '%s'", addslashes($_REQUEST['after_timestamp']));
             }
-            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
+            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
                 $limit = intval($limit);
             } else {
-                $limit = 1000;
+                $limit = 5000;
             }
      
             $query=sprintf("select * from client_journal where account = '%s' %s order by timestamp ASC limit %d",  addslashes($this->account), $where, $limit);
@@ -6518,13 +6520,13 @@ class SipSettings {
             }
 
             if ($_REQUEST['after_timestamp']) {
-                $mongo_where['timestamp'] = array('$gte' => intval($_REQUEST['after_timestamp']));
+                $mongo_where['timestamp'] = array('$gt' => intval($_REQUEST['after_timestamp']));
             }
 
-            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 1000) {
+            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
                 $limit = intval($limit);
             } else {
-                $limit = 1000;
+                $limit = 5000;
             }
 
             $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
@@ -6544,11 +6546,35 @@ class SipSettings {
                 $this->journalEntries['results'][]=$entry;
             }
 
+            if ($return_summary) {
+                $mongo_where=array();
+                $mongo_where['account'] = $this->account;
+                if ($_REQUEST['except_uuid']) {
+                    $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
+                }
+    
+                if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
+                    $limit = intval($limit);
+                } else {
+                    $limit = 5000;
+                }
+    
+                $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
+                foreach ($cursor as $result) {
+                    $entry = array(
+                                   'journal_id'  => strval($result['_id']),
+                                   'timestamp'   => $result['timestamp'],
+                                   );
+                    $this->journalEntries['summary'][]=$entry;
+                }
+            }
+
         }
         return True;
     }
 
     function putJournalEntries() {
+        $result['results'] = array();
         if (strlen($_REQUEST['uuid'])) {
             $uuid = $_REQUEST['uuid'];
         } else {
@@ -6631,7 +6657,6 @@ class SipSettings {
                         if (property_exists($row, 'journal_id')) {
                             $mongo_query=array(
                                                'account'    => $this->account,
-                                               'uuid'       => $uuid,
                                                'journal_id' => $row->journal_id
                                                );
          
@@ -6647,6 +6672,63 @@ class SipSettings {
         } else {
             $result['success'] = false;
             $result['error_message'] = 'Json decode error';
+        }
+        return $result;
+    }
+
+    function deleteJournalEntries() {
+        if (strlen($_REQUEST['data'])) {
+            $data = $_REQUEST['data'];
+            $entries = json_decode($data);
+        } else {
+            if (strlen($_REQUEST['journal_id'])) {
+               $entries=array($_REQUEST['journal_id']);
+            } else {
+                $result['success'] = false;
+                $result['error_message'] = 'Missing data';
+                return $result;
+            }
+        }
+
+        if ($this->chat_replication_backend == 'mysql') {
+            $this->db = new DB_CDRTool();
+        } else if ($this->chat_replication_backend == 'mongo') {
+            if (!$this->getMongoJournalTable()) {
+                $result['success'] = false;
+                $result['error_message'] = $this->mongo_exception;
+                return $result;
+            }
+        }
+
+        if ($entries) {
+            if ($this->chat_replication_backend == 'mysql') {
+                $journal_id_sql="";
+                foreach ($entries as $entry) {
+                    $journal_id_sql.=sprintf("'%s',",$entry);
+                }
+                $journal_id_sql = rtrim($journal_id_sql,",");
+                $query=sprintf("delete from client_journal where account in '%s' and journal_id in (%s)", addslashes($this->account), addslashes($journal_id_sql));
+                if (!$this->db->query($query)) {
+                    $result['error_message'] = 'database error';
+                } else {
+                    $result['success'] = true;
+                }
+
+            } else if ($this->chat_replication_backend == 'mongo') {
+                $id_entries=array();
+                foreach ($entries as $entry) {
+                    $id_entries[] = new MongoId($entry);
+                }
+                $mongo_query=array('account' => $this->account,
+                                   '_id'     => array('$in'=> $id_entries)
+                                   );
+
+                $this->mongo_table_rw->remove($mongo_query);
+                $result['success'] = true;
+            }
+        } else {
+            $result['success'] = false;
+            $result['error_message'] = 'No journal entries provided';
         }
         return $result;
     }
@@ -10708,7 +10790,6 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         dprint("Header file $header included, refresh=$auto_refesh_tab");
         include($css);
         dprint("CSS file $css included");
-
     }
 
     if ($_REQUEST['action']=="save settings") {
@@ -10772,6 +10853,9 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         return true;
     } else if ($_REQUEST['action'] == 'put_journal_entries'){
         print json_encode($SipSettings->putJournalEntries());
+        return true;
+    } else if ($_REQUEST['action'] == 'delete_journal_entries'){
+        print json_encode($SipSettings->deleteJournalEntries());
         return true;
     } else if ($_REQUEST['action'] == 'get_reject_rules'){
         $SipSettings->getRejectMembers();
