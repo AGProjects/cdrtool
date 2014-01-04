@@ -960,7 +960,7 @@ class pageLayout {
             <label class=control-label>
             Yubikey</label>
             <div class=controls>
-                <input rel='popover'  data-trigger='hover' data-delay='1000'
+                <input rel='popover'  placeholder='This field is optional' data-trigger='hover' data-delay='1000'
             data-original-title='OTP hardware authentication'
             data-content=\"With this field you can login using a hardware OTP device called 'yubikey'.<br>
             If you login the first time with a CDRTool account and the username, password and OTP key filled in, the key identifier is stored into you account.<br>
