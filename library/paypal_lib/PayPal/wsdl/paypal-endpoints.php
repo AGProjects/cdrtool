@@ -22,8 +22,8 @@ $PayPalEndpoints = array (
       array (
         'PayPalAPI' => 'https://api.sandbox.paypal.com/2.0/',
         'PayPalAPIAA' => 'https://api-aa.sandbox.paypal.com/2.0/',
-        'PayPalAPI-threetoken' => 'https://api.sandbox.paypal.com/2.0/',
-        'PayPalAPIAA-threetoken' => 'https://api-aa.sandbox.paypal.com/2.0/',
+        'PayPalAPI-threetoken' => 'https://api-3t.sandbox.paypal.com/2.0/',
+        'PayPalAPIAA-threetoken' => 'https://api-aa-3t.sandbox.paypal.com/2.0/',
       ),
       'beta-sandbox' => 
       array (
