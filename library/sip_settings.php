@@ -1949,6 +1949,7 @@ class SipSettings {
 
         $payment_processor = new $this->payment_processor_class($this);
 
+
         if ($payment_processor->fraudDetected()) {
             $chapter=sprintf(_("Payments"));
             $this->showChapter($chapter);
@@ -7634,29 +7635,12 @@ class SipSettings {
     }
 
     function sendRemoveAccount() {
-        include_once('Mail.php');
-        include_once('Mail/mime.php');
            
         $this->ip = $_SERVER['REMOTE_ADDR'];
         $subject=sprintf ("The account %s was removed from IP Address: %s",$this->account, $this->ip);
-
-        $hdrs = array(
-                'From'    => $this->support_email,
-                'Subject' => $subject
-                );
-
-        $crlf = "\n";
-        $mime = new Mail_mime($crlf);
-
-        $mime->setTXTBody($subject);
-        $mime->setHTMLBody($subject);
-
-        $body = $mime->get();
-        $hdrs = $mime->headers($hdrs);
-
-        $mail =& Mail::factory('mail');
-
-        $mail->send($this->support_email, $hdrs, $body);
+        
+        syslog(LOG_NOTICE, $subject);
+        
     }
 
     function sendPasswordReset($skip_html=False) {
