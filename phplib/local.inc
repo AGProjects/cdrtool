@@ -145,6 +145,8 @@ class CDRTool_Auth extends Auth {
     if (stream_resolve_include_path('Auth/Yubico.php')) {
         require_once 'Auth/Yubico.php';
         $use_yubikey=1;
+    } else {
+        require_once 'PEAR.php';
     }
 
     if(isset($username)) {
@@ -179,7 +181,7 @@ class CDRTool_Auth extends Auth {
             return $ret[0];
 
         } else {
-            $query = sprintf("select * from auth_user where (username = '%s' or yubikey='%s') and expire > NOW()", addslashes($username),addslashes($yubi_id));
+            $query = sprintf("select * from auth_user where (username = '%s' or (yubikey='%s' and yubikey !='')) and expire > NOW()", addslashes($username),addslashes($yubi_id));
             $this->db->query($query);
             $this->db->next_record();
             $otp_enabled_db =$this->db->f('otp_enable');
@@ -224,7 +226,7 @@ class CDRTool_Auth extends Auth {
             UNIX_TIMESTAMP() as timestamp_now  ".
             "       from %s ".
             "       where (username = '%s'  or " .
-            "       yubikey='%s') ".
+            "       (yubikey='%s' and yubikey != '')) ".
             "       and expire > NOW()    " ,
             addslashes($this->database_table),
             addslashes($username),
@@ -556,6 +558,8 @@ class SIP_Subscriber_Auth extends Auth {
         if (stream_resolve_include_path('Auth/Yubico.php')) {
             require_once 'Auth/Yubico.php';
             $use_yubikey=1;
+        } else {
+            require_once 'PEAR.php';
         }
 
         if(isset($username)) {
@@ -791,6 +795,8 @@ class SipThor_DomainAuth {
         if (stream_resolve_include_path('Auth/Yubico.php')) {
             require_once 'Auth/Yubico.php';
             $use_yubikey=1;
+        } else {
+            require_once 'PEAR.php';
         }
 
         if ($this->userDB->query($query)) {
