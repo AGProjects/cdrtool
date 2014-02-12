@@ -136,7 +136,10 @@ class Rate {
             $this->traffic = 0;
         }
 
-        $this->application='audio';
+        $this->application=$dictionary['application'];
+        if (!$this->application) {
+            $this->application = 'audio';
+        }
 
         $durationRate = 0;
 
@@ -1490,14 +1493,14 @@ class Rate {
 
     function lookupRateValuesAudio($rateName,$DestinationId) {
 
-        if (is_array($this->rateValuesCache[$rateName][$DestinationId]['audio'])) {
-            return $this->rateValuesCache[$rateName][$DestinationId]['audio'];
+        if (is_array($this->rateValuesCache[$rateName][$DestinationId][$this->application])) {
+            return $this->rateValuesCache[$rateName][$DestinationId][$this->application];
         }
 
         if ($this->mongo_db != NULL) {
             // mongo backend
             $mongo_where['destination'] = $DestinationId;
-            $mongo_where['application'] = 'audio';
+            $mongo_where['application'] = $this->application;
             $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
                                         array('reseller_id' => 0)
                                         );
@@ -1527,7 +1530,7 @@ class Rate {
                            );
     
                 // cache values
-                $this->rateValuesCache[$rateName][$DestinationId]['audio']=$values;
+                $this->rateValuesCache[$rateName][$DestinationId][$this->application]=$values;
                 return $values;
             }
         }
@@ -1538,17 +1541,19 @@ class Rate {
             } else {
                 $table="billing_rates_default";
             }
-            $query=sprintf("select * from %s where destination = '%s' and application = 'audio'",
+            $query=sprintf("select * from %s where destination = '%s' and application = '%s'",
             $table,
-            addslashes($DestinationId)
+            addslashes($DestinationId),
+            addslashes($this->application)
             );
 
         } else {
             $table="billing_rates";
-            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = 'audio'",
+            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = '%s'",
             $table,
             addslashes($rateName),
-            addslashes($DestinationId)
+            addslashes($DestinationId),
+            addslashes($this->application)
             );
         }
 
@@ -1560,9 +1565,10 @@ class Rate {
                 return false;
             }
             // try the main table
-            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = 'audio'",
+            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = '%s'",
             addslashes($rateName),
-            addslashes($DestinationId)
+            addslashes($DestinationId),
+            addslashes($this->application)
             );
 
             if (!$this->db->query($query)) {
@@ -1582,7 +1588,7 @@ class Rate {
                        );
 
             // cache values
-            $this->rateValuesCache[$rateName][$DestinationId]['audio']=$values;
+            $this->rateValuesCache[$rateName][$DestinationId][$this->application]=$values;
             return $values;
         } else {
             return false;
@@ -8466,6 +8472,19 @@ class RatingEngine {
                 $NetFields['duration']=$this->settings['MaxSessionTime'];
             }
 
+            $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
+            if (strlen($app_prefix)) {
+                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
+                    $application=$NetFields['application'];
+                } else {
+                    $log=sprintf ("error: unsupported application %s",$NetFields['application']);
+                    syslog(LOG_NOTICE, $log);
+                    return $log;
+                }
+            } else {
+                $application='audio';
+            }
+
             list($username_t,$domain_t)=explode("@",$NetFields['from']);
 
             $CDRStructure=array (
@@ -8476,6 +8495,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
                               $this->CDRS->CDRFields['domain']         => $domain_t,
+                              $this->CDRS->CDRFields['application']    => $application,
                               'skip_fix_prepaid_duration'              => true
                               );
 
@@ -8603,7 +8623,8 @@ class RatingEngine {
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
                                       'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => $this->CDRS->RatingTables
+                                      'RatingTables'    => $this->CDRS->RatingTables,
+                                      'application'     => $application
                                       );
     
                 $Rate = new Rate($this->settings, $this->db);
@@ -8643,7 +8664,8 @@ class RatingEngine {
                                       'gateway'         => $CDR->gateway,
                                       'BillingPartyId'  => $CDR->BillingPartyId,
                                       'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => $this->CDRS->RatingTables
+                                      'RatingTables'    => $this->CDRS->RatingTables,
+                                      'application'     => $application
                                       );
     
                 $Rate = new Rate($this->settings, $this->db);
@@ -8782,7 +8804,8 @@ class RatingEngine {
                 return $log;
             }
 
-            if (!strlen($NetFields['application']) || (strlen($NetFields['application']) && $NetFields['application'] == 'audio')) {
+            $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
+            if (!strlen($app_prefix) || (strlen($app_prefix) && $app_prefix == 'audio')) {
                 if (!strlen($NetFields['duration'])) {
                     $log=sprintf ("error: missing Duration parameter");
                     syslog(LOG_NOTICE, $log);
@@ -8790,8 +8813,8 @@ class RatingEngine {
                 }
             }
 
-            if (strlen($NetFields['application'])) {
-                if ($NetFields['application'] == 'audio' || $NetFields['application'] == 'sms' ) {
+            if (strlen($app_prefix)) {
+                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
                     $application=$NetFields['application'];
                 } else {
                     $log=sprintf ("error: unsupported application %s",$NetFields['application']);
@@ -8800,6 +8823,7 @@ class RatingEngine {
                 }
             } else {
                 $application='audio';
+                $app_prefix='audio';
             }
 
             if (!$NetFields['gateway']) {
@@ -8833,6 +8857,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
                               $this->CDRS->CDRFields['domain']         => $domain_t,
+                              $this->CDRS->CDRFields['application']    => $application,
                               'skip_fix_prepaid_duration'              => true
                               );
 
@@ -8854,7 +8879,8 @@ class RatingEngine {
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => $this->CDRS->RatingTables
+                                  'RatingTables'    => $this->CDRS->RatingTables,
+                                  'application'     => $application
                                   );
 
 
@@ -8862,7 +8888,7 @@ class RatingEngine {
 
             $this->runtime['instantiate_rate']=microtime_float();
 
-            if ($application == 'audio') {
+            if ($app_prefix == 'audio') {
                 if ($Rate->calculateAudio($RateDictionary)) {
     
                     $this->runtime['calculate_rate']=microtime_float();
@@ -8905,17 +8931,18 @@ class RatingEngine {
                     syslog(LOG_NOTICE, 'Failed to calculate rate in DebitBalance()');
                     return "Failed\n";
                 }
-            } else if ($application == 'sms') {
+            } else if ($app_prefix == 'sms') {
                 // return Ok, No credit, Error
                 if ($Rate->calculateMessage($RateDictionary)) {
 
                     if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
     
-                        $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=sms",
+                        $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=%s",
                         $Rate->price,
                         $NetFields['callid'],
                         $CDR->BillingPartyId,
-                        $CDR->DestinationId
+                        $CDR->DestinationId,
+                        $application
                         );
         
                         syslog(LOG_NOTICE, $log);
@@ -9011,6 +9038,19 @@ class RatingEngine {
                 return $log;
             }
 
+            $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
+            if (strlen($app_prefix)) {
+                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
+                    $application=$NetFields['application'];
+                } else {
+                    $log=sprintf ("error: unsupported application %s",$NetFields['application']);
+                    syslog(LOG_NOTICE, $log);
+                    return $log;
+                }
+            } else {
+                $application='audio';
+            }
+
             list($username_t,$domain_t)=explode("@",$NetFields['from']);
 
             $CDRStructure=array (
@@ -9022,6 +9062,7 @@ class RatingEngine {
                               $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
                               $this->CDRS->CDRFields['timestamp']      => time(),
                               $this->CDRS->CDRFields['domain']         => $domain_t,
+                              $this->CDRS->CDRFields['application']    => $application,
                               'skip_fix_prepaid_duration'              => true
                               );
 
@@ -9040,7 +9081,8 @@ class RatingEngine {
                                   'gateway'         => $CDR->gateway,
                                   'BillingPartyId'  => $CDR->BillingPartyId,
                                   'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => $this->CDRS->RatingTables
+                                  'RatingTables'    => $this->CDRS->RatingTables,
+                                  'application'     => $application
                                   );
 
             $Rate->calculateAudio($RateDictionary);

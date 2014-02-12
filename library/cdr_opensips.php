@@ -2548,11 +2548,10 @@ class CDR_opensips extends CDR {
 
         $this->UserAgentPrint  = quoted_printable_decode($this->UserAgent);
 
-        if (strstr($this->application,'audio')) {
-            $this->application='audio';
-        }
-
-        if (!in_array($this->application,$this->supportedApplicationTypes)) {
+        $app_prefix = preg_replace('/[.].*$/', '', $this->application);
+        if (!in_array($app_prefix, $this->supportedApplicationTypes)) {
+            $log=sprintf("Changing application from %s to %s\n", $this->application, $this->defaultApplicationType);
+            syslog(LOG_NOTICE,$log);
             $this->application = $this->defaultApplicationType;
         }
 

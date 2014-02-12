@@ -93,3 +93,4 @@ ATTRIBUTE       Event                  224     string
 #ATTRIBUTE       Event-Timestamp       230     string
 ATTRIBUTE       SIP-Proxy-IP           231     string
 ATTRIBUTE       ENUM-TLD               232     string
+ATTRIBUTE       Sip-Application-Type   233     string

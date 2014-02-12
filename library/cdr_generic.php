@@ -2259,7 +2259,8 @@ class CDR {
                                               'RatingTables'    => $this->CDRS->RatingTables,
                                               'aNumber'         => $this->aNumber,
                                               'cNumber'         => $this->cNumber,
-                                              'ENUMtld'         => $this->ENUMtld
+                                              'ENUMtld'         => $this->ENUMtld,
+                                              'application'     => $this->application
                                               );
 
                         $Rate->calculateAudio($RateDictionary);

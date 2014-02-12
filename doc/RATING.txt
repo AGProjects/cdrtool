@@ -216,6 +216,14 @@ the 'destination id' and the billing party determined at the previous steps.
    possible destination has a 'corresponding id' and name in the destinations
    table.
 
+   The 'audio' application may optionally be specified with a subtype in order
+   to refine billing rates. If a subtype is specified, it is appended to the
+   application name, separated by a dot (i.e. 'audio.incoming').
+
+   For example, ('1', 'audio') can have a durationRate of 280, where
+   ('1', 'audio.incoming') can have a durationRate of 0. If the application
+   isn't specified in the CDR, it defaults to 'audio'.
+
    This step determines the costs within the current time span associated
    with the time of day and destination id. If the call duration exceeds
    this time span (that is a new interval for which another rate applies is
