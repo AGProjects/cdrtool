@@ -3614,6 +3614,22 @@ class CDRS_opensips_mongo extends CDRS_opensips {
             ${$_el} = trim($_REQUEST[$_el]);
         }
 
+        if ($begin_time) {
+            list($begin_hour,$begin_min)=explode(":",$begin_time);
+        }
+
+        if ($end_time) {
+            list($end_hour,$end_min)=explode(":",$end_time);
+        }
+
+        if ($begin_date) {
+            list($begin_year,$begin_month,$begin_day)=explode("-",$begin_date);
+        }
+
+        if ($end_date) {
+            list($end_year,$end_month,$end_day)=explode("-",$end_date);
+        }
+
         // overwrite some elements based on user rights
         if ($this->CDRTool['filter']['gateway']) {
             $gateway =$this->CDRTool['filter']['gateway'];
