@@ -203,7 +203,7 @@ class CDRS {
         if (strlen($this->DATASOURCES[$this->cdr_source]['intAccessCode'])) {
             $this->intAccessCode=$this->DATASOURCES[$this->cdr_source]['intAccessCode'];
         }
-    
+
         if (strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])) {
             $this->natAccessCode  = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
@@ -225,7 +225,7 @@ class CDRS {
             syslog(LOG_NOTICE, $log);
             return 0;
         }
-    
+
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
             $this->BillingIdField  = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
         }
@@ -309,7 +309,7 @@ class CDRS {
     function initDefaults() {
         if (is_readable('/etc/default/cdrtool')) {
             $defaultContentLines=explode("\n",file_get_contents('/etc/default/cdrtool'));
-        
+
             foreach ($defaultContentLines as $_line) {
                 list($defaults_key, $defaults_value)=explode("=",$_line);
                 if (strlen($defaults_value)) $this->defaults[trim($defaults_key)]=trim($defaults_value);
@@ -663,7 +663,7 @@ class CDRS {
                 <div class=\"btn-group pull-right\">
                     <a class=\"btn\" href=\"$this->url_edit\" ><i class=icon-search></i> Refine search</a><a class=\"btn\" href=\"$this->url_run\"><i class=\"icon-refresh\"></i> Refresh</a>";
 
-            
+
             $log_query=sprintf("insert into log
             (date,login,ip,url,results,rerun,reedit,datasource,reseller_id)
             values
@@ -683,7 +683,7 @@ class CDRS {
                 $this->cdrtool->next_record();
                 $current_log=$this->cdrtool->f('lid');
             }
-           
+
             if ($this->rows) {
                 print "<a class=\"btn\" href=\"$this->url_export\" target=_new><i class=\"icon-file\"></i> Export results to file</a>
                 </div></div>";
@@ -711,7 +711,7 @@ class CDRS {
                 } else {
                     print "$this->rows records found";
                 }
-                
+
                 if ($begin_datetime && $end_datetime) {
                     printf(" between %s and %s",$begin_datetime,$end_datetime);
                 }
@@ -756,7 +756,7 @@ class CDRS {
                 $this->cdrtool->next_record();
                 $current_log=$this->cdrtool->f('lid');
             }
-    
+
             if (!$this->CDRTool['filter']['aNumber']) {
 
                 if ($this->rows) {
@@ -882,7 +882,7 @@ class CDRS {
                 $url_prev=$PHP_SELF.$this->url."&action=search&next=$mod_show_next";
                 print "<li><a href=\"$url_prev\"> &larr; Previous</a></li>";
             }
-            
+
             print "
             </td>
             <td>
@@ -947,28 +947,28 @@ class CDRS {
         if ($this->CDRFields['MediaTimeout']) {
             /*
             If we use MediaProxy information then eliminate all possible raise conditions
-    
+
             1. Session started and is in progress:
                                 AcctStopTime = '0000-00-00 00:00:00'
                                 AcctSessionTime = 0
                                 MediaInfo is NULL
                                 ConnectInfo_stop is NULL
-    
+
             2. Session closed with a negative response code ([4-6]XX):
                                 AcctSessionTime = 0
                                 AcctStopTime != '0000-00-00 00:00:00'
                                 MediaInfo is NULL
                                 ConnectInfo_stop is NULL
-    
+
             3. Session received a BYE:
                                 ConnectInfo_stop is not NULL
                                 AcctStopTime != '0000-00-00 00:00:00'
-    
+
             4. Media has timed-out:
                                 MediaInfo = 'timeout'
                                 ConnectInfo_stop is NULL
                                 AcctStopTime != '0000-00-00 00:00:00'
-    
+
             5. MediaProxy update before BYE is received:
                                 MediaInfo = ''
                                 ConnectInfo_stop is NULL
@@ -1171,7 +1171,7 @@ class CDRS {
             $d=time()-$b;
             $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
             syslog(LOG_NOTICE,$log );
-    
+
         }
 
         if ($this->csv_file_ready) {
@@ -1236,8 +1236,8 @@ class CDRS {
             $NumberStack['domain']    = $p[1];
         }
 
-        // Translate the domain 
-        if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']) && 
+        // Translate the domain
+        if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']) &&
             in_array($NumberStack['domain'],array_keys($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']))) {
             $NumberStack['domain'] = $this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']];
         }
@@ -1394,7 +1394,7 @@ class CDRS {
             $log=sprintf("Error: cannot find destinations for subscriber='%s', domain ='%s', gateway='%s', reseller='%s'\n",$subscriber,$domain,$gateway,$reseller_id);
             syslog(LOG_NOTICE,$log);
         }
-    
+
         if (count($_destinations)>0) {
             $length = min(strlen($destination), $maxLength);
             for ($i=$length; $i>0; $i--) {
@@ -1565,7 +1565,7 @@ class CDRS {
             $log=sprintf ("Destination table %s has %d records\n",$destinationTable,$rowsDestinationTable);
             syslog(LOG_NOTICE,$log);
             print $log;
-    
+
             if ($rowsDestinationTable != $rowsSourceTable) {
                 $log=sprintf ("Error: source table has %d records and destination table has %d records\n",$rowsSourceTable,$rowsDestinationTable);
                 syslog(LOG_NOTICE,$log);
@@ -1587,7 +1587,7 @@ class CDRS {
                 $query=sprintf("drop table if exists %s",addslashes($destinationTableTmp));
                 print($query);
                 $this->CDRdb->query($query);
-    
+
                 if ($query=file_get_contents($createTableFile)) {
                     $query=preg_replace("/CREATE TABLE.*/","CREATE TABLE $destinationTableTmp (",$query);
                     if (!$this->CDRdb->query($query)) {
@@ -1612,21 +1612,21 @@ class CDRS {
                 addslashes($this->CDRFields['startTime']),
                 addslashes($stopSQL)
                 );
-        
+
                 return ;
-        
+
                 if ($this->CDRdb->query($query)) {
                     $e=time();
                     $d=$e-$b;
                     $rps=0;
                     if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
-        
+
                     $log=printf ("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$destinationTableTmp,$d,$rps);
                     syslog(LOG_NOTICE,$log);
                     print $log;
-        
+
                     $query=sprinf("rename table %s to %s", addslashes($destinationTableTmp),addslashes($destinationTableTmp));
-        
+
                     if (!$this->CDRdb->query($query)) {
                         printf ("Error renaming table %s to %s: %s\n",$destinationTableTmp,$destinationTable,$this->CDRdb->Error);
                         return 0;
@@ -1700,7 +1700,7 @@ class CDRS {
 
         while ($i <= $max) {
             $found=$found+$interval;
-            
+
             if ($i + $interval < $max) {
                 $top=$i;
             } else {
@@ -1847,18 +1847,18 @@ class CDRS {
             syslog(LOG_NOTICE, $log);
             return 0;
         }
-     
+
         if (!$lockname) {
             $log=sprintf("Error: no lockname provided. ");
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
-     
+
          unset($this->lock_connection_id);
 
         register_shutdown_function("unLockNormalization",$locker,$lockname);
-     
+
         $query=sprintf("SELECT GET_LOCK('%s',0)",addslashes($lockname));
 
         if ($locker->query($query)) {
@@ -1976,7 +1976,7 @@ class E164 {
         // E164 = Country Code + Network Code + Subscriber Number
         // Example: 31208015100 is an E164 number from Holland (country code 31)
 
-        // If nothing is returned by this function the session is considered an Internet destination 
+        // If nothing is returned by this function the session is considered an Internet destination
 
         if (preg_match($this->regexp_international,$Number,$m)) {
             return $m[1];
@@ -1988,7 +1988,7 @@ class E164 {
             if (preg_match($_regexp,$Number,$m)) {
                 return $m[1];
             }
-        } 
+        }
         return false;
     }
 }
@@ -2211,7 +2211,7 @@ class CDR {
 
                 if ($this->DestinationId) {
                     $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
-    
+
                     if ($this->application == 'message') {
                         $RateDictionary=array(
                                               'callId'          => $this->callId,
@@ -2226,8 +2226,8 @@ class CDR {
                                               'aNumber'         => $this->aNumber,
                                               'cNumber'         => $this->cNumber
                                               );
-        
-    
+
+
                         $Rate->calculateMessage($RateDictionary);
                     } else {
                         $RateDictionary=array(
@@ -2246,16 +2246,16 @@ class CDR {
                                               'cNumber'         => $this->cNumber,
                                               'ENUMtld'         => $this->ENUMtld
                                               );
-        
-    
+
+
                         $Rate->calculateAudio($RateDictionary);
                     }
-    
+
                     $this->pricePrint   = $Rate->pricePrint;
                     $this->price        = $Rate->price;
                     $this->rateInfo     = $Rate->rateInfo;
                     $this->rateDuration = $Rate->duration;
-    
+
                     if ($Rate->broken_rate) {
                         $this->broken_rate=true;
                     }
@@ -2271,7 +2271,7 @@ class CDR {
                     $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->priceField),addslashes($this->pricePrint));
                     $mongo_field = array_search($this->CDRS->priceField, $this->CDRS->CDRFields);
                     $this->mongo_cdr[$mongo_field] = floatval($this->pricePrint);
-    
+
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
@@ -2303,7 +2303,7 @@ class CDR {
                         if ($this->isBillingPartyLocal()) {
                             if ($table == $this->CDRS->table) {
                                 // cache usage only if current month
-        
+
                                 $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
                                 $_usage=array('calls'    => 1,
                                               'duration' => $this->duration,
@@ -2311,7 +2311,7 @@ class CDR {
                                               'cost_today' => $this->price,
                                               'traffic'  => $_traffic
                                              );
-    
+
                                 $this->cacheQuotaUsage($_usage);
                             }
                         }
