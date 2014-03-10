@@ -7,10 +7,10 @@
  *
  * $Id: db_mysql.inc,v 1.4 2006-05-12 11:38:39 adigeo Exp $
  *
- */ 
+ */
 
 class DB_Sql {
-  
+
   /* public: connection parameters */
   var $Host     = "";
   var $Database = "";
@@ -148,9 +148,9 @@ class DB_Sql {
         if ($this->Query_ID) $this->free();
         
         mysql_close($this->Link_ID);
-        
+
         $this->Link_ID = 0;
-        
+
         if (!$this->connect()) {
             syslog(LOG_NOTICE, "Error: failed to re-connect to the MySQL server");
             return 0;
@@ -200,7 +200,7 @@ class DB_Sql {
     else {
       $this->halt("seek($pos) failed: result has ".$this->num_rows()." rows");
 
-      /* half assed attempt to save the day, 
+      /* half assed attempt to save the day,
        * but do not consider this documented or even
        * desireable behaviour.
        */
@@ -215,7 +215,7 @@ class DB_Sql {
   /* public: table locking */
   function lock($table, $mode="write") {
     $this->connect();
-    
+
     $query="lock tables ";
     if (is_array($table)) {
       while (list($key,$value)=each($table)) {
@@ -236,7 +236,7 @@ class DB_Sql {
     }
     return $res;
   }
-  
+
   function unlock() {
     $this->connect();
 
@@ -282,7 +282,7 @@ class DB_Sql {
   /* public: sequence numbers */
   function nextid($seq_name) {
     $this->connect();
-    
+
     if ($this->lock($this->Seq_Table)) {
       /* get sequence number (locked) and increment */
       $q  = sprintf("select nextid from %s where seq_name = '%s'",
@@ -290,7 +290,7 @@ class DB_Sql {
                 $seq_name);
       $id  = @mysql_query($q, $this->Link_ID);
       $res = @mysql_fetch_array($id);
-      
+
       /* No current value, make one */
       if (!is_array($res)) {
         $currentid = 0;
@@ -356,11 +356,11 @@ class DB_Sql {
       if (!$id)
         $this->halt("Metadata query failed.");
     } else {
-      $id = $this->Query_ID; 
+      $id = $this->Query_ID;
       if (!$id)
         $this->halt("No query specified.");
     }
- 
+
     $count = @mysql_num_fields($id);
 
     // made this IF due to performance (one if is faster than $count if's)
@@ -374,7 +374,7 @@ class DB_Sql {
       }
     } else { // full
       $res["num_fields"]= $count;
-    
+
       for ($i=0; $i<$count; $i++) {
         $res[$i]["table"] = @mysql_field_table ($id, $i);
         $res[$i]["name"]  = @mysql_field_name  ($id, $i);
@@ -384,7 +384,7 @@ class DB_Sql {
         $res["meta"][$res[$i]["name"]] = $i;
       }
     }
-    
+
     // free the result only if we were called on a table
     if ($table) @mysql_free_result($id);
     return $res;
