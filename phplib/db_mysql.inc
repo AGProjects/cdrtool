@@ -68,36 +68,17 @@ class DB_Sql {
 
     /* establish connection, select database */
     if ( 0 == $this->Link_ID ) {
-    
-      $this->Link_ID=mysql_pconnect($Host, $User, $Password);
-      if (!$this->Link_ID) {
-    	syslog(LOG_NOTICE, "Error in connect(): pconnect as $User to $Host failed");
+      $this->Link_ID = mysql_pconnect($Host, $User, $Password);
 
-        $this->halt("pconnect as $User to $Host failed.");
-        return 0;
-      }
-
-      if (!@mysql_select_db($Database,$this->Link_ID)) {
-    	syslog(LOG_NOTICE, "Error in connect(): cannot use database");
-        $this->halt("cannot use database ".$this->Database);
-        return 0;
-      }
-
-    }
-
-    if ( !mysql_ping( $this->Link_ID ) ) {
-    
-      $this->Link_ID=mysql_pconnect($Host, $User, $Password);
-      
       if (!$this->Link_ID) {
         syslog(LOG_NOTICE, "Error in connect(): pconnect as $User to $Host failed");
 
         $this->halt("pconnect as $User to $Host failed.");
         return 0;
       }
-
+      syslog(LOG_NOTICE, "Connected to mysql with $User to $Host $this->Link_ID");
       if (!@mysql_select_db($Database,$this->Link_ID)) {
-        syslog(LOG_NOTICE, "Error in connect(): cannot use database ".$this->Database);
+        syslog(LOG_NOTICE, "Error in connect(): cannot use database");
         $this->halt("cannot use database ".$this->Database);
         return 0;
       }
@@ -115,6 +96,7 @@ class DB_Sql {
 
   /* public: perform a query */
   function query($Query_String) {
+
     /* No empty queries, please, since PHP4 chokes on them. */
     if ($Query_String == "")
       /* The empty query string is passed on from the constructor,
@@ -132,21 +114,29 @@ class DB_Sql {
       $this->free();
     }
 
-    $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
-    $this->Row   = 0;
-    $this->Errno = mysql_errno();
-    $this->Error = mysql_error();
+    try {
+      $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
+      $this->Row   = 0;
+      $this->Errno = mysql_errno($this->Link_ID);
+      $this->Error = mysql_error($this->Link_ID);
+      if ($this->Errno) {
+        throw new Exception($this->Errno);
+      }
+    } catch (Exception $e) {
 
-    /*
-    	2006= CR_SERVER_GONE_ERROR
-       	2013= CR_SERVER_LOST
-    */
+      /*
+          2006= CR_SERVER_GONE_ERROR
+          2013= CR_SERVER_LOST
+      */
 
-    if ($this->Errno==2006 || $this->Errno==2013) {
-    	syslog(LOG_NOTICE, "Warning: mysql connection '$this->Link_ID' lost with code $this->Errno");
-	
+      syslog(LOG_NOTICE, "$Query_String");
+      $dbError= $e->getMessage();
+      if ($dbError=='2006' || $dbError=='2013') {
+        syslog(LOG_NOTICE, "Warning: mysql connection '$this->Link_ID' lost with code $dbError");
+        print "Warning: mysql connection '$this->Link_ID' lost with code $dbError\n";
+
         if ($this->Query_ID) $this->free();
-        
+
         mysql_close($this->Link_ID);
 
         $this->Link_ID = 0;
@@ -156,19 +146,26 @@ class DB_Sql {
             return 0;
         }
 
-    	syslog(LOG_NOTICE, "Mysql connection re-created with '$this->Link_ID'");
-        
+        syslog(LOG_NOTICE, "Mysql connection re-created with '$this->Link_ID'");
+        print "Mysql connection re-created with '$this->Link_ID'\n";
         $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
         $this->Row   = 0;
         $this->Errno = mysql_errno();
         $this->Error = mysql_error();
 
+      } else {
+        $this->halt("Invalid SQL: ".$Query_String);
+      }
     }
+    // $this->Query_ID = @mysql_query($Query_String,$this->Link_ID);
+    // $this->Row   = 0;
+    // $this->Errno = mysql_errno();
+    // $this->Error = mysql_error();
 
-    if (!$this->Query_ID) {
-      $this->halt("Invalid SQL: ".$Query_String);
-    }
-
+    // if (!$this->Query_ID) {
+    //   $this->halt("Invalid SQL: ".$Query_String);
+    // }
+    //print "$Query_String\n";
     # Will return nada if it fails. That's fine.
     return $this->Query_ID;
   }
@@ -180,7 +177,7 @@ class DB_Sql {
       return 0;
     }
 
-    $this->Record = @mysql_fetch_array($this->Query_ID);
+    $this->Record = @mysql_fetch_assoc($this->Query_ID);
     $this->Row   += 1;
     $this->Errno  = mysql_errno();
     $this->Error  = mysql_error();
