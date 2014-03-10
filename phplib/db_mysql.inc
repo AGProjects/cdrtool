@@ -77,6 +77,7 @@ class DB_Sql {
         return 0;
       }
       syslog(LOG_NOTICE, "Connected to mysql with $User to $Host $this->Link_ID");
+
       if (!@mysql_select_db($Database,$this->Link_ID)) {
         syslog(LOG_NOTICE, "Error in connect(): cannot use database");
         $this->halt("cannot use database ".$this->Database);
@@ -129,7 +130,6 @@ class DB_Sql {
           2013= CR_SERVER_LOST
       */
 
-      syslog(LOG_NOTICE, "$Query_String");
       $dbError= $e->getMessage();
       if ($dbError=='2006' || $dbError=='2013') {
         syslog(LOG_NOTICE, "Warning: mysql connection '$this->Link_ID' lost with code $dbError");
