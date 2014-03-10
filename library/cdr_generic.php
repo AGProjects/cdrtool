@@ -1863,12 +1863,12 @@ class CDRS {
 
         if ($locker->query($query)) {
             $locker->next_record();
-            $return = $locker->Record[0];
+            $return = $locker->Record["GET_LOCK('$lockname',0)"];
 
             $query=sprintf("SELECT IS_USED_LOCK('%s')",addslashes($lockname));
             if ($locker->query($query)) {
                 $locker->next_record();
-                $this->lock_connection_id=$locker->Record[0];
+                $this->lock_connection_id=$locker->Record["IS_USED_LOCK('$lockname')"];
             }
 
             if ($return == 0) {
