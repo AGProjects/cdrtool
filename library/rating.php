@@ -5885,8 +5885,8 @@ class RatingTables {
         $query .= $where;
         $this->db->query($query);
         $this->db->next_record();
-        $rows=$this->db->Record[0];
-        
+        $rows=$this->db->Record['c'];
+
         if (!$export) {
             print "
             <table border=0 align=center>
@@ -6430,7 +6430,7 @@ class RatingTables {
 
             $j=0;
             while ($j < $this->db->num_fields()) {
-                $value=$this->db->Record[$j];
+                $value=$this->db->Record[$metadata[$j]['name']];
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
                 $class=$metadata[$j]['class'];
