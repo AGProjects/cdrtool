@@ -2600,12 +2600,12 @@ class CDR_opensips extends CDR {
         $this->domainNormalized = $this->domain;
 
         if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP']) &&
-            in_array($this->SourceIP,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'])) &&
+            isset($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'][$this->SourceIP]) &&
             strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'][$this->SourceIP])) {
 
             $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation_SourceIP'][$this->SourceIP];
         } else if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation']) &&
-            in_array($this->domain,array_keys($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'])) &&
+            isset($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain]) &&
             strlen($this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain])) {
 
             $this->domainNormalized=$this->CDRS->DATASOURCES[$this->cdr_source]['domainTranslation'][$this->domain];
@@ -3388,7 +3388,7 @@ class CDR_opensips extends CDR {
     function isBillingPartyLocal() {
         $els=explode("@",$this->BillingPartyId);
 
-        if ($els[1] && in_array($els[1],array_keys($this->CDRS->localDomains))) {
+        if ($els[1] && isset($this->CDRS->localDomains[$els[1]])) {
             return true;
         }
 
@@ -3396,7 +3396,7 @@ class CDR_opensips extends CDR {
     }
 
     function isCallerLocal() {
-        if (in_array($this->aNumberDomain,array_keys($this->CDRS->localDomains))) {
+        if (isset($this->CDRS->localDomains[$this->aNumberDomain])) {
             $this->CallerIsLocal=true;
             $this->SipRPID = $this->CDRS->getCallerId($this->BillingPartyId);
             $this->SipRPIDPrint = $this->SipRPID;
@@ -3405,7 +3405,7 @@ class CDR_opensips extends CDR {
     }
 
     function isCalleeLocal() {
-        if (in_array($this->CanonicalURIDomain,array_keys($this->CDRS->localDomains)) && !preg_match("/^0/",$this->CanonicalURIUsername)) {
+        if (isset($this->CDRS->localDomains[$this->CanonicalURIDomain]) && !preg_match("/^0/",$this->CanonicalURIUsername)) {
             $this->CalleeIsLocal=true;
             $this->CalleeCallerId=$this->CDRS->getCallerId($this->CanonicalURI);
         }

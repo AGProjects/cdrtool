@@ -1212,7 +1212,8 @@ class CDRS {
             }
 
         } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
-            $oct=preg_split("/\./",$m[2]);
+            #$oct=preg_split("/\./",$m[2]);
+            $oct = explode(",",$m[2]);
             if(sizeof($oct)==4) {
             // This is a SIP address without username
                 $NumberStack['username']  = "";
@@ -1238,7 +1239,7 @@ class CDRS {
 
         // Translate the domain
         if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']) &&
-            in_array($NumberStack['domain'],array_keys($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']))) {
+            isset($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']])) {
             $NumberStack['domain'] = $this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']];
         }
 
@@ -2227,7 +2228,6 @@ class CDR {
                                               'cNumber'         => $this->cNumber
                                               );
 
-
                         $Rate->calculateMessage($RateDictionary);
                     } else {
                         $RateDictionary=array(
@@ -2246,7 +2246,6 @@ class CDR {
                                               'cNumber'         => $this->cNumber,
                                               'ENUMtld'         => $this->ENUMtld
                                               );
-
 
                         $Rate->calculateAudio($RateDictionary);
                     }
