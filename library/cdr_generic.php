@@ -1044,27 +1044,25 @@ class CDRS {
 
         $this->buildWhereForUnnormalizedSessions();
 
-        $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
-        from %s where %s and %s order by %s asc",
-        addslashes($table),
-        $where,
-        $this->whereUnnormalized,
-        addslashes($this->CDRFields['id'])
-        );
-
         $this->status['cdr_to_normalize']=0;
         $this->status['normalized']=0;
         $this->status['normalize_failures']=0;
 
+        $query=sprintf("select count(*) as c from %s where %s and %s",
+        addslashes($table),
+        $where,
+        $this->whereUnnormalized
+        );
 
-        if (!$this->CDRdb->query($query)) {
-            $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
-            syslog(LOG_NOTICE,$log);
-            print $log;
-            return false;
+        if ($this->CDRdb->query($query)) {
+            $this->CDRdb->next_record();
+            $c=$this->CDRdb->f('c');
         }
 
-        $this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
+        print "$c to normalize\n";
+        $this->status['cdr_to_normalize']=$c;
+
+        //$this->status['cdr_to_normalize']=$this->CDRdb->num_rows();
 
         //print "<p>$query";
 
@@ -1082,53 +1080,72 @@ class CDRS {
 
         $this->usageKeysForDeletionFromCache=array();
 
-        while ($this->CDRdb->next_record()) {
+        // For loop to process 1k records each time
+        for ($i = 1000; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
 
-            //$Structure=$this->_readCDRNormalizationFieldsFromDB();
-            $Structure=$this->_readCDRFieldsFromDB();
-            if ($this->csv_writter) {
-                if (!$this->csv_file_cannot_be_opened) {
-                    if (!$this->csv_writter->ready) {
-                        if (!$this->csv_writter->open_file($Structure[$this->CDRNormalizationFields['id']])) {
-                            $this->csv_file_cannot_be_opened = true;
-                        } else {
-                            $this->csv_file_ready = true;
+            $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
+                from %s where %s and %s limit 0,1000",
+                addslashes($table),
+                $where,
+                $this->whereUnnormalized
+            );
+
+
+            if (!$this->CDRdb->query($query)) {
+                $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
+                syslog(LOG_NOTICE,$log);
+                print $log;
+                return false;
+            }
+
+            while ($this->CDRdb->next_record()) {
+
+                //$Structure=$this->_readCDRNormalizationFieldsFromDB();
+                $Structure=$this->_readCDRFieldsFromDB();
+                if ($this->csv_writter) {
+                    if (!$this->csv_file_cannot_be_opened) {
+                        if (!$this->csv_writter->ready) {
+                            if (!$this->csv_writter->open_file($Structure[$this->CDRNormalizationFields['id']])) {
+                                $this->csv_file_cannot_be_opened = true;
+                            } else {
+                                $this->csv_file_ready = true;
+                            }
                         }
                     }
                 }
-            }
 
-            $found++;
+                $found++;
 
-            $CDR = new $this->CDR_class($this, $Structure);
+                $CDR = new $this->CDR_class($this, $Structure);
 
-            if ($CDR->normalize("Save",$table)) {
-                $this->status['normalized']++;
-                if ($this->csv_file_ready) {
-                    if (!$this->csv_writter->write_cdr($CDR)) {
-                        // stop writing future records if we have a failure
-                        $this->csv_file_cannot_be_opened = true;
+                if ($CDR->normalize("Save",$table)) {
+                    $this->status['normalized']++;
+                    if ($this->csv_file_ready) {
+                        if (!$this->csv_writter->write_cdr($CDR)) {
+                            // stop writing future records if we have a failure
+                            $this->csv_file_cannot_be_opened = true;
+                        }
                     }
+
+                    if ($CDR->broken_rate) {
+                        $this->brokenRates[$CDR->DestinationId]++;
+                    }
+
+                } else {
+                    $this->status['normalize_failures']++;
                 }
 
-                if ($CDR->broken_rate) {
-                    $this->brokenRates[$CDR->DestinationId]++;
+                if ($this->reNormalize && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
+                    $this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
                 }
 
-            } else {
-                $this->status['normalize_failures']++;
-            }
-
-            if ($this->reNormalize && !$this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]) {
-                $this->usageKeysForDeletionFromCache[$CDR->BillingPartyId]++;
-            }
-
-            if ($this->status['cdr_to_normalize'] > 1000) {
-                if ($found > $progress*$this->status['cdr_to_normalize']/100) {
-                    $progress++;
-                    if ($progress%10==0) {
-                        print "$progress% ";
-                            flush();
+                if ($this->status['cdr_to_normalize'] > 1000) {
+                    if ($found > $progress*$this->status['cdr_to_normalize']/100) {
+                        $progress++;
+                        if ($progress%10==0) {
+                            print "$progress% ";
+                                flush();
+                        }
                     }
                 }
             }
@@ -1187,7 +1204,6 @@ class CDRS {
     }
 
     function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="",$ENUMtld="",$reseller_id=0) {
-
         $this->CSCODE="";
 
         $Number=strtolower(quoted_printable_decode($Number));
