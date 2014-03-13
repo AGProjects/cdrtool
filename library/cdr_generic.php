@@ -1081,7 +1081,7 @@ class CDRS {
         $this->usageKeysForDeletionFromCache=array();
 
         // For loop to process 1k records each time
-        for ($i = 1000; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
+        for ($i = 0; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
 
             $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
                 from %s where %s and %s limit 0,1000",
