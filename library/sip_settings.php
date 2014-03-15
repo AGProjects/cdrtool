@@ -7402,7 +7402,7 @@ class SipSettings {
     function sendPasswordReset($skip_html=False) {
         dprint ("SipSettings->sendPasswordEmail($this->email)");
 
-        $identifier = $this->RandomIdentifier();
+        $identifier = RandomIdentifier();
         $this->db = new DB_CDRTool();
 
         $this->ip = $_SERVER['REMOTE_ADDR'];
@@ -7525,15 +7525,6 @@ class SipSettings {
             $i++;
         }
         return $string;
-    }
-
-    function RandomIdentifier($length=30) {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[rand(0, strlen($characters) - 1)];
-        }
-        return $randomString;
     }
 
     function cleanURI($uri) {
@@ -12406,6 +12397,16 @@ class DIDProcessor {
 
     }
 }
+
+function RandomIdentifier($length=30) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
 
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
 	require_once('/etc/cdrtool/local/sip_settings.php');
