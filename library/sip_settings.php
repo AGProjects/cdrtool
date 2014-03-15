@@ -1924,76 +1924,104 @@ class SipSettings {
         <tr>
         <td colspan=3>
         ";
-        printf (_("Calling to telephone numbers is possible at the costs set forth in the <a href=%s&tab=payments&task=showprices>Price List</a>. "),$this->url);
         print "<p>";
-        print _("You can purchase credit with a Credit Card. ");
+        printf (_("Calling to telephone numbers is possible at the costs set forth in the <a href=%s&tab=payments&task=showprices>Price List</a>. "),$this->url);
+        //printf (_("You can purchase credit with a <a href=%s&tab=payments&method=creditcard>Credit Card</a> or <a href=%s&tab=payments&method=btc>Bitcoin</a>. "),$this->url, $this->url);
+        //print "<p>";
+        //printf (_("You can purchase credit using <a href=http://bitcoin.org target=_new>Bitcoin</a>. "), $this->url);
+
+        print "<br><br>";
 
         print "
         </td>
         </tr>
         ";
 
-        if ($this->require_proof_of_identity) {
-            if ($this->login_type == 'subscriber') {
-                if (!in_array("payments",$this->groups)) {
+        $credit_amount = 20;
+        //$method = 'btc';
+
+        if ($method == 'btc') {
+            print "<p>Select an amount and click submit to go the Bitcoin payment page.";
+            printf("<form action='https://mdns.sipthor.net/bitcoin/' target=_new method='POST'>
+            <input type='hidden' name='account' value='%s'>
+            Amount <input class=span1 type='text' name='amount' value='20'> USD
+            <p><input class=btn type=submit value='Submit'>
+            </form>
+            ", $this->account);
+        } else {
+            $chapter=sprintf(_("Credit Card"));
+            $this->showChapter($chapter);
+            if ($this->require_proof_of_identity) {
+                if ($this->login_type == 'subscriber') {
+                    if (!in_array("payments",$this->groups)) {
+                        $this->showIdentityProof();
+                    }
+                } else {
                     $this->showIdentityProof();
                 }
-            } else {
-                $this->showIdentityProof();
+    
+                if (!in_array("payments",$this->groups)) {
+                    return false;
+                }
             }
-
-            if (!in_array("payments",$this->groups)) {
+    
+            $payment_processor = new $this->payment_processor_class($this);
+    
+            if ($payment_processor->fraudDetected()) {
+                $chapter=sprintf(_("Payments"));
+                $this->showChapter($chapter);
+    
+                print "
+                <tr>
+                <td colspan=3>
+                ";
+    
+                if ($account->login_type!='subscriber') {
+                    print "<p>";
+                    printf ("<font color=red>%s</font>",$this->fraud_reason);
+                } else {
+                    print _("Page Not Available");
+                    $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
+                    syslog(LOG_NOTICE, $log);
+                }
+    
+                print "</td>
+                </tr>
+                ";
+    
                 return false;
             }
-        }
-
-        $payment_processor = new $this->payment_processor_class($this);
-
-
-        if ($payment_processor->fraudDetected()) {
-            $chapter=sprintf(_("Payments"));
-            $this->showChapter($chapter);
-
-            print "
-            <tr>
-            <td colspan=3>
-            ";
-
-            if ($account->login_type!='subscriber') {
-                print "<p>";
-                printf ("<font color=red>%s</font>",$this->fraud_reason);
-            } else {
-                print _("Page Not Available");
-                $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
-                syslog(LOG_NOTICE, $log);
+    
+            $basket = array('pstn_credit'=>array('price'       => $credit_amount,
+                                                 'description' => _('Prepaid Credit'),
+                                                 'unit'        => 'credit',
+                                                 'duration'    => 'N/A',
+                                                 'qty'         => 1
+                                                 )
+                                   );
+    
+           // print "<pre>";
+           // print_r($payment_processor);
+           // print "</pre>";
+            $payment_processor->doDirectPayment($basket);
+    
+           //print "<pre>";
+            //
+            //print_r($payment_processor);
+            //print "</pre>";
+            if ($payment_processor->transaction_results['success']) {
+                    // add PSTN credit
+                    $this->addBalanceReseller($credit_amount,sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
             }
-
-            print "</td>
-            </tr>
-            ";
-
-            return false;
-        }
-
-        $credit_amount = 20;
-        $basket = array('pstn_credit'=>array('price'       => $credit_amount,
-                                             'description' => _('Prepaid Credit'),
-                                             'unit'        => 'credit',
-                                             'duration'    => 'N/A',
-                                             'qty'         => 1
-                                             )
-                               );
-        $payment_processor->doDirectPayment($basket);
-
-        if ($payment_processor->transaction_results['success']) {
-        	// add PSTN credit
-        	$this->addBalanceReseller($credit_amount,sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
-        }
-
-        if ($this->first_transaction && $payment_processor->make_credit_checks) {
-            // block account temporary to check the user
-            $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
+    
+            if ($this->first_transaction && $payment_processor->make_credit_checks) {
+                // block account temporary to check the user
+                // $transaction_data= $payment_processor->['CardProcessor']['transaction_data'];
+                // if ( $this->email != $transaction_data['USER_EMAIL'] || 
+                //      $this->
+                $this->SipPort->addHeader($this->SoapAuth);
+                $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
+            }
         }
     }
 
