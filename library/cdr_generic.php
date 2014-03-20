@@ -2988,7 +2988,7 @@ class MaxRate extends CSVWritter {
                 $cdr['origin'] = "00".$m[1];
             } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
                 if (preg_match("/^\+?0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
-                    $cdr['origin'] = "0".$m[1];
+                    $cdr['origin'] = "0031".$m[1];
                 } else if (preg_match("/^\+?00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "00".$m[1];
                 } else if (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
