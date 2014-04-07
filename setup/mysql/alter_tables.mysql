@@ -720,8 +720,41 @@ CREATE TABLE `client_journal` (
   KEY `uuid_idx` (`uuid`)
 );
 
-9.1.2
+9.2.0
 alter table auth_user add column auth_method int(2);
 
 alter table auth_user add column yubikey varchar(12);
+
+# for ngpro logs
+CREATE TABLE `ngnpro_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ip` varchar(15) DEFAULT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `total` int(11) DEFAULT NULL,
+  `total_time` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `dates` (`date`),
+  KEY `ips` (`ip`);
+);
+
+CREATE TABLE `ngnpro_logs_functions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ip` varchar(15) DEFAULT NULL,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `function` varchar(60) DEFAULT NULL,
+  `total` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `dates` (`date`),
+  KEY `ips` (`ip`),
+  KEY `functions` (`ip`,`function`)
+);
+
+CREATE TABLE `ngnpro_logs_summary` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `total` int(11) DEFAULT NULL,
+  `total_time` double DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `dates` (`date`)
+);
 
