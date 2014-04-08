@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 # -*- mode: makefile; coding: utf-8 -*-
 
-# export DH_VERBOSE=1
-export DH_ALWAYS_EXCLUDE=CVS _darcs
+#export DH_VERBOSE=1
+export DH_ALWAYS_EXCLUDE=_darcs
 
 configure: configure-stamp
 
