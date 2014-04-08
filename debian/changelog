@@ -1,3 +1,37 @@
+cdrtool (9.2.0) unstable; urgency=low
+
+  [ Web Interface ]
+
+  * Updated to font awesome 3
+  * Added yubikey support for CDRTool accounts
+  * Fixed various minor layout issues
+  * Updated languages
+  * Added some endpoint imagaes
+  * Fixed subscriber CDR view
+  * Fixed searches for username and from uri
+
+  [ Normalization ]
+
+  * Reworked mysql connectors to skip 'ping'
+  * Change normalizing process to run in batches of 1k records
+  * Skip quota update if normalizing previous month
+  * Optimze some functions for speed
+  * Changed custom CSV writter to new formats
+  * Added index to billing_customers:    
+
+  [ NGNPro client ]
+
+  * Fixed siptrace links in account history
+  * Added provisioning statistics
+  * Added account delete possibility
+  * Added password reset possibility
+
+  [ Rating ] 
+
+  *  Added the concept of 'subtypes' for applications.
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Tue, 08 Apr 2014 12:27:41 +0200
+
 cdrtool (9.1.1) unstable; urgency=low
 
   [ Web Interface ] 
