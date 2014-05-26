@@ -8574,13 +8574,7 @@ class RatingEngine {
 
             }
 
-            if (!preg_match("/^0/",$CDR->CanonicalURINormalized)) {
-                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",$NetFields['callid'],$CDR->BillingPartyId);
-                syslog(LOG_NOTICE, $log);
-                $this->logRuntime();
-                $ret="none"."\n"."type=prepaid";
-                return $ret;
-            } else {
+            if (preg_match("/^0[0-9]{1,}@/",$CDR->CanonicalURINormalized)) {
                 if (!$CDR->DestinationId) {
                     $log = sprintf ("error: cannot figure out the destination id for %s",$CDR->CanonicalURI);
                     $this->logRuntime();
@@ -8588,6 +8582,12 @@ class RatingEngine {
                     $ret=$log."\n"."type=prepaid";
                     return $ret;
                 }
+            } else {
+                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",$NetFields['callid'],$CDR->BillingPartyId);
+                syslog(LOG_NOTICE, $log);
+                $this->logRuntime();
+                $ret="none"."\n"."type=prepaid";
+                return $ret;
             }
 
             $session_counter=count($active_sessions);
