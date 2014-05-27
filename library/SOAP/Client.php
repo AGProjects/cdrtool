@@ -531,7 +531,7 @@ class SOAP_Client extends SOAP_Client_Overload
                        $soapAction = false)
     {
         $this->fault = null;
-        $this->_options['input'] = 'parse'; 
+        $this->_options['input'] = 'parse';
         $this->_options['result'] = 'parse';
         $this->_options['parameters'] = false;
 
@@ -748,18 +748,18 @@ class SOAP_Client extends SOAP_Client_Overload
         // Parse the response.
         $response =new SOAP_Parser($response, $encoding, $attachments);
         if ($response->fault) {
-            $fault =& $this->_raiseSoapFault($response->fault);
+            $fault = $this->_raiseSoapFault($response->fault);
             return $fault;
         }
 
         // Return array of parameters.
-        $return =& $response->getResponse();
-        $headers =& $response->getHeaders();
+        $return = $response->getResponse();
+        $headers = $response->getHeaders();
         if ($headers) {
-            $this->headersIn =& $this->_decodeResponse($headers, false);
+            $this->headersIn = $this->_decodeResponse($headers, false);
         }
 
-        $decoded = &$this->_decodeResponse($return);
+        $decoded = $this->_decodeResponse($return);
         return $decoded;
     }
 

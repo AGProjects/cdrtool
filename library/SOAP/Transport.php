@@ -115,7 +115,7 @@ class SOAP_Transport extends SOAP_Base
         return $this->_raiseSoapFault('SOAP_Transport::send() not implemented.');
     }
 
-    function &getTransport($url, $encoding = SOAP_DEFAULT_ENCODING)
+    static function &getTransport($url, $encoding = SOAP_DEFAULT_ENCODING)
     {
         $urlparts = @parse_url($url);
 
