@@ -115,7 +115,7 @@ if ($_REQUEST['generatorId']) {
 } else {
 	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$login_credentials);
     $_class     = $SoapEngine->records_class;
-    $RECORDS    = new $_class(&$SoapEngine);
+    $RECORDS    = new $_class($SoapEngine);
 
     $RECORDS->showWelcomeMessage();
 
