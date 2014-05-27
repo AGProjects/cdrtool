@@ -7,7 +7,7 @@
  *
  * $Id: page.inc,v 1.3 2005-01-14 10:42:48 adigeo Exp $
  *
- */ 
+ */
 
 function page_open($feature) {
   global $_PHPLIB;
@@ -17,21 +17,21 @@ function page_open($feature) {
     global $sess;
     $sess = new $feature["sess"];
     $sess->start();
-    
+
     # the auth feature depends on sess
     if (isset($feature["auth"])) {
       global $auth;
-      
+
       if (!isset($auth)) {
         $auth = new $feature["auth"];
       }
       $auth->start();
-  
-      
+
+
       # the perm feature depends on auth and sess
       if (isset($feature["perm"])) {
         global $perm;
-        
+
         if (!isset($perm)) {
           $perm = new $feature["perm"];
         }
@@ -39,7 +39,7 @@ function page_open($feature) {
       # the perm feature depends on auth and sess
       if (isset($feature["source"])) {
         global $source;
-        
+
         if (!isset($source)) {
           $source = new $feature["source"];
         }
@@ -48,7 +48,7 @@ function page_open($feature) {
       # the user feature depends on auth and sess
       if (isset($feature["user"])) {
         global $user;
-        
+
         if (!isset($user)) {
           $user = new $feature["user"];
         }
@@ -63,7 +63,7 @@ function page_open($feature) {
       if ($sess->secure_auto_init != "") {
         $sess->freeze();
       }
-    } 
+    }
   }
 }
 
