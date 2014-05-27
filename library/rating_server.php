@@ -118,7 +118,7 @@ class Daemon {
             fclose($pf);
             register_shutdown_function(array(&$this, "removePid"));
         }
-        
+
       	//pcntl_signal(SIGCHLD, array(&$this, 'signalHandler'));
       	//pcntl_signal(SIGTERM, array(&$this, 'signalHandler'));
       	//pcntl_signal(SIGKILL, array(&$this, 'signalHandler'));
@@ -244,7 +244,7 @@ class socketServer extends socket {
 
 	public function accept()
 	{
-		$client = new $this->client_class(parent::accept(),&$this);
+		$client = new $this->client_class(parent::accept(),$this);
 		if (!is_subclass_of($client, 'socketServerClient')) {
 			throw new socketException("Invalid serverClient class specified! Has to be a subclass of socketServerClient");
 		}

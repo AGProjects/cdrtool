@@ -243,7 +243,7 @@ class Session {
   ## to be saved as an array of strings).
   ##
   ## You don't need to know...
-  function serialize($prefix, $str) {
+  function serialize($prefix, &$str) {
     static $t,$l,$k;
 
     ## Determine the type of $$prefix
@@ -256,7 +256,7 @@ class Session {
         $str .= "\$$prefix = array(); ";
         while ( "array" == $l ) {
           ## Structural recursion
-          $this->serialize($prefix."['".preg_replace("/([\\\'])/", "\\\\1", $k)."']", &$str);
+          $this->serialize($prefix."['".preg_replace("/([\\\'])/", "\\\\1", $k)."']", $str);
           eval("\$l = gettype(list(\$k)=each(\$$prefix));");
         }
 
@@ -267,7 +267,7 @@ class Session {
         $str.="\$$prefix = new $k; ";
         while ( $l ) {
           ## Structural recursion.
-          $this->serialize($prefix."->".$l,&$str);
+          $this->serialize($prefix."->".$l,$str);
           eval("\$l = next(\$${prefix}->persistent_slots);");
         }
 
@@ -298,14 +298,14 @@ class Session {
   function freeze() {
     $str="";
 
-    $this->serialize("this->in",&$str);
-    $this->serialize("this->pt",&$str);
+    $this->serialize("this->in",$str);
+    $this->serialize("this->pt",$str);
 
     reset($this->pt);
     while ( list($thing) = each($this->pt) ) {
       $thing=trim($thing);
       if ( $thing ) {
-        $this->serialize("GLOBALS['".$thing."']",&$str);
+        $this->serialize("GLOBALS['".$thing."']",$str);
       }
     }
 
