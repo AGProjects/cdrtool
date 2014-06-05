@@ -5697,6 +5697,12 @@ class SipSettings {
             ";
         }
 
+        if ($this->enable_thor) {
+            $cdr_source   = 'sipthor';
+        } else {
+            $cdr_source   = 'sip_trace';
+        }
+
         if (count($this->calls_received)) {
             $chapter=sprintf(_("Incoming"));
             $this->showChapter($chapter);
@@ -5724,7 +5730,6 @@ class SipSettings {
                 $fromTag      = urlencode($this->calls_received[$call]['fromTag']);
                 $toTag        = urlencode($this->calls_received[$call]['toTag']);
                 $proxyIP      = urlencode($this->calls_received[$call]['proxyIP']);
-                $cdr_source   = 'sipthor';
                 $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Server Logs',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Server Logs</a>";
 
@@ -5791,7 +5796,6 @@ class SipSettings {
                 $fromTag      = urlencode($this->calls_placed[$call]['fromTag']);
                 $toTag        = urlencode($this->calls_placed[$call]['toTag']);
                 $proxyIP      = urlencode($this->calls_placed[$call]['proxyIP']);
-                $cdr_source   = 'sipthor';
                 $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'Server Logs',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Server Logs</a>";
 
