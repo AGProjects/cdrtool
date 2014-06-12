@@ -3186,7 +3186,8 @@ class MaxRate extends CSVWritter {
         $cdr['destination'] = str_replace('+','00',$cdr['destination']);
         $cdr['diversion'] = str_replace('+','00',$cdr['diversion']);
 
-        $line = sprintf('"%s","%s","%s","%s","%s","%s","%s","%s",%s'."\n",
+        $line = sprintf('"%s","%s","%s","%s","%s","%s","%s","%s","%s",%s'."\n",
+                        $CDR->callId,
                         $cdr['origin'],
                         $cdr['username'],
                         $cdr['destination'],
