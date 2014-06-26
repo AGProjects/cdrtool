@@ -725,9 +725,9 @@ alter table auth_user add column auth_method int(2);
 
 alter table auth_user add column yubikey varchar(12);
 
-alter table billing_customers add index domain;
+alter table billing_customers add index domain (`domain`);
 
-# for ngpro logs
+# for ngpro logs this needs to be put in ngnpro customer DB
 CREATE TABLE `ngnpro_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ip` varchar(15) DEFAULT NULL,
@@ -736,7 +736,7 @@ CREATE TABLE `ngnpro_logs` (
   `total_time` double DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `dates` (`date`),
-  KEY `ips` (`ip`);
+  KEY `ips` (`ip`)
 );
 
 CREATE TABLE `ngnpro_logs_functions` (
