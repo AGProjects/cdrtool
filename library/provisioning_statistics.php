@@ -344,11 +344,11 @@ class ProvisioningStatistics {
 
     function purge($class) {
         global $CDRTool;
-        
+
         if (!class_exists($class)) return array();
 
         $db = new $class();
-        
+
         $query = "insert into ngnpro_logs_summary (total, date,total_time) "
                 ."select sum(total) as number, date, sum(total_time) as data from ngnpro_logs "
                 ."where date < DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY UNIX_TIMESTAMP(date) DIV 3600 order by date";
@@ -390,8 +390,8 @@ class ProvisioningStatistics {
             $period='600';
         } else if ($days >= 20) {
              $period='900';
-        } 
-        
+        }
+
         $query = "select total as number,date from ngnpro_logs_summary";
         dprint($query);
 
@@ -402,10 +402,10 @@ class ProvisioningStatistics {
             return array();
         }
 
-        if (!$db->num_rows()) return array();
-
-        while ($db->next_record()) {
-            $requests[] = array($db->f('date'),(intval($db->f('number')))/60);
+        if (db->num_rows()) {
+            while ($db->next_record()) {
+                $requests[] = array($db->f('date'),(intval($db->f('number')))/60);
+            }
         }
 
         $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period";
@@ -418,10 +418,10 @@ class ProvisioningStatistics {
             return array();
         }
 
-        if (!$db->num_rows()) return array();
-
-        while ($db->next_record()) {
-            $requests[] = array($db->f('date'),(intval($db->f('number')))/($period/60));
+        if ($db->num_rows()) {
+            while ($db->next_record()) {
+                $requests[] = array($db->f('date'),(intval($db->f('number')))/($period/60));
+            }
         }
 
         return json_encode($requests);
@@ -441,7 +441,7 @@ class ProvisioningStatistics {
             $period='600';
         } else if ($days >= 20) {
              $period='900';
-        } 
+        }
         //else if ($days > 20) {
           //   $period='2400';
        // }
@@ -456,13 +456,12 @@ class ProvisioningStatistics {
             return array();
         }
 
-        if (!$db->num_rows()) return array();
-
-        while ($db->next_record()) {
-            $total= $db->f('data');
-            $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+        if ($db->num_rows()) {
+            while ($db->next_record()) {
+                $total= $db->f('data');
+                $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+            }
         }
-
         #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
         $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
         dprint($query);
@@ -474,11 +473,11 @@ class ProvisioningStatistics {
             return array();
         }
 
-        if (!$db->num_rows()) return array();
-
-        while ($db->next_record()) {
-            $total= $db->f('data');
-             $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+        if ($db->num_rows()) {
+            while ($db->next_record()) {
+                $total= $db->f('data');
+                 $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
+            }
         }
         $end = (float) array_sum(explode(' ',microtime()));
         dprint("<br>Processing time for getRequestsTime: ". sprintf("%.4f", ($end-$start))." seconds<br>");
