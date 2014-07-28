@@ -402,7 +402,7 @@ class ProvisioningStatistics {
             return array();
         }
 
-        if (db->num_rows()) {
+        if ($db->num_rows()) {
             while ($db->next_record()) {
                 $requests[] = array($db->f('date'),(intval($db->f('number')))/60);
             }
