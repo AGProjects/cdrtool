@@ -1266,7 +1266,7 @@ class CDRS_opensips extends CDRS {
             $where .= ") ";
         } else if ($Realm) {
             $Realm=urldecode($Realm);
-            $where .= sprintf(" and %s = '%s' ", $this->domainField, addslashes($Realm));
+            $where .= sprintf(" and %s like '%s' ", $this->domainField, addslashes($Realm));
             $this->url.=sprintf("&Realm=%s",urlencode($Realm));
         }
 
