@@ -760,3 +760,5 @@ CREATE TABLE `ngnpro_logs_summary` (
   KEY `dates` (`date`)
 );
 
+9.2.1
+delete from sip_status where code='434';

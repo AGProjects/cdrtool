@@ -58,10 +58,9 @@ INSERT INTO sip_status VALUES (202,'Accepted','Success',0);
 INSERT INTO sip_status VALUES (430,'Quota exceeded','Client-Error',0);
 INSERT INTO sip_status VALUES (477,'SendingError','Client-Error',0);
 INSERT INTO sip_status VALUES (478,'UnresolvableNextHopAddress','Client-Error',0);
-INSERT INTO sip_status VALUES (434,'NotOnline','Client-Error',0);
 INSERT INTO sip_status VALUES (492,'CrossReferencedURI','Client-Error',0);
-INSERT INTO sip_status VALUES (435,'Diverted','Client-Error','0'); 
-INSERT INTO sip_status VALUES (476,'UnresolvableDestination','Client-Error','0'); 
+INSERT INTO sip_status VALUES (435,'Diverted','Client-Error','0');
+INSERT INTO sip_status VALUES (476,'UnresolvableDestination','Client-Error','0');
 
 INSERT INTO isdncause VALUES (2,'No route to specified transit network');
 INSERT INTO isdncause VALUES (3,'No route to destination');
