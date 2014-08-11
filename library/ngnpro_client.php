@@ -145,19 +145,19 @@ class SoapEngine {
     var $default_msrp_relay = "";
 
     var $ports=array(
-                         'customers'      => array(
-                                           'records_class' => 'Customers',
-                                           'name'          => 'Accounts',
-                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
-                                           'category'      => 'general',
-                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
-                                           ),
                          'sip_accounts'   => array(
                                            'records_class' => 'SipAccounts',
                                            'name'          => 'SIP accounts',
                                            'soap_class'    => 'WebService_NGNPro_SipPort',
                                            'category'      => 'sip',
                                            'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use _ or % to match one or more characters. ',
+                                           ),
+                         'customers'      => array(
+                                           'records_class' => 'Customers',
+                                           'name'          => 'Owner Accounts',
+                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
+                                           'category'      => 'general',
+                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
                                            ),
                          'sip_domains'    => array(
                                            'records_class' => 'SipDomains',
