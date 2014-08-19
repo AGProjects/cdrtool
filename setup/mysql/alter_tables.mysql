@@ -762,3 +762,5 @@ CREATE TABLE `ngnpro_logs_summary` (
 
 9.2.1
 delete from sip_status where code='434';
+
+alter table quota_usage add index account (`account`);
