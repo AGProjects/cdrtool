@@ -624,7 +624,7 @@ class SipSettings {
             $this->show_barring_tab=$this->soapEngines[$this->sip_engine]['show_barring_tab'];
         }
 
-        if (strlen($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
+        if (array_key_exists($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
             $this->disable_extra_groups=$this->soapEngines[$this->sip_engine]['disable_extra_groups'];
         }
 
@@ -7884,7 +7884,7 @@ class SipSettings {
             printf ("<input type=hidden name=extra_groups value='%s'>",trim($extraGroups_text));
         } else {
             print "
-            <div class=control-group'>
+            <div class=control-group>
             <label for=extra_groups class=control-label>";
             print _("Extra Groups");
             print "
