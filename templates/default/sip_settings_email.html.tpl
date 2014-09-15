@@ -98,6 +98,7 @@
                                                 {$client->username}
                                             </td>
                                         </tr>
+                                        {if $client->password}
                                         <tr style='background-color:#EEEEEE; font-family: Helvetica,Arial,sans-serif; font-size: 10pt;'>
                                             <td style='text-align:right;font-family: Helvetica,Arial,sans-serif; font-size: 10pt;'>
                                                 Password
@@ -106,6 +107,7 @@
                                                 {$client->password}
                                             </td>
                                         </tr>
+                                        {/if}
                                         <tr style='background-color:#EEEEEE;font-family: Helvetica,Arial,sans-serif; font-size: 10pt;'>
                                             <td style='text-align:right'>
                                                 Domain/Realm
@@ -174,8 +176,10 @@
                                 {if $client->allowPSTN}
                                 <p>You may call to PSTN</p>
                                 {/if}
+                                <p>To access your account settings go to <a href='{$client->sip_settings_page}'>{$client->sip_settings_page}</a></p>
+
+                                {if $client->web_password or $client->password}
                                 <p>
-                                    To access your account settings go to <a href='{$client->sip_settings_page}'>{$client->sip_settings_page}</a><br />
                                     Your login details:
                                 </p>
                                 <p style='padding-left:10px; background-color:#EEEEEE'>
@@ -183,9 +187,12 @@
                                     {if $client->web_password}
                                     Password: {$client->web_password}
                                     {else}
-                                    Password: {$client->password}
+                                	{if $client->password}
+                                	Password: '{$client->password}'
+                                	{/if}
                                     {/if}
                                 </p>
+                                {/if}
 				<p>
 				If you wish to delete your account, go to identity section of the account settings page.
 				</p>

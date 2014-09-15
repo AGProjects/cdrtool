@@ -7501,6 +7501,9 @@ class SipSettings {
         //    print "</font>";
         //}
 
+        if (!$this->store_clear_text_password) {
+                    $web_password = '';
+        }
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
 
         define("SMARTY_DIR", "/usr/share/php/smarty/libs/");

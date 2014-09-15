@@ -25,7 +25,9 @@ How to use your SIP account:
 2. Setup your SIP device as follows:
 
 Username: {$client->username}
+{if $client->password}
 Password: {$client->password}
+{/if}
 Domain: {$client->domain}
 Register with domain: Yes
 Outboud Proxy: {$client->sip_proxy}
@@ -51,16 +53,18 @@ You may call to PSTN
 {/if}
 
 To access your account settings go to {$client->sip_settings_page}
-
+{if $client->web_password or $client->password}
 Your login details:
 
    Username: {$client->account}
 {if $client->web_password}
    Password: {$client->web_password}
-{else}
+{else]
+{if $client->password}
    Password: {$client->password}
 {/if}
-
+{/if}
+{/if}
 If you wish to delete your account, go to identity section of the account settings page.
 
 How to use your SIP account:
