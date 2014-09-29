@@ -11507,13 +11507,13 @@ class Customers extends Records {
 
           if ($this->adminonly || $this->reseller == $customer->reseller) {
             if ($_REQUEST['action'] != 'Delete') {
-                print "<input type=submit name=action value=Copy>";
+                print "<div class='btn-group'><input class='btn' type=submit name=action value=Copy>";
             }
 
-            print "<input type=submit name=action value=Delete>";
+            print "<input class='btn btn-danger'type=submit name=action value=Delete></div>";
 
             if ($_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Copy') {
-                print "<input type=hidden name=confirm value=1>";
+                print "<input class='btn btn-warning' type=hidden name=confirm value=1>";
             }
         }
 
