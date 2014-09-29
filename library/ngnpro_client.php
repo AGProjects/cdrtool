@@ -11372,13 +11372,13 @@ class Customers extends Records {
                     $customer->id,
                     $customer->reseller,
                     $customer->impersonate,
-                    $customer->username,
-                    $customer->firstName,
-                    $customer->lastName,
-                    $customer->organization,
-                    $customer->country,
-                    $customer->email,
-                    $customer->email,
+                    strip_tags($customer->username),
+                    strip_tags($customer->firstName),
+                    strip_tags($customer->lastName),
+                    strip_tags($customer->organization),
+                    strip_tags($customer->country),
+                    strip_tags($customer->email),
+                    strip_tags($customer->email),
                     $customer->tel,
                     $customer->changeDate,
                     $_url,
@@ -12069,7 +12069,7 @@ class Customers extends Records {
             } else if ($this->Fields[$item]['type'] == 'float') {
                 $customer->$item = floatval($_REQUEST[$var_name]);
             } else {
-                $customer->$item = trim($_REQUEST[$var_name]);
+                $customer->$item = strip_tags(trim($_REQUEST[$var_name]));
             }
         }
 
@@ -12450,10 +12450,10 @@ class Customers extends Records {
         foreach (array_keys($this->addFields) as $item) {
 
             if ($dictionary[$item]) {
-                $customer[$item] = trim($dictionary[$item]);
+                $customer[$item] = strip_tags(trim($dictionary[$item]));
             } else {
                 $item_form       = $item.'_form';
-                $customer[$item] = trim($_REQUEST[$item_form]);
+                $customer[$item] = strip_tags(trim($_REQUEST[$item_form]));
             }
         }
 
