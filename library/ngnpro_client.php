@@ -4227,10 +4227,12 @@ class EnumRanges extends Records {
                                     'prefix'     => 'Prefix',
                                   'tld'        => 'TLD'
                                  );
+        /*
         $this->Fields['nameservers'] = array('type'=>'text',
-                                             'name'=>'Name servers',
-                                             'help'=>'Name servers authoritative for this DNS zone'
-                                             );
+                                              'name'=>'Name servers',
+                                              'help'=>'Name servers authoritative for this DNS zone'
+                                              );
+        */
 
         if ($this->login_credentials['reseller_filters'][$this->reseller]['record_generator']) {
             //printf ("Engine: %s",$this->SoapEngine->soapEngine);
