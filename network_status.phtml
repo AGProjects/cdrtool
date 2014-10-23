@@ -26,8 +26,11 @@ foreach (array_keys($DATASOURCES) as $datasource) {
         if ($DATASOURCES[$datasource]['networkStatus']) {
             print "<div class='span6'>";
             printf ("<h2>%s</h2>",$DATASOURCES[$datasource]['name']);
-            printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",
-            $DATASOURCES[$datasource]['networkStatus']);
+            $SipThorNetworkImage = new SipThorNetworkImage($DATASOURCES[$datasource]['networkStatus'],$allowedDomains);
+            //printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",$DATASOURCES[$datasource]['networkStatus']);
+            print "<div id='thorMap'><script>";
+            printf("var thorData = %s",json_encode($SipThorNetworkImage->returnImageData()));
+            print "</script></div>";
             print "</div>";
             print "<div class='span6'>";
         } else if ($DATASOURCES[$datasource]['db_registrar']){

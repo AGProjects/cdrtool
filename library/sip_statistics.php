@@ -133,6 +133,8 @@ class NetworkStatistics {
                 if ($_role=='sip_proxy') $this->sip_proxies[$this->status[$_id]['ip']]++;
                 if ($_role=='thor_dnsmanager') $this->dns_managers[$this->status[$_id]['ip']]++;
                 if ($_role=='thor_manager') $this->thor_managers[$this->status[$_id]['ip']]++;
+                if ($_role=='conference_server') $this->conference_servers[$this->status[$_id]['ip']]++;
+                if ($_role=='voicemail_server') $this->voicemail_servers[$this->status[$_id]['ip']]++;
 
 				$ip=$this->status[$_id]['ip'];
                 $this->roles[$_role][$ip]=array('ip'      => $ip,
@@ -256,45 +258,59 @@ class SipThorNetworkImage {
         $NetworkStatistics->getStatistics();
 
         $this->sip_proxies     = $NetworkStatistics->sip_proxies;
+        $this->conference_servers = $NetworkStatistics->conference_servers;
+        $this->voicemail_servers = $NetworkStatistics->voicemail_servers;
         $this->dns_managers    = $NetworkStatistics->dns_managers;
         $this->thor_mangers    = $NetworkStatistics->thor_managers;
         $this->node_statistics = $NetworkStatistics->node_statistics;
         $this->hostnames       = $NetworkStatistics->hostnames;
 
-        /*
+
         if (!$this->display_options['hide_sessions']) {
             require_once("media_sessions.php");
             $MediaSessions = new MediaSessionsNGNPro($engineId);
             $MediaSessions->getSummary();
-    
+
             foreach ($MediaSessions->summary as $_relay) {
                 $this->node_statistics[$_relay['ip']]['sessions']=$_relay['session_count'];
             }
         }
-        */
+
+    }
+
+    function returnImageData(){
+        if ($this->display_options['hide_accounts']) {
+            foreach($this->node_statistics as $key => $value){
+                if ($value['sip_proxy']) {
+                    $this->node_statistics[$key] = array();
+                    $this->node_statistics[$key]['sip_proxy'] = true;
+                }
+            }
+        }
+        return $this;
     }
 
     function buildImage() {
         $img   = imagecreatetruecolor($this->imgsize, $this->imgsize);
         $white = imagecolorallocate($img, 255, 255, 255);
         $black = imagecolorallocate($img, 0, 0, 0);
-        
+
         imagefill($img, 0, 0, $white);
-    
+
         $c=count($this->sip_proxies);
         $cx=$this->imgsize/2;
         $cy=$cx;
-     
+
         $radius=0.7*$cx;
-     
+
         // Sip Thor node image
         $sip_thor_node_img = @imagecreatefrompng('SipThorNode.png');
         list($nw, $nh) = getimagesize('SipThorNode.png');
-    
+
         // Internet cloud Image
         $cloud_img = @imagecreatefrompng('InternetCloud.png');
         list($cw, $ch) = getimagesize('InternetCloud.png');
-    
+
         // Sip Thor title rectangle image
         $sip_thor_background_img = @imagecreatefrompng('SipThorNetworkBackground.png');
         list($tw, $th) = getimagesize('SipThorNetworkBackground.png');
@@ -306,24 +322,24 @@ class SipThorNetworkImage {
 
         $dash=false;
         $dashsize=2;
-        
-        for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) { 
-          $x = ($radius * cos(deg2rad($angle))); 
-          $y = ($radius * sin(deg2rad($angle))); 
-     
-          if ($dash) { 
+
+        for ($angle=0; $angle<=(180+$dashsize); $angle+=$dashsize) {
+          $x = ($radius * cos(deg2rad($angle)));
+          $y = ($radius * sin(deg2rad($angle)));
+
+          if ($dash) {
               imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, $black);
               imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, $black);
-          } 
-          
-          $dash=!$dash; 
-          $px=$x; 
+          }
+
+          $dash=!$dash;
+          $px=$x;
           $py=$y;
 
-          if ($dash) { 
+          if ($dash) {
               imageline($img, $cx+$px, $cy+$py, $cx+$x, $cy+$y, $black);
               imageline($img, $cx-$px, $cx-$py, $cx-$x, $cy-$y, $black);
-          } 
+          }
 
         }
 
@@ -348,14 +364,14 @@ class SipThorNetworkImage {
         }
 
         if (count($this->node_statistics)) {
-    
+
             $dashsize=360/count($this->node_statistics);
             $j=0;
 
             $node_names=array_keys($this->node_statistics);
 
             for ($angle=0; $angle<360; $angle+=$dashsize) {
-         
+
               $x = ($radius * cos(deg2rad($angle)));
               $y = ($radius * sin(deg2rad($angle)));
 
@@ -365,7 +381,7 @@ class SipThorNetworkImage {
               } else {
               	$text = $node_names[$j];
               }
-              $px=$x; 
+              $px=$x;
               $py=$y;
 
               if (strlen($this->node_statistics[$node_names[$j]]['online_accounts']) && strlen($this->node_statistics[$node_names[$j]]['sessions'])) {
@@ -388,7 +404,7 @@ class SipThorNetworkImage {
                 }
               	$extra_text2="";
               }
-         
+
               if (($angle >= 120 && $angle < 240)) {
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-72, $text, $black);
                 imagestring ($img, 3, $cx+$px-70, $cy+$py-62, $extra_text1, $black);
@@ -400,10 +416,10 @@ class SipThorNetworkImage {
               }
               imagecopy ($img,$sip_thor_node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
               $j++;
-              
+
             }
         }
-    
+
         return $img;
     }
 }
@@ -446,7 +462,7 @@ class SIPstatistics {
         	echo "Error opening {$this->mrtgcfg_file}.\n";
             return 0;
         }
-        
+
         // printing cfg header
 
         fwrite($handle,"
@@ -473,7 +489,7 @@ YSize[{$key}_users]: 75
 Ylegend[{$key}_users]: Users
 Legend1[{$key}_users]: Online Users
 LegendI[{$key}_users]:   Online Users
-LegendO[{$key}_users]: 
+LegendO[{$key}_users]:
 PageTop[{$key}_users]: <H1> Online Users for {$key} </H1>
 
 Target[{$key}_sessions]: `{$this->mrtg_data_script} {$key} sessions`
@@ -487,7 +503,7 @@ YSize[{$key}_sessions]: 75
 Ylegend[{$key}_sessions]: Sessions
 Legend1[{$key}_sessions]: Active Sessions
 LegendI[{$key}_sessions]:   Active Sessions
-LegendO[{$key}_sessions]:   
+LegendO[{$key}_sessions]:
 PageTop[{$key}_sessions]: <H1> Active Sessions for {$key} </H1>
 
 Target[{$key}_traffic]: `{$this->mrtg_data_script} {$key} traffic`
@@ -505,9 +521,9 @@ LegendO[{$key}_traffic]:   called
 PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 
         ");
-        
+
         }
-        
+
         fclose($handle);
 	}
 
@@ -626,7 +642,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                     $MediaSessions->getSessions();
                     $totals=array_merge_recursive($totals,$MediaSessions->domain_statistics);
                 }
-            
+
                 if ($DATASOURCES[$datasource]['networkStatus']) {
                     // OpenSIPS via NGNPro
                     $NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus']);
@@ -643,7 +659,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
         $body="domains\t\t\tonline_accounts\tsessions\tcaller\tcallee\n\n";
         foreach (array_keys($totals) as $_domain) {
             if (!$totals[$_domain]['online_accounts'] && !$totals[$_domain]['sessions']) continue;
-        
+
             $body.=sprintf("%s\t\t%d\t\t%d\t\t%s\t%s\n",
             $_domain,
             $totals[$_domain]['online_accounts'],
