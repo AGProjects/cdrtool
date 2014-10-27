@@ -35,6 +35,7 @@ $soapEngines=array(
                                          'support_web'         => 'https://web.example.com',
                                          'enable_thor'         => false,
                                          'pstn_access'         => false,
+                                         'allow_none_local_dns_zones' => false,
                                          'welcome_message'     => '<h1>NGNPro provisioning client</h1>',
                                          'currency'            => '&euro;',
                                          'timeout'             => 5,

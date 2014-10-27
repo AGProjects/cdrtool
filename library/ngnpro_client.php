@@ -491,6 +491,9 @@ class SoapEngine {
                 $this->store_clear_text_passwords=$this->soapEngines[$this->soapEngine]['store_clear_text_passwords'];
             }
 
+            if (strlen($this->soapEngines[$this->soapEngine]['allow_none_local_dns_zones'])) {
+                $this->allow_none_local_dns_zones=$this->soapEngines[$this->soapEngine]['allow_none_local_dns_zones'];
+            }
             if (strlen($this->login_credentials['record_generator'])) {
                 $this->record_generator=$this->login_credentials['record_generator'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
@@ -6783,9 +6786,36 @@ class DnsZones extends Records {
 
 
         } else {
+            if (isset($this->SoapEngine->allow_none_local_dns_zones)) {
+                $allow_none_local_dns_zones = $this->SoapEngine->allow_none_local_dns_zones;
+            } else {
+                $allow_none_local_dns_zones = false;
+            }
 
             if (!strlen($name)) {
-                printf ("<p><font color=red>Error: Missing zone name. </font>");
+                printf ("<p class='alert alert-danger'><strong>Error</strong>: Missing zone name.</p>");
+                return false;
+            }
+            $lookup1 = dns_get_record($name);
+            //dprint_r($lookup1);
+
+            $ns_array1=explode(" ",trim($this->SoapEngine->name_servers));
+
+            if (empty($lookup1) || $allow_none_local_dns_zones){
+                $valid = 1;
+            } else {
+                $valid = 0;
+                foreach($lookup1 as $lrecord){
+                    if ($lrecord['type'] == 'NS') {
+                        if(in_array($lrecord['target'],$ns_array1)){
+                            $valid = 1 ;
+                        }
+                    }
+                }
+            }
+
+            if ($valid==0){
+                printf ("<p class='alert alert-danger'><strong>Error</strong>: zone already exists on other server</p>");
                 return false;
             }
 
@@ -12289,7 +12319,7 @@ class Customers extends Records {
 
                 if ($_property->name == $item) {
                     // update property
-                    
+
                     if ($_property->permission == 'admin') {
                         if ($this->login_credentials['login_type'] == 'admin') {
                             $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
@@ -12310,7 +12340,7 @@ class Customers extends Records {
                         }
                     }
 
-        
+
                     $updated_property[$item]++;
 
                     break;
