@@ -20,7 +20,7 @@ class NetworkStatistics {
                                    'xcap_server',
                                    'thor_dnsmanager',
                                    'thor_database',
-                                   'voicemail_server'
+                                   'voicemail_server',
                                    );
     public $allowedSummary    = array('online_accounts',
                                    'total_accounts'

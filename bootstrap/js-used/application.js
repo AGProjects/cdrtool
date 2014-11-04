@@ -338,66 +338,83 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
         .x(265)
         .fill('#bbb');
 
-      var dns_nodes = Object.keys(thorData.dns_managers).length;
+      var dns_nodes;
 
-      index = 0 ;
-      console.log(thorData);
+      if (typeof thorData.dns_managers != "undefined") {
+          dns_nodes = Object.keys(thorData.dns_managers).length;
+          index = 0 ;
+          //console.log(thorData);
+          $.each(thorData.dns_managers, function( key, value ) {
 
-      $.each(thorData.dns_managers, function( key, value ) {
-
-            // draw.text("\ue9a4").font({
-            //     family: 'picol',
-            //     size: '40'
-            // })
-            // .cy(20)
-            // .cx(610-(40*dns_nodes)+(index*45))
-            // .fill('#88a2d2');
+                // draw.text("\ue9a4").font({
+                //     family: 'picol',
+                //     size: '40'
+                // })
+                // .cy(20)
+                // .cx(610-(40*dns_nodes)+(index*45))
+                // .fill('#88a2d2');
 
 
-            // draw.text("DNS"+(index+1)).font({
-            //     family: 'Verdana',
-            //     size: '10'
-            // })
-            // .cy(50)
-            // .cx(610-(40*dns_nodes)+(index*45));
+                // draw.text("DNS"+(index+1)).font({
+                //     family: 'Verdana',
+                //     size: '10'
+                // })
+                // .cy(50)
+                // .cx(610-(40*dns_nodes)+(index*45));
 
-        draw.circle()
-          .radius(4)
-          .fill('green')
-          .cx(490)
-          .cy(21+(index*12));
+            draw.circle()
+              .radius(4)
+              .fill('green')
+              .cx(490)
+              .cy(21+(index*12));
 
-        var hostname = key;
+            var hostname = key;
 
-        if (thorData.hostnames[key]){
-          hostname = thorData.hostnames[key];
-        }
+            if (thorData.hostnames[key]){
+              hostname = thorData.hostnames[key];
+            }
 
-        draw.text("DNS"+(index+1)+': '+hostname)
-          .font({
-            family: 'Verdana',
-            size: '10'
-          })
-          .cy(20+(index*12))
-          .x(500);
-        index++;
-      });
+            draw.text("DNS"+(index+1)+': '+hostname)
+              .font({
+                family: 'Verdana',
+                size: '10'
+              })
+              .cy(20+(index*12))
+              .x(500);
+            index++;
+          });
+      }
 
-      var sip_proxies = Object.keys(thorData.node_statistics).length + Object.keys(thorData.conference_servers).length + Object.keys(thorData.voicemail_servers).length;
+      sip_proxies=0;
+
+      if (typeof thorData.node_statistics != "undefined") {
+          sip_proxies = sip_proxies + Object.keys(thorData.node_statistics).length;
+      }
+
+      if (typeof thorData.conference_servers != "undefined") {
+          sip_proxies = sip_proxies+ Object.keys(thorData.conference_servers).length;
+      }
+
+      if (typeof thorData.voicemail_servers != "undefined") {
+          sip_proxies = sip_proxies+ Object.keys(thorData.voicemail_servers).length;
+      }
+
+      //var sip_proxies = Object.keys(thorData.node_statistics).length + Object.keys(thorData.conference_servers).length + Object.keys(thorData.voicemail_servers).length;
 
         //var sip_proxies = Object.keys(thorData.node_statistics).length
       var counter= 0;
 
+    if (typeof thorData.voicemail_servers != "undefined") {
       $.each(thorData.voicemail_servers, function( key, value ) {
         position = ((2/sip_proxies)*counter);
         counter++;
 
-          // draw.circle()
-          //   .radius(10)
-          //   .fill('white')
-          //   .stroke({color:'green', width:2})
-          //   .cx(315+(315*0.6)*Math.sin(position*Math.PI))
-          //   .cy(315+(315*0.6)*Math.cos(position*Math.PI));
+        //   draw.circle()
+        //     .radius(10)
+        //     .fill('white')
+        //     .stroke({color:'green', width:2})
+        //     .cx(315+(315*0.6)*Math.sin(position*Math.PI))
+        //     .cy(315+(315*0.6)*Math.cos(position*Math.PI));
 
         draw.rect(32,24)
           .fill('white')
@@ -457,7 +474,8 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
               315+(315*0.6)*Math.sin(position*Math.PI)-x).fill('#5177bd');
 
         });
-
+        }
+        if (typeof thorData.conference_servers != "undefined") {
         $.each(thorData.conference_servers, function( key, value ) {
           position = ((2/sip_proxies)*counter);
           counter++;
@@ -521,7 +539,8 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
           .x(315+(315*0.6)*Math.sin(position*Math.PI)-x).fill('#5177bd');
 
         });
-
+        }
+if (typeof thorData.node_statistics != "undefined") {
         $.each(thorData.node_statistics, function( key, value ) {
           position = ((2/sip_proxies)*counter);
           counter++;
@@ -651,6 +670,7 @@ align='start';
               315+(315*0.6)*Math.sin(position*Math.PI)-x).fill('#5177bd');
           }
         });
+    }
     }
 
     if ( $('#end_date').exists()) {
