@@ -78,15 +78,15 @@ class CT_Sql {
     $now = date("YmdHis", time());
     $uquery = sprintf("update %s set val='%s', changed='%s', count=count+1 where sid='%s' and name='%s'",
       $this->database_table,
-      $str,
+      addslashes($str),
       $now,
-      $id,
-      $name);
+      addslashes($id),
+      addslashes($name));
     $iquery = sprintf("insert into %s ( sid, name, val, changed ) values ('%s', '%s', '%s', '%s')",
       $this->database_table,
-      $id,
+      addslashes($id),
       $name,
-      $str,
+      addslashes($str),
       $now);
 
     $this->db->query($uquery);
@@ -103,13 +103,13 @@ class CT_Sql {
     $this->db->query(sprintf("delete from %s where name = '%s' and sid = '%s'",
       $this->database_table,
       addslashes($name),
-      $id));
+      addslashes($id)));
   }
 
   function ac_get_value($id, $name) {
     $this->db->query(sprintf("select val from %s where sid  = '%s' and name = '%s'",
       $this->database_table,
-      $id,
+      addslashes($id),
       addslashes($name)));
     if ($this->db->next_record()) {
       $str  = $this->db->f("val");
