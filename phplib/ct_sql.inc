@@ -78,15 +78,16 @@ class CT_Sql {
     $now = date("YmdHis", time());
     $uquery = sprintf("update %s set val='%s', changed='%s', count=count+1 where sid='%s' and name='%s'",
       $this->database_table,
-      addslashes($str),
+      $str,
       $now,
       addslashes($id),
-      addslashes($name));
-    $iquery = sprintf("insert into %s ( sid, name, val, changed ) values ('%s', '%s', '%s', '%s')",
+      $name);
+    $iquery = sprintf("insert
+ into %s ( sid, name, val, changed ) values ('%s', '%s', '%s', '%s')",
       $this->database_table,
       addslashes($id),
       $name,
-      addslashes($str),
+      $str,
       $now);
 
     $this->db->query($uquery);
