@@ -104,9 +104,11 @@ if (!$sendotp || $username) {
 	$spam= new DB_CDRTool;
 	if (!$spam_rows) {
         	$query=sprintf("insert into spam (ip,tries,stamp)
-			values ('%s','0','$new_stamp')
+			values ('%s','0','%s')
 			",
-            $_SERVER['REMOTE_ADDR']);
+            $_SERVER['REMOTE_ADDR'],
+            time()
+            );
 	} else {
 		
         	$query="update spam set 

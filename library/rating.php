@@ -1542,7 +1542,7 @@ class Rate {
                 $table="billing_rates_default";
             }
             $query=sprintf("select * from %s where destination = '%s' and application = '%s'",
-            $table,
+            addslashes($table),
             addslashes($DestinationId),
             addslashes($this->application)
             );
@@ -1550,7 +1550,7 @@ class Rate {
         } else {
             $table="billing_rates";
             $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = '%s'",
-            $table,
+            addslashes($table),
             addslashes($rateName),
             addslashes($DestinationId),
             addslashes($this->application)
@@ -1645,13 +1645,13 @@ class Rate {
                 $table="billing_rates_default";
             }
             $query=sprintf("select * from %s where (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            $table,
+            addslashes($table),
             addslashes($DestinationId)
             );
         } else {
             $table="billing_rates";
             $query=sprintf("select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            $table,
+            addslashes($table),
             addslashes($rateName),
             addslashes($DestinationId)
             );
@@ -5405,7 +5405,7 @@ class RatingTables {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
                                         $query_u = sprintf("update %s set %s where %s ",
-                                        $extra_rate_table,
+                                        addslashes($extra_rate_table),
                                         $update_set,
                                         $where
                                         );
@@ -5479,7 +5479,7 @@ class RatingTables {
                         }
                     }
 
-                    $query="delete from $table where $where";
+                    $query=sprintf("delete from %s where %s", addslashes($table), $where);
 
                     if ($this->db->query($query)) {
 
@@ -5490,7 +5490,7 @@ class RatingTables {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
                                         $query_u = sprintf("delete from %s where %s ",
-                                        $extra_rate_table,
+                                        addslashes($extra_rate_table),
                                         $where
                                         );
                                         if (!$this->db->query($query_u)) {
@@ -5579,7 +5579,7 @@ class RatingTables {
                             }
 
                             if (strlen($value)) {
-                                $where .= " and $Fname $like $quotes".$likewhat."$quotes";
+                                $where.=sprintf(" and %s %s %s%s%s ", addslashes($Fname),$like, $quotes, addslashes($likewhat),$quotes);
                                 $t++;
                             }
                         }
@@ -5602,7 +5602,7 @@ class RatingTables {
                             if ($table == 'billing_rates') {
                                 if ($this->settings['split_rating_table']) {
                                     $query=sprintf("create table billing_rates_%s select * from billing_rates where %s ",
-                                    $toRate,
+                                    addslashes($toRate),
                                     $where
                                     );
                                     if (!$this->db->query($query)) {
@@ -5732,7 +5732,7 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
-                    $query=sprintf("delete from %s where id = '%s' and %s ",addslashes($table), addslashes($id), $this->whereResellerFilter);
+                    $query=sprintf("delete from %s where id = '%s' and %s ",addslashes($table), addslashes($id), addslashes($this->whereResellerFilter));
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows && in_array($table,$this->requireReload)) {
@@ -6992,7 +6992,7 @@ class OpenSIPSQuota {
             }
 
         } else {
-             $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",$this->quotaGroup);
+             $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",addslashes($this->quotaGroup));
 
              if (count($reset_quota_for)) {
                  $k=0;

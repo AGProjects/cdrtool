@@ -69,12 +69,12 @@ if ($current_log ) {
         $query=sprintf("update log set description = '%s' where %s and id = %d",
         addslashes($log_description),
         $where,
-        addslashes($current_log));
+        intval($current_log));
 
         $db->query($query);
 
     } else if ($task == "mailLog" && $recipient) {
-        $query=sprintf("select * from log where %s and id = %d",$where,addslashes($current_log));
+        $query=sprintf("select * from log where %s and id = %d",$where,intval($current_log));
 
         $db->query($query);
         $db->next_record();
@@ -130,7 +130,7 @@ if (!$next) {
     $i=0;
     $next=0;
 } else {
-	$i=$next;
+	$i=intval($next);
 }
 $j=0;
 $z=0;
