@@ -716,6 +716,17 @@ class Records {
     var $filters            = array();
     var $selectionActiveExceptions    = array();
 
+    function log_action($action='Unknown') {
+       global $CDRTool;
+       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, action=%s:%s",
+       $this->login_credentials['username'], 
+       $this->login_credentials['login_type'], 
+       $CDRTool['impersonate'], 
+       $this->SoapEngine->port,
+       $action);
+       syslog(LOG_NOTICE, $log);
+    }
+
     function Records($SoapEngine) {
 
         $this->SoapEngine          = $SoapEngine;
@@ -1043,7 +1054,7 @@ class Records {
         $class_name=get_class($this).'Actions';
 
         if (class_exists($class_name)) {
-            $actions=new $class_name($this->SoapEngine);
+            $actions=new $class_name($this->SoapEngine, $this->login_credentials);
             $actions->execute($this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
         }
     }
@@ -1075,6 +1086,7 @@ class Records {
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+        $this->log_action('getCustomers');
 
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
@@ -1134,7 +1146,7 @@ class Records {
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
-
+        $this->log_action('getResellers');
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
@@ -1196,7 +1208,7 @@ class Records {
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
-
+        $this->log_action('getResellers');
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
@@ -1229,6 +1241,7 @@ class Records {
 
             // Insert credetials
             $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+            $this->log_action('getResellers');
 
             // Call function
             $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
@@ -1371,6 +1384,7 @@ class Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
         if (PEAR::isError($result)) {
@@ -1399,6 +1413,7 @@ class Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
         if (PEAR::isError($result)) {
@@ -1503,8 +1518,8 @@ class Records {
         }
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+        $this->log_action('getProperties');
         $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($customer));
-
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
@@ -1539,6 +1554,7 @@ class Records {
         if (!is_array($properties) || !$customer) return true;
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
+        $this->log_action('setProperties');
         $result     = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer),$properties);
 
         if (PEAR::isError($result)) {
@@ -1656,6 +1672,7 @@ class SipDomains extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
@@ -1922,6 +1939,7 @@ class SipDomains extends Records {
             foreach($imported_data['customers'] as $customer) {
                 // Insert credetials
                 $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addAccount');
 
                 $customer['credit'] = floatval($customer['credit']);
                 $customer['balance'] = floatval($customer['balance']);
@@ -1955,6 +1973,7 @@ class SipDomains extends Records {
             foreach($imported_data['sip_domains'] as $domain) {
                 flush();
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addDomain');
                 $result = $this->SoapEngine->soapclient->addDomain($domain);
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -1962,6 +1981,7 @@ class SipDomains extends Records {
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 1001) {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $this->log_action('updateDomain');
                         $result = $this->SoapEngine->soapclient->updateDomain($domain);
                         if (PEAR::isError($result)) {
                             $error_msg  = $result->getMessage();
@@ -1995,6 +2015,7 @@ class SipDomains extends Records {
                 $account['timeout']   = intval($account['timeout']);
 
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addAccount');
                 $result = $this->SoapEngine->soapclient->addAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -2040,6 +2061,7 @@ class SipDomains extends Records {
                 flush();
 
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addAlias');
                 $result = $this->SoapEngine->soapclient->addAlias($alias);
 
                 if (PEAR::isError($result)) {
@@ -2114,6 +2136,7 @@ class SipDomains extends Records {
                         );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
         if (PEAR::isError($result)) {
@@ -2154,6 +2177,7 @@ class SipDomains extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
@@ -2327,6 +2351,7 @@ class SipDomains extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
         if (PEAR::isError($result)) {
@@ -2353,6 +2378,7 @@ class SipDomains extends Records {
         }
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccounts');
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,'getAccounts'),array($Query));
 
@@ -2404,6 +2430,7 @@ class SipDomains extends Records {
 
                 // Call function
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAliases');
                 $result = $this->SoapEngine->soapclient->getAliases($Query);
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -2432,6 +2459,7 @@ class SipDomains extends Records {
 
             // Insert credetials
             $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+            $this->log_action('getCustomers');
 
             // Call function
             $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
@@ -2538,6 +2566,7 @@ class SipAccounts extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccounts');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
@@ -2606,6 +2635,7 @@ class SipAccounts extends Records {
 
         // Insert credentials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccounts');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
@@ -2684,6 +2714,7 @@ class SipAccounts extends Records {
                 if (count($_prepaid_accounts)) {
                     // Insert credetials
                     $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                    $this->log_action('getPrepaidStatus');
 
                     // Call function
                     $result1     = $this->SoapEngine->soapclient->getPrepaidStatus($_prepaid_accounts);
@@ -3286,6 +3317,7 @@ class SipAccounts extends Records {
                         );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
         if (PEAR::isError($result)) {
@@ -3471,6 +3503,7 @@ class SipAccounts extends Records {
                          'range'   => $range);
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccounts');
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
 
         if (PEAR::isError($result)) {
@@ -3521,6 +3554,7 @@ class SipAccounts extends Records {
                          'range'   => $range);
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccounts');
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
 
         if (PEAR::isError($result)) {
@@ -3568,6 +3602,7 @@ class SipAccounts extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
@@ -3729,7 +3764,7 @@ class SipAliases extends Records {
         //dprint_r($Query);
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-
+        $this->log_action('getAliases');
         // Call function
         $result     = $this->SoapEngine->soapclient->getAliases($Query);
 
@@ -3790,6 +3825,7 @@ class SipAliases extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAliases');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getAliases($Query);
@@ -4160,6 +4196,7 @@ class SipAliases extends Records {
                         );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
         if (PEAR::isError($result)) {
@@ -4290,6 +4327,7 @@ class EnumRanges extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
         if (PEAR::isError($result)) {
@@ -4643,6 +4681,7 @@ class EnumRanges extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
         if (PEAR::isError($result)) {
@@ -4891,6 +4930,7 @@ class EnumRanges extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
         if (PEAR::isError($result)) {
@@ -5076,6 +5116,7 @@ class EnumMappings extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumbers');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
@@ -5404,6 +5445,7 @@ class EnumMappings extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumbers');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
@@ -5499,6 +5541,7 @@ class EnumMappings extends Records {
                        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
         if (!PEAR::isError($result)) {
@@ -5691,6 +5734,7 @@ class EnumMappings extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
         if (PEAR::isError($result)) {
@@ -5859,6 +5903,7 @@ class EnumMappings extends Records {
         }
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
         if (PEAR::isError($result)) {
@@ -5969,6 +6014,7 @@ class EnumMappings extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumberss');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
@@ -6132,6 +6178,7 @@ class EnumMappings extends Records {
     function getRecord($enumid) {
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enumid);
 
         if (PEAR::isError($result)) {
@@ -6349,6 +6396,7 @@ class DnsZones extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getZones');
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
         if (PEAR::isError($result)) {
@@ -6608,6 +6656,8 @@ class DnsZones extends Records {
                 $customer['credit'] = floatval($customer['credit']);
                 $customer['balance'] = floatval($customer['balance']);
                 // Call function
+                $this->log_action('addAccount');
+
                 $result     = $this->SoapEngine->soapclientCustomers->addAccount($customer);
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -6640,6 +6690,7 @@ class DnsZones extends Records {
             foreach($imported_data['dns_zones'] as $zone) {
                 flush();
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addZone');
                 $result = $this->SoapEngine->soapclient->addZone($zone);
                 $name_servers[$zone['name']] = $zone['nameservers'];
                 if (PEAR::isError($result)) {
@@ -6648,6 +6699,7 @@ class DnsZones extends Records {
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 7001) {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $this->log_action('updateZone');
                         $result = $this->SoapEngine->soapclient->updateZone($zone);
                         if (PEAR::isError($result)) {
                             $error_msg  = $result->getMessage();
@@ -6679,6 +6731,7 @@ class DnsZones extends Records {
                     continue;
                 }
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('addRecord');
                 $result = $this->SoapEngine->soapclient->addRecord($record);
 
                 if (PEAR::isError($result)) {
@@ -6687,6 +6740,7 @@ class DnsZones extends Records {
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 7003) {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                        $this->log_action('updateRecord');
                         $result = $this->SoapEngine->soapclient->updateRecord($record);
                         if (PEAR::isError($result)) {
                             $error_msg  = $result->getMessage();
@@ -6993,6 +7047,7 @@ class DnsZones extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getZones');
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
         if (PEAR::isError($result)) {
@@ -7041,6 +7096,7 @@ class DnsZones extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getZones');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getZones($Query);
@@ -7430,6 +7486,7 @@ class DnsRecords extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action($this->getRecordsFunction);
 
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
@@ -7827,6 +7884,7 @@ class DnsRecords extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getZones');
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
         if (PEAR::isError($result)) {
@@ -8128,6 +8186,7 @@ class DnsRecords extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getRecords');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getRecords($Query);
@@ -8282,6 +8341,7 @@ class DnsRecords extends Records {
                      );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action($this->getRecordsFunction);
 
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
@@ -8427,6 +8487,8 @@ class TrustedPeers extends Records {
                         );
 
         // Call function
+        $this->log_action('getTrustedPeers');
+
         $result     = $this->SoapEngine->soapclient->getTrustedPeers($Query);
 
         if (PEAR::isError($result)) {
@@ -8704,6 +8766,7 @@ class Carriers extends Records {
                      );
 
         // Call function
+        $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
         if (PEAR::isError($result)) {
@@ -8945,7 +9008,7 @@ class Carriers extends Records {
                         );
 
         // Call function
-
+        $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
         if (PEAR::isError($result)) {
@@ -9127,6 +9190,7 @@ class Gateways extends Records {
                         );
 
         // Call function
+        $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
         if (PEAR::isError($result)) {
@@ -9572,6 +9636,7 @@ class Gateways extends Records {
                         );
 
         // Call function
+        $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
         if (PEAR::isError($result)) {
@@ -9660,6 +9725,7 @@ class GatewayRules extends Records {
                         'range'   => $range
                         );
 
+        $this->log_action('getGatewayRules');
         $result     = $this->SoapEngine->soapclient->getGatewayRules($Query);
 
         if (PEAR::isError($result)) {
@@ -10089,6 +10155,7 @@ class GatewayRules extends Records {
                         );
 
         // Call function
+        $this->log_action('getGatewayRules');        
         $result     = $this->SoapEngine->soapclient->getGatewayRules($Query);
 
         if (PEAR::isError($result)) {
@@ -10173,6 +10240,7 @@ class Routes extends Records {
                         );
 
         // Call function
+        $this->log_action('getRoutes');
         $result     = $this->SoapEngine->soapclient->getRoutes($Query);
 
         if (PEAR::isError($result)) {
@@ -10482,7 +10550,7 @@ class Routes extends Records {
                         );
 
         // Call function
-
+        $this->log_action('getRoutes');
         $result     = $this->SoapEngine->soapclient->getRoutes($Query);
 
         if (PEAR::isError($result)) {
@@ -11282,8 +11350,10 @@ class Customers extends Records {
 
         // Call function
         if ($this->adminonly && $this->filters['only_resellers']) {
+            $this->log_action('getResellers');
             $result     = $this->SoapEngine->soapclient->getResellers($Query);
         } else {
+            $this->log_action('getCustomers');
             $result     = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
@@ -11491,6 +11561,7 @@ class Customers extends Records {
     function getRecord($id) {
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getAccount');
         $result     = $this->SoapEngine->soapclient->getAccount(intval($id));
 
         if (PEAR::isError($result)) {
@@ -12192,6 +12263,7 @@ class Customers extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+        $this->log_action('getCustomers');
 
         // Call function
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
@@ -12661,8 +12733,10 @@ class Customers extends Records {
 
         // Call function
         if ($this->adminonly && $this->filters['only_resellers']) {
+            $this->log_action('getResellers');
             $result     = $this->SoapEngine->soapclient->getResellers($Query);
         } else {
+            $this->log_action('getCustomers');
             $result     = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
@@ -12698,8 +12772,8 @@ class Customers extends Records {
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
-
         // Call function
+        $this->log_action('getCustomers');
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
         if (PEAR::isError($result)) {
@@ -12731,6 +12805,7 @@ class Customers extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Call function
+        $this->log_action('getCustomers');
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
         if (PEAR::isError($result)) {
@@ -13855,13 +13930,24 @@ class Actions {
     var $sub_action_parameter_size = 35;
     var $html = true;
 
-    function Actions($SoapEngine) {
+    function Actions($SoapEngine, $login_credentials) {
         $this->SoapEngine = $SoapEngine;
+        $this->login_credentials = $login_credentials;
         $this->version    = $this->SoapEngine->version;
         $this->adminonly  = $this->SoapEngine->adminonly;
     }
 
-    function execute($selectionKeys,$action,$sub_action_parameter) {
+    function log_action($action='Unknown') {
+       global $CDRTool;
+       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, action=%s",
+       $this->login_credentials['username'], 
+       $this->login_credentials['login_type'], 
+       $CDRTool['impersonate'], 
+       $action);
+       syslog(LOG_NOTICE, $log);
+    }
+
+    function execute($selectionKeys, $action, $sub_action_parameter) {
     }
 
     function showActionsForm($filters,$sorting,$hideParameter=false) {
@@ -13946,8 +14032,8 @@ class SipAccountsActions extends Actions {
                        'changepassword' => 'Change password to:'
                        );
 
-    function SipAccountsActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function SipAccountsActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -13969,7 +14055,7 @@ class SipAccountsActions extends Actions {
             printf ("<li>%s@%s",$key['username'],$key['domain']);
 
             if ($action=='block') {
-
+                $this->log_action('addToGroup');
                 $function=array('commit'   => array('name'       => 'addToGroup',
                                                     'parameters' => array($account,'blocked'),
                                                     'logs'       => array('success' => sprintf('SIP account %s@%s has been blocked',$key['username'],$key['domain'])
@@ -13981,6 +14067,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='deblock') {
+                $this->log_action('removeFromGroup');
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'blocked'),
@@ -13997,6 +14084,7 @@ class SipAccountsActions extends Actions {
                     printf ("<font color=red>Error: you must enter a group name</font>");
                     break;
                 }
+                $this->log_action('removeFromGroup');
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,$sub_action_parameter),
@@ -14009,6 +14097,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='addtogroup') {
+                $this->log_action('addToGroup');
                 if (!strlen($sub_action_parameter)) {
                     printf ("<font color=red>Error: you must enter a group name</font>");
                     break;
@@ -14025,6 +14114,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='deblock_quota') {
+                $this->log_action('removeFromGroup');
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'quota'),
@@ -14037,6 +14127,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='disable_pstn') {
+                $this->log_action('removeFromGroup');
 
                 $function=array('commit'   => array('name'       => 'removeFromGroup',
                                                     'parameters' => array($account,'free-pstn'),
@@ -14049,6 +14140,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='enable_pstn') {
+                $this->log_action('addToGroup');
 
                 $function=array('commit'   => array('name'       => 'addToGroup',
                                                     'parameters' => array($account,'free-pstn'),
@@ -14061,7 +14153,7 @@ class SipAccountsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
 
             } else if ($action=='delete') {
-
+                $this->log_action('deleteAccount');
                 $function=array('commit'   => array('name'       => 'deleteAccount',
                                                     'parameters' => array($account),
                                                     'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$key['username'],$key['domain'])
@@ -14074,6 +14166,7 @@ class SipAccountsActions extends Actions {
 
             } else if ($action=='prepaid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14092,7 +14185,7 @@ class SipAccountsActions extends Actions {
                     $result->answerTimeout = intval($result->answerTimeout);
 
                     $result->prepaid=1;
-
+                    $this->log_action('updateAccount');
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
                                                         'logs'       => array('success' => sprintf('SIP account %s@%s is now prepaid',$key['username'],$key['domain'])
@@ -14104,6 +14197,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='postpaid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14120,6 +14214,7 @@ class SipAccountsActions extends Actions {
                     $result->answerTimeout = intval($result->answerTimeout);
 
                     $result->prepaid=0;
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14133,6 +14228,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='setquota') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14149,6 +14245,7 @@ class SipAccountsActions extends Actions {
                     if (!is_array($result->groups))       $result->groups=array();
                     $result->quota         = intval($sub_action_parameter);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14163,6 +14260,7 @@ class SipAccountsActions extends Actions {
 
             } else if ($action=='rmdsfromrpid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14188,6 +14286,7 @@ class SipAccountsActions extends Actions {
 
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14201,6 +14300,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='rpidasusername') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14219,6 +14319,7 @@ class SipAccountsActions extends Actions {
 
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14232,6 +14333,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='prefixtorpid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14254,6 +14356,7 @@ class SipAccountsActions extends Actions {
                     }
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14267,6 +14370,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='changecustomer') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14289,6 +14393,7 @@ class SipAccountsActions extends Actions {
                     }
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14302,6 +14407,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='changeowner') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14324,6 +14430,7 @@ class SipAccountsActions extends Actions {
                     }
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14337,6 +14444,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='changefirstname') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14353,6 +14461,7 @@ class SipAccountsActions extends Actions {
 
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14366,6 +14475,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='changelastname') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14382,6 +14492,7 @@ class SipAccountsActions extends Actions {
 
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14395,6 +14506,7 @@ class SipAccountsActions extends Actions {
                 }
             } else if ($action=='changepassword') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14411,6 +14523,7 @@ class SipAccountsActions extends Actions {
 
                     $result->quota         = intval($result->quota);
                     $result->answerTimeout = intval($result->answerTimeout);
+                    $this->log_action('updateAccount');
 
                     $function=array('commit'   => array('name'       => 'updateAccount',
                                                         'parameters' => array($result),
@@ -14429,6 +14542,7 @@ class SipAccountsActions extends Actions {
                 }
 
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
                 if (PEAR::isError($result)) {
@@ -14443,7 +14557,7 @@ class SipAccountsActions extends Actions {
                     printf ("<font color=red>Info: SIP account %s@%s is not prepaid, no action performed</font>",$key['username'],$key['domain']);
                     continue;
                 }
-
+                $this->log_action('addBalance');
                 $function=array('commit'   => array('name'       => 'addBalance',
                                                     'parameters' => array($account,$sub_action_parameter),
                                                     'logs'       => array('success' => sprintf('SIP account %s@%s balance has been increased with %s',$key['username'],$key['domain'],$sub_action_parameter)
@@ -14466,8 +14580,8 @@ class SipAliasesActions extends Actions {
                        'delete'         => 'Delete SIP aliases'
                        );
 
-    function SipAliasesActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function SipAliasesActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -14487,6 +14601,7 @@ class SipAliasesActions extends Actions {
                         );
 
             if ($action=='delete') {
+                $this->log_action('deleteAlias');
 
                 $function=array('commit'   => array('name'       => 'deleteAlias',
                                                     'parameters' => array($alias),
@@ -14518,8 +14633,8 @@ class EnumMappingsActions extends Actions {
                               'ttl'      => 'integer'
                               );
 
-    function EnumMappingsActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function EnumMappingsActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -14550,6 +14665,7 @@ class EnumMappingsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
                 if (PEAR::isError($number)) {
@@ -14584,6 +14700,7 @@ class EnumMappingsActions extends Actions {
                     }
 
                     $number->mappings=$new_mappings;
+                    $this->log_action('updateNumber');
 
                     $function=array('commit'   => array('name'       => 'updateNumber',
                                                         'parameters' => array($number),
@@ -14596,6 +14713,7 @@ class EnumMappingsActions extends Actions {
                 }
             } else if ($action  == 'changeowner') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
                 if (PEAR::isError($number)) {
@@ -14618,6 +14736,7 @@ class EnumMappingsActions extends Actions {
                         printf ("<font color=red>Error: Owner '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
                     }
+                    $this->log_action('updateNumber');
 
                     $function=array('commit'   => array('name'       => 'updateNumber',
                                                         'parameters' => array($number),
@@ -14629,6 +14748,7 @@ class EnumMappingsActions extends Actions {
                 }
             } else if ($action  == 'changeinfo') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
                 if (PEAR::isError($number)) {
@@ -14646,6 +14766,7 @@ class EnumMappingsActions extends Actions {
                     $number->mappings=$new_mappings;
 
                     $number->info=trim($sub_action_parameter);
+                    $this->log_action('updateNumber');
 
                     $function=array('commit'   => array('name'       => 'updateNumber',
                                                         'parameters' => array($number),
@@ -14672,8 +14793,8 @@ class DnsRecordsActions extends Actions {
                        'delete'         => 'Delete records'
                        );
 
-    function DnsRecordsActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function DnsRecordsActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -14689,7 +14810,7 @@ class DnsRecordsActions extends Actions {
             //printf ("Performing action=%s on key=%s",$action,$key['id']);
 
             if ($action=='delete') {
-
+                $this->log_action('deleteRecord');
                 $function=array('commit'   => array('name'       => 'deleteRecord',
                                                     'parameters' => array(intval($key['id'])),
                                                     'logs'       => array('success' => sprintf('Record %d has been deleted',$key['id'])
@@ -14701,6 +14822,7 @@ class DnsRecordsActions extends Actions {
                 $this->SoapEngine->execute($function,$this->html);
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
                 if (PEAR::isError($record)) {
@@ -14717,6 +14839,7 @@ class DnsRecordsActions extends Actions {
                     }
 
                     $record->ttl=intval($sub_action_parameter);
+                    $this->log_action('updateRecord');
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
@@ -14729,6 +14852,7 @@ class DnsRecordsActions extends Actions {
                 }
             } else if ($action  == 'changepriority') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
                 if (PEAR::isError($record)) {
@@ -14744,6 +14868,7 @@ class DnsRecordsActions extends Actions {
                         printf ("<font color=red>Error: Priority '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
                     }
+                    $this->log_action('updateRecord');
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
@@ -14756,6 +14881,7 @@ class DnsRecordsActions extends Actions {
                 }
             } else if ($action  == 'changevalue') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
                 if (PEAR::isError($record)) {
@@ -14766,6 +14892,7 @@ class DnsRecordsActions extends Actions {
                     break;
                 } else {
                 	$record->value=$sub_action_parameter;
+                    $this->log_action('updateRecord');
 
                     $function=array('commit'   => array('name'       => 'updateRecord',
                                                         'parameters' => array($record),
@@ -14798,8 +14925,8 @@ class DnsZonesActions extends Actions {
                        'export'         => 'Export zones'
                        );
 
-    function DnsZonesActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function DnsZonesActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -14823,6 +14950,7 @@ class DnsZonesActions extends Actions {
             //printf ("Performing action=%s on key=%s",$action,$key['name']);
 
             if ($action=='delete') {
+                $this->log_action('deleteZone');
                 $function=array('commit'   => array('name'       => 'deleteZone',
                                                     'parameters' => array($key['name']),
                                                     'logs'       => array('success' => sprintf('Zone %s has been deleted',$key['name'])
@@ -14844,6 +14972,7 @@ class DnsZonesActions extends Actions {
                              );
 
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $result     = $this->SoapEngine->soapclient->getZone($key['name']);
                 if (PEAR::isError($result)) {
                     $error_msg  = $result->getMessage();
@@ -14863,6 +14992,7 @@ class DnsZonesActions extends Actions {
                 }
 
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getRecords');
                 // Call function
                 $result = call_user_func_array(array($this->SoapEngine->soapclient,'getRecords'),array($Query));
 
@@ -14878,6 +15008,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'changettl') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -14894,7 +15025,7 @@ class DnsZonesActions extends Actions {
                     }
 
                     $zone->ttl=intval($sub_action_parameter);
-
+                    $this->log_action('updateZone');
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
                                                         'logs'       => array('success' => sprintf('TTL for zone %s has been set to %d',$key['name'],intval($sub_action_parameter))
@@ -14906,6 +15037,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'changeexpire') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -14922,6 +15054,7 @@ class DnsZonesActions extends Actions {
                     }
 
                     $zone->expire=intval($sub_action_parameter);
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -14934,6 +15067,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'changeminimum') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -14950,6 +15084,7 @@ class DnsZonesActions extends Actions {
                     }
 
                     $zone->minimum=intval($sub_action_parameter);
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -14962,6 +15097,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'addnsrecord') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -14974,6 +15110,7 @@ class DnsZonesActions extends Actions {
 
 					$zone->nameservers[]=$sub_action_parameter;
 					$zone->nameservers=array_unique($zone->nameservers);
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -14986,6 +15123,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'removensrecord') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -15002,6 +15140,7 @@ class DnsZonesActions extends Actions {
                     }
 
 					$zone->nameservers=array_unique($new_servers);
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -15014,6 +15153,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'changeretry') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -15030,6 +15170,7 @@ class DnsZonesActions extends Actions {
                     }
 
                     $zone->retry=intval($sub_action_parameter);
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -15042,6 +15183,7 @@ class DnsZonesActions extends Actions {
                 }
             } else if ($action  == 'changeinfo') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
+                $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
                 if (PEAR::isError($zone)) {
@@ -15052,6 +15194,7 @@ class DnsZonesActions extends Actions {
                     break;
                 } else {
                 	$zone->info=$sub_action_parameter;
+                    $this->log_action('updateZone');
 
                     $function=array('commit'   => array('name'       => 'updateZone',
                                                         'parameters' => array($zone),
@@ -15079,6 +15222,7 @@ class DnsZonesActions extends Actions {
 
                 // Insert credetials
                 $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuth);
+                $this->getCustomers('getZone');
 
                 // Call function
                 $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
@@ -15103,8 +15247,8 @@ class CustomersActions extends Actions {
                        'delete'         => 'Delete customers'
                        );
 
-    function CustomerActions($SoapEngine) {
-        $this->Actions($SoapEngine);
+    function CustomerActions($SoapEngine, $login_credentials) {
+        $this->Actions($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -15121,6 +15265,7 @@ class CustomersActions extends Actions {
             print "<li>";
 
             if ($action=='delete') {
+                $this->log_action('deleteAccount');
                 $function=array('commit'  => array('name'       => 'deleteAccount',
                                                     'parameters' => array(intval($key)),
                                                    'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
@@ -15191,4 +15336,5 @@ function objectToArray($d) {
 			return $d;
 		}
 	}
+
 ?>

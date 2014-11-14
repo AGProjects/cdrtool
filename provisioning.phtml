@@ -47,6 +47,7 @@ if ($export) {
 global $CDRTool;
 
 $login_credentials=array();
+$login_credentials['username']=$auth->auth["uname"];
 
 if ($CDRTool['impersonate']) {
     if (preg_match("/^([0-9]*)\.([0-9]*)$/", $CDRTool['impersonate'], $m)) {
