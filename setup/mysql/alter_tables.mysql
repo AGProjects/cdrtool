@@ -764,3 +764,6 @@ CREATE TABLE `ngnpro_logs_summary` (
 delete from sip_status where code='434';
 
 alter table quota_usage add index account (`account`);
+
+10.0.0
+alter table auth_user add column aclFilter varchar(255) not null after afterDateFilter;

@@ -238,6 +238,29 @@ class CDRTool_Auth extends Auth {
             $yubikey        = $this->db->f("yubikey");
             $auth_method    = $this->db->f("auth_method");
             $user_db   = $this->db->f("username");
+            $aclFilter   = array();
+            foreach (explode(" ", $this->db->f("aclFilter"))  as $ip) {
+                $ip = trim($ip);
+                if ($ip) {
+                    $aclFilter[] = $ip;
+                }
+
+            }
+            $acl_filter = false;
+            if ($aclFilter) {
+                  $acl_filter = true;
+                  foreach ($aclFilter as $f) {
+                      if (startsWith($_SERVER['REMOTE_ADDR'], $f)){
+                          $acl_filter = false;
+                          break; 
+                      }
+                  }
+            }
+            if ($acl_filter){
+                    $log=sprintf("CDRTool login with username %s using method %s from IP %s denied by ACL", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+            }
 
             if ($CDRTool['provider']['clear_text_passwords']!=1) {
 
@@ -397,7 +420,7 @@ class CDRTool_Auth extends Auth {
                     (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5') ||
                     (!PEAR::isError($auth) && $auth_method =='4' )  ||
                     ($password == $otp_passwd && $timestamp_otp > $timestamp_now)) {
-                    $log=sprintf("CDRTool %s %s", $auth_method, $_SERVER['REMOTE_ADDR']);
+                    $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
                     syslog(LOG_NOTICE, $log);
                     if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
                         $this->db->query(sprintf(
@@ -424,7 +447,7 @@ class CDRTool_Auth extends Auth {
                     (!PEAR::isError($auth) && $auth_method =='4' ) ||
                     ($response == $expect_otp && $timestamp_otp > $timestamp_now) ) {
 
-                    $log=sprintf("CDRTool %s %s", $auth_method, $_SERVER['REMOTE_ADDR']);
+                    $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
                     syslog(LOG_NOTICE, $log);
                     if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
                         $this->db->query(sprintf(
@@ -465,11 +488,8 @@ class CDRTool_Auth extends Auth {
                 $perm               = $this->db->f("perms");
                 $auth_method        = $this->db->f("auth_method");
 
-                $log=sprintf("CDRTool %s %s %s", $auth_method, $username, $_SERVER['REMOTE_ADDR']);
+                $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
                 syslog(LOG_NOTICE, $log);
-
-
-
 
                 $this->auth["perm"] = $perm;
                 return $uid;
@@ -1502,6 +1522,14 @@ function get_location($ip) {
         $geo_location['region']  = $_loc['region'];
     }
     return json_encode($geo_location);
+}
+
+function startsWith($haystack,$needle,$case=true)
+{
+    if ($case)
+        return strpos($haystack, $needle, 0) === 0;
+
+    return stripos($haystack, $needle, 0) === 0;
 }
 
 ?>

@@ -116,6 +116,7 @@ CREATE TABLE `auth_user` (
   `serviceFilter` varchar(255) NOT NULL DEFAULT '',
   `aNumberFilter` varchar(255) NOT NULL DEFAULT '',
   `afterDateFilter` varchar(255) NOT NULL DEFAULT '',
+  `aclFilter` varchar(255) NOT NULL DEFAULT '',
   `soapFilter` varchar(255) NOT NULL,
   `sources` varchar(255) NOT NULL DEFAULT '',
   `otp_enable` enum('0','1') NOT NULL DEFAULT '0',

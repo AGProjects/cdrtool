@@ -37,6 +37,7 @@ $compidFilter    = $_REQUEST['compidFilter'];
 $aNumberFilter   = $_REQUEST['aNumberFilter'];
 $cscodeFilter    = $_REQUEST['cscodeFilter'];
 $afterDateFilter = $_REQUEST['afterDateFilter'];
+$aclFilter       = $_REQUEST['aclFilter'];
 $impersonate     = $_REQUEST['impersonate'];
 
 $perms           = $_REQUEST['perms'];
@@ -137,6 +138,7 @@ if ($action == "edit" && $id) {
                     aNumberFilter   = '%s',
                     cscodeFilter    = '%s',
                     afterDateFilter = '%s',
+                    aclFilter       = '%s',
                     impersonate     = '%s'
                     ",
                 	addslashes($perms_text),
@@ -149,6 +151,7 @@ if ($action == "edit" && $id) {
                     addslashes($aNumberFilter),
                     addslashes($cscodeFilter),
                     addslashes($afterDateFilter),
+                    addslashes($aclFilter),
                     addslashes($impersonate)
                     );
                 }
@@ -156,6 +159,7 @@ if ($action == "edit" && $id) {
 
             $query.=sprintf(" where user_id = '%s'", addslashes($id));
 
+//            print $query;
             if (!$db->query($query)) {
                 print "<p>Failed to update user $id";
                 print "The error is $db->Error";
@@ -216,6 +220,7 @@ if ($action == "edit" && $id) {
         $compidFilter     = $db->f('compidFilter');
         $cscodeFilter     = $db->f('cscodeFilter');
         $afterDateFilter  = $db->f('afterDateFilter');
+        $aclFilter        = $db->f('aclFilter');
         $impersonate      = $db->f('impersonate');
         $yubikey          = $db->f('yubikey');
         $auth_method      = $db->f('auth_method');
@@ -274,6 +279,7 @@ if ($action == "edit" && $id) {
                 cscodeFilter,
                 gatewayFilter,
                 afterDateFilter,
+                aclFilter,
                 impersonate,
                 yubikey,
                 auth_method
@@ -281,6 +287,7 @@ if ($action == "edit" && $id) {
                 '%s',
                 '%s',
                 '',
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -317,6 +324,7 @@ if ($action == "edit" && $id) {
                 addslashes($cscodeFilter),
                 addslashes($gatewayFilter),
                 addslashes($afterDateFilter),
+                addslashes($aclFilter),
                 addslashes($impersonate),
                 addslashes($yubikey),
                 addslashes($auth_method)
@@ -340,10 +348,12 @@ if ($action == "edit" && $id) {
                 cscodeFilter,
                 gatewayFilter,
                 afterDateFilter,
+                aclFilter,
                 impersonate,
                 yubikey,
                 auth_method
                 ) values (
+                '%s',
                 '%s',
                 '%s',
                 '%s',
@@ -382,6 +392,7 @@ if ($action == "edit" && $id) {
                 addslashes($cscodeFilter),
                 addslashes($gatewayFilter),
                 addslashes($afterDateFilter),
+                addslashes($aclFilter),
                 addslashes($impersonate),
                 addslashes($yubikey),
                 addslashes($auth_method)
