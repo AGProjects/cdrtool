@@ -5997,7 +5997,7 @@ class RatingTables {
             $i=0;
             $next=0;
         } else {
-            $i=$next;
+            $i=intval($next);
         }
 
         $j=0;
@@ -6022,8 +6022,8 @@ class RatingTables {
         $where,
         $this->whereResellerFilter,
         $order,
-        $i,
-        $this->maxrowsperpage
+        intval($i),
+        intval($this->maxrowsperpage)
         );
 
         $this->db->query($query);

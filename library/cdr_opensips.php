@@ -1473,7 +1473,7 @@ class CDRS_opensips extends CDRS {
             $i=0;
             $this->next=0;
         } else {
-            $i=$this->next;
+            $i=intval($this->next);
         }
         $j=0;
         $z=0;
@@ -1571,6 +1571,11 @@ class CDRS_opensips extends CDRS {
                     $query.= ", sum($this->priceField) as $this->priceField ";
                 }
 
+                $_max_rows = intval($this->maxrowsperpage);
+                if (!$_max_rows) {
+                    $_max_rows = 10;
+                }
+                /*
                 $query.= "
                 , $group_by as mygroup
                 from $cdr_table
@@ -1578,8 +1583,17 @@ class CDRS_opensips extends CDRS {
                 group by $group_by
                 $having
                 order by $order_by1 $order_type
-                limit $i,$this->maxrowsperpage
+                limit $i,$_max_rows
                 ";
+                */
+
+                $query.= sprintf(", %s as mygroup from %s
+                where %s
+                group by %s
+                %s
+                order by %s %s
+                limit %d, %d
+                ", addslashes($group_by), addslashes($cdr_table), $where, addslashes($group_by), addslashes($having), addslashes($order_by1), addslashes($order_type), $i, $_max_rows);
 
                 dprint($query);
                 $this->CDRdb->query($query);
@@ -1786,14 +1800,18 @@ class CDRS_opensips extends CDRS {
                 if ($order_by=="zeroP" || $order_by=="nonzeroP") {
                     $order_by="timestamp";
                 }
+                $_max_rows = intval($this->maxrowsperpage);
+                if (!$_max_rows) {
+                   $_max_rows = 10;
+                }
                 $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
                 from %s where %s order by %s %s limit %d, %d",
                 addslashes($cdr_table),
                 $where,
                 addslashes($order_by),
                 addslashes($order_type),
-                $i,
-                $this->maxrowsperpage
+                intval($i),
+                $_max_rows
                 );
 
                 $this->CDRdb->query($query);

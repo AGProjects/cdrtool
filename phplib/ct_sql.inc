@@ -59,6 +59,9 @@ class CT_Sql {
 
   function ac_store($id, $name, $str) {
     $ret = true;
+    if (strstr($id, " ")) {
+        return false;
+    }
 
     switch ( $this->encoding_mode ) {
       case "slashes":
@@ -78,16 +81,15 @@ class CT_Sql {
     $now = date("YmdHis", time());
     $uquery = sprintf("update %s set val='%s', changed='%s', count=count+1 where sid='%s' and name='%s'",
       $this->database_table,
-      $str,
+      addslashes($str),
       $now,
       addslashes($id),
-      $name);
-    $iquery = sprintf("insert
- into %s ( sid, name, val, changed ) values ('%s', '%s', '%s', '%s')",
+      addslashes($name));
+    $iquery = sprintf("insert into %s ( sid, name, val, changed ) values ('%s', '%s', '%s', '%s')",
       $this->database_table,
       addslashes($id),
       $name,
-      $str,
+      addslashes($str),
       $now);
 
     $this->db->query($uquery);

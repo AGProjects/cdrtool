@@ -13,7 +13,7 @@ $search_text     = $_REQUEST['search_text'];
 $task            = $_REQUEST['task'];
 $current_log     = $_REQUEST['current_log'];
 $log_description = $_REQUEST['log_description'];
-$next            = $_REQUEST['next'];
+$next            = intval($_REQUEST['next']);
 $maxrowsperpage  = 20;
 $PHP_SELF        = $_SERVER['PHP_SELF'];
 $thisMonth       = $_REQUEST['thisMonth'];
@@ -166,7 +166,11 @@ if  ($rows>0)  {
         $maxrows=$rows;
     }
 
-    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,$i,$maxrowsperpage);
+    $_max_rows= intval($maxrowsperpage);
+    if (!$_max_rows) {
+        $_max_rows = 10;
+    }
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d",addslashes($where),intval($i),$_max_rows);
 
     $db->query($query);
 
