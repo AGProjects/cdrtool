@@ -718,12 +718,21 @@ class Records {
 
     function log_action($action='Unknown') {
        global $CDRTool;
-       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, action=%s:%s",
+       $location = "Unknown";
+       $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+       if ($_loc['country_name']) {
+           $location = $_loc['country_name'];
+       }
+       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
        $this->login_credentials['username'], 
        $this->login_credentials['login_type'], 
        $CDRTool['impersonate'], 
+       $_SERVER['REMOTE_ADDR'],
+       $location,
        $this->SoapEngine->port,
-       $action);
+       $action,
+       $_SERVER['PHP_SELF']
+       );
        syslog(LOG_NOTICE, $log);
     }
 
@@ -14128,11 +14137,21 @@ class Actions {
 
     function log_action($action='Unknown') {
        global $CDRTool;
-       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, action=%s",
+       $location = "Unknown";
+       $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+       if ($_loc['country_name']) {
+           $location = $_loc['country_name'];
+       }
+       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
        $this->login_credentials['username'], 
        $this->login_credentials['login_type'], 
        $CDRTool['impersonate'], 
-       $action);
+       $_SERVER['REMOTE_ADDR'],
+       $location,
+       $this->SoapEngine->port,
+       $action,
+       $_SERVER['PHP_SELF']
+       );
        syslog(LOG_NOTICE, $log);
     }
 
