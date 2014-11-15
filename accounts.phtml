@@ -15,6 +15,23 @@ if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("header.phtml");
 }
 
+function log_accounts_action($action){
+    global $auth;
+    $location = "Unknown";
+    $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+    if ($_loc['country_name']) {
+       $location = $_loc['country_name'];
+    }
+    $log = sprintf("CDRTool login username=%s, IP=%s, location=%s, action=%s, script=%s",
+    $auth->auth["uname"],
+    $_SERVER['REMOTE_ADDR'],
+    $location,
+    $action,
+    $_SERVER['PHP_SELF']
+    );
+    syslog(LOG_NOTICE, $log);
+}
+    
 $loginname=$auth->auth["uname"];
 
 $action          = $_REQUEST['action'];
@@ -165,8 +182,10 @@ if ($action == "edit" && $id) {
                 print "The error is $db->Error";
             }  else {
                 if ($delete) {
+                   log_accounts_action(sprintf("account %s deleted", $username));
                     print "<p>User <b>$name</b> deleted";
                 } else {
+                   log_accounts_action(sprintf("account %s updated", $username));
                     print "<p>User <b>$name</b> updated";
                     if ($mailsettings) {
                         if ($_SERVER['HTTPS']=="on") {
@@ -404,6 +423,7 @@ if ($action == "edit" && $id) {
                 printf("<p>Failed to add user: %s(%s) %s",$db->Error,$db->Errno,$query);
 
             } else {
+                log_accounts_action(sprintf("account %s added", $username));
                 print "<p>User <b>$name</b> created";
                 if ($mailsettings) {
                     if ($_SERVER['HTTPS']=="on") {
