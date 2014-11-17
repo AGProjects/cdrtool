@@ -117,13 +117,21 @@ $f->add_element(array(	"name"=>"expire",
 			"size"=>"11"
 			));
 
-$f->add_element(array(  "name"=>"yubikey",
-                "type"=>"text",
-                "size"=>"12",
-                "minlength"=>"12",
-                "maxlength"=>"12",
-                "valid_regex"=>"^[a-zA-Z0-9|_|-]*$"
-                ));
+$use_yubikey=0;
+if (stream_resolve_include_path('Auth/Yubico.php')) {
+    require_once 'Auth/Yubico.php';
+    $use_yubikey=1;
+}
+
+if ($use_yubikey) {
+    $f->add_element(array(  "name"=>"yubikey",
+                    "type"=>"text",
+                    "size"=>"12",
+                    "minlength"=>"12",
+                    "maxlength"=>"12",
+                    "valid_regex"=>"^[a-zA-Z0-9|_|-]*$"
+                    ));
+}
 
 $blocked_els=array(
                 array("label"=>"","value"=>"0"),
@@ -158,17 +166,19 @@ $f->add_element(array("type"=>"select",
 			        )
             );
 
-$f->add_element(array("type"=>"select",
-                      "name"=>"auth_method",
-                      "options"=> array(
-                                    array("label"=>"Username+Password+Yubikey","value"=>"7"),
-                                    array("label"=>"Username+Yubikey","value"=>"5"),
-                                    array("label"=>"Yubikey","value"=>"4"),
-                                  ),
-                      "multiple"=>"0",
-                      "value"=>""
-              )
-            );
+if ($use_yubikey) {
+    $f->add_element(array("type"=>"select",
+                          "name"=>"auth_method",
+                          "options"=> array(
+                                        array("label"=>"Username+Password+Yubikey","value"=>"7"),
+                                        array("label"=>"Username+Yubikey","value"=>"5"),
+                                        array("label"=>"Yubikey","value"=>"4"),
+                                      ),
+                          "multiple"=>"0",
+                          "value"=>""
+                  )
+                );
+}
 
 
 function showForm($id="") {
@@ -176,6 +186,12 @@ function showForm($id="") {
     $perms, $source, $sources, $action;
 
     $sources=explode(",",$sources);
+
+    $use_yubikey=0;
+    if (stream_resolve_include_path('Auth/Yubico.php')) {
+        require_once 'Auth/Yubico.php';
+        $use_yubikey=1;
+    }
 
     global $afterDateFilter;
 
@@ -322,35 +338,37 @@ function showForm($id="") {
     </div>
     ";
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Yubikey");
-    print "</label>
-    <div class='controls'>
-      <font color=$formelcolor>
-    ";
-    $f->show_element("yubikey","");
-    print "
-    </div>
-    </div>
-    ";
+    if ($use_yubikey) {
+        print "
+          <div class=\"control-group\">
+          <label class='control-label'>
+        ";
+        print _("Yubikey");
+        print "</label>
+        <div class='controls'>
+          <font color=$formelcolor>
+        ";
+        $f->show_element("yubikey","");
+        print "
+        </div>
+        </div>
+        ";
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Yubikey usage");
-    print "</label>
-    <div class='controls'>
-      <font color=$formelcolor>
-    ";
-    $f->show_element("auth_method","");
-    print "
-    </div>
-    </div>
-    ";
+        print "
+          <div class=\"control-group\">
+          <label class='control-label'>
+        ";
+        print _("Yubikey usage");
+        print "</label>
+        <div class='controls'>
+          <font color=$formelcolor>
+        ";
+        $f->show_element("auth_method","");
+        print "
+        </div>
+        </div>
+        ";
+    }
 
     print "
           <div class=\"control-group\">
