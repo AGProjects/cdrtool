@@ -899,6 +899,8 @@ class pageLayout {
             $use_yubikey=1;
         }
 
+        $username = $auth->auth["uname"];
+
         print "
         <script language=javascript src=md5.js></script>
         <script language=javascript>
