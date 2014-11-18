@@ -80,11 +80,11 @@
                                     </h3>
 
                                 <p>
-                                    The follwing values have been changed for the SIP account {$client->account} from {$client->ip}.
+                                    The follwing values have been changed for the SIP account {$client->account} from the IP: {$client->ip}.
                                 </p>
                                 <ul>
                                 {foreach name=fields from=$client->fields item=field}
-                                <li>{$smarty.foreach.fields.iteration}: {$field}</li>
+                                <li>{$field}</li>
                                 {/foreach}
                                 </ul>
                             </td>
