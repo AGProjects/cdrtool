@@ -62,6 +62,8 @@ class SipSettings {
     var $show_did_tab       = false;
     var $show_directory     = false;
 
+    var $notify_on_account_changes  = false;
+
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
 
@@ -632,6 +634,9 @@ class SipSettings {
             $this->disable_extra_groups=$this->soapEngines[$this->sip_engine]['disable_extra_groups'];
         }
 
+        if (array_key_exists($this->soapEngines[$this->sip_engine]['notify_on_account_changes'])) {
+            $this->notify_on_account_changes=$this->soapEngines[$this->sip_engine]['notify_on_account_changes'];
+        }
         if ($this->loginCredentials['templates_path']) {
             $this->templates_path   = $this->loginCredentials['templates_path'];
         } else if ($this->soapEngines[$this->sip_engine]['templates_path']) {
@@ -3890,6 +3895,8 @@ class SipSettings {
         $this->getDivertTargets();
         $this->getDiversions();
         */
+        $this->changedFields=[];
+        $this->sendCEmail=0;
 
         foreach ($this->form_elements as $el) {
             ${$el} = $_REQUEST[$el];
@@ -3907,6 +3914,8 @@ class SipSettings {
             $this->email=$mailto;
             $this->somethingChanged=1;
             $this->voicemailOptionsHaveChanged=1;
+            $this->sendCEmail=1;
+            array_push($this->changedFields,"Email Address");
         }
 
         if ($this->login_type != "subscriber") {
@@ -4148,7 +4157,8 @@ class SipSettings {
                 $md2=strtolower($this->username).'@'.strtolower($this->domain).':'.strtolower($this->domain).':'.$sip_password;
                 $result->password=md5($md1).':'.md5($md2);
             }
-
+            $this->sendCEmail=1;
+            array_push($this->changedFields,"Password");
             $this->somethingChanged=1;
         }
 
@@ -4161,6 +4171,8 @@ class SipSettings {
                 $web_password_new=md5($md1).':'.md5($md2);
             }
             $this->setPreference('web_password',$web_password_new);
+            $this->sendCEmail=1;
+            array_push($this->changedFields,"Web password");
             $this->somethingChanged=1;
         }
 
@@ -4288,6 +4300,9 @@ class SipSettings {
                 return false;
             } else {
                 dprint("Call updateAccount");
+                if ($this->sendCEmail && $this->notify_on_account_changes) {
+                    $this->sendChangedEmail(False,$this->changedFields)
+                }
             }
 
         }
@@ -7539,6 +7554,75 @@ class SipSettings {
         }
     }
 
+    function sendChangedEmail($skip_html=False, $fields=[]) {
+        dprint ("SipSettings->sendChangedEmail($this->email)");
+        $this->ip = $_SERVER['REMOTE_ADDR'];
+        if (!$this->email && !$skip_html) {
+            print "<p><font color=blue>";
+            print _("Please fill in the e-mail address. ");
+            print "</font>";
+            return false;
+        }
+
+        $subject = sprintf("SIP Account %s changed",$this->account);
+
+
+        $tpl = $this->getChangedEmailTemplate($this->reseller, $this->Preferences['language']);
+
+        if (!$tpl && !$skip_html) {
+            print "<p><font color=red>";
+            print _("Error: no email template found");
+            print "</font>";
+            return false;
+        }
+
+        $tpl_html = $this->getEmailChangedTemplateHTML($this->reseller, $this->Preferences['language']);
+
+        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+        include_once(SMARTY_DIR . 'Smarty.class.php');
+
+        $smarty = new Smarty;
+        $smarty->template_dir = '.';
+
+        //$smarty->use_sub_dirs = true;
+        //$smarty->cache_dir = 'templates_c';
+
+        $smarty->assign('client', $this);
+        $bodyt = $smarty->fetch($tpl);
+
+        if ($tpl_html) {
+            $bodyhtml = $smarty->fetch($tpl_html);
+        }
+
+        include_once 'Mail.php';
+        include_once 'Mail/mime.php' ;
+
+        $hdrs = array(
+            'From'    => $this->support_email,
+            'Subject' => $subject
+        );
+
+        $crlf = "\n";
+        $mime = new Mail_mime($crlf);
+
+        $mime->setTXTBody($bodyt);
+
+        if ($tpl_html) {
+          $mime->setHTMLBody($bodyhtml);
+        }
+
+        $body = $mime->get();
+        $hdrs = $mime->headers($hdrs);
+
+        $mail =& Mail::factory('mail');
+
+        //dprint_r($_REQUEST);
+
+        if ($mail->send($this->email, $hdrs, $body)) {
+            return 1;
+        }
+    }
+
     function sendRemoveAccount() {
         include_once('Mail.php');
         include_once('Mail/mime.php');
@@ -7814,6 +7898,44 @@ class SipSettings {
     function getEmailTemplateHTML($reseller, $language='en') {
         $file = "sip_settings_email_$language.html.tpl";
         $file2 = "sip_settings_email.html.tpl";
+
+        //print("templates_path = $this->templates_path");
+
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
+        } else {
+            return false;
+        }
+    }
+
+    function getChangedEmailTemplate($reseller, $language='en') {
+        $file = "sip_settings_changed_$language.tpl";
+        $file2 = "sip_settings_changed.tpl";
+
+        //print("templates_path = $this->templates_path");
+
+        if (file_exists("$this->templates_path/$this->reseller/$file")) {
+            return "$this->templates_path/$this->reseller/$file";
+        } elseif (file_exists("$this->templates_path/$this->reseller/$file2")) {
+            return "$this->templates_path/$this->reseller/$file2";
+        } elseif (file_exists("$this->templates_path/default/$file")) {
+            return "$this->templates_path/default/$file";
+        } elseif (file_exists("$this->templates_path/default/$file2")) {
+            return "$this->templates_path/default/$file2";
+        } else {
+            return false;
+        }
+    }
+
+    function getChangedEmailTemplateHTML($reseller, $language='en') {
+        $file = "sip_settings_changed_$language.html.tpl";
+        $file2 = "sip_settings_changed.html.tpl";
 
         //print("templates_path = $this->templates_path");
 

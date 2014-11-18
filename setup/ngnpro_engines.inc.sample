@@ -48,7 +48,8 @@ $soapEngines=array(
                                          'disable_extra_groups'  => true,
                                          'default_timezone'    => 'Netherlands/Amsterdam',
                                          'default_country'     => 'NL',
-                                         'call_limit'          => '3'
+                                         'call_limit'          => '3',
+                                         'notify_on_account_changes' => false
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',
