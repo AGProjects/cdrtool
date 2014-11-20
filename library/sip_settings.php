@@ -624,7 +624,7 @@ class SipSettings {
             $this->show_barring_tab=$this->soapEngines[$this->sip_engine]['show_barring_tab'];
         }
 
-        if (array_key_exists($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
+        if (isset($this->soapEngines[$this->sip_engine]['disable_extra_groups'])) {
             $this->disable_extra_groups=$this->soapEngines[$this->sip_engine]['disable_extra_groups'];
         }
 
