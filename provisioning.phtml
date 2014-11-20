@@ -78,6 +78,7 @@ if ($CDRTool['impersonate']) {
                         );
     }
 
+    $login_credentials['username']=$auth->auth["uname"];
 } else {
     page_close();
     printf ("Please define impersonate field for login account <b>%s</b>",$auth->auth["uname"]);
