@@ -1,6 +1,6 @@
 Dear {$client->name},
 
-The follwing values have been changed for the SIP account {$client->account} from the IP: {$client->ip}.
+The following properties have been changed for your SIP account {$client->account} from the IP address {$client->ip} {if $client->location}located in {$client->location}.{else}.{/if}
 
     {foreach name=fields from=$client->fields item=field}
     {$field}

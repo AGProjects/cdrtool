@@ -67,20 +67,13 @@
                 <center>
                     <table width='650px' style='margin-top: 5px; padding: 4px; width 650px; background-color:#FFFFFF; border: 1px solid #EEEEEE; border-radius: 6px 6px 6px 6px;    -moz-box-shadow: 0 0 5px #888; -webkit-box-shadow: 0 0 5px#888;box-shadow: 0 0 5px #888; padding-bottom:20px;'>
                         <tr>
-                            <td bgcolor="#EEEEEE" class=grey>
-                                <center>
-                                    <img src="https://mdns.sipthor.net/images/Sip2Sip-logo.png">
-                                </center>
-                            </td>
-                        </tr>
-                        <tr>
                             <td bgcolor='#FFFFFF' style='font-family: Helvetica,Arial,sans-serif; font-size: 10pt;'>
                                     <h3>
                                         Dear {$client->name},
                                     </h3>
 
                                 <p>
-                                    The follwing values have been changed for the SIP account {$client->account} from the IP: {$client->ip}.
+                                    The following properties have been changed your the SIP account {$client->account} from the IP address {$client->ip} {if $client->location}located in {$client->location}.{else}.{/if}
                                 </p>
                                 <ul>
                                 {foreach name=fields from=$client->fields item=field}

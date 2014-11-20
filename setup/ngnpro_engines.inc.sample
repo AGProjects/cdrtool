@@ -49,7 +49,7 @@ $soapEngines=array(
                                          'default_timezone'    => 'Netherlands/Amsterdam',
                                          'default_country'     => 'NL',
                                          'call_limit'          => '3',
-                                         'notify_on_account_changes' => false
+                                         'notify_on_sip_account_changes' => false
                                          ),
                            'vm' => array('name'=> 'Voicemail server',
                                          'username'=> 'admin',

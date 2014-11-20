@@ -62,7 +62,7 @@ class SipSettings {
     var $show_did_tab       = false;
     var $show_directory     = false;
 
-    var $notify_on_account_changes  = false;
+    var $notify_on_sip_account_changes  = false;
 
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
@@ -634,9 +634,9 @@ class SipSettings {
             $this->disable_extra_groups=$this->soapEngines[$this->sip_engine]['disable_extra_groups'];
         }
 
-        if (strlen($this->soapEngines[$this->sip_engine]['notify_on_account_changes'])) {
-            dprint($this->soapEngines[$this->sip_engine]['notify_on_account_changes']);
-            $this->notify_on_account_changes=$this->soapEngines[$this->sip_engine]['notify_on_account_changes'];
+        if (strlen($this->soapEngines[$this->sip_engine]['notify_on_sip_account_changes'])) {
+            //dprint($this->soapEngines[$this->sip_engine]['notify_on_sip_account_changes']);
+            $this->notify_on_sip_account_changes=$this->soapEngines[$this->sip_engine]['notify_on_sip_account_changes'];
         }
         if ($this->loginCredentials['templates_path']) {
             $this->templates_path   = $this->loginCredentials['templates_path'];
@@ -4301,7 +4301,7 @@ class SipSettings {
                 return false;
             } else {
                 dprint("Call updateAccount");
-                if ($this->sendCEmail && $this->notify_on_account_changes) {
+                if ($this->sendCEmail && $this->notify_on_sip_account_changes) {
                     $this->sendChangedEmail(False,$this->changedFields);
                 }
             }
@@ -7566,6 +7566,11 @@ class SipSettings {
             return false;
         }
 
+        //$this->location = "Unknown";
+        $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+        if ($_loc['country_name']) {
+            $this->location = $_loc['country_name'];
+        }
         $subject = sprintf("SIP Account %s changed",$this->account);
 
 
