@@ -1,3 +1,37 @@
+cdrtool (9.3.0) unstable; urgency=low
+
+  * Added initial PHP 5.4 compatibility
+
+  [ Web Interface ]
+
+  * Changed domain field in CDR search to match wildcards
+  * Escape customer data to prevent HTML input
+  * Removed Non exsiting status code
+  * Only display Yubikey if the library is installed
+  * Prevent SQL injection against session
+  * Added ip based ACL for login accounts
+  * Fixed spam detection in login
+
+  [ NGNPro Client ]
+
+  * Fixed trace links in accounts
+  * Fixed data in provisioning graphs
+  * Changed default SOAP port order
+  * Updated customer interface
+  * Fixed disabling extra groups
+  * Prevent changing zones for ENUM ranges
+  * Updated Thor-network diagram
+  * Added option to allow none local dns zones in provisioning
+  * Added more logging for provisioning requests
+  * Added email on sip account changes
+
+  [ Rating ]
+
+  * Changed PSTN destination selection to work only for numbers
+  * Added index to quota_usage to get more speed
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Thu, 20 Nov 2014 14:06:52 +0100
+
 cdrtool (9.2.0) unstable; urgency=low
 
   [ Web Interface ]
