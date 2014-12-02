@@ -59,7 +59,7 @@ Your login details:
    Username: {$client->account}
 {if $client->web_password}
    Password: {$client->web_password}
-{else]
+{else}
 {if $client->password}
    Password: {$client->password}
 {/if}
