@@ -1593,7 +1593,7 @@ class CDRS_opensips extends CDRS {
                 %s
                 order by %s %s
                 limit %d, %d
-                ", addslashes($group_by), addslashes($cdr_table), $where, addslashes($group_by), addslashes($having), addslashes($order_by1), addslashes($order_type), $i, $_max_rows);
+                ", $group_by, addslashes($cdr_table), $where, $group_by, addslashes($having), addslashes($order_by1), addslashes($order_type), $i, $_max_rows);
 
                 dprint($query);
                 $this->CDRdb->query($query);
