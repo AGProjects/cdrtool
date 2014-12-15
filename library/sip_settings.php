@@ -1959,23 +1959,23 @@ class SipSettings {
                 } else {
                     $this->showIdentityProof();
                 }
-    
+
                 if (!in_array("payments",$this->groups)) {
                     return false;
                 }
             }
-    
+
             $payment_processor = new $this->payment_processor_class($this);
-    
+
             if ($payment_processor->fraudDetected()) {
                 $chapter=sprintf(_("Payments"));
                 $this->showChapter($chapter);
-    
+
                 print "
                 <tr>
                 <td colspan=3>
                 ";
-    
+
                 if ($account->login_type!='subscriber') {
                     print "<p>";
                     printf ("<font color=red>%s</font>",$this->fraud_reason);
@@ -1984,14 +1984,14 @@ class SipSettings {
                     $log=sprintf("CC transaction is not allowed from %s for %s (%s)",$_SERVER['REMOTE_ADDR'],$account->account,$this->fraud_reason);
                     syslog(LOG_NOTICE, $log);
                 }
-    
+
                 print "</td>
                 </tr>
                 ";
-    
+
                 return false;
             }
-    
+
             $basket = array('pstn_credit'=>array('price'       => $credit_amount,
                                                  'description' => _('Prepaid Credit'),
                                                  'unit'        => 'credit',
@@ -1999,12 +1999,12 @@ class SipSettings {
                                                  'qty'         => 1
                                                  )
                                    );
-    
+
            // print "<pre>";
            // print_r($payment_processor);
            // print "</pre>";
             $payment_processor->doDirectPayment($basket);
-    
+
            //print "<pre>";
             //
             //print_r($payment_processor);
@@ -2013,11 +2013,11 @@ class SipSettings {
                     // add PSTN credit
                     $this->addBalanceReseller($credit_amount,sprintf("CC transaction %s",$payment_processor->transaction_results['id']));
             }
-    
+
             if ($this->first_transaction && $payment_processor->make_credit_checks) {
                 // block account temporary to check the user
                 // $transaction_data= $payment_processor->['CardProcessor']['transaction_data'];
-                // if ( $this->email != $transaction_data['USER_EMAIL'] || 
+                // if ( $this->email != $transaction_data['USER_EMAIL'] ||
                 //      $this->
                 $this->SipPort->addHeader($this->SoapAuth);
                 $result     = $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain),"free-pstn");
@@ -2640,7 +2640,7 @@ class SipSettings {
                 }
                 print "</button></p>";
             }
-            
+
             print $this->hiddenElements;
 
             print "
@@ -6661,13 +6661,13 @@ class SipSettings {
                 if ($_REQUEST['except_uuid']) {
                     $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
                 }
-    
+
                 if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
                     $limit = intval($limit);
                 } else {
                     $limit = 5000;
                 }
-    
+
                 $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
                 foreach ($cursor as $result) {
                     $entry = array(
@@ -7663,12 +7663,12 @@ class SipSettings {
     }
 
     function sendRemoveAccount() {
-           
+
         $this->ip = $_SERVER['REMOTE_ADDR'];
         $subject=sprintf ("The account %s was removed from IP Address: %s",$this->account, $this->ip);
-        
+
         syslog(LOG_NOTICE, $subject);
-        
+
     }
 
     function sendPasswordReset($skip_html=False) {
