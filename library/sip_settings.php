@@ -11387,7 +11387,6 @@ class Enrollment {
 
         if ($this->create_customer && !$_REQUEST['owner']) {
         	// create owner id
-            $this->log_action("Create owner account");
             $customerEngine           = 'customers@'.$this->customerEngine;
             $this->CustomerSoapEngine = new SoapEngine($customerEngine,$this->soapEngines,$this->customerLoginCredentials);
             $_customer_class          = $this->CustomerSoapEngine->records_class;
@@ -11406,6 +11405,8 @@ class Enrollment {
                 $firstName = $_REQUEST['display_name'];
                 $lastName  = 'Blink';
             }
+
+            $this->log_action("Create owner account ($firstname $lastname) ");
 
             $timezone=$_REQUEST['tzinfo'];
 
@@ -11481,7 +11482,7 @@ class Enrollment {
                 print (json_encode($return));
                 return false;
             } else {
-                $this->log_action("Owner account created");
+                $this->log_action("Owner account created (". $customer['username'].")");
             }
     
             $owner=$result->id;
@@ -11493,6 +11494,8 @@ class Enrollment {
                               );
                 print (json_encode($return));
                 return false;
+            } else {
+                $this->log_action("Owner id is $owner (". $customer['username'].")");
             }
         } else if (is_numeric($_REQUEST['owner']) && $_REQUEST['owner'] != 0 ) {
             $owner=intval($_REQUEST['owner']);
@@ -11546,7 +11549,7 @@ class Enrollment {
                             'properties'=> $sip_properties
                             );
 
-        $this->log_action("Create SIP account");
+        $this->log_action("Create SIP account ($sip_addres)");
 
         if (!$result = $this->sipRecords->addRecord($sipAccount)) {
             if ($this->sipRecords->SoapEngine->exception->errorstring) {
@@ -11584,8 +11587,8 @@ class Enrollment {
             return false;
 
         } else {
-            $this->log_action("SIP account created");
             $sip_address=$result->id->username.'@'.$result->id->domain;
+            $this->log_action("SIP account created ($sip_address)");
 
             if ($this->create_certificate) {
                 if (!$passport = $this->generateCertificate($sip_address,$_REQUEST['email'],$_REQUEST['password'])) {
@@ -11605,7 +11608,7 @@ class Enrollment {
     
                     if ($this->create_voicemail) {
                         // Add voicemail account
-                        $this->log_action("Add voicemail account");
+                        $this->log_action("Add voicemail account ($sip_address)");
                         $SipSettings->addVoicemail();
                         $SipSettings->setVoicemailDiversions();
                     }
@@ -11617,7 +11620,7 @@ class Enrollment {
             }
 
             if ($this->create_email_alias) {
-                $this->log_action("Add email alias");
+                $this->log_action("Add email alias ($sip_address)");
                 $emailEngine           = 'email_aliases@'.$this->emailEngine;
                 $this->EmailSoapEngine = new SoapEngine($emailEngine,$this->soapEngines,$this->sipLoginCredentials);
                 $_email_class          = $this->EmailSoapEngine->records_class;
