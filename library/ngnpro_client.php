@@ -6815,7 +6815,7 @@ class DnsZones extends Records {
             }
 
             if ($valid==0){
-                printf ("<p class='alert alert-danger'><strong>Error</strong>: zone already exists on other server</p>");
+                printf ("<p class='alert alert-danger'><strong>Error</strong>: DNS zone already exists on other server. Please contact our support if you plan to transfer this DNS zone to this system. </p>");
                 return false;
             }
 
