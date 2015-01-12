@@ -834,10 +834,11 @@ class Rate {
 
         // mysql backend
         $query=sprintf("select * from billing_customers
-        where subscriber = '%s'
-        or domain        = '%s'
-        or gateway       = '%s'
-        or (subscriber = '' and domain = '' and gateway = '')
+        where
+            (subscriber  = '%s' and domain       = '' and gateway = '' )
+        or (domain      = '%s' and subscriber   = '' and gateway = '' )
+        or (gateway     = '%s' and subscriber   = '' and domain  = '' )
+        or (subscriber  = ''   and domain       = '' and gateway = '' )
         order by subscriber desc, domain desc, gateway desc limit 1 ",
         addslashes($this->BillingPartyId),
         addslashes($this->domain),
