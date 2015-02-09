@@ -506,8 +506,8 @@ function get_os_data ( $pv_browser_string, $pv_browser_name, $pv_version_number 
 	$a_linux_distros = array( 'ubuntu', 'kubuntu', 'xubuntu', 'mepis', 'xandros', 'linspire', 'winspire', 'sidux', 'kanotix', 'debian', 'opensuse', 'suse', 'fedora', 'redhat', 'slackware', 'slax', 'mandrake', 'mandriva', 'gentoo', 'sabayon', 'linux' );
 	$a_linux_process = array ( 'i386', 'i586', 'i686' );// not use currently
 	// note, order of os very important in os array, you will get failed ids if changed
-	$a_os_types = array( 'android', 'blackberry', 'iphone', 'palmos', 'palmsource', 'symbian', 'beos', 'os2', 'amiga', 'webtv', 'mac', 'nt', 'win', $a_unix_types, $a_linux_distros );
-	
+	$a_os_types = array( 'android', 'blackberry', 'iphone', 'palmos', 'palmsource', 'symbian', 'beos', 'os2', 'amiga', 'webtv', 'mac', 'nt', 'darwin', 'win', $a_unix_types, $a_linux_distros );
+
 	//os tester
 	$i_count = count( $a_os_types );
 	for ( $i = 0; $i < $i_count; $i++ )
@@ -612,6 +612,12 @@ function get_os_data ( $pv_browser_string, $pv_browser_name, $pv_version_number 
 						( ( $pv_browser_name == 'ie' ) && ( $pv_version_number >= 5.2 ) ) )
 					{
 						$os_working_number = 10;
+					}
+					break;
+				case 'darwin':
+					if ( strstr( $pv_browser_string, 'blink' ) ) {
+						$os_working_number = 10;
+						$os_working_type = 'mac';
 					}
 					break;
 				case 'iphone':
