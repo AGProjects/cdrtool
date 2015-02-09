@@ -31,9 +31,9 @@ this is currently set to accept these parameters, although you can add as many a
 3. moz_version - returns array of moz version, version number (includes full version, + etc), rv number (for math
 	comparison), rv number (for full rv, including alpha and beta versions), and release date
 4. dom - returns true/false if it is a basic dom browser, ie >= 5, opera >= 5, all new mozillas, safaris, konquerors
-5. os - returns which os is being used - win, nt, mac, OR iphone, blackberry, palmos, palmsource, 
-   symbian, beos, os2, amiga, webtv, linux, unix. 
-6. os_number - returns windows versions, 95, 98, ce, me, nt: 4; 5 [windows 2000]; 
+5. os - returns which os is being used - win, nt, mac, OR iphone, blackberry, palmos, palmsource,
+   symbian, beos, os2, amiga, webtv, linux, unix.
+6. os_number - returns windows versions, 95, 98, ce, me, nt: 4; 5 [windows 2000];
    5.1 [windows xp]; 5.2 [Server 2003]; 6.0 [Windows Vista], 6.1 [Windows 7].
    Only win, nt, mac, iphone return os numbers (mac/iphone return 10 if OS X.)
 	OR returns linux distro/unix release name, otherwise returns null
@@ -48,9 +48,9 @@ this is currently set to accept these parameters, although you can add as many a
 10. type - returns: bot (web bot); bro (normal browser); bbro (simple browser); mobile (handheld)
     dow (downloading agent); lib (http library)
 11. math_number - returns basic version number, for math comparison, ie. 1.2rel2a becomes 1.2
-12. webkit_version - returns array of webkit version name (Eg. Chrome), webkit version number 
+12. webkit_version - returns array of webkit version name (Eg. Chrome), webkit version number
 	(Eg. Chrome's: 1.2), and the actual webkit version number (Eg. Webkit's: 436)
-13. mobile_test - returns a string of various mobile id methods, from device to os to browser. 
+13. mobile_test - returns a string of various mobile id methods, from device to os to browser.
     If string is not null, should be a mobile. Also see 10, 'type', which will be 'mobile' if handheld.
 14. mobile_data - returns an array of data about mobiles. Note the browser/os number data is very
     unreliable so don't count on that. No blackberry version handling done explicitly.
@@ -156,7 +156,7 @@ function browser_detection( $which_test ) {
 			array( 'ibrowse', false, 'ibrowse', 'bbro' ),// amiga browser
 			array( 'icab', false, 'icab', 'bro' ),// mac browser
 			array( 'crazy browser', true, 'ie', 'bro' ),// uses ie rendering engine
-	
+
 			// search engine spider bots:
 			array( 'googlebot', false, 'google', 'bot' ),// google
 			array( 'mediapartners-google', false, 'adsense', 'bot' ),// google adsense
@@ -184,24 +184,24 @@ function browser_detection( $which_test ) {
 			array( 'answerbus', false, 'answerbus', 'bot' ),// http://www.answerbus.com/, web questions
 			array( 'sohu-search', false, 'sohu', 'bot' ),// chinese media company, search component
 			array( 'iltrovatore-setaccio', false, 'il-set', 'bot' ),
-	
+
 			// various http utility libaries
 			array( 'w3c_validator', false, 'w3c', 'lib' ), // uses libperl, make first
 			array( 'wdg_validator', false, 'wdg', 'lib' ), //
 			array( 'libwww-perl', false, 'libwww-perl', 'lib' ),
 			array( 'jakarta commons-httpclient', false, 'jakarta', 'lib' ),
 			array( 'python-urllib', false, 'python-urllib', 'lib' ),
-	
+
 			// download apps
 			array( 'getright', false, 'getright', 'dow' ),
 			array( 'wget', false, 'wget', 'dow' ),// open source downloader, obeys robots.txt
-	
+
 			// netscape 4 and earlier tests, put last so spiders don't get caught
 			array( 'mozilla/4.', false, 'ns', 'bbro' ),
 			array( 'mozilla/3.', false, 'ns', 'bbro' ),
 			array( 'mozilla/2.', false, 'ns', 'bbro' )
 		);
-	
+
 		//array( '', false ); // browser array template
 
 		/*
@@ -739,15 +739,15 @@ function check_is_mobile( $pv_browser_user_agent )
 	// these will search for basic mobile hints, this should catch most of them, first check
 	// known hand held device os, then check device names, then mobile browser names
 	// This list is almost the same but not exactly as the 4 arrays in function below
-	$a_mobile_search = array( 
+	$a_mobile_search = array(
 	# os
-	'android', 'epoc', 'linux armv', 'palmos', 'palmsource', 'windows ce', 'symbianos', 'symbian os', 'symbian', 
+	'android', 'epoc', 'linux armv', 'palmos', 'palmsource', 'windows ce', 'symbianos', 'symbian os', 'symbian',
 	# devices
-	'benq', 'blackberry', 'ddipocket', 'iphone', 'kindle', 'lge-cx', 'lge-lx', 'lge-mx', 'lge vx', 'lge ', 'lge-', 'nintendo wii', 'nokia', 'palm', 'pdxgw', 'playstation', 'sagem', 'samsung', 'SEC-SGH', 'sharp', 'sonyericsson', 'sprint', 'vodaphone', 'j-phone', 'N410', 'mot 24', 'mot-', 'htc-', 'htc_', 'sec-', 'sie-m', 'sie-s', 'spv ', 'smartphone', 'armv', 
+	'benq', 'blackberry', 'ddipocket', 'iphone', 'kindle', 'lge-cx', 'lge-lx', 'lge-mx', 'lge vx', 'lge ', 'lge-', 'nintendo wii', 'nokia', 'palm', 'pdxgw', 'playstation', 'sagem', 'samsung', 'SEC-SGH', 'sharp', 'sonyericsson', 'sprint', 'vodaphone', 'j-phone', 'N410', 'mot 24', 'mot-', 'htc-', 'htc_', 'sec-', 'sie-m', 'sie-s', 'spv ', 'smartphone', 'armv',
 	# browsers
-	'blazer', 'elaine', 'eudoraweb', 'iemobile',  'minimo', 'opera mobi', 'opera mini', 'netfront', 'opwv', 'semc-browser', 'up.browser', 'webpro', 'wms pie', 'xiino', 
+	'blazer', 'elaine', 'eudoraweb', 'iemobile',  'minimo', 'opera mobi', 'opera mini', 'netfront', 'opwv', 'semc-browser', 'up.browser', 'webpro', 'wms pie', 'xiino',
 	# services
-	'astel', 'avantgo',  'DoCoMo',  'novarra-vision', 'portalmmm', 'ReqwirelessWeb' 
+	'astel', 'avantgo',  'DoCoMo',  'novarra-vision', 'portalmmm', 'ReqwirelessWeb'
 	);
 
 	// then do basic mobile type search, this uses data from: get_mobile_data()
@@ -760,7 +760,7 @@ function check_is_mobile( $pv_browser_user_agent )
 			break;
 		}
 	}
-	
+
 	return $mobile_working_test;
 }
 
@@ -775,7 +775,7 @@ function get_mobile_data( $pv_browser_user_agent )
 	$mobile_os_number = '';
 	$mobile_server = '';
 	$mobile_server_number = '';
-	
+
 	// browsers, show it as a handheld, but is not the os
 	$a_mobile_browser = array( 'blazer', 'elaine', 'eudoraweb', 'iemobile',  'minimo', 'MobileExplorer', 'opera mobi', 'opera mini', 'netfront', 'opwv', 'semc-browser', 'up.browser', 'webpro', 'wms pie', 'xiino' );
 	// This goes from easiest to detect to hardest, so don't use this for output unless you
@@ -783,7 +783,7 @@ function get_mobile_data( $pv_browser_user_agent )
 	$a_mobile_device = array( 'benq', 'blackberry', 'ddipocket', 'iphone', 'kindle', 'lge-cx', 'lge-lx', 'lge-mx', 'lge vx', 'nintendo wii', 'nokia', 'palm', 'pdxgw', 'playstation', 'sagem', 'samsung', 'SEC-SGH', 'sharp', 'sonyericsson', 'sprint', 'vodaphone', 'j-phone', 'N410', 'mot 24', 'mot-', 'htc-', 'htc_',  'lge ', 'lge-', 'sec-', 'sie-m', 'sie-s', 'spv ', 'smartphone', 'armv' );
 	// note: linux alone can't be searched for, and almost all linux devices are armv types
 	$a_mobile_os = array( 'android', 'epoc', 'palmos', 'palmsource', 'windows ce', 'symbianos', 'symbian os', 'symbian', 'linux armv'  );
-	
+
 	// sometimes there is just no other id for the unit that the CTS type service/server
 	$a_mobile_server = array( 'astel', 'avantgo', 'DoCoMo', 'novarra-vision', 'portalmmm', 'ReqwirelessWeb' );
 
