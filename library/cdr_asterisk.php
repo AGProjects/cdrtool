@@ -59,8 +59,8 @@ class CDRS_asterisk extends CDRS {
         );
 
     var $FormElements=array(
-        "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime",
-        "end_hour","end_min","end_month","end_day","end_year","end_datetime",
+        "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime","end_date","begin_date",
+        "end_hour","end_min","end_month","end_day","end_year","end_datetime","end_date","begin_date",
         "call_id","a_number","a_number_comp","c_number","c_number_comp","DestinationId","ExcludeDestinations",
         "unnormalize",
         "UserName","UserName_comp","BillingId",
@@ -148,7 +148,24 @@ class CDRS_asterisk extends CDRS {
             ${$_el} = $_REQUEST[$_el];
         }
 
+        if ($begin_time) {
+            list($begin_hour,$begin_min)=explode(":",$begin_time);
+        }
+
+        if ($end_time) {
+            list($end_hour,$end_min)=explode(":",$end_time);
+        }
+
+        if ($begin_date) {
+            list($begin_year,$begin_month,$begin_day)=explode("-",$begin_date);
+        }
+
+        if ($end_date) {
+            list($end_year,$end_month,$end_day)=explode("-",$end_date);
+        }
+        
         if (!$this->export) {
+
             if (!$begin_datetime) {
                 $begin_datetime="$begin_year-$begin_month-$begin_day $begin_hour:$begin_min";
                 $begin_datetime_timestamp=mktime($begin_hour, $begin_min, 0, $begin_month,$begin_day,$begin_year);
@@ -751,100 +768,34 @@ class CDRS_asterisk extends CDRS {
         if (!$end_month) $end_month = $default_month;
         if (!$end_year)  $end_year  = $default_year;
 
-        $m=0;
-        while ($m<24) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $hours_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
         $this->f->add_element(array(
-                    "name"=>"begin_hour",
-                    "type"=>"select",
-                    "options"=>$hours_els,
-                    "size"=>"1"
-                    ));
-        $this->f->add_element(array(	"name"=>"end_hour",
-                    "type"=>"select",
-                    "options"=>$hours_els,
+                    "name"=>"begin_time",
                     "size"=>"1",
-                    "value"=>"23"
-                    ));
-        $m=0;
-        while ($m<60) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $min_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
-        $this->f->add_element(array(	"name"=>"begin_min",
-                    "type"=>"select",
-                    "options"=>$min_els,
-                    "size"=>"1"
+		            "type"=>"text",
+                    "extrahtml"=>"id='timepicker1' class=\"input-small\" data-show-meridian='false' data-minute-step='1' data-default-time='$begin_hour:$begin_min'"
                     ));
         $this->f->add_element(array(
-                    "name"=>"end_min",
-                    "type"=>"select",
-                    "options"=>$min_els,
-                    "size"=>"1"
+                    "name"=>"end_time",
+                    "size"=>"1",
+		            "type"=>"text",
+                    "extrahtml"=>"id='timepicker2' class=\"input-small\" data-show-meridian='false' data-minute-step='1' data-default-time='$end_hour:$end_min'"
                     ));
 
-        $m=1;
-        while ($m<32) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $days_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-
-        $this->f->add_element(array(	"name"=>"begin_day",
-                                "type"=>"select",
-                                "options"=>$days_els,
-                                "size"=>"1"
-        
-                    ));
-        $this->f->add_element(array(	"name"=>"end_day",
-                                "type"=>"select",
-                                "options"=>$days_els,
-                                "size"=>"1"
-        
+        $this->f->add_element(array(
+                    "name"=>"begin_date",
+                    "size"=>"10",
+                    "maxlength"=>"10",
+                    "type"=>"text",
+                    "value"=>"$begin_year-$begin_month-$begin_day",
+                    "extrahtml"=>"id='begin_date' data-date-format=\"yyyy-mm-dd\" class=\"span2\""
                     ));
 
-        $m=1;
-        while ($m<13) {
-            if ($m<10) { $v="0".$m; } else { $v=$m; }
-            $month_els[]=array("label"=>$v,"value"=>$v);
-            $m++;
-        }
-        
-        
-        $this->f->add_element(array(	"name"=>"begin_month",
-                                "type"=>"select",
-                                "options"=>$month_els,
-                                "size"=>"1"
-                    ));
-        
-        $this->f->add_element(array(	"name"=>"end_month",
-                                "type"=>"select",
-                                "options"=>$month_els,
-                                "size"=>"1"
-                    ));
-        
-        $thisYear=date("Y",time());
-        $y=$thisYear;
-        while ($y>$thisYear-6) {
-            $year_els[]=array("label"=>$y,"value"=>$y);
-            $y--;
-        }
-        $this->f->add_element(array(	"name"=>"begin_year",
-                                "type"=>"select",
-                                "options"=>$year_els,
-                                "size"=>"1"
-        
-                    ));
-        $this->f->add_element(array(	"name"=>"end_year",
-                                "type"=>"select",
-                                "options"=>$year_els,
-                                "size"=>"1"
+        $this->f->add_element(array(
+                    "name"=>"end_date",
+                    "size"=>"1",
+                    "type"=>"text",
+                    "value"=>"$end_year-$end_month-$end_day",
+                    "extrahtml"=>"id='end_date' data-date-format=\"yyyy-mm-dd\" class=\"span2\""
                     ));
 
         $this->f->add_element(array(	"name"=>"call_id",
