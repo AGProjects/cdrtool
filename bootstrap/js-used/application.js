@@ -8,7 +8,7 @@ function bytes(bytes, label) {
     var value = ((bytes/Math.pow(1000, Math.floor(e))).toFixed(1));
     e = (e<0) ? (-e) : e;
     if (label) value += ' ' + s[e];
-    console.log(value);
+    //console.log(value);
     return value;
 }
 
@@ -363,10 +363,10 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
                 // .cx(610-(40*dns_nodes)+(index*45));
 
             draw.circle()
-              .radius(4)
-              .fill('green')
-              .cx(490)
-              .cy(21+(index*12));
+                .radius(4)
+                .fill('green')
+                .cx(490)
+                .cy(21+(index*12));
 
             var hostname = key;
 
