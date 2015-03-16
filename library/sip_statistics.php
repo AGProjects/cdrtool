@@ -681,4 +681,224 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
     }
 }
 
+/**
+ * MRTGGraphs class sets up the dashboard and creates Entity objects.
+ */
+class MRTGGraphs {
+
+    /**
+    * MRTG entities
+    *
+    * @var array
+    */
+    public $entities = array();
+
+    /**
+    * Server hostname;
+    *
+    * @var type
+    */
+    public $hostname;
+
+    /**
+    * Domains;
+    *
+    * @var type
+    */
+    public $domains = array();
+
+    /**
+    * Graphs types;
+    *
+    * @var type
+    */
+    public $graph_types = array('users','sessions','traffic');
+
+    /**
+    * Construct.
+    */
+    public function __construct() {
+        //require("sip_statistics.php");
+
+        $title='Platform usage';
+
+        if (is_readable("/etc/cdrtool/local/header.phtml")) {
+            include("/etc/cdrtool/local/header.phtml");
+        } else {
+            include("header.phtml");
+        }
+
+        $layout = new pageLayoutLocal();
+        $layout->showTopMenu($title);
+
+        global $CDRTool;
+
+        $SIPstatistics = new SIPstatistics ();
+
+        if (strlen($CDRTool['filter']['domain'])) {
+            $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+        }
+
+        if (is_array($allowedDomains))  {
+            $domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
+        } else {
+            $domains=array_keys($SIPstatistics->domains);
+        }
+        $this->domains[]= $domains;
+
+        // read entities in directory for domain list
+
+        foreach ($domains as $entity){
+            $entity =  sprintf("status/usage/%s",$entity);
+            foreach ($this->graph_types as $type) {
+                $final_entity =  sprintf("%s_%s.log", $entity, $type);
+                $this->entities[] = new MRTGEntity(preg_replace("/.log$/", "", $final_entity));
+            }
+        }
+
+        // determine hostname
+        exec("hostname -f", $hostname);
+        $this->hostname = $hostname[0];
+
+    }
+}
+
+
+/**
+ * Entity class represents each MRTG entity found in the directory.
+ */
+class MRTGEntity {
+
+    /**
+    * Entity name.
+    *
+    * @var string
+    */
+    public $name;
+
+    /**
+    * Entity title.
+    *
+    * @var string
+    */
+    public $title;
+
+    /**
+    * Entity page link.
+    *
+    * @var string
+    */
+    public $link;
+
+    /**
+    * Entity log file.
+    *
+    * @var string
+    */
+    public $log;
+
+    /**
+    * Construct.
+    *
+    * @throws Exception
+    */
+    public function __construct($name) {
+
+        // check entity exists
+        if (!is_file("{$name}.html")) throw new Exception("Could not find MRTG files for entity {$name}");
+
+        // add name
+        $this->name = $name;
+
+        // create nicer-looking title
+        $np = explode('_', $name);
+        $this->title = preg_replace("/status\/usage\//","",$np[0]);
+        array_shift($np);
+
+        if (in_array('users',$np) && strstr($this->title,'total')){
+            $this->title = ucfirst($this->title)." SIP Accounts online";
+        } else if (in_array('users',$np)) {
+            $this->title = "Online SIP accounts on $this->title";
+        } else if (in_array('traffic',$np) && strstr($this->title,'total')){
+            $this->title = ucfirst($this->title)." relayed RTP traffic";
+        } else if (in_array('traffic',$np)) {
+            $this->title = "Relayed RTP traffic for $this->title";
+        } else if (in_array('sessions',$np) && strstr($this->title,'total')){
+            $this->title = ucfirst($this->title)." active RTP media sessions";
+        } else if (in_array('sessions',$np)) {
+            $this->title = "Active RTP media sessions for $this->title";
+        } else {
+            $this->title .= " (".implode(" ",$np).")";
+        }
+
+        // add HTML and log files
+        $this->link = $name.'.html';
+        $this->log = $name.'.log';
+
+    }
+
+    /**
+    * Retrieve and process the entity's log file.
+    *
+    * @param boolean $max Set to true to retrieve maximum in/out rather than average.
+    *
+    * @return string JSON encoded data
+    */
+    public function retrieveLog($max=false) {
+        // arrays for parsed data
+        $in = $out = $stamps = array();
+        global $start_date,$stop_date;
+
+        foreach (file("{$this->name}.log") as $line) {
+
+            // ignore the summary line
+            if (!isset($header)) {
+                    $header = $line;
+                    continue;
+            }
+
+            $parts = explode(' ', rtrim($line));
+            //if ($parts[1] == 0 && $parts[2] == 0 && $parts[3] == 0 && $parts[4] == 0) continue;
+            if ($parts[0] < $start_date->getTimestamp()) continue;
+            if ($parts[0] > $stop_date->getTimestamp()) continue;
+
+            array_push($stamps, $parts[0]);
+            if (strstr($this->name,'traffic')){
+                if ($max) {
+                    $in[] = array($parts[0],round(($parts[3]*8)/1000));
+                    $out[] = array($parts[0]*1000,round(($parts[4]*8)/1000));
+                } else {
+                    $in[] = array(date('Y-m-d H:i:s',$parts[0]), round(($parts[1]*8)));
+                    $out[] = array(date('Y-m-d H:i:s',$parts[0]), round(($parts[2]*8)));
+                }
+            } else {
+                if ($max) {
+                    $in[] = array(date('Y-m-d H:i:s',$parts[0]),round($parts[3]));
+                    $out[] = array(date('Y-m-d H:i:s',$parts[0]),round($parts[4]));
+                } else {
+                    $in[] = array(date('Y-m-d H:i:s',$parts[0]),round($parts[1]));
+                    $out[] = array(date('Y-m-d H:i:s',$parts[0]),round($parts[2]));
+                }
+            }
+        }
+
+        // determine earliest and latest timestamps
+        $latest = array_shift($stamps);
+        $earliest = array_pop($stamps);
+
+        $interval = 300;
+
+        // encode and return response
+        return json_encode(array(
+            'earliest'      => $earliest,
+            'latest'        => $latest,
+            'start'         => $start_date,
+            'stop'          => $stop_date,
+            'interval'      => $interval,
+            'intervalMin'   => round($interval/60, 0),
+            'inData'        => array_reverse($in),
+            'outData'       => array_reverse($out)
+        ));
+    }
+}
 ?>

@@ -1,6 +1,263 @@
-// NOTICE!! DO NOT USE ANY OF THIS JAVASCRIPT
-// IT'S ALL JUST JUNK FOR OUR DOCS!
-// ++++++++++++++++++++++++++++++++++++++++++
+
+// GRAPHS
+
+function bytes(bytes, label) {
+    if (bytes == 0) return '';
+    var s = ['', 'K', 'M', 'G', 'T', 'P'];
+    var e = Math.floor(Math.log(bytes)/Math.log(1000));
+    var value = ((bytes/Math.pow(1000, Math.floor(e))).toFixed(1));
+    e = (e<0) ? (-e) : e;
+    if (label) value += ' ' + s[e];
+    console.log(value);
+    return value;
+}
+
+function formatDate(myDate){
+    var day = [];
+    var month = [];
+
+    day[0]="Sunday";
+    day[1]="Monday";
+    day[2]="Tuesday";
+    day[3]="Wednesday";
+    day[4]="Thursday";
+    day[5]="Friday";
+    day[6]="Saturday";
+    month[0]="Jan";
+    month[1]="Feb";
+    month[2]="Mar";
+    month[3]="Apr";
+    month[4]="May";
+    month[5]="Jun";
+    month[6]="Jul";
+    month[7]="Aug";
+    month[8]="Sep";
+    month[9]="Oct";
+    month[10]="Nov";
+    month[11]="Dec";
+
+    var hours = myDate.getUTCHours();
+    var minutes = myDate.getMinutes();
+    minutes = minutes < 10 ? '0'+minutes : minutes;
+    var strTime = hours + ':' + minutes;
+
+    return(day[myDate.getDay()]+", "+month[myDate.getMonth()]+ ' '+ myDate.getDate()+", "+strTime);
+}
+
+
+function isBigEnough(value) {
+    return function(element, index, array) {
+        return (element[0] >= value);
+    };
+}
+function isSmallEnough(value) {
+    return function(element, index, array) {
+        return (element[0] <= value);
+    };
+}
+
+function basicTimeGraph(container,legend, flotr_data, extra_options) {
+    var default_options = {
+        title: '',
+        ytitle: '',
+        suffix: '',
+        ticks1:
+            function(y) {
+                return Math.round(y);
+        },
+        scaling: 'linear',
+        trackY: false,
+        minY: 0,
+        maxY: ''
+    };
+
+    if (typeof extra_options != "undefined") {
+        $.extend(default_options, extra_options);
+    }
+
+    var
+        data, graph, offset, i,
+        options = {
+            shadowSize: 0,
+            xaxis : {
+                mode : 'time',
+            },
+            selection : {
+                mode : 'x',
+            },
+            title: default_options.title,
+            yaxis: {
+                min: default_options.minY,
+                title : default_options.ytitle,
+                tickFormatter: default_options.ticks1,
+                autoscale: true,
+                autoscaleMargin: 2,
+                noTicks: 4,
+                scaling: default_options.scaling
+            },
+            y2axis: {
+                min: 0,
+                autoscale: true,
+                autoscaleMargin: 2,
+                noTicks: 3,
+            },
+            HtmlText : false,
+            grid: {
+                outline: 'ws',
+                minorHorizontalLines: true,
+            },
+            legend: {
+                noColumns: 2,
+                container: legend,
+                labelBoxBorderColor: '#FFFFFF',
+            },
+            mouse : {
+                track : true,
+                trackAll: true,
+                relative: true,
+                trackY: default_options.trackY,
+                trackFormatter: function(obj){
+                    if (typeof obj.series !== undefined) {
+                        return formatDate(new Date(Math.round(obj.x))) +
+                            '<br>' +
+                            obj.series.label +
+                            ': '+
+                            default_options.ticks1(obj.y) +
+                            default_options.suffix;
+                    }
+                }
+            },
+            lines: {
+                lineWidth: 1,
+            }
+         };
+
+    if ( default_options.scaling !== 'linear') {
+        options.yaxis.ticks=  [10e-5, 10e-4, 10e-3, 10e-2, 10e-1, 10e0, 10e1, 10e2, 10e3, 10e4, 10e5];
+        options.yaxis.min = 10e-2;
+    }
+    var g ='';
+
+    // Draw graph with default options, overwriting with passed options
+    function drawGraph (opts) {
+
+        // Clone the options, so the 'options' variable always keeps intact.
+        o = Flotr._.extend(Flotr._.clone(options), opts || {});
+
+        // Return a new graph.
+        g = Flotr.draw(
+            container,
+            flotr_data,
+            o
+        );
+
+        return g;
+    }
+
+    graph = drawGraph();
+
+    // Selection of an interval
+    Flotr.EventAdapter.observe(container, 'flotr:select', function(area){
+
+        // Prevent too small selection interval (20 mins)
+        if (area.x2-area.x1< 1200000) {
+            area.x1 = area.x2 - 1200000;
+        }
+
+        // Get maximum of max two series, only process selected interval
+        function result_max() {
+            result_a = flotr_data[0].data.filter(isBigEnough(area.x1)).filter(isSmallEnough(area.x2)).reduce(
+                function(max, arr) {
+                    return max >= arr[1] ? max : arr[1];
+            }, -Infinity);
+
+            if (typeof flotr_data[1] !== "undefined") {
+                if ( typeof flotr_data[1].yaxis === "undefined") {
+                    result_b = flotr_data[1].data.filter(isBigEnough(area.x1)).filter(isSmallEnough(area.x2)).reduce(function(max, arr) {
+                    return max >= arr[1] ? max : arr[1];
+                    }, -Infinity);
+                    if (result_b > result_a ){
+                        return result_b;
+                    }
+                }
+            }
+            return result_a;
+        }
+
+        op = {
+            xaxis : {
+                min : area.x1,
+                max : area.x2,
+                mode : 'time'
+            },
+            yaxis : {
+                title : default_options.ytitle,
+                min   : 0,
+                max   : result_max()*1.2,
+                tickFormatter: default_options.ticks1,
+                scaling: default_options.scaling
+            },
+        };
+
+        if ( default_options.scaling !== 'linear') {
+            op.yaxis.min = 10e-2;
+            //op.yaxis.max = op.yaxis.max*10;
+            //op.yaxis.ticks = [10e-5, 10e-4, 10e-3, 10e-2, 10e-1, 10e0, 10e1, 10e2, 10e3, 10e4, 10e5];
+        }
+        if (typeof flotr_data[1] !== "undefined") {
+            if ( typeof flotr_data[1].yaxis !== "undefined") {
+                result_b = flotr_data[1]['data'].filter(isBigEnough(area.x1)).filter(isSmallEnough(area.x2)).reduce(function(max, arr) {
+                return max >= arr[1] ? max : arr[1];
+                }, -Infinity);
+                op.y2axis = {min :0, max: result_b*1.2};
+            }
+        }
+        graph = drawGraph(op);
+    });
+
+    // Reset graph
+    Flotr.EventAdapter.observe(container, 'flotr:click', function () {
+
+        new_opts ={
+            yaxis : {
+                min: 0,
+                title:extra_options.ytitle,
+                tickFormatter: default_options.ticks1,
+                autoscaleMargin: 2,
+                autoscale: true,
+                noTicks: 3,
+                scaling: default_options.scaling
+
+            },
+        };
+        if ( default_options.scaling !== 'linear') {
+            new_opts.yaxis.min = 10e-2;
+            new_opts.yaxis.ticks = [10e-5, 10e-4, 10e-3, 10e-2, 10e-1, 10e0, 10e1, 10e2, 10e3, 10e4, 10e5];
+        }
+        graph = drawGraph(new_opts);
+    });
+
+    $(window).resize(function() {
+        new_opts ={
+            yaxis : {
+                min: 0,
+                title:extra_options.ytitle,
+                tickFormatter: default_options.ticks1,
+                autoscaleMargin: 2,
+                autoscale: true,
+                noTicks: 3,
+                scaling: default_options.scaling
+
+            },
+        };
+        if ( default_options.scaling !== 'linear') {
+            new_opts.yaxis.min = 10e-2;
+            new_opts.yaxis.ticks = [10e-5, 10e-4, 10e-3, 10e-2, 10e-1, 10e0, 10e1, 10e2, 10e3, 10e4, 10e5];
+        }
+        graph = drawGraph(new_opts);
+
+    });
+}
 
 !function ($) {
 
@@ -18,6 +275,36 @@
       $('#timepicker2').timepicker();
     }
 
+    if ( $('#reportrange').exists()) {
+        picker = $('#reportrange').daterangepicker({
+            ranges: {
+                 'Today': [moment(), moment()],
+                 'Yesterday': [moment().subtract('days', 1), moment().subtract('days', 1)],
+                 'Last 7 Days': [moment().subtract('days', 6), moment().endOf('day')],
+                 'Last 30 Days': [moment().subtract('days', 29), moment().endOf('day')],
+                 'This Month': [moment().startOf('month'), moment().endOf('month')],
+                 'Last Month': [moment().subtract('month', 1).startOf('month'), moment().subtract('month', 1).endOf('month')]
+            },
+            startDate: moment().subtract('days', 29),
+            endDate: moment(),
+            timePicker: true, timePickerIncrement: 30,
+            format: 'YYYY-MM-DD HH:mm '
+        },
+        function(start,end) {
+            var url = window.location.href;
+            if (url.indexOf('?') > -1){
+                url = url.substring(0,url.indexOf('?'));
+            }
+            url += '?start_date='+ encodeURIComponent(start.format('YYYY-MM-DD HH:mm'))+"&stop_date="+ encodeURIComponent(end.format('YYYY-MM-DD HH:mm'));
+            window.location.href = url;
+        });
+        if ( typeof stop_date_set !== "undefined") {
+            picker.data('daterangepicker').setEndDate(stop_date_set);
+        }
+        if ( typeof start_date_set !== "undefined") {
+            picker.data('daterangepicker').setStartDate(start_date_set);
+        }
+    }
     if ( $('#begin_date').exists()) {
       $('#begin_date').datepicker();
     }
@@ -573,7 +860,6 @@ Highcharts.theme = {
 
 // Apply the theme
 var highchartsOptions = Highcharts.setOptions(Highcharts.theme);
-
 
 
 }(window.jQuery)

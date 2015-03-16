@@ -1,111 +1,271 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
 page_open(
-    array("sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm"));
+     array("sess" => "CDRTool_Session",
+           "auth" => "CDRTool_Auth",
+           "perm" => "CDRTool_Perm"
+           ));
 
 $loginname=$auth->auth["uname"];
 
 $perm->check("statistics");
 
+$start_date = isset($_REQUEST['start_date']) ? new DateTime($_REQUEST['start_date']) : new DateTime('-1 days');
+$stop_date = isset($_REQUEST['stop_date']) ? new DateTime($_REQUEST['stop_date']) : new DateTime('now');
+
+if ($start_date == $stop_date){
+    $start_date = $start_date->setTime(00, 00, 00);
+    $stop_date = $stop_date->setTime(00, 00, 00);
+    $stop_date->add(new DateInterval('P1D'));
+}
+
+global $CDRTool;
 require("sip_statistics.php");
-$title           = "Platform status/Usage";
 
-if (is_readable("/etc/cdrtool/local/header.phtml")) {
-	include("/etc/cdrtool/local/header.phtml");
-} else {
-	include("header.phtml");
+// trap AJAX requests
+if (isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'log':
+            $layout = new pageLayoutLocal();
+            try {
+                $entity = new MRTGEntity($_POST['entity']);
+                $json = $entity->retrieveLog();
+            } catch (Exception $e) {
+                $json = json_encode(array('error' => "entity not found"));
+            }
+        break;
+    }
+
+    // return data and terminate
+    print $json;
+    exit;
 }
 
 
-$layout = new pageLayoutLocal();
-$layout->showTopMenu($title);
-
-
-$SIPstatistics=new SIPstatistics();
-
-//global $CDRTool;
-
-if (strlen($CDRTool['filter']['domain'])) {
-    $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
-}
-
-    //$layout= $this->newPageLayout();
-    //showTopMenu($title);
-?>
-
-<h2>Platform usage</h2>
-
-<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
-
-<? if ($perm->have_perm('admin')) { ?>
-
-<TR>
-<TD><DIV align='center'><B> Total SIP accounts</B></DIV>
-<DIV><A HREF='status/usage/total_users.html' target='Usage'><IMG BORDER=0 ALT='total_users Traffic Graph' SRC='status/usage/total_users-day.png'></A>
-<SMALL><!--#flastmod file='total_users.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Total RTP media sessions</B></DIV>
-<DIV><A HREF='status/usage/total_sessions.html' target='Usage'><IMG><IMG BORDER=0 ALT='total_sessions Traffic Graph' SRC='status/usage/total_sessions-day.png'></A>
-<SMALL><!--#flastmod file='total_sessions.html' --></SMALL></DIV>
-</TD><TD><DIV align='center'><B> Total relayed RTP traffic </B></DIV>
-<DIV><A HREF='status/usage/total_traffic.html' target='Usage'><IMG><IMG BORDER=0 ALT='total_traffic Traffic Graph' SRC='status/usage/total_traffic-day.png'></A>
-<SMALL><!--#flastmod file='total_traffic.html' --></SMALL></DIV>
-</TD></TR>
-<TR>
-
-<?
-}
-
-if (is_array($allowedDomains))  {
-	$domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
-} else {
-    $domains=array_keys($SIPstatistics->domains);
-}
-
-foreach ($domains as $key) {
-    if ($key == 'total') continue;
-    printf ("
-    <TR>
-    <TD><DIV align='center'><B> SIP accounts on %s </B></DIV>
-    <DIV><A HREF='status/usage/%s_users.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_users Traffic Graph' SRC='status/usage/%s_users-day.png'></A>
-    <SMALL><!--#flastmod file='%s_users.html' --></SMALL></DIV>
-    </TD><TD><DIV align='center'><B> RTP media sessions for %s </B></DIV>
-    <DIV><A HREF='status/usage/%s_sessions.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_sessions Traffic Graph' SRC='status/usage/%s_sessions-day.png'></A>
-    <SMALL><!--#flastmod file='%s_sessions.html' --></SMALL></DIV>
-    </TD><TD><DIV align='center'><B> Relayed RTP traffic for %s </B></DIV>
-    <DIV><A HREF='status/usage/%s_traffic.html' target='Usage'><IMG><IMG BORDER=0 ALT='%s_traffic Traffic Graph' SRC='status/usage/%s_traffic-day.png'></A>
-    <SMALL><!--#flastmod file='%s_traffic.html' --></SMALL></DIV>
-    </TD></TR>
-    <TR>
-    ",
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key,
-    $key
-    );
-}
+// setup
+$mrtggraphs = new MRTGGraphs();
 
 ?>
 
-</TABLE>
-</BODY>
-</HTML>
-<?
 
-page_close();
-?>
+<style type="text/css">
+
+    DIV.entity H4 {
+        font-weight: bolder;
+        margin-left: 10px;
+        font-size: 12px;
+    }
+
+    .graph {
+        height: 125px;
+        margin: 8px auto;
+    }
+
+    .graphs {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .flotr-mouse-value {
+        background-color:rgb(249, 249, 249) !important;
+        color: #333333 !important;
+        opacity: 0.9 !important;
+        border: solid 1px #000000 !important;
+        z-index: 200;
+    }
+
+    .grid {
+        padding: 10px 0;
+    }
+
+    hr + .grid {
+        padding:0;
+        padding-bottom: 10px;
+    }
+    .grid:nth-child(even) {
+        background-color:#f9f9f9;
+    }
+    .flotr-axis-title-y1 {
+        -ms-transform: rotate(-90deg); /* IE 9 */
+        -webkit-transform: rotate(-90deg); /* Chrome, Safari, Opera */
+        transform: rotate(-90deg);
+    }
+  .graphs table {
+    margin: 0 auto; /* or margin: 0 auto 0 auto */
+  }
+</style>
+
+<?php print "<script type=\"text/javascript\">var start_date_set=\"".$start_date->format('Y-m-d H:i:s')."\";var stop_date_set=\"".$stop_date->format('Y-m-d H:i:s')."\";</script>";?>
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        $('#reportrange').detach().appendTo('.page-header h1');
+        // initial update
+        updateGraphs();
+    });
+
+    function addGraph(entity, obj) {
+        $.ajax({
+
+            dataType: 'json',
+            type: 'POST',
+            data: { action: 'log', entity: entity },
+
+            success: function(log) {
+
+                better_data = [];
+                better_data1 = [];
+
+                var suffix = '';
+                var extra_options = {};
+                for (var j = 0; j < log.inData.length; j++) {
+                    var t = log.inData[j][0].split(/[- :]/);
+                    log.inData[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+                    better_data1[j]=[log.inData[j][0],log.inData[j][1]];
+                }
+
+
+                var flotr_data = []
+                var ticks1 = function(y){
+                    return y;
+                };
+                var title;
+                var trackY = false;
+                var suffix = ''
+
+                flotr_data = [
+                    {idx: 0,data: better_data1},
+                ]
+
+                if (entity.indexOf("traffic") != -1) {
+                    title = 'bits/s';
+                    suffix = 'bits/s';
+                    ticks1 = function(y){
+                        return bytes(y, true);
+                    };
+
+                    better_data2 = [];
+                    for (var j = 0; j < log.outData.length; j++) {
+                        var t = log.outData[j][0].split(/[- :]/);
+                        log.outData[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+                        better_data2[j]=[log.outData[j][0],log.outData[j][1]];
+                    }
+                    flotr_data[0]['label'] = 'Caller';
+                    flotr_data[0]['suffix'] = suffix;
+
+                    flotr_data[1] = {idx: 1,label:'Called',data: better_data2,suffix: suffix, ticks: function(y){
+                        return bytes(y, true);
+                    }}
+
+                    trackY = true;
+                }
+                else if (entity.indexOf("users") != -1) {
+                    title = "Users";
+                    suffix = ' users';
+
+                    flotr_data[0]['label'] = 'Users';
+                    flotr_data[0]['suffix'] = suffix;
+                    flotr_data[0]['lines'] = { fill : true };
+                }
+                else if (entity.indexOf("sessions") != -1) {
+                    title = 'sessions';
+                    suffix = ' sessions';
+
+                    flotr_data[0]['label'] = 'Sessions';
+                    flotr_data[0]['suffix'] = suffix;
+                    flotr_data[0]['lines'] = { fill : true }
+                }
+
+                extra_options = {
+                    ytitle: title,
+                    title: '',
+                    suffix: suffix,
+                    ticks1: ticks1,
+                    trackY: trackY
+                };
+                basicTimeGraph(document.getElementById(entity.replace(/\/|[0-9]|\./g,'')), document.getElementById('LegendA'+entity.replace(/\/|[0-9]|\./g,'')),flotr_data,extra_options);
+            },
+            error: function() {
+                $('#error').html('<div class="alert alert-error">Unable to load '+$(this).attr('entity')+'.log from the server.</div>');
+            }
+        });
+    }
+
+
+    /**
+    * Refresh all entities.
+    *
+    * @param specificGraph		- pass one graph just to process that one
+    *
+    * @return void
+    */
+    function updateGraphs(specificGraph) {
+
+        // if no specific graph passed then update all
+        if (specificGraph) {
+            var graphs = specificGraph;
+        } else {
+            var graphs = $("DIV.graph");
+        }
+
+        // update graphs
+        graphs.each(function() {
+            var graph = $(this);
+            entity = $(this).attr('entity');
+            addGraph(entity, $(this));
+        });
+    }
+</script>
+
+    <div id='error'></div>
+    <div id="reportrange" class="btn pull-right">
+        <i class="icon-calendar"></i>
+        <span><?php echo $start_date->format('F j, Y H:i:s')." - ".$stop_date->format('F j, Y H:i:s')?></span>
+        <b class=\"caret\"></b>
+    </div>
+    <div style='clear:both'></div>
+    <br />
+    <div class='row-fluid'>
+
+    <?php rsort($mrtggraphs->entities) ; foreach ($mrtggraphs->entities as $entity) :
+        if (strstr($entity->name,'total')) { ?>
+        <div class="entity span4">
+            <h4><?php print $entity->title; ?><small> (<a href="<?php print $entity->link; ?>">MRTG</a>)</small></h4>
+            <div class="graphs">
+                <div class='graph gg'  entity='<?php print $entity->name; ?>' id='<?php print preg_replace("/\/|[0-9]|\./","",$entity->name); ?>'></div>
+                <div id='LegendA<?php print preg_replace("/\/|[0-9]|\./","",$entity->name); ?>'></div>
+            </div>
+
+        </div>
+
+    <?php } endforeach; ?>
+
+    </div><hr />
+
+    <div class='row-fluid grid'>
+
+    <?php $counter = 0; rsort($mrtggraphs->entities) ; foreach ($mrtggraphs->entities as $entity) :
+        if (!strstr($entity->name,'total')) {
+
+            if ($counter == 3){
+                $counter = 0;
+                print "</div><div class='row-fluid grid'>";
+            }
+            $counter++; ?>
+        <div class="entity span4">
+            <div id="chart"></div>
+                <h4><?php print $entity->title; ?><small> (<a href="<?php print $entity->link; ?>">MRTG</a>)</small></h4>
+                <div class="graphs">
+                    <div class='graph'  entity='<?php print $entity->name; ?>' id='<?php print preg_replace("/\/|[0-9]|\./","",$entity->name); ?>'></div>
+                    <div id='LegendA<?php print preg_replace("/\/|[0-9]|\./","",$entity->name); ?>'></div>
+                </div>
+
+            </div>
+
+    <?php } endforeach; ?>
+
+    </div>
+</body>
+</html>
+<?php page_close(); ?>
