@@ -29,11 +29,12 @@ $login_credentials=array('login_type' => 'admin');
 
 $SoapEngine = new SoapEngine('sip_accounts',$soapEngines,$login_credentials);
 $_class     = $SoapEngine->records_class;
-$RECORDS    = new $_class(&$SoapEngine);
+$RECORDS    = new $_class($SoapEngine);
 
 $login_credentials['sip_engine'] = $RECORDS->SoapEngine->sip_engine;
 
 if ($_REQUEST['id']){
+    $id = $_REQUEST['id'];
     $db = new DB_CDRTool();
 
     $query="delete from memcache where `key` LIKE 'email_%' and NOW() >= `expire`";
@@ -77,7 +78,7 @@ if ($_REQUEST['id']){
             if($_REQUEST['web_password']){
                 //dprint_r($SipSettings->result->properties);
                 if ($SipSettings->store_clear_text_passwords) {
-                    $web_password_new=$web_password;
+                    $web_password_new=$_REQUEST['web_password'];
                 } else {
                     $md1=strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
                     $md2=strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
