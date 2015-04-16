@@ -7855,7 +7855,7 @@ class DnsRecords extends Records {
 
         $name=rtrim($name,".");
 
-        if (preg_match("/^(.*)@(.*)$/",$name,$m)) {
+        if (preg_match("/^(.+)@(.*)$/",$name,$m)) {
             $zone=$m[2];
         } else {
             if ($dictionary['zone']) {
@@ -7872,7 +7872,7 @@ class DnsRecords extends Records {
 
         if (!strlen($zone)) {
         	if ($this->html) {
-            	printf ("<p><font color=red>Error: Missing zone name. </font>");
+            	printf ("<div class='alert alert-error'><strong>Error</strong>: Missing zone name. </div>");
             }
             return false;
         }
