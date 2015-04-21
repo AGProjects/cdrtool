@@ -58,7 +58,10 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "qutecom" => "qutecom.png",
                          "SPA303" =>"cisco-spa303.png",
                          "JingleMe.*Pro" =>"jingle-me-pro.png",
-                         "JingleMe"=>"jingle-me.png"
+                         "JingleMe"=>"jingle-me.png",
+                         "Zoiper.*"=>"zoiper.png",
+                         "YETI.*"=>"yeti.png",
+                         "Groundwire.*"=>"groundwire.png"
                          );
 
 ?>
