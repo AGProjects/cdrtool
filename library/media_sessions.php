@@ -375,120 +375,153 @@ class MediaSessions {
 
     function showSessions () {
         if (!count($this->sessions)) return;
-           print "
-           <table id='sessions' class='table-bordered table-condensed table'>
-           <thead>
-            <tr valign=bottom>
-             <th rowspan=2>&nbsp;</th>
-             <th rowspan=2>Callers</th>
-             <th rowspan=2 colspan=2>Phones</th>
-             <th colspan=10>Media Streams</th>
-            </tr>
-            <tr valign=bottom>
-             <th><nobr>Caller address</nobr></th>
-             <th>Relay caller</th>
-             <th>Relay callee</th>
-             <th><nobr>Callee address</nobr></th>
-             <th>Status</th>
-             <th>Codec</th>
-             <th>Type</th>
-             <th>Duration</th>
-             <th>Bytes<br>Caller</th>
-             <th>Bytes<br>Called</th>
-            </tr></thead>";
+        
+        print "
+            <table id='sessions' class='table-bordered table-condensed table'>
+            <thead>
+                <tr valign=bottom>
+                    <th rowspan=2>&nbsp;</th>
+                    <th rowspan=2>Callers</th>
+                    <th rowspan=2 colspan=2>Phones</th>
+                    <th colspan=10>Media Streams</th>
+                </tr>
+                <tr valign=bottom>
+                    <th><nobr>Caller address</nobr></th>
+                    <th>Relay caller</th>
+                    <th>Relay callee</th>
+                    <th><nobr>Callee address</nobr></th>
+                    <th>Status</th>
+                    <th>Codec</th>
+                    <th>Type</th>
+                    <th>Duration</th>
+                    <th>Bytes<br>Caller</th>
+                    <th>Bytes<br>Called</th>
+                </tr>
+            </thead>";
     
-            $i = 1;
-            foreach ($this->sessions as $session) {
-                $from = $session->from_uri;
-                $to   = $session->to_uri;
-                $fromAgent = $session->caller_ua;
-                $toAgent   = $session->callee_ua;
-                $fromImage = $this->getImageForUserAgent($fromAgent);
-                $toImage = $this->getImageForUserAgent($toAgent);
-                $sc = count($session->streams);
+        $i = 1;
 
-                print "
+        foreach ($this->sessions as $session) {
+            $from = $session->from_uri;
+            $to   = $session->to_uri;
+            $fromAgent = $session->caller_ua;
+            $toAgent   = $session->callee_ua;
+            $fromImage = $this->getImageForUserAgent($fromAgent);
+            $toImage = $this->getImageForUserAgent($toAgent);
+            $sc = count($session->streams);
+
+            print "
                 <tr valign=top>
-                 <td class=border height='37px' rowspan=$sc>$i</td>
+                 <td class=border height='35px' rowspan=$sc>$i</td>
                  <td class=border rowspan=$sc>
                    <nobr><b>From:</b> $from</nobr><br>
                    <nobr><b>To:</b> $to</nobr><br>
                  </td>
-                 <td class=border rowspan=$sc style='text-align:center'>
+                 <td class=border rowspan=$sc style='text-align:center; vertical-align:middle'>
+                 ";
+            if ($fromImage == 'unknown.png') {
+                print "<i style=\"font-size:28px\" class=\"icon-question\"
+                        title=\"$fromAgent\"
+                        ONMOUSEOVER='window.status=\"$fromAgent\";'
+                        ONMOUSEOUT='window.status=\"\";'></i>";
+            } else if ($fromImage == 'asterisk.png') {
+                print "<i style=\"font-size:25px\" class=\"icon-asterisk\"
+                        title=\"$fromAgent\"
+                        ONMOUSEOVER='window.status=\"$fromAgent\";'
+                        ONMOUSEOUT='window.status=\"\";'></i>";
+            } else {
+                print "
                    <img src=\"images/30/$fromImage\"
                         alt=\"$fromAgent\"
                         title=\"$fromAgent\"
                         ONMOUSEOVER='window.status=\"$fromAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
-                   />
+                        />";
+            }
+            print "
                  </td>
-                 <td class=border rowspan=$sc style='text-align:center'>
+                 <td class=border rowspan=$sc style='text-align:center; vertical-align:middle'>";
+            if ($toImage == 'unknown.png') {
+                print "<i style=\"font-size:28px\" class=\"icon-question\"
+                        title=\"$toAgent\"
+                        ONMOUSEOVER='window.status=\"$toAgent\";'
+                        ONMOUSEOUT='window.status=\"\";'></i>";
+            } else if ($toImage == 'asterisk.png') {
+                print "<i style=\"font-size:25px\" class=\"icon-asterisk\"
+                        title=\"$toAgent\"
+                        ONMOUSEOVER='window.status=\"$toAgent\";'
+                        ONMOUSEOUT='window.status=\"\";'></i>";
+            } else {
+                print "
                    <img src=\"images/30/$toImage\"
                         alt=\"$toAgent\"
                         title=\"$toAgent\"
                         ONMOUSEOVER='window.status=\"$toAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
-                   />
-                 </td>";
+                        />";
+            } 
+            print "</td>";
+            $duration = $this->normalizeTime($session->duration);
+            if (count($session->streams) > 0) {
 
-                    $duration = $this->normalizeTime($session->duration);
+                foreach ($session->streams as $streamInfo) {
+                    $status   = $streamInfo->status;
 
-                    foreach ($session->streams as $streamInfo) {
-                        $status   = $streamInfo->status;
-
-                        if ($status=="idle" || $status=='hold') {
-                            $idletime = $this->normalizeTime($streamInfo->timeout_wait);
-                            $status = sprintf("%s %s", $status, $idletime);
-                        }
-
-                        $caller = $streamInfo->caller_remote;
-                        $callee = $streamInfo->callee_remote;
-                        $relay_caller  = $streamInfo->caller_local;
-                        $relay_callee  = $streamInfo->callee_local;
-
-                        $codec  = $streamInfo->caller_codec;
-                        $type   = $streamInfo->media_type;
-
-                        if ($caller == '?.?.?.?:?') {
-                            $caller = '&#150;';  // a dash
-                            $align1 = 'center';
-                        } else {
-                            $align1 = 'left';
-                        }
-                        if ($callee == '?.?.?.?:?') {
-                            $callee = '&#150;';  // a dash
-                            $align2 = 'center';
-                        } else {
-                            $align2 = 'left';
-                        }
-                        if ($codec == 'Unknown')
-                            $codec = '&#150;';   // a dash
-                        if ($type == 'Unknown')
-                            $type = '&#150;';    // a dash
-                        $bytes_in1 = $this->normalizeBytes($streamInfo->caller_bytes);
-                        $bytes_in2 = $this->normalizeBytes($streamInfo->callee_bytes);
-                        print "
-          <td class=border align=$align1>$caller</td>
-          <td class=border align=left>$relay_caller</td>
-          <td class=border align=left>$relay_callee</td>
-          <td class=border align=$align2>$callee</td>
-
-          <td class=border align=center><nobr>$status</nobr></td>
-          <td class=border align=center>$codec</td>
-          <td class=border align=center>$type</td>
-          <td class=border align=right>$duration</td>
-          <td class=border align=right>$bytes_in1</td>
-          <td class=border align=right>$bytes_in2</td>
-         </tr>";
+                    if ($status=="idle" || $status=='hold') {
+                        $idletime = $this->normalizeTime($streamInfo->timeout_wait);
+                        $status = sprintf("%s %s", $status, $idletime);
                     }
-                    $i++;
-            }
-            print "
-         </table>
-         <br />";
 
+                    $caller = $streamInfo->caller_remote;
+                    $callee = $streamInfo->callee_remote;
+                    $relay_caller  = $streamInfo->caller_local;
+                    $relay_callee  = $streamInfo->callee_local;
+
+                    $codec  = $streamInfo->caller_codec;
+                    $type   = $streamInfo->media_type;
+
+                    if ($caller == '?.?.?.?:?') {
+                        $caller = '&#150;';  // a dash
+                        $align1 = 'center';
+                    } else {
+                        $align1 = 'left';
+                    }
+                    if ($callee == '?.?.?.?:?') {
+                        $callee = '&#150;';  // a dash
+                        $align2 = 'center';
+                    } else {
+                        $align2 = 'left';
+                    }
+                    if ($codec == 'Unknown')
+                        $codec = '&#150;';   // a dash
+                    if ($type == 'Unknown')
+                        $type = '&#150;';    // a dash
+                    $bytes_in1 = $this->normalizeBytes($streamInfo->caller_bytes);
+                    $bytes_in2 = $this->normalizeBytes($streamInfo->callee_bytes);
+                    print "
+                        <td class=border align=$align1>$caller</td>
+                        <td class=border align=left>$relay_caller</td>
+                        <td class=border align=left>$relay_callee</td>
+                        <td class=border align=$align2>$callee</td>
+
+                        <td class=border align=center><nobr>$status</nobr></td>
+                        <td class=border align=center>$codec</td>
+                        <td class=border align=center>$type</td>
+                        <td class=border align=right>$duration</td>
+                        <td class=border align=right>$bytes_in1</td>
+                        <td class=border align=right>$bytes_in2</td>
+                        </tr>";
+                }
+            } else {
+                print "<td colspan='10'></td></tr>";
+            }
+            $i++;
+        }
+        print "
+            </table>
+            <br />";
     }
 
     function normalizeBytes($bytes) {
