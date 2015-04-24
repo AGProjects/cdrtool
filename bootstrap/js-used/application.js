@@ -129,7 +129,8 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
             },
             lines: {
                 lineWidth: 1,
-            }
+            },
+            resolution: window.devicePixelRatio,
          };
 
     if ( default_options.scaling !== 'linear') {
