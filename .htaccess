@@ -1,0 +1,7 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    #RewriteBase /CDRTool
+    RewriteRule \.(?:jpe?g|gif|png|bmp)$ library/retinaimages.php [NC,L]
+
+</IfModule>
