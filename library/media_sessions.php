@@ -194,14 +194,21 @@ class MediaSessions {
     }
 
     function showSearch() {
-        printf ("<form method=post action=%s>
+        printf ("
+            <div class='pull-right' id='session_search'><form method=post class='form-inline' action=%s>
             <div class='input-append'>
-        <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'><input class=btn type=submit value='Search'></div>
-        <p>
-        ",
-        $_SERVER['PHP_SELF'],
-        $_REQUEST['user']
+            <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'><button class='btn btn-primary' type=submit><i class='icon-search'></i></button></div>
+            </form></div>
+            ",
+            $_SERVER['PHP_SELF'],
+            $_REQUEST['user']
         );
+
+        print "<script type=\"text/javascript\">
+            $(document).ready(function() {
+                console.log($('#session_search'));
+                    $('#session_search').detach().appendTo('#sessions_title');
+                });</script>";
     }
 
     function showHeader() {
@@ -247,9 +254,9 @@ class MediaSessions {
 
         $this->showHeader();
 
-        $this->showSearch();
-
         $this->showSummary();
+        
+        $this->showSearch();
 
         $this->showSessions();
 
@@ -369,19 +376,19 @@ class MediaSessions {
         }
 
         print "
-        </table><div class=span4></div></div>
+        </table></div>
         ";
     }
 
     function showSessions () {
+        print "<h2 id='sessions_title'>Sessions</h2>";
         if (!count($this->sessions)) return;
-        
+
         print "
             <table id='sessions' class='table-bordered table-condensed table'>
             <thead>
                 <tr valign=bottom>
-                    <th rowspan=2>&nbsp;</th>
-                    <th rowspan=2>Callers</th>
+                    <th rowspan=2>Callers (".count($this->sessions).")</th>
                     <th rowspan=2 colspan=2>Phones</th>
                     <th colspan=10>Media Streams</th>
                 </tr>
@@ -391,8 +398,7 @@ class MediaSessions {
                     <th>Relay callee</th>
                     <th><nobr>Callee address</nobr></th>
                     <th>Status</th>
-                    <th>Codec</th>
-                    <th>Type</th>
+                    <th>Type/Codec</th>
                     <th>Duration</th>
                     <th>Bytes<br>Caller</th>
                     <th>Bytes<br>Called</th>
@@ -412,8 +418,7 @@ class MediaSessions {
 
             print "
                 <tr valign=top>
-                 <td class=border height='35px' rowspan=$sc>$i</td>
-                 <td class=border rowspan=$sc>
+                 <td class=border height='39px' rowspan=$sc>
                    <nobr><b>From:</b> $from</nobr><br>
                    <nobr><b>To:</b> $to</nobr><br>
                  </td>
@@ -437,6 +442,7 @@ class MediaSessions {
                         ONMOUSEOVER='window.status=\"$fromAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
+                        style='max-width:30px'
                         />";
             }
             print "
@@ -460,6 +466,7 @@ class MediaSessions {
                         ONMOUSEOVER='window.status=\"$toAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
+                        style='max-width:30px'
                         />";
             } 
             print "</td>";
@@ -468,10 +475,13 @@ class MediaSessions {
 
                 foreach ($session->streams as $streamInfo) {
                     $status   = $streamInfo->status;
+                    $statusClass = "";
 
                     if ($status=="idle" || $status=='hold') {
                         $idletime = $this->normalizeTime($streamInfo->timeout_wait);
                         $status = sprintf("%s %s", $status, $idletime);
+                    } else if ($status == "closed" ) {
+                        $statusClass = "muted";
                     }
 
                     $caller = $streamInfo->caller_remote;
@@ -479,6 +489,17 @@ class MediaSessions {
                     $relay_caller  = $streamInfo->caller_local;
                     $relay_callee  = $streamInfo->callee_local;
 
+                    if (substr_count($relay_caller,":") == 1) {
+                        // Probaly ipv4
+                        $relay_caller_data = explode(":",$relay_caller);
+                        $relay_caller = $this->ip2host($relay_caller_data[0]).":".$relay_caller_data[1];
+                    }
+
+                    if (substr_count($relay_callee,":") == 1) {
+                        // Probaly ipv4
+                        $relay_callee_data = explode(":",$relay_callee);
+                        $relay_callee = $this->ip2host($relay_callee_data[0]).":".$relay_callee_data[1];
+                    }
                     $codec  = $streamInfo->caller_codec;
                     $type   = $streamInfo->media_type;
 
@@ -494,24 +515,33 @@ class MediaSessions {
                     } else {
                         $align2 = 'left';
                     }
-                    if ($codec == 'Unknown')
+                    if ($codec == 'Unknown') {
                         $codec = '&#150;';   // a dash
-                    if ($type == 'Unknown')
+                    } else {
+                        $codec  = "<span class=\"label label-info\">$codec</span>";
+                    }
+                    if ($type == 'Unknown') {
                         $type = '&#150;';    // a dash
+                    } else if ($type == 'video') {
+                        $type  = "<span class=\"badge badge-success\">$type</span>";
+                    } else if ($type == 'audio') {
+                        $type  = "<span class=\"badge badge-info\">$type</span>";
+                    } else {
+                        $type  = "<span class=\"badge\">$type</span>";
+                    }
                     $bytes_in1 = $this->normalizeBytes($streamInfo->caller_bytes);
                     $bytes_in2 = $this->normalizeBytes($streamInfo->callee_bytes);
                     print "
-                        <td class=border align=$align1>$caller</td>
-                        <td class=border align=left>$relay_caller</td>
-                        <td class=border align=left>$relay_callee</td>
-                        <td class=border align=$align2>$callee</td>
+                        <td class=\"border $statusClass\"   align=$align1>$caller</td>
+                        <td class=\"border $statusClass\"  align=left>$relay_caller</td>
+                        <td class=\"border $statusClass\"  align=left>$relay_callee</td>
+                        <td class=\"border $statusClass\"  align=$align2>$callee</td>
 
-                        <td class=border align=center><nobr>$status</nobr></td>
-                        <td class=border align=center>$codec</td>
-                        <td class=border align=center>$type</td>
-                        <td class=border align=right>$duration</td>
-                        <td class=border align=right>$bytes_in1</td>
-                        <td class=border align=right>$bytes_in2</td>
+                        <td class=\"border $statusClass\"  align=center><nobr>$status</nobr></td>
+                        <td class=\"border $statusClass\"   align=center><nobr>$type $codec</nobr></td>
+                        <td class=\"border $statusClass\"  align=right>$duration</td>
+                        <td class=\"border $statusClass\" align=right>$bytes_in1</td>
+                        <td class=\"border $statusClass\" align=right>$bytes_in2</td>
                         </tr>";
                 }
             } else {
