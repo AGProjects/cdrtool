@@ -938,9 +938,9 @@ class pageLayout {
     	";
 	$this->hasAGProjectslogo=1;
 	$logo=$CDRTool['tld']."/images/CDRTool.png";
-        print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0></a></center><br>";
+        print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0 style='max-width:176px'></a></center><br>";
         print "
-        <form class=form-horizontal action=\"$url\" method=post name=login onsubmit='doChallengeResponse();'>
+        <form class=form-horizontal style='margin-bottom:0' action=\"$url\" method=post name=login onsubmit='doChallengeResponse();'>
         <p>
         ";
         if ($CDRTool[provider][sampleLoginSubscriber]) {
@@ -1037,7 +1037,7 @@ class pageLayout {
 
 
         print "
-            <div class='well well-small'>
+            <div class='p-footer'>
             <div class=row-fluid>
             <div class=pull-left>
         If you make use of <b>O</b>ne <b>T</b>ime <b>P</b>asswords:

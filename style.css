@@ -359,3 +359,17 @@ input[type="checkbox"] {
 #trace {
     padding-top: 5px;
 }
+
+.muted {
+    background-color: #f9f9f9;
+}
+
+.p-footer {
+    padding: 10px 15px;
+    margin: 0 -5px -5px -5px;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+

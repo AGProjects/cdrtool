@@ -5016,10 +5016,10 @@ class SIP_trace {
                     if ($arrow_direction == 'left') {
                         print "<img src=images/$arrow border=0>";
                         if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
-                        print "<img src=images/30/$sip_phone_img border=0>";
+                        print "<img src=images/30/$sip_phone_img style='max-width:30px' border=0>";
                     } else {
                         if (!$isProxy && $direction=='in' && $sip_phone_img && $sip_phone_img!='unknown.png')
-                        print "<img src=images/30/$sip_phone_img border=0>";
+                        print "<img src=images/30/$sip_phone_img style='max-width:30px' border=0>";
                         print "<img src=images/$arrow border=0>";
                     }
 
@@ -5085,7 +5085,11 @@ class SIP_trace {
                 <h1>SIP Proxy</h1></nobr>
                 ";
             } else {
-                if ($sip_phone_img) print "<img style='max-width:none' src=images/$sip_phone_img>";
+                if ($sip_phone_img && $sip_phone_img!='unknown.png') {
+                    print "<img style='max-width:none' src=images/$sip_phone_img>";
+                } else {
+                    print "<i style=\"font-size:28px\" class=\"icon-question\"></i>";
+                }
             }
             print "</div></div><div class=row-fluid><div class='span12'>";
             if ($timeline > 0) {
@@ -5437,7 +5441,7 @@ class Media_trace {
 
         print "<h2>Media Streams</h2>";
 
-        print "<table class='table table-condensed table-striped' style='width:300px' border=0>";
+        print "<table class='table table-condensed table-striped' style='width:600px' border=0>";
         print "<thead><tr><th></th>";
 
         foreach (array_values($media_types) as $_type) {
