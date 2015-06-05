@@ -63,7 +63,8 @@ $userAgentImages = array("Asterisk"       => "asterisk.png",
                          "YETI.*"=>"yeti.png",
                          "Groundwire.*"=>"groundwire.png",
                          "Linphone"=>"linphone.png",
-                         "Callcentric"=>"callcentric.png"
+                         "Callcentric"=>"callcentric.png",
+                         "FPBX"=>"freepbx.png"
                          );
 
 ?>
