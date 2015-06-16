@@ -442,7 +442,7 @@ class MediaSessions {
                         ONMOUSEOVER='window.status=\"$fromAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
-                        style='max-width:30px'
+                        style='max-height:30px; max-width:30px;'
                         />";
             }
             print "
@@ -466,7 +466,7 @@ class MediaSessions {
                         ONMOUSEOVER='window.status=\"$toAgent\";'
                         ONMOUSEOUT='window.status=\"\";'
                         border=0
-                        style='max-width:30px'
+                        style='max-height:30px; max-width: 30px'
                         />";
             } 
             print "</td>";
