@@ -924,6 +924,14 @@ class Records {
     function deleteRecord() {
     }
 
+    function showSortCaret($sortSearch) {
+        if ($this->sorting['sortBy'] == $sortSearch && $this->sorting['sortOrder'] == 'DESC') {
+            print ' <i style="font-size:12px; color: #3a87ad" class="icon-caret-down"></i>';
+        } else if ($this->sorting['sortBy'] == $sortSearch && $this->sorting['sortOrder'] == 'ASC') {
+            print ' <i style="font-size:12px; color: #3a87ad" class="icon-caret-up"></i>';
+        }
+    }
+
     function tel2enum($tel,$tld) {
 
         if (strlen($tld) == 0)  $tld="e164.arpa";
@@ -2601,7 +2609,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if (PEAR::isError($result)) {
+         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2624,7 +2632,14 @@ class SipAccounts extends Records {
             <thead>
             <tr>
                 <th>Id</th>
-                <th>SIP account</th>
+                <th>SIP account";
+            $this->showSortCaret('username');
+            if ($this->sorting['sortBy'] == 'domain' ) {
+                print " (domain ";
+                $this->showSortCaret('domain');
+                print ")";
+            }
+            print "</th>
                 <th>Full name</th>
                 <th>Email address</th>
                 <th>Timezone</th>
@@ -2632,7 +2647,9 @@ class SipAccounts extends Records {
                 <th align=right>Quota</th>
                 <th align=right>Balance</th>
                 <th>Owner</th>
-                <th>Change date</th>
+                <th>Change date";
+            $this->showSortCaret('changeDate');
+            print "</th>
                 <th>Actions</th>
             </tr>
             </thead>
