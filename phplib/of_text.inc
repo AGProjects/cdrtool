@@ -45,7 +45,7 @@ class of_text extends of_element {
       $str .= " size='$this->size'";
     if ($this->extrahtml) 
       $str .= " $this->extrahtml";
-    $str .= ">";
+    $str .= "autocomplete='off'>";
     
     $count = 1;
     return $str;

@@ -2990,9 +2990,9 @@ class SipAccounts extends Records {
             $checked_pstn='';
         }
 
-        printf (" <div class=input-prepend><span class='add-on'>Password</span><input class=span1 type=password size=10 name=password value='%s'></div>",$_REQUEST['password']);
-        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s'></div>",$_REQUEST['fullname']);
-        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s'></div>",$_REQUEST['email']);
+        printf (" <div class=input-prepend><span class='add-on'>Password</span><input class=span1 type=password size=10 name=password value='%s' autocomplete='off'></div>",$_REQUEST['password']);
+        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s' autocomplete='off'></div>",$_REQUEST['fullname']);
+        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s' autocomplete='off'></div>",$_REQUEST['email']);
         printf (" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
         printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
         printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
