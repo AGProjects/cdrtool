@@ -8,8 +8,11 @@ function bytes(bytes, label) {
     var value = ((bytes/Math.pow(1000, Math.floor(e))).toFixed(1));
     e = (e<0) ? (-e) : e;
     if (label) value += ' ' + s[e];
-    //console.log(value);
     return value;
+}
+
+function between(x, min, max) {
+    return x >= min && x <= max;
 }
 
 function formatDate(myDate){
@@ -54,6 +57,431 @@ function isSmallEnough(value) {
     return function(element, index, array) {
         return (element[0] <= value);
     };
+}
+
+
+function MultiDonut(id, in_data) {
+    var margin = {top: 150, right: 300, bottom: 150, left: 300},
+        radius = Math.min(margin.top, margin.right, margin.bottom, margin.left) - 40;
+
+    var hue = d3.scale.category10();
+
+    var luminance = d3.scale.sqrt()
+        .domain([0, 5000])
+        .clamp(true)
+        .range([90, 20]);
+
+    var svg = d3.select(id).append("svg")
+        .attr("width", margin.left + margin.right)
+        .attr("height", margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var partition = d3.layout.partition()
+        .sort(function(a, b) { return d3.ascending(a.name, b.name); })
+        .size([2 * Math.PI, radius]);
+
+    var arc = d3.svg.arc()
+        .startAngle(function(d) { return d.x; })
+        .endAngle(function(d) { return d.x + d.dx - .01 / (d.depth + .5); })
+        .innerRadius(function(d) { d.depth === 1 ? dist = radius / 3* d.depth : dist = radius / 3 * d.depth; return dist; })
+        .outerRadius(function(d) { return radius / 3 * (d.depth + 1) - 1; });
+
+    var root = in_data;
+
+    partition
+        .value(function(d) { return d.size; })
+        .nodes(root)
+        .forEach(function(d) {
+            d._children = d.children;
+            d.sum = d.value;
+            d.key = key(d);
+            d.fill = fill(d);
+        });
+
+    // Now redefine the value function to use the previously-computed sum.
+    partition
+        .children(function(d, depth) { return depth < 2 ? d._children : null; })
+        .value(function(d) { return d.sum; });
+
+    var center = svg.append("circle")
+        .attr("r", radius / 3)
+        .on("click", zoomOut);
+
+    center
+        .append("title")
+        .text("zoom out");
+
+    svg
+        .append("g")
+        .attr('class','dia');
+
+    var path = svg.select(".dia").selectAll("path")
+        .data(partition.nodes(root).slice(1))
+        .enter().append("path")
+        .attr("d", arc)
+        .style("fill", function(d) { return d.fill; })
+        .each(function(d) { this._current = updateArc(d); })
+        .on("mouseover",update_legend)
+        .on("mouseout",remove_legend)
+        .on("click", zoomIn);
+
+    svg
+        .append("g")
+        .attr("class", "labelst");
+
+    svg
+        .append("g")
+        .attr("class", "labels");
+    svg
+        .append("g")
+        .attr("class", "lines");
+    svg
+        .append("g")
+        .attr("class", "center");
+    svg
+        .append("g")
+        .attr("class", "innerlines");
+
+    var lineFunction = d3.svg.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        .interpolate("basis");
+
+    var addOuterLabelLines = function(data) {
+        svg.select(".lines").selectAll("path")
+        .remove();
+        svg.select(".lines").selectAll("path")
+        .data(data)
+        .enter()
+        .append("path")
+        .filter(function(d) { return ((d.sum/d.parent.sum)*100) > 10 })
+        .filter(function(d) { return ((d.sum/d.parent.parent.sum)*100) >=5 ;})
+        .attr("d", function(d) {
+            centr = arc.centroid(d);
+            ocentr = arc.centroid(d);
+            midAngle = Math.atan2(ocentr[1], ocentr[0]);
+            ocentr[0] = Math.cos(midAngle) * radius*1.2;
+            ocentr[1] = Math.sin(midAngle) * radius*1.2;
+            centr[1] = ocentr[1];
+            centr[0] < 0 ? centr[0] = ocentr[0]-20 : centr[0] = ocentr[0] + 20;
+            return lineFunction([
+                {
+                    'x': arc.centroid(d)[0],
+                    'y': arc.centroid(d)[1]
+                },
+                {
+                    'x': ocentr[0],
+                    'y': ocentr[1]
+                },
+                {
+                    'x': centr[0],
+                    'y': centr[1]
+                }
+            ]);
+        })
+    };
+
+    var addInnerLabelLines = function(data) {
+        svg.select(".innerlines").selectAll("path")
+        .remove();
+        svg.select(".innerlines").selectAll("path")
+        .data(data)
+        .enter()
+        .append("path")
+        .attr("d", function(d) {
+            offset = arc.centroid(d);
+            offset[1] = offset[1] + 15;
+            centr = arc.centroid(d);
+            ocentr = arc.centroid(d);
+            midAngle = Math.atan2(offset[1], ocentr[0]);
+            ocentr[0] = Math.cos(midAngle) * radius*1.2;
+            ocentr[1] = Math.sin(midAngle+.28) * radius*1.2;
+            centr[1] = ocentr[1];
+            centr[0] < 0 ? centr[0] = ocentr[0]-25 : centr[0] = ocentr[0]+25 ;
+            return lineFunction([
+                {
+                    'x': offset[0],
+                    'y': offset[1]
+                },
+                {
+                    'x': ocentr[0],
+                    'y': ocentr[1]
+                },
+                {
+                    'x': centr[0],
+                    'y': centr[1]
+                }
+            ]);
+        })
+    };
+
+    var addOuterLabel = function(data) {
+        svg.select(".labelst").selectAll("text")
+        .remove();
+        points = [];
+        svg.select(".labelst").selectAll("text")
+        .data(data)
+        .enter().append("text")
+        .attr("text-anchor", "left")
+        .text(function(d) {
+            if (((d.sum/d.parent.sum)*100) > 10 ) {
+                if (d.depth>=2) {
+                    if (((d.sum/d.parent.parent.sum)*100) >= 5) {
+                        return d.name;
+                    }
+            } else {
+                    return d.name;
+            }
+        }
+        })
+        .style("font-weight", function(d) {
+            if (d.depth === 1) {
+                return 'bold';
+            }})
+        .attr("transform", function(d) {
+            centr = arc.centroid(d);
+            ocentr = arc.centroid(d);
+            if (d.depth >= 2) {
+                midAngle = Math.atan2(ocentr[1], ocentr[0]);
+                ocentr[1] = Math.sin(midAngle) * radius*1.2;
+            } else {
+                offset = arc.centroid(d);
+                offset[1] = offset[1]+15;
+                midAngle = Math.atan2(offset[1], ocentr[0]);
+                ocentr[1] = Math.sin(midAngle+.28) * radius*1.2;
+            }
+            ocentr[0] = Math.cos(midAngle) * radius*1.2;
+            centr[1] = ocentr[1]+4;
+            textLength = this.getComputedTextLength();
+            if (d.depth === 1) {
+                centr[0] < 0 ? centr[0] = ocentr[0]-textLength-26 : centr[0] = ocentr[0] + 26;
+            }
+            else {
+                centr[0] < 0 ? centr[0] = ocentr[0]-textLength-21 : centr[0] = ocentr[0] +21;
+            }
+            return "translate(" + centr + ")";
+        })
+        .on("mouseover",update_legend)
+        .on("mouseout",remove_legend)
+        .on("click", zoomIn);
+
+    };
+
+    var addPercentages = function (data) {
+        svg.select(".labels").selectAll("text")
+            .remove();
+        svg.select(".labels").selectAll("text")
+        .data(data)
+        .enter().append("text")
+        .attr("text-anchor", "left")
+        .text(function(d) {
+            if (((d.sum/d.parent.sum)*100) > 10 ) {
+                if (d.depth>=2) {
+                    if (((d.sum/d.parent.parent.sum)*100) > 5) {
+                        return ((d.sum/d.parent.parent.sum)*100).toFixed(1)+'%';
+                    }
+                } else {
+                    return ((d.sum/d.parent.sum)*100).toFixed(1) +'%';
+                }
+            }
+        })
+        .attr("transform", function(d) {
+            centr = arc.centroid(d);
+            textLength = this.getComputedTextLength();
+            if (d.depth>=2) {
+                ocentr = arc.centroid(d);
+                midAngle = Math.atan2(ocentr[1], ocentr[0]);
+                ocentr[0] = Math.cos(midAngle) * radius*1.2;
+                ocentr[1] = Math.sin(midAngle) * radius*1.2;
+                centr[1] = ocentr[1]+16;
+                centr[0] < 0 ? centr[0] = ocentr[0]-21-textLength : centr[0] = ocentr[0]+21 ;
+            } else {
+                centr[0] = centr[0]-(textLength/2);
+                centr[1] = centr[1];
+            }
+            return "translate(" + centr + ")";
+        })
+        .on("mouseover",update_legend)
+        .on("mouseout",remove_legend)
+        .on("click", zoomIn);
+    };
+
+    addOuterLabelLines(partition.nodes(root).slice(1)
+            .filter(function(d){return d.depth >= 2}));
+    addInnerLabelLines(partition.nodes(root).slice(1)
+            .filter(function(d){return ((d.sum/d.parent.sum)*100) > 10})
+            .filter(function(d){return d.depth === 1}));
+    addOuterLabel(partition.nodes(root).slice(1));
+    addPercentages(partition.nodes(root).slice(1));
+
+
+    function zoomIn(p) {
+        if (p.depth > 1) p = p.parent;
+            if (!p.children) return;
+            zoom(p, p);
+    }
+
+    function zoomOut(p) {
+        if (!p.parent) return;
+            zoom(p.parent, p);
+    }
+
+    // Zoom to the specified new root.
+    function zoom(root, p) {
+        if (document.documentElement.__transition__) return;
+
+
+        // Rescale outside angles to match the new layout.
+        var enterArc,
+            exitArc,
+            outsideAngle = d3.scale.linear().domain([0, 2 * Math.PI]);
+
+        function insideArc(d) {
+            return p.key > d.key
+                ? {depth: d.depth - 1 , x: 0, dx: 0} : p.key < d.key
+                ? {depth: d.depth - 1, x: 2 * Math.PI, dx: 0}
+                : {depth: 0, x: 0, dx: 2 * Math.PI};
+        }
+
+        function outsideArc(d) {
+            return {depth: d.depth + 1, x: outsideAngle(d.x), dx: outsideAngle(d.x + d.dx) - outsideAngle(d.x)};
+        }
+
+        center.datum(root);
+
+        // When zooming in, arcs enter from the outside and exit to the inside.
+        // Entering outside arcs start from the old layout.
+        if (root === p) enterArc = outsideArc, exitArc = insideArc, outsideAngle.range([p.x, p.x + p.dx]);
+
+        path = path.data(partition.nodes(root).slice(1), function(d) { return d.key; });
+
+        // When zooming out, arcs enter from the inside and exit to the outside.
+        // Exiting outside arcs transition to the new layout.
+        if (root !== p) enterArc = insideArc, exitArc = outsideArc, outsideAngle.range([p.x, p.x + p.dx]);
+
+        addOuterLabelLines(partition.nodes(root).slice(1)
+                .filter(function(d){return d.depth >= 2}));
+        addInnerLabelLines(partition.nodes(root).slice(1)
+                .filter(function(d){return ((d.sum/d.parent.sum)*100) > 10})
+                .filter(function(d){return d.depth === 1}));
+
+        var textp = svg.select(".center").selectAll("text")
+            .data([root]);
+
+        textp.enter().append("text")
+            .attr("text-anchor", "middle")
+            .text(function(d) {
+                    return d.name;
+            });
+
+        textp.exit().remove();
+        textp.transition().style("fill-opacity", 1)
+            .attr("text-anchor", "middle")
+            .text(function(d) {
+                    return d.name;
+            });
+
+        addOuterLabel(partition.nodes(root).slice(1));
+        addPercentages(partition.nodes(root).slice(1));
+
+        d3.transition().duration(d3.event.altKey ? 7500 : 750).each(function() {
+            path.exit().transition()
+                .style("fill-opacity", function(d) { return d.depth === 1 + (root === p) ? 1 : 0; })
+                .attrTween("d", function(d) { return arcTween.call(this, exitArc(d)); })
+                .remove();
+
+            path.enter().append("path")
+                .style("fill-opacity", function(d) { return d.depth === 2 - (root === p) ? 1 : 0; })
+                .style("fill", function(d) { return d.fill; })
+                .on("mouseover",update_legend)
+                .on("mouseout",remove_legend)
+                .on("click", zoomIn)
+                .each(function(d) { this._current = enterArc(d); });
+
+            path.transition()
+                .style("fill-opacity", 1)
+                .attrTween("d", function(d) { return arcTween.call(this, updateArc(d)); });
+        });
+    }
+
+    // TODO fix overlapping
+    function fixOverlap() {
+        var prev;
+        svg.select(".labelst").selectAll("text").each(function(d, i) {
+            if(i > 0) {
+                var thisbb = this.getBoundingClientRect(),
+            prevbb = prev.getBoundingClientRect();
+            // move if they overlap
+            if(!(thisbb.right < prevbb.left ||
+                thisbb.left > prevbb.right ||
+                thisbb.bottom < prevbb.top ||
+                thisbb.top > prevbb.bottom)) {
+                var ctx = thisbb.left + (thisbb.right - thisbb.left)/2,
+                    cty = thisbb.top + (thisbb.bottom - thisbb.top)/2,
+                    cpx = prevbb.left + (prevbb.right - prevbb.left)/2,
+                    cpy = prevbb.top + (prevbb.bottom - prevbb.top)/2,
+                    off = Math.sqrt(Math.pow(ctx - cpx, 2) + Math.pow(cty - cpy, 2))/2;
+                d3.select(this).attr("transform",
+                    "translate(" + (radius*1.2 + off) + "," +
+                    (radius*1.2 + off) + ")");
+                }
+            }
+            prev = this;
+        });
+    }
+
+    function key(d) {
+        var k = [], p = d;
+        while (p.depth) k.push(p.name), p = p.parent;
+        return k.reverse().join(".");
+    }
+
+    function fill(d) {
+        var p = d;
+        while (p.depth > 1) p = p.parent;
+        var c = d3.lab(hue(p.name));
+        c.l = luminance((d.sum/p.sum)*500*(1/d.depth));
+        if ( p == d) {
+            c.l = luminance((d.sum/p.sum)*1000);
+        }
+        return c;
+    }
+
+    function arcTween(b) {
+        var i = d3.interpolate(this._current, b);
+        this._current = i(0);
+        return function(t) {
+            return arc(i(t));
+        };
+    }
+
+    function updateArc(d) {
+        return {depth: d.depth, x: d.x, dx: d.dx};
+    }
+
+    var div = d3.select('body').insert("div")
+        .attr("class", "tooltip1")
+        .style("opacity", 0);
+
+    function update_legend(d)
+    {
+        div.transition()
+            .duration(100)
+            .style("opacity", .9);
+        perc =  d.depth >= 2 ? ((d.sum/d.parent.parent.sum)*100).toFixed(1) : ((d.sum/d.parent.sum)*100).toFixed(1);
+        div.html(d.name + "<br/>"  + perc +"%" )
+            .style("left", (d3.event.pageX) + "px")
+            .style("top", (d3.event.pageY - 28) + "px");
+    }
+
+    function remove_legend(d) {
+        div.transition()
+            .duration(100)
+            .style("opacity", 0);
+    }
+
+    d3.select(self.frameElement).style("height", margin.top + margin.bottom + "px");
 }
 
 function basicTimeGraph(container,legend, flotr_data, extra_options) {
@@ -808,79 +1236,6 @@ $.ajaxTransport('jsonpi', function(opts, originalOptions, jqXHR) {
     }
   }
 });
-
-Highcharts.theme = {
-
-    chart: {
-        backgroundColor: 'transparent',
-        plotBackgroundColor: 'transparent',
-        plotShadow: false,
-        plotBorderWidth: 0
-    },
-    title: {
-        style: {
-            color: '#5177bd',
-            font: 'bold 16px Verdana, Arial,Telex, sans-serif'
-        }
-    },
-    subtitle: {
-        style: {
-            color: '#5177bd',
-            font: 'bold 12px Verdana, Arial,Telex, sans-serif'
-        }
-    },
-    xAxis: {
-        minorTickInterval: 'auto',
-        //majorTickInterval: '',
-        lineColor: '#000',
-        lineWidth: 1,
-        tickWidth: 1,
-        tickColor: '#000',
-        labels: {
-            style: {
-                color: '#000',
-                font: '10px Verdana, Arial,Telex, sans-serif'
-            }
-        },
-    },
-    yAxis: {
-        minorTickInterval: 'auto',
-        lineColor: '#000',
-        lineWidth: 1,
-        tickWidth: 1,
-        tickColor: '#000',
-        labels: {
-            style: {
-                color: '#000',
-                font: '10px Verdana, Arial,Telex, sans-serif'
-            }
-        },
-    },
-    legend: {
-        itemStyle: {
-            font: '11px Verdana, Arial,Telex, sans-serif',
-            color: '#333'
-        },
-        itemHoverStyle: {
-            color: '#039'
-        },
-        itemHiddenStyle: {
-            color: 'gray'
-        }
-    },
-
-
-    navigation: {
-        buttonOptions: {
-            theme: {
-                stroke: '#e6e6e6'
-            }
-        }
-    }
-};
-
-// Apply the theme
-var highchartsOptions = Highcharts.setOptions(Highcharts.theme);
 
 
 }(window.jQuery)

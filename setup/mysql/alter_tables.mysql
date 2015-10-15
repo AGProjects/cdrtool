@@ -766,4 +766,29 @@ delete from sip_status where code='434';
 alter table quota_usage add index account (`account`);
 
 10.0.0
+
 alter table auth_user add column aclFilter varchar(255) not null after afterDateFilter;
+
+# Next two are only needed for ngnpro statistics
+# this needs to be put in ngnpro customer DB
+CREATE TABLE `ngnpro_logs_functions_history` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `ip` varchar(15) DEFAULT NULL,
+    `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `function` varchar(60) DEFAULT NULL,
+    `total` int(11) DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `dates` (`date`),
+    KEY `ips` (`ip`),
+    KEY `functions` (`ip`,`function`)
+);
+
+DELIMITER ;;
+CREATE TRIGGER `ngnpro_functions_rotate` BEFORE UPDATE ON `ngnpro_logs_functions`
+    FOR EACH ROW BEGIN
+        IF (DATE(OLD.date) < CURDATE()) THEN
+            INSERT into `ngnpro_logs_functions_history` (ip,date,function,total) values (OLD.ip,OLD.date,OLD.function,OLD.total);
+            set NEW.total = 1;
+        END IF;
+    END ;;
+DELIMITER ;

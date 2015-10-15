@@ -1,5 +1,10 @@
-<?
+<?php
+/*
+ * This file displays the provisioning stats
+ */
+
 require("/etc/cdrtool/global.inc");
+
 page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
@@ -13,41 +18,57 @@ $title="Provisioning usage statistics";
 include("header.phtml");
 
 global $CDRTool;
+
 if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-$num=0;
+$start_date = isset($_REQUEST['start_date']) ? new DateTime($_REQUEST['start_date']) : new DateTime('-30 days');
+$stop_date = isset($_REQUEST['stop_date']) ? new DateTime($_REQUEST['stop_date']) : new DateTime('now');
+
+if ($start_date == $stop_date){
+    $start_date = $start_date->setTime(00, 00, 00);
+    $stop_date = $stop_date->setTime(00, 00, 00);
+    $stop_date->add(new DateInterval('P1D'));
+}
+
+print "<script type=\"text/javascript\">var start_date_set=\"".$start_date->format('Y-m-d H:i:s')."\";var stop_date_set=\"".$stop_date->format('Y-m-d H:i:s')."\";</script>";
 
 foreach (array_keys($DATASOURCES) as $datasource) {
+
     if ($DATASOURCES[$datasource]['db_ngnpro_stats']) {
         $stats= new ProvisioningStatistics();
 
-        list($datan,$datan1) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        list($data1,$data2) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$start_date,$stop_date);
 
-        $categories = $stats->getCategories($datan);
-        $second_categories = $stats->getSecondCategories($datan);
+        // Fetch the required data
+        $donutData = $stats->getData($data1, $data2);
 
-        $period = $stats->getPeriod($DATASOURCES[$datasource]['db_ngnpro_stats']);
+        $requests_number = $stats->getNumber($DATASOURCES[$datasource]['db_ngnpro_stats'], $start_date, $stop_date);
+        $interval = $start_date->diff($stop_date);
 
-        $date1 = new DateTime($period[0]);
-        $date2 = new DateTime($period[1]);
-        $interval = $date1->diff($date2);
+        $requests_time_new = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days,$start_date,$stop_date);
+        $requests_new = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days ,$start_date,$stop_date);
 
-        $requests_time_new = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days);
-        $requests_new = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days);
+        print "<div id=\"reportrange\" class=\"btn pull-right\">
+        <i class=\"icon-calendar\"></i>
+        <span>".$start_date->format('F j, Y H:i:s')." - ".$stop_date->format('F j, Y H:i:s')."</span> <b class=\"caret\"></b>
+        </div>";
+        print "<div style='clear:both'></div>";
+        print "<script type='text/javascript'>console.log($('#reportrange'));$('#reportrange').detach().appendTo('.page-header h1');</script>";
 
-        print "<div class='alert alert-success'><center>$period[2] requests between ".$period[0]." and ".$period[1]."</center></div>";
-
-        print "<div class='row-fluid' style='min-height:350px'>";
-        $stats->printChartDonut("Top 5 distribution of request types",'',$num+2,$categories, $second_categories,$datan1);
-        print "</div>";
+        print "<div class='row-fluid' style='min-height:350px'><div class='span6'>";
+        print "<div class='alert alert-success'><center> $requests_number[0] requests between ".$start_date->format('Y-m-d H:i:s')." and ".$stop_date->format('Y-m-d H:i:s')." </center></div>";
+        print "<p>Top 5 percentages are calculated from the total amount of requests in the top 5. The Top 5 donut can be zoomed to reveal distribution from each source IP.
+        The percentages in the zoomed donut are based on the total amount of the specific SOAP port.<br/><br/>
+        The Line graphs can be zoomed by selecting an area in the graph. The graphs can be zoomed out with a mouse-click on the graph.</p></div>";
+        print "<div class='span6'>";
+        $stats->printChartDonut("Top 5 distribution of request types", $donutData);
+        print "</div></div>";
         print "<div class='row-fluid' style='min-height:280px'>";
-        //$stats->printChartLine($num,$requests,$requests_time);
-        $stats->printChartLine($num,$requests_new,$requests_time_new);
+        $stats->printLineCharts($datasource,$requests_new,$requests_time_new);
         print "</div>";
-        $num++;
     }
 }
 

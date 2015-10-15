@@ -1,14 +1,14 @@
-<?
+<?php
 /*
-    Copyright (c) 2013 AG Projects
-    http://ag-projects.com
-    Author Tijmen de Mes
+ * Copyright (c) 2015 AG Projects
+ * http://ag-projects.com
+ * Author Tijmen de Mes
 */
 
 class ProvisioningStatistics {
-    // obtain statistics from Database for NGNPro
+    // Obtain statistics from database for NGNPro
 
-    function getTopRequestsProvisioning($class) {
+    function getTopRequestsProvisioning($class, $start_date, $stop_date) {
         global $CDRTool;
 
         $number_of_requests=0;
@@ -18,9 +18,42 @@ class ProvisioningStatistics {
 
         if (!class_exists($class)) return array();
 
+        $today = new DateTime(); // This object represents current date/time
+        $today->setTime( 23, 59, 00 ); // reset time part, to prevent partial comparison
+
+        if ($stop_date == $today) {
+             $new_stop_date = $stop_date->add(new DateInterval('P1D'));
+        } else {
+            $new_stop_date = $stop_date;
+        }
         $db = new $class();
         $start = (float) array_sum(explode(' ',microtime()));
-        $query = "select substring_index(function,':',1) as port, total as number from ngnpro_logs_functions group by port order by number desc limit 0, 5";
+
+        $query = sprintf(
+            "select port, sum(number) as number
+            from (
+                select substring_index(function,':',1) as port, sum(total) as number
+                from ngnpro_logs_functions
+                where
+                    date between '%s' and '%s'
+                group by port
+
+                union all
+
+                select substring_index(function,':',1) as port, sum(total) as number
+                from ngnpro_logs_functions_history
+                where
+                    date between '%s' and '%s'
+                group by port
+            ) t
+            group by port
+            order by number desc limit 0,5",
+            $start_date->format('Y-m-d 00:00:00'),
+            $new_stop_date->format('Y-m-d 00:00:00'),
+            $start_date->format('Y-m-d 00:00:00'),
+            $new_stop_date->format('Y-m-d 00:00:00')
+        );
+
         dprint($query);
 
         if (!$db->query($query))  {
@@ -38,8 +71,37 @@ class ProvisioningStatistics {
             $requests['total'] = intval($db->f('number')) + $requests['total'];
         }
 
+        dprint_r($requests);
+
         foreach($temp as $key=> $value) {
-            $query = "select total as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
+            $query = sprintf("select sum(number) as number, function, port, method
+                from (
+                    select sum(total) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method
+                    from ngnpro_logs_functions
+                    where
+                        function like '$key:%%'
+                    and
+                        date between '%s' and '%s'
+                    group by function
+
+                    union all
+
+                    select sum(total) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method
+                    from ngnpro_logs_functions_history
+                    where
+                        function like '$key:%%'
+                    and
+                        date between '%s' and '%s'
+                    group by function
+                ) t
+                group by function
+                order by number desc limit 0,5",
+                $start_date->format('Y-m-d 00:00:00'),
+                $new_stop_date->format('Y-m-d 00:00:00'),
+                $start_date->format('Y-m-d 00:00:00'),
+                $new_stop_date->format('Y-m-d 00:00:00')
+            );
+            #$query = "select sum(total) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
             dprint("$query");
 
             if (!$db->query($query))  {
@@ -60,7 +122,32 @@ class ProvisioningStatistics {
         dprint("Processing time: ". sprintf("%.4f", ($end-$start))." seconds<br>");
 
         $start = (float) array_sum(explode(' ',microtime()));
-        $query ="select total as number, function, ip from ngnpro_logs_functions group by ip,function order by number desc";
+
+        $query = sprintf("select sum(number) as number,function, ip
+            from
+            (
+                select total as number, function, ip
+                from ngnpro_logs_functions
+                where
+                    date between '%s' and '%s'
+                group by ip,function
+
+                union all
+
+                select total as number, function, ip
+                from ngnpro_logs_functions_history
+                where
+                    date between '%s' and '%s'
+                group by ip,function
+            ) t
+            group by ip,function",
+            $start_date->format('Y-m-d 00:00:00'),
+            $new_stop_date->format('Y-m-d 00:00:00'),
+            $start_date->format('Y-m-d 00:00:00'),
+            $new_stop_date->format('Y-m-d 00:00:00')
+        );
+
+        #$query ="select total as number, function, ip from ngnpro_logs_functions group by ip,function order by number desc";
         dprint("$query");
 
         if (!$db->query($query))  {
@@ -81,16 +168,16 @@ class ProvisioningStatistics {
         return array($requests,$requests_ip);
     }
 
-    function getPeriod($class) {
+
+    function getNumber($class, $start_date, $stop_date) {
         global $CDRTool;
 
         $temp = array();
 
         if (!class_exists($class)) return array();
-
         $db = new $class();
-
-        $query = "select MIN(date) as min_date,MAX(date) as max_date, sum(total) as total from ngnpro_logs";
+        // Get total
+        $query = "select sum(total) as total from ngnpro_logs where date between '". $start_date->format('Y-m-d H:i:s')."' and '".$stop_date->format('Y-m-d H:i:s')."'";
         dprint($query);
 
         if (!$db->query($query))  {
@@ -102,33 +189,51 @@ class ProvisioningStatistics {
 
         if (!$db->num_rows()) return array();
 
-        $requests['total']=0;
         while ($db->next_record()) {
-            $temp = array($db->f('min_date'),$db->f('max_date'),$db->f('total'));
+            $temp = array($db->f('total'));
+        }
+        dprint_r($temp);
+
+        // Also get from archived entries
+        $query = "select sum(total) as total from ngnpro_logs_summary where date between '". $start_date->format('Y-m-d H:i:s')."' and '".$stop_date->format('Y-m-d H:i:s')."'";
+        dprint($query);
+
+        if (!$db->query($query))  {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
         }
 
+
+        if (!$db->num_rows()) return array();
+
+        while ($db->next_record()) {
+            $temp[0] = $temp[0]+$db->f('total');
+        }
         return $temp;
     }
 
-    function getCategories($requests) {
-        $total = $requests['total'];
+    function getData($requests,$data1) {
         $port_data= array();
-        $colors = array(
-               '#2f7ed8', '#0d233a', '#8bbc21',
-               '#910000', '#1aadce', '#492970','#f28f43',
-               '#77a1e5', '#c42525', '#a6c96a'
-           );
-
-        $num=0;
+        $port_data['name']="";
+        $port_data['children']=array();
         foreach($requests as $key => $value) {
             if ($key != 'total'){
-                $port_data[] = array(
-                    "name"  => $key,
-                    "y"     => round(($requests[$key]['total']/$total)*100,2),
-                    "color" => $colors[$num],
-                    "id"    => "$key"
-                );
-                $num++;
+                $children1 = array();
+                foreach($requests[$key] as $key1 => $value1) {
+                    if ($key1 != 'total'){
+                        $children2 = array();
+                        foreach($data1[$key][$key1] as $key2 => $value2) {
+                            $children2[] = array(name=> "$key2", size=>$value2);
+                        }
+                        $children1[] = array(
+                            "name"  => $key1,
+                            "children" => $children2
+                        );
+                    }
+                }
+                $port_data['children'][]=array(name =>$key,children => $children1);
             }
         }
 
@@ -136,226 +241,81 @@ class ProvisioningStatistics {
         return $return;
     }
 
-
-    function getSecondCategories($requests) {
-        $total = $requests['total'];
-        $method_data= array();
-
-        foreach($requests as $key => $value) {
-             if ($key != 'total'){
-                foreach($value as $key1 => $value1) {
-                    if ($key1 != 'total'){
-                        $method_data[$key][] = array(
-                            "name"     => $key1,
-                            "y"        => round(($value[$key1]/$total)*100,2),
-                            "parentId" => "$key",
-                            "value"    => "$value[$key1]");
-                    }
-                 }
-            }
-        }
-
-        dprint("<pre>");
-        dprint_r($method_data);
-        dprint("</pre>");
-
-        $return = json_encode($method_data);
-        return $return;
-    }
-
-    function printChartDonut($titlex,$titley,$num,$categories, $second_categories,$requests_ip) {
+    function printChartDonut($titlex,$good_data) {
         // Create the chart
-
-        $requests_ip=json_encode($requests_ip);
-
+        print "<h2>$titlex</h2>";
+        print "<div id='pie_provisioning'></div>";
         $chart = "
+            <style>
+            svg {
+                display: block;
+                margin: 0 auto;
+            }
+
+            circle,
+            path {
+                cursor: pointer;
+            }
+
+            circle {
+                fill: none;
+                pointer-events: all;
+            }
+
+            .lines path{
+                opacity: 1;
+                stroke: black;
+                stroke-width: 1px;
+                fill: none;
+            }
+            .innerlines path {
+                opacity: .5;
+                stroke: blue;
+                stroke-width: 3px;
+                fill: none;
+            }
+
+            div.tooltip1 {
+                position: absolute;
+                width: 100px;
+                height: 28px;
+                padding: 2px;
+                font: 11px sans-serif;
+                background-color:rgb(249, 249, 249) !important;
+                color: #333333 !important;
+                border: solid 1px #000000 !important;
+                z-index: 200;
+                border-radius: 4px;
+                pointer-events: none;
+            }
+
+            </style>
+
             <script type=\"text/javascript\">
                 $(function () {
-
-                    var colors = Highcharts.getOptions().colors,
-
-                    methods = [$second_categories];
-                    ports   = $categories;
-                    var new_methods = [];
-
-                    total_data = $requests_ip;
-
-                    // console.log(total_data['Sip']);
-
-                    for (var j = 0; j < methods.length; j++) {
-                        // console.log(methods[j]);
-
-                        num=0;
-
-                        $.each( methods[j], function( key, value ) {
-                            // console.log( value[0] );
-                            for (var i = 0; i < value.length; i++) {
-                                var brightness = 0.2 - (i / value.length) / 5 ;
-
-                                name = value[i].name;
-                                new_methods.push ({
-                                    name     : name,
-                                    y        : value[i].y,
-                                    color    : Highcharts.Color(ports[num].color).brighten(brightness).get(),
-                                    parentId : value[i].parentId,
-                                });
-
-                            }
-                            num++;
-                        });
-
-                    }
-
-                    //new_methods.sort();
-                    $('#sub_container$num').fadeIn();
-                    renderSubPie(new_methods[0].parentId+':'+new_methods[0].name+' by IP', total_data[new_methods[0].parentId][new_methods[0].name]);
-
-                    // console.log(new_methods);
-
-                    $('#container$num').highcharts({
-                        chart : {
-                            type   : 'pie',
-                            height : 350,
-                        },
-                        title : {
-                            text : '$titlex',
-                        },
-                        plotOptions : {
-                            pie : {
-                                allowPointSelect : true,
-                                shadow           : false,
-                                center           : ['50%', '50%']
-                            },
-                            series : {
-                                cursor : 'pointer',
-                                point  : {
-                                    events : {
-                                        click : function() {
-                                            // console.log(this.selected);
-
-                                            if (total_data[this.parentId] !== undefined) {
-                                                if (!this.selected){
-                                                    $('#sub_container$num').fadeIn();
-                                                    // console.log(total_data[this.parentId][this.name]);
-                                                    renderSubPie(this.parentId+':'+this.name+' by IP', total_data[this.parentId][this.name]);
-                                                } else {
-                                                    $('#sub_container$num').fadeOut();
-                                                }
-                                            } else {
-                                                $('#sub_container$num').fadeOut();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        tooltip : {
-                            valueSuffix : '%'
-                        },
-                        credits : {
-                          enabled : false
-                        },
-                        series: [{
-                            name : 'Requests',
-                            data : $categories,
-                            size : '60%',
-                            dataLabels : {
-                                formatter : function() {
-                                    return this.y > 12 ? this.point.name : null;
-                                },
-                                color    : 'white',
-                                distance : -50
-                            }
-                        },{
-                            name : 'Function',
-                            data : new_methods,
-                            size : '80%',
-                            innerSize  : '60%',
-                            dataLabels : {
-                                formatter : function() {
-                                    // display only if larger than 3
-                                    return this.y > 3 ? '<b>'+ this.point.name +'</b><br />'+ this.y +'%' : null;
-                                }
-                            }
-                        }],
-                    });
-
-                    function renderSubPie(title,data) {
-                        var new_data = [];
-                        var total    = 0;
-                        $.each( data, function( key, value ) {
-                            total = total + value;
-                        });
-
-                        $.each( data, function( key, value ) {
-                            val = (value/total)*100;
-                            new_data.push ({
-                                name : key,
-                                y    : val,
-                            });
-                        });
-
-                        $('#sub_container$num').highcharts({
-                            chart : {
-                                type   : 'pie',
-                                height : 350,
-                            },
-                            title : {
-                                text : title,
-                            },
-                            subtitle : {
-                                text : total + ' requests',
-                            },
-                            plotOptions : {
-                                pie : {
-                                    shadow : false,
-                                    center : ['50%', '50%']
-                                },
-                            },
-                            tooltip : {
-                                formatter : function() {
-                                    return '<b>'+ this.point.name +'</b>: '+ Math.round(this.percentage) +' %';
-                                 }
-                            },
-                            credits : {
-                              enabled : false
-                            },
-                            series : [{
-                                name : 'Requests',
-                                data : new_data,
-                                size : '80%',
-                                dataLabels : {
-                                    formatter : function() {
-                                        return this.y > 12 ?  '<b>'+ this.point.name +'</b><br/>'+  Math.round(this.percentage) +'%'  : null;
-                                    },
-                                },
-                            }],
-                        });
-                    }
+                    all_data = $good_data
+                    MultiDonut('#pie_provisioning',all_data);
                 });
-        </script>
-
-        <div id='container$num' class='span5'></div>
-        <div class='span1'></div>
-        <div id='sub_container$num' class='span5 pull-right' style='display:none'></div>";
+            </script>";
 
         print $chart;
     }
 
     function purge($class) {
         global $CDRTool;
+        $interval = 547;
 
         if (!class_exists($class)) return array();
 
         $db = new $class();
 
         $query = "insert into ngnpro_logs_summary (total, date,total_time) "
-                ."select sum(total) as number, date, sum(total_time) as data from ngnpro_logs "
-                ."where date < DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY UNIX_TIMESTAMP(date) DIV 3600 order by date";
+               . "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs "
+               . "where date < DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY UNIX_TIMESTAMP(date) DIV 3600 order by date";
 
         dprint($query);
 
-        if (!$db->query($query))  {
+        if (!$db->query($query)) {
             $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
@@ -367,16 +327,48 @@ class ProvisioningStatistics {
 
         dprint($query);
 
-        if (!$db->query($query))  {
+        if (!$db->query($query)) {
             $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
 
+        $query = sprintf("delete from ngnpro_logs_summary where date < date_sub(now(), interval %u day)", $interval);
+
+        dprint($query);
+
+        if (!$db->query($query)) {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+        $query = sprintf("delete from ngnpro_logs_functions where date < date_sub(now(), interval %u day)", $interval);
+
+        dprint($query);
+
+        if (!$db->query($query)) {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
+
+        $query = sprintf("delete from ngnpro_logs_functions_history where date < date_sub(now(), interval %u day)", $interval);
+
+        dprint($query);
+
+        if (!$db->query($query)) {
+            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            print $log;
+            syslog(LOG_NOTICE, $log);
+            return array();
+        }
     }
 
-    function getRequestsProvisioning($class,$days) {
+    function getRequestsProvisioning($class,$days, $start_date, $stop_date) {
         global $CDRTool;
         $requests = array();
         $period = '300';
@@ -392,7 +384,12 @@ class ProvisioningStatistics {
              $period='900';
         }
 
-        $query = "select total as number,date from ngnpro_logs_summary";
+        $query = "select total as number,date from ngnpro_logs_summary where date between '"
+               . $start_date->format('Y-m-d H:i:s')
+               . "' and '"
+               . $stop_date->format('Y-m-d H:i:s')
+               . "' order by date";
+
         dprint($query);
 
         if (!$db->query($query))  {
@@ -408,7 +405,12 @@ class ProvisioningStatistics {
             }
         }
 
-        $query = "select sum(total) as number,date from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period";
+        $query = "select sum(total) as number,date from ngnpro_logs where date between '"
+               . $start_date->format('Y-m-d H:i:s')
+               . "' and '"
+               . $stop_date->format('Y-m-d H:i:s')
+               . "' GROUP BY UNIX_TIMESTAMP(date) DIV $period";
+
         dprint($query);
 
         if (!$db->query($query))  {
@@ -428,7 +430,7 @@ class ProvisioningStatistics {
     }
 
 
-    function getRequestsTime($class, $days) {
+    function getRequestsTime($class, $days, $start_date, $stop_date) {
         global $CDRTool;
         $requests = array();
         $period = '300';
@@ -446,7 +448,12 @@ class ProvisioningStatistics {
           //   $period='2400';
        // }
 
-        $query = "select total as number, date, total_time as data from ngnpro_logs_summary order by date";
+        $query = "select total as number, date, total_time as data from ngnpro_logs_summary where date between '"
+               . $start_date->format('Y-m-d H:i:s')
+               . "' and '"
+               . $stop_date->format('Y-m-d H:i:s')
+               . "' order by date ";
+
         dprint($query);
 
         if (!$db->query($query))  {
@@ -463,7 +470,12 @@ class ProvisioningStatistics {
             }
         }
         #$query = "select sum(total) as number, date, concat('[',group_concat(data),']') as data from ngnpro_logs_new GROUP BY UNIX_TIMESTAMP(date) DIV 60 order by date";
-        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
+        $query = "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs where date between '"
+               . $start_date->format('Y-m-d H:i:s')
+               . "' and '"
+               . $stop_date->format('Y-m-d H:i:s')
+               . "' GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
+
         dprint($query);
 
         if (!$db->query($query))  {
@@ -487,17 +499,57 @@ class ProvisioningStatistics {
         return json_encode($requests);
     }
 
-    function printChartLine($num,$requests,$requests_time) {
-
-        $num=$num+1;
+    function printLineCharts($name,$requests,$requests_time) {
         $chart = "
-            <script type=\"text/javascript\">
+        <style type=\"text/css\">
+        .graph {
+            height: 200px;
+            margin: 8px auto;
+        }
+
+        .graphs table{
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .flotr-mouse-value {
+            background-color:rgb(249, 249, 249) !important;
+            color: #333333 !important;
+            opacity: 0.9 !important;
+            border: solid 1px #000000 !important;
+            z-index: 200;
+        }
+
+        .grid {
+            padding: 10px 0;
+        }
+
+        hr + .grid {
+            padding:0;
+            padding-bottom: 10px;
+        }
+
+        .grid:nth-child(even) {
+            background-color:#f9f9f9;
+        }
+
+        .flotr-axis-title-y1 {
+            -ms-transform: rotate(-90deg); /* IE 9 */
+            -webkit-transform: rotate(-90deg); /* Chrome, Safari, Opera */
+            transform: rotate(-90deg);
+        }
+        </style>
+        <script type=\"text/javascript\">
             $(function () {
                 var requests = $requests;
+
+                var temp_data = [];
+                var temp_data1 = [];
 
                 for (var j = 0; j < requests.length; j++) {
                     var t = requests[j][0].split(/[- :]/);
                     requests[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+                    temp_data[j] = [requests[j][0],requests[j][1]];
                     //requests[j][1] = requests[j][1]/5;
                 }
 
@@ -506,76 +558,47 @@ class ProvisioningStatistics {
                 for (var j = 0; j < request_time.length; j++) {
                     var t = request_time[j][0].split(/[- :]/);
                     request_time[j][0] = Date.UTC(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
+                    temp_data1[j] = [request_time[j][0],request_time[j][1]];
                 }
-                console.log(requests);
 
-                $('#container_line$num').highcharts({
-                    chart : {
-                        type     : 'spline',
-                        zoomType : 'x',
-                        height   : 280,
-                        marginRight: 80
+                good_data = [
+                    {
+                            idx   : 0,
+                            name  : 'test',
+                            data  : temp_data,
+                            label : 'number'
                     },
-                    credits : {
-                        enabled : false
-                    },
-                    title : {
-                        text : 'Provisioning requests - Average execution time',
-                    },
-                    xAxis : {
-                        type  : 'datetime',
-                        title : {
-                            text : null
-                        },
-                        minRange : 3600000,
-                        endOnTick: true,
-                    },
-                    plotOptions : {
-                        spline  : {
-                            marker : {
-                                enabled:  false
-                            },
-                            lineWidth : 1,
-                            shadow    : false,
-                            states    : {
-                                hover : {
-                                    lineWidth : 1
-                                }
-                            },
-                            threshold : null
-                        }
-                    },
-                    yAxis : [{
-                        title : {
-                            text : 'Requests'
-                        },
-                    },{
-                        title : {
-                            text : 'Execution time (ms)'
-                        },
-                        opposite : true
-                    }],
-                    series: [{
-                        name: 'Requests per minute',
-                            data: requests,
-                            enableMouseTracking: false,
-                            animation: false
+                ];
+                data1 = [
+                    {
+                        idx   : 0,
+                        name  : 'test',
+                        data  : temp_data1,
+                        label : 'time',
+                        color : '#d9534f'
                     }
-                    ,{
-                        name: 'Average execution time',
-                        data: request_time,
-                        color: '#8A0808',
-                        yAxis: 1,
-                        enableMouseTracking: false,
-                        animation: false
-                    }
-                    ],
-                });
+                ];
+
+                var extra_options = {
+                 //   title: 'Provisioning requests',
+                    ytitle: 'requests',
+                    suffix: '#',
+                };
+
+                basicTimeGraph(document.getElementById('new_graph_$name'), document.getElementById('legend_$name'),good_data,extra_options)
+
+                extra_options1 = {};
+                //extra_options1.title='Average execution time';
+                extra_options1.ytitle= 'ms';
+                extra_options1.suffix= 'ms';
+                extra_options1.scaling = 'logarithmic';
+                basicTimeGraph(document.getElementById('new_graph1_$name'), document.getElementById('legend1_$name'),data1,extra_options1)
             });
             </script>
-            <div  style='float:left; width: 100%;'>
-            <div id='container_line$num' class='span12' style='width: 75%; margin-left: auto; display:table ;margin-right: auto; text-align:center;float:none;'></div>";
-
+            <div class='row-fluid graphs'>
+            <div class='span6'><h2>Number of provisioning Requests</h2><div id='new_graph_$name' class='graph'></div><div id='legend_$name'></div></div>
+            <div class='span6'><h2>Average execution time per request</h2><div id='new_graph1_$name' class='graph'></div><div id='legend1_$name'></div></div></div>
+        ";
         print $chart;
     }
 }
