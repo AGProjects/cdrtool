@@ -1,83 +1,82 @@
-<?
-/*
-     This configuration is used for accessing remote NGNPro servers
-     Copy this file to /etc/cdrtool/ngnpro_engines.inc
+<?php
+/**
+*     This configuration is used for accessing remote NGNPro servers
+*     Copy this file to /etc/cdrtool/ngnpro_engines.inc
 */
 
-$customerProperties=array( 
-                          'support_order'       => array('name'     => 'Support order number',
-                                                            'category' => 'billing',
-                                                               'permission' => 'admin',
-                                                               'invisible'  => true
-                                                               )
-                                                               
-                          );
+$customerProperties = array(
+    'support_order' => array('name'       => 'Support order number',
+                             'category'   => 'billing',
+                             'permission' => 'admin',
+                             'invisible'  => true,
+                       )
+);
 
 $soapEngines=array(
-                           'sip' => array(
-                                         'name'                => 'SIP platform',
-                                         'username'            => 'admin',
-                                         'password'            => 'passwd',
-                                         'url'                 => 'http://sip.example.com:9200/',
-                                         'pstn_access'       => true,
-                                         'version'             => 4,
-                                         'record_generator'    => 'rg',
-                                         'sip_engine'          => 'sip',
-                                         'customer_engine'     => 'sip',
-                                         'voicemail_engine'    => 'vm',
-                                         'customer_properties' => $customerProperties,
-                                         'sip_proxy'           => 'sip.example.com',
-                                         'msrp_relay'          => 'msrprelay.example.com',
-                                         'voicemail_server'    => 'vm.example.com',
-                                         'xcap_root'           => 'https://cdr.example.com/xcap-root',
-                                         'support_email'       => 'support@example.com',
-                                         'billing_email'       => 'billing@example.com',
-                                         'support_web'         => 'https://web.example.com',
-                                         'enable_thor'         => false,
-                                         'pstn_access'         => false,
-                                         'allow_none_local_dns_zones' => false,
-                                         'welcome_message'     => '<h1>NGNPro provisioning client</h1>',
-                                         'currency'            => '&euro;',
-                                         'timeout'             => 5,
-                                         'enrollment_url'      => 'https://enrollment.example.com/',
-                                         'sip_settings_api_url'=> 'https://wiki.example.com',
-                                         'hostnames'           => array ('10.10.0.1'=>'node01.example.com'),
-                                         'store_clear_text_passwords' => true,
-                                         'show_presence_tab'   => false,
-                                         'show_directory'      => false,
-                                         'emergency_regions'   => array(),
-                                         'disable_extra_groups'  => true,
-                                         'default_timezone'    => 'Netherlands/Amsterdam',
-                                         'default_country'     => 'NL',
-                                         'call_limit'          => '3',
-                                         'notify_on_sip_account_changes' => false
-                                         ),
-                           'vm' => array('name'=> 'Voicemail server',
-                                         'username'=> 'admin',
-                                         'password'=> 'password',
-                                         'url'     => 'http://vm.example.com:9200/',
-                                         'skip'    =>  true
-                                         )
-                                         
-                          );
-$recordGenerators =array (
-			  'rg'=>array(
-                                      'sip_engine' => 'sip',
-                                      'enum_engine'=> 'sip'
-                                     )
-                         );
+    'sip'   => array(
+                    'name'                          => 'SIP platform',
+                    'username'                      => 'admin',
+                    'password'                      => 'passwd',
+                    'url'                           => 'http://sip.example.com:9200/',
+                    'pstn_access'                   => true,
+                    'version'                       => 4,
+                    'record_generator'              => 'rg',
+                    'sip_engine'                    => 'sip',
+                    'customer_engine'               => 'sip',
+                    'voicemail_engine'              => 'vm',
+                    'customer_properties'           => $customerProperties,
+                    'sip_proxy'                     => 'sip.example.com',
+                    'msrp_relay'                    => 'msrprelay.example.com',
+                    'voicemail_server'              => 'vm.example.com',
+                    'xcap_root'                     => 'https://cdr.example.com/xcap-root',
+                    'support_email'                 => 'support@example.com',
+                    'billing_email'                 => 'billing@example.com',
+                    'support_web'                   => 'https://web.example.com',
+                    'enable_thor'                   => false,
+                    'pstn_access'                   => false,
+                    'allow_none_local_dns_zones'    => false,
+                    'welcome_message'               => '<h1>NGNPro provisioning client</h1>',
+                    'currency'                      => '&euro;',
+                    'timeout'                       => 5,
+                    'enrollment_url'                => 'https://enrollment.example.com/',
+                    'sip_settings_api_url'          => 'https://wiki.example.com',
+                    'hostnames'                     => array ('10.10.0.1'=>'node01.example.com'),
+                    'store_clear_text_passwords'    => true,
+                    'show_presence_tab'             => false,
+                    'show_directory'                => false,
+                    'emergency_regions'             => array(),
+                    'disable_extra_groups'          => true,
+                    'default_timezone'              => 'Netherlands/Amsterdam',
+                    'default_country'               => 'NL',
+                    'call_limit'                    => '3',
+                    'notify_on_sip_account_changes' => false,
+               ),
+    'vm'    => array(
+                    'name'      => 'Voicemail server',
+                    'username'  => 'admin',
+                    'password'  => 'password',
+                    'url'       => 'http://vm.example.com:9200/',
+                    'skip'      =>  true,
+                )
+);
 
-$resellerFilters=array('default'  => array('soap_filter'        => 'sip'
-                                          ),
-                       '17451'     => array('soap_filter'        => 'sip:customers,enum_ranges,enum_numbers',
-                                           'record_generator'  => 'rg',
-                                           'voicemail_engine'  => 'vm',
-                                           'currency'          => '&euro'
-                                           )
-                       );
+$recordGenerators = array (
+    'rg'    => array('sip_engine'   => 'sip',
+                     'enum_engine'  => 'sip'
+               )
+);
 
-$domainFilters=array('default'      => array('sip_engine' => 'sip')
-                     );
+$resellerFilters = array(
+    'default'   => array('soap_filter' => 'sip'),
+    '17451'     => array('soap_filter'       => 'sip:customers,enum_ranges,enum_numbers',
+                        'record_generator'  => 'rg',
+                        'voicemail_engine'  => 'vm',
+                        'currency'          => '&euro'
+                  )
+);
 
+$domainFilters = array(
+    'default' => array('sip_engine' => 'sip')
+);
 
 ?>
