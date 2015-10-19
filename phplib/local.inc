@@ -1,4 +1,4 @@
-<?
+<?php
 class CDRTool_CT_Sql extends CT_Sql {
   var $database_class = "DB_CDRTool";          ## Which database to connect...
   var $database_table = "active_sessions";     ## and find our session data in this table.
