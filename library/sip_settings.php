@@ -3706,7 +3706,7 @@ class SipSettings {
                 if ($publicContact) {
                     $_els=explode(":",$publicContact);
                     if ($_loc=geoip_record_by_name($_els[0])) {
-                        $this->geo_location=$_loc['country_name'].'/'.$_loc['city'];
+                        $this->geo_location=$_loc['country_name'].'/'.utf8_encode($_loc['city']);
                     } else if ($_loc=geoip_country_name_by_name($_els[0])) {
                         $this->geo_location=$_loc;
                     } else {
@@ -11423,8 +11423,8 @@ class Enrollment {
                          'password'   => trim($_REQUEST['password']),
                          'email'      => trim($_REQUEST['email']),
                          'country'    => $location['country_code'],
-                         'state'      => $location['region'],
-                         'city'       => $location['city'],
+                         'state'      => utf8_encode($location['region']),
+                         'city'       => utf8_encode($location['city']),
                          'properties' => $properties
                         );
 
