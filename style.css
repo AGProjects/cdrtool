@@ -373,3 +373,6 @@ input[type="checkbox"] {
     border-bottom-left-radius: 6px;
 }
 
+.input-append .btn {
+    vertical-align: middle !important;
+}
