@@ -1,3 +1,31 @@
+cdrtool (9.4.0) unstable; urgency=low
+
+  * Added more logging
+
+  [ Web Interface ]
+
+  * Added more UA images
+  * Support retina images
+  * Fixed group by month
+  * Fixed Asterisk CDR search
+  * Replaced MRTG graphs with Flotr-2 graphs
+  * Reworked media sessions screen
+  * Reworked Provisioning Stats using d3 and flotr-2
+  * Disabled autocomplete in more fields
+
+  [ NGNPro Client ]
+
+  * Added setting to skip download tab
+  * Fixed pasword reset and reminders for php 5.4
+  * Fixed adding TXT records
+  * Changed city and sate to UTF-8
+
+  [ Rating ]
+
+  * Fixed finding only 1 profile in rating instead of multiple
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Mon, 19 Oct 2015 11:29:41 +0200
+
 cdrtool (9.3.0) unstable; urgency=low
 
   * Added initial PHP 5.4 compatibility
