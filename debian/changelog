@@ -1,6 +1,7 @@
 cdrtool (9.4.0) unstable; urgency=low
 
   * Added more logging
+  * Updated default apache config
 
   [ Web Interface ]
 
