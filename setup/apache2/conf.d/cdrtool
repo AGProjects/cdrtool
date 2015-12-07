@@ -30,7 +30,7 @@
 </Directory>
 
 <Directory /var/www/CDRTool/doc>
-	Options Indexes MultiViews
+	Options +Indexes +MultiViews
 </Directory>
 
 <Directory /var/www/CDRTool/csv>
