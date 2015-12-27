@@ -570,25 +570,32 @@ class MediaSessions {
         $sec = $period % 60;
         $min = floor($period/60);
         $h   = floor($min/60);
+        $d   = floor($h/24);
         $min = $min % 60;
-    
-        if ($h >= 1) {
-            return sprintf('%dh%02d\'%02d"', $h, $min, $sec);
+        $h   = $h % 24;
+
+        if ($d >= 1) {
+            return sprintf('%dd %dh %02d\' %02d"', $d, $h, $min, $sec);
+        } else if ($h >= 1) {
+            return sprintf('%dh %02d\' %02d"', $h, $min, $sec);
         } else {
-            return sprintf('%d\'%02d"', $min, $sec);
+            return sprintf('%d\' %02d"', $min, $sec);
         }
     }
     
     function normalizeTraffic($traffic) {
         // input is in bytes/second
         $mb = $traffic/1024/1024.0;
+        $gb = $traffic/1024.0;
         $kb = $traffic/1024.0;
-        if ($mb >= 0.95) {
-            return sprintf("%.2fMbps", $mb);
+        if ($gb >= 0.95) {
+            return sprintf("%.2f Gbit/s", $gb);
+        } else if ($mb >= 0.95) {
+            return sprintf("%.2f Mbit/s", $mb);
         } else if ($kb >= 1) {
-            return sprintf("%.2fkbps",$kb);
+            return sprintf("%.2f kbit/s",$kb);
         } else {
-            return sprintf("%dbps",$traffic);
+            return sprintf("%d bit/s",$traffic);
         }
     }
     
