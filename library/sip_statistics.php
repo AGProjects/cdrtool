@@ -788,7 +788,7 @@ class MRTGGraphs {
         }
         $this->domains[]= $domains;
 
-        // read entities in directory for domain list
+        // read entities in directory for each entry in domain list
 
         foreach ($domains as $entity) {
             $entity =  sprintf("status/usage/%s", $entity);
@@ -797,11 +797,10 @@ class MRTGGraphs {
                 $this->entities[] = new MRTGEntity(preg_replace("/.log$/", "", $final_entity));
             }
         }
-
+        $this->layout = $layout;
         // determine hostname
         exec("hostname -f", $hostname);
         $this->hostname = $hostname[0];
-
     }
 }
 

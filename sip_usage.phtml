@@ -12,18 +12,20 @@ $loginname=$auth->auth["uname"];
 $perm->check("statistics");
 
 $start_date = isset($_REQUEST['start_date']) ? new DateTime($_REQUEST['start_date']) : new DateTime('-1 days');
-$stop_date = isset($_REQUEST['stop_date']) ? new DateTime($_REQUEST['stop_date']) : new DateTime('now');
+$stop_date  = isset($_REQUEST['stop_date']) ? new DateTime($_REQUEST['stop_date']) : new DateTime('now');
 
 if ($start_date == $stop_date){
     $start_date = $start_date->setTime(00, 00, 00);
-    $stop_date = $stop_date->setTime(00, 00, 00);
+    $stop_date  = $stop_date->setTime(00, 00, 00);
     $stop_date->add(new DateInterval('P1D'));
 }
 
 global $CDRTool;
+
 require("sip_statistics.php");
 
 // trap AJAX requests
+
 if (isset($_POST['action'])) {
     switch ($_POST['action']) {
         case 'log':
@@ -269,6 +271,7 @@ $mrtggraphs = new MRTGGraphs();
     <?php } endforeach; ?>
 
     </div>
+<?php $mrtggraphs->layout->showFooter(); ?>
 </body>
 </html>
 <?php page_close(); ?>
