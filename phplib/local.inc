@@ -1351,7 +1351,7 @@ class pageLayout {
         print "
             <div id=wrapper2>
             <center>
-            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/CDRTool.png border=0></a>
+            <a href=http://cdrtool.ag-projects.com target=agprojects><img src=images/CDRTool.png style='max-width: 176px' border=0></a>
             </center>
         <h2 class=page-header>Terms and conditions</h2>
         <div class='row-fluid'>
