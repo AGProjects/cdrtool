@@ -432,7 +432,7 @@ class SIPstatistics {
     function SIPstatistics () {
         global $CDRTool;
 
-		$this->path=$CDRTool['Path'];
+        $this->path=$CDRTool['Path'];
 
         $this->harvest_file       = "/tmp/CDRTool-sip-statistics.txt";
         $this->harvest_script     = $this->path."/scripts/harvestStatistics.php";
@@ -444,13 +444,13 @@ class SIPstatistics {
 
         $this->getDomains();
 
-	}
+    }
 
     function getDomains () {
         global $CDRTool;
 
         if (!is_array($CDRTool['statistics']['domains'])) return;
-
+        
         foreach ($CDRTool['statistics']['domains'] as $_domain) {
         	$this->domains[$_domain]=$_domain;
         }
@@ -733,13 +733,13 @@ class MRTGGraphs {
 
         global $CDRTool;
 
-        $SIPstatistics = new SIPstatistics ();
+        $SIPstatistics = new SIPstatistics();
 
         $allowedDomains = '';
         if (strlen($CDRTool['filter']['domain'])) {
             $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
         }
-
+        
         if (is_array($allowedDomains))  {
             $domains=array_intersect($allowedDomains,array_keys($SIPstatistics->domains));
         } else {
