@@ -584,16 +584,18 @@ class MediaSessions {
     }
     
     function normalizeTraffic($traffic) {
-        // input is in bytes/second
+        // input is in bits/second
         $mb = $traffic/1024/1024.0;
-        $gb = $traffic/1024.0;
+        $gb = $traffic/1024/1024/1024;
         $kb = $traffic/1024.0;
         if ($gb >= 0.95) {
             return sprintf("%.2f Gbit/s", $gb);
         } else if ($mb >= 0.95) {
             return sprintf("%.2f Mbit/s", $mb);
         } else if ($kb >= 1) {
-            return sprintf("%.2f kbit/s",$kb);
+            return sprintf("%.2f Kbit/s",$kb);
+        } else if ($traffic == 0) {
+            return $traffic;
         } else {
             return sprintf("%d bit/s",$traffic);
         }
