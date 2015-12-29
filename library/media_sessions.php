@@ -331,9 +331,13 @@ class MediaSessions {
                     $streams=sprintf("%s %s",$key,$relay['stream_count'][$key]);
                 }
             }
+            $rClass= 'label-success';
+            if ($relay['status'] == 'halting') {
+                $rClass = 'label-warning';
+            }
+            $relayStatus = sprintf("<span class=\"label %s\">%s</span>",$rClass, ucfirst($relay['status']));
 
-        	if (count($this->allowedDomains)) {
-                
+            if (count($this->allowedDomains)) {
                 printf ("
                   <tr>
                     <td>%d</td>
@@ -348,7 +352,7 @@ class MediaSessions {
                   $this->normalizeTraffic($relay['bps_relayed']),
                   $relay['session_count'],
                   $streams,
-                  ucfirst($relay['status'])
+                  $relayStatus
                   );
             } else {
                 printf ("
@@ -369,7 +373,7 @@ class MediaSessions {
                   $this->normalizeTraffic($relay['bps_relayed']),
                   $relay['session_count'],
                   $streams,
-                  ucfirst($relay['status'])
+                  $relayStatus
                   );
             }
             $i++;
