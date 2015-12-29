@@ -38,7 +38,7 @@ class MediaSessions {
             $target= 'tcp://'.$m[2].':'.$m[3];
             $transport= $m[1];
 
-		    $this->mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.'.$m[2].'.pem';
+            $this->mp_tls_cert_file  = '/etc/cdrtool/mediaproxy.'.$m[2].'.pem';
 
             if ($m[1] == 'tls') {
                 if (!file_exists($this->mp_tls_cert_file)) {
@@ -73,7 +73,7 @@ class MediaSessions {
     }
 
     function fetchSessionFromNetwork() {
-    	// get sessions from MediaProxy2 dispatcher
+        // get sessions from MediaProxy2 dispatcher
 
         if (!$fp = $this->connectSocket()) return array();
 
@@ -83,7 +83,7 @@ class MediaSessions {
     }
 
     function fetchSummaryFromNetwork() {
-    	// get summary from MediaProxy2 dispatcher
+        // get summary from MediaProxy2 dispatcher
 
         if (count($this->allowedDomains)) return array();
         if (!$fp = $this->connectSocket()) return array();
@@ -119,7 +119,7 @@ class MediaSessions {
                     $_relay_statistics[$relay_ip]['stream_count'][$streamInfo->media_type]++;;
 
                     if ($_session->duration) {
-                    	$session_bps=($streamInfo->caller_bytes+$streamInfo->callee_bytes)/$_session->duration*8;
+                        $session_bps=($streamInfo->caller_bytes+$streamInfo->callee_bytes)/$_session->duration*8;
                     	$_relay_statistics[$relay_ip]['bps_relayed'] = $_relay_statistics[$relay_ip]['bps_relayed'] + $session_bps;
                     }
 
@@ -265,7 +265,7 @@ class MediaSessions {
 
     function showSummary() {
 
-		$this->getSummary();
+	$this->getSummary();
 
         if (!count($this->summary)) return;
 
@@ -666,7 +666,7 @@ class MediaSessionsNGNPro extends MediaSessions {
     }
 
     function fetchSessionFromNetwork() {
-    	if (!is_object($this->soapclient)) return false;
+        if (!is_object($this->soapclient)) return false;
 
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->getMediaSessions();
@@ -706,7 +706,7 @@ class MediaSessionsNGNPro extends MediaSessions {
 		if ($this->hostnames[$ip]) {
             return $this->hostnames[$ip];
         } else {
-        	return $ip;
+            return $ip;
         }
     }
 
