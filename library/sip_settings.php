@@ -874,6 +874,11 @@ class SipSettings {
             $this->timeout=intval($this->FNOA_timeoutDefault);
         }
 
+        if ($this->timeout > 900 ) {
+            $this->timeoutWasNotSet=1;
+            $this->timeout=intval(900);
+        }
+
         $this->getOwnerSettings($this->owner);
 
         $this->getDomainOwner($this->domain);
@@ -3423,7 +3428,7 @@ class SipSettings {
         print _("No-answer Timeout");
         print "' data-trigger=\"focus\" data-toggle=\"popover\" data-content=\"";
         print _("Used to determined after how many seconds the Forwarding action for this condition will occur");
-        printf ("\" value='%d' size=3 type=text><span class='add-on'>s</span>",$this->timeout);
+        printf ("\" value='%d' size=3 type=number max=\"900\"><span class='add-on'>s</span>",$this->timeout);
  
         print "
         </div>
@@ -4210,9 +4215,14 @@ class SipSettings {
             $result->quota=0;
         }
 
-        if ($result->timeout == '') {
+        if ($result->timeout == '')  {
             $this->somethingChanged=1;
             $result->timeout=35;
+        }
+
+        if ($result->timeout > 900)  {
+            $this->somethingChanged=1;
+            $result->timeout=900;
         }
 
         if ($this->somethingChanged) {
