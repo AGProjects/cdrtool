@@ -243,7 +243,6 @@ class CDRS_opensips extends CDRS {
 
 
     function initForm() {
-
         // form els added below must have global vars
         foreach ($this->FormElements as $_el) {
             global ${$_el};
@@ -2605,7 +2604,7 @@ class CDR_opensips extends CDR {
                 $this->CanonicalURI=$this->cNumber;
             }
         }
-
+        
         if ($this->CanonicalURI) {
             $this->CanonicalURIPrint            = $this->CanonicalURI;
             $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);

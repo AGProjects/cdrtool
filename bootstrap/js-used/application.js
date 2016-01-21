@@ -218,6 +218,7 @@ function MultiDonut(id, in_data) {
                 }
             ]);
         })
+        .attr("id", function(d) {return(d.name)})
     };
 
     var addOuterLabel = function(data) {
@@ -228,6 +229,12 @@ function MultiDonut(id, in_data) {
         .data(data)
         .enter().append("text")
         .attr("text-anchor", "left")
+        .attr("class", function(d){
+            if (d.depth < 2) {
+                return 'cat'
+            }
+            return 'sec'
+        })
         .text(function(d) {
             if (((d.sum/d.parent.sum)*100) > 10 ) {
                 if (d.depth>=2) {
@@ -298,7 +305,7 @@ function MultiDonut(id, in_data) {
                 midAngle = Math.atan2(ocentr[1], ocentr[0]);
                 ocentr[0] = Math.cos(midAngle) * radius*1.2;
                 ocentr[1] = Math.sin(midAngle) * radius*1.2;
-                centr[1] = ocentr[1]+16;
+                centr[1] = ocentr[1]+18;
                 centr[0] < 0 ? centr[0] = ocentr[0]-21-textLength : centr[0] = ocentr[0]+21 ;
             } else {
                 centr[0] = centr[0]-(textLength/2);
@@ -407,31 +414,159 @@ function MultiDonut(id, in_data) {
                 .style("fill-opacity", 1)
                 .attrTween("d", function(d) { return arcTween.call(this, updateArc(d)); });
         });
+        fixOverlap();
     }
 
-    // TODO fix overlapping
     function fixOverlap() {
-        var prev;
-        svg.select(".labelst").selectAll("text").each(function(d, i) {
-            if(i > 0) {
-                var thisbb = this.getBoundingClientRect(),
-            prevbb = prev.getBoundingClientRect();
-            // move if they overlap
-            if(!(thisbb.right < prevbb.left ||
-                thisbb.left > prevbb.right ||
-                thisbb.bottom < prevbb.top ||
-                thisbb.top > prevbb.bottom)) {
-                var ctx = thisbb.left + (thisbb.right - thisbb.left)/2,
-                    cty = thisbb.top + (thisbb.bottom - thisbb.top)/2,
-                    cpx = prevbb.left + (prevbb.right - prevbb.left)/2,
-                    cpy = prevbb.top + (prevbb.bottom - prevbb.top)/2,
-                    off = Math.sqrt(Math.pow(ctx - cpx, 2) + Math.pow(cty - cpy, 2))/2;
-                d3.select(this).attr("transform",
-                    "translate(" + (radius*1.2 + off) + "," +
-                    (radius*1.2 + off) + ")");
+        console.log('Fixing overlapping labels');
+
+        svg.select(".labelst").selectAll("text.sec").each(function(d1, i1) {
+
+            var thisbb0 = this.getBoundingClientRect();
+            var overlapper = this;
+
+            if (this.textContent !== '') {
+                svg.select(".labelst").selectAll("text.cat").each(function(d, i) {
+                    if (overlapper !== this){
+                var thisbb1 = this.getBoundingClientRect();
+                var  p1x = thisbb0.left,
+                     p1y = thisbb0.top,
+                     p2x = thisbb0.right,
+                     p2y = thisbb0.bottom,
+
+                     p3x = thisbb1.left,
+                     p3y = thisbb1.top,
+                     p4x = thisbb1.right,
+                     p4y = thisbb1.bottom;
+
+                x_overlap = Math.max(0, Math.min(p2x,p4x) - Math.max(p1x,p3x));
+                y_overlap = Math.max(0, Math.min(p2y,p4y) - Math.max(p1y,p3y));
+
+                if ( this.textContent !== '' && x_overlap !== 0 && y_overlap !==0 ) {
+                    var correction =0;
+                    if (p2y > p3y && p4y >= p2y) {
+                        correction  = thisbb0.height-y_overlap+thisbb1.height;
+                    } else {
+                        correction = y_overlap;
+                    }
+                    console.log("Overlap with minor label, moving: "+ this.textContent);
+                    cords = d3.transform(d3.select(this).attr("transform")).translate;
+                    console.log(cords);
+                    if (cords[0] < 0) {
+                        cords[0] = cords[0];
+                    } else {
+                        cords[0] = cords[0];
+                    }
+                    if (cords[1] < 0) {
+                        cords[1] = cords[1]-correction;
+                    } else {
+                        cords[1] = cords[1]+correction;
+                    }
+
+                    d3.select(this).attr("transform",
+                       "translate(" + (cords[0]) + "," +
+                        (cords[1]) + ")");
+
+                    var cw = d3.select(this)[0][0].clientWidth;
+
+                    d3.select("path#"+ this.textContent)
+                        .transition().attr("d", function(d){
+                            centr = arc.centroid(d);
+                            ocentr = arc.centroid(d);
+                            midAngle = Math.atan2(ocentr[1], ocentr[0]);
+                            ocentr[0] = Math.cos(midAngle) * radius*1.2;
+                            ocentr[1] = Math.sin(midAngle) * radius*1.2;
+                            ocentr[1] < 0 ? ocentr[1]=ocentr[1]+4: ocentr[1]= ocentr[1]-4;
+                            cords[0] < 0 ? centr[0] = cords[0]+cw+1 : centr[0] = cords[0] ;
+                            return lineFunction([
+                                {
+                                    'x': arc.centroid(d)[0],
+                                    'y': arc.centroid(d)[1]
+                                },
+                                {
+                                    'x': ocentr[0],
+                                    'y': cords[1]-4
+                                },
+                                {
+                                    'x': centr[0],
+                                    'y': cords[1]-4
+                                }
+                            ]);
+                    });
                 }
+              }
+            });
             }
-            prev = this;
+        });
+
+        svg.select(".labels").selectAll("text").each(function(d1, i1) {
+
+            var thisbb0 = this.getBoundingClientRect();
+            var overlapper = this;
+
+            if (this.textContent !== '') {
+                svg.select(".labelst").selectAll("text.cat").each(function(d, i) {
+                var thisbb1 = this.getBoundingClientRect();
+                var  p1x = thisbb0.left,
+                     p1y = thisbb0.top,
+                     p2x = thisbb0.right,
+                     p2y = thisbb0.bottom,
+                     p3x = thisbb1.left,
+                     p3y = thisbb1.top,
+                     p4x = thisbb1.right,
+                     p4y = thisbb1.bottom;
+
+                x_overlap = Math.max(0, Math.min(p2x,p4x) - Math.max(p1x,p3x));
+                y_overlap = Math.max(0, Math.min(p2y,p4y) - Math.max(p1y,p3y));
+
+                if ( this.textContent !== '' && x_overlap !== 0 && y_overlap !==0 ) {
+
+                    console.log("Overlap with a %, moving: "+ this.textContent);
+                    cords = d3.transform(d3.select(this).attr("transform")).translate;
+
+                    if (cords[0] < 0) {
+                        cords[0] = cords[0]-x_overlap;
+                    } else {
+                        cords[0] = cords[0]+x_overlap;
+                    }
+                    if (cords[1] < 0) {
+                        cords[1] = cords[1]+y_overlap;
+                    } else {
+                        cords[1] = cords[1]+y_overlap;
+                    }
+                    d3.select(this).attr("transform",
+                       "translate(" + (cords[0]) + "," +
+                        (cords[1]) + ")");
+
+                    var cw = d3.select(this)[0][0].clientWidth;
+
+                    d3.select("path#"+ this.textContent)
+                        .transition().attr("d", function(d){
+                            centr = arc.centroid(d);
+                            ocentr = arc.centroid(d);
+                            midAngle = Math.atan2(ocentr[1], ocentr[0]);
+                            ocentr[0] = Math.cos(midAngle) * radius*1.2;
+                            ocentr[1] = Math.sin(midAngle) * radius*1.2;
+                            ocentr[1] < 0 ? ocentr[1]=ocentr[1]-4: ocentr[1]= ocentr[1]-4;
+                            cords[0] < 0 ? centr[0] = cords[0]+cw+1 : centr[0] = cords[0] ;
+                            return lineFunction([
+                                {
+                                    'x': arc.centroid(d)[0],
+                                    'y': arc.centroid(d)[1]
+                                },
+                                {
+                                    'x': ocentr[0],
+                                    'y': cords[1]-4
+                                },
+                                {
+                                    'x': centr[0],
+                                    'y': cords[1]-4
+                                }
+                            ]);
+                    });
+                }
+            });
+            }
         });
     }
 
@@ -485,6 +620,7 @@ function MultiDonut(id, in_data) {
             .style("opacity", 0);
     }
 
+    fixOverlap();
     d3.select(self.frameElement).style("height", margin.top + margin.bottom + "px");
 }
 
