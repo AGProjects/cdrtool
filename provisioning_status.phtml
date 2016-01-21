@@ -58,7 +58,7 @@ foreach (array_keys($DATASOURCES) as $datasource) {
         <span>".$start_date->format('F j, Y H:i:s')." - ".$stop_date->format('F j, Y H:i:s')."</span> <b class=\"caret\"></b>
         </div>";
         print "<div style='clear:both'></div>";
-        print "<script type='text/javascript'>console.log($('#reportrange'));$('#reportrange').detach().appendTo('.page-header h1');</script>";
+        print "<script type='text/javascript'>$('#reportrange').detach().appendTo('.page-header h1');</script>";
 
         print "<div class='row-fluid' style='min-height:350px'><div class='span6'>";
         print "<div class='alert alert-success'><center> $requests_number[0] requests between ".$start_date->format('Y-m-d H:i:s')." and ".$stop_date->format('Y-m-d H:i:s')." </center></div>";
