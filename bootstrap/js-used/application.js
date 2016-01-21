@@ -72,8 +72,12 @@ function MultiDonut(id, in_data) {
         .range([90, 20]);
 
     var svg = d3.select(id).append("svg")
-        .attr("width", margin.left + margin.right)
-        .attr("height", margin.top + margin.bottom)
+        // TODO: check if svg is now fully responsive
+        // .attr("width", margin.left + margin.right)
+        // .attr("height", margin.top + margin.bottom+50)
+        // .attr("width","100%")
+       .attr("viewBox","0 0 600 350")
+       .attr("style","max-height: 350px")
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
