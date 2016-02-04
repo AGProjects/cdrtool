@@ -10756,7 +10756,7 @@ class Customers extends Records {
                               'credit'      => array('type'       => 'float',
                                                      'adminonly'  => true
                                                      ),
-                              'username'    => array('type'       =>'text'
+                              'username'    => array('type'       =>'text', 'extra_html' => 'autocomplete="off"'
                                                      ),
                               'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
@@ -11742,12 +11742,13 @@ class Customers extends Records {
                         printf ("
                         <tr>
                         <td class=border valign=top>%s</td>
-                        <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                        <td class=border><input name=%s_form size=30 type=text value='%s' %s></td>
                         </tr>
                         ",
                         $item_name,
                         $item,
-                        $customer->$item
+                        $customer->$item,
+                        $this->Fields[$item]['extra_html']
                         );
                     }
                 }
