@@ -15104,10 +15104,9 @@ class CustomersActions extends Actions {
 
             if ($action=='delete') {
                 $function=array('commit'  => array('name'       => 'deleteAccount',
-                                                    'parameters' => intval($key),
+                                                    'parameters' => array(intval($key)),
                                                    'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
                                 );
-
                 $this->SoapEngine->execute($function,$this->html);
             }
         }
