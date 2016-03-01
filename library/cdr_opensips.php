@@ -1,4 +1,4 @@
-<?
+<?php
 class CDRS_opensips extends CDRS {
     var $table                 = "radacct";
     var $CDR_class             = "CDR_opensips";
@@ -371,13 +371,13 @@ class CDRS_opensips extends CDRS {
         $this->f->add_element(array(
                     "name"=>"begin_time",
                     "size"=>"1",
-		            "type"=>"text",
+                    "type"=>"text",
                     "extrahtml"=>"id='timepicker1' class=\"input-small\" data-show-meridian='false' data-minute-step='1' data-default-time='$begin_hour:$begin_min'"
                     ));
         $this->f->add_element(array(
                     "name"=>"end_time",
                     "size"=>"1",
-		            "type"=>"text",
+                    "type"=>"text",
                     "extrahtml"=>"id='timepicker2' class=\"input-small\" data-show-meridian='false' data-minute-step='1' data-default-time='$end_hour:$end_min'"
                     ));
         $this->f->add_element(array(    "name"=>"call_id",
@@ -2604,7 +2604,7 @@ class CDR_opensips extends CDR {
                 $this->CanonicalURI=$this->cNumber;
             }
         }
-        
+
         if ($this->CanonicalURI) {
             $this->CanonicalURIPrint            = $this->CanonicalURI;
             $NormalizedNumber                   = $this->CDRS->NormalizeNumber($this->CanonicalURI,"destination",$this->BillingPartyId,$this->domain,$this->gateway,'',$this->ENUMtld,$this->ResellerId);
