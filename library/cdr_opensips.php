@@ -26,6 +26,7 @@ class CDRS_opensips extends CDRS {
                          'timestamp'       => 'timestamp',
                          'SipMethod'       => 'SipMethod',
                          'disconnect'      => 'SipResponseCode',
+                         'disconnectOrig' => 'AcctTerminateCause',
                          'SipFromTag'      => 'SipFromTag',
                          'SipToTag'        => 'SipToTag',
                          'RemoteAddress'   => 'SipTranslatedRequestURI',
@@ -2746,6 +2747,41 @@ class CDR_opensips extends CDR {
             $this->destinationName = $NormalizedNumber['destinationName'];
         }
 
+        if ($this->CDRS->rating_settings['rate_on_net_calls']
+            && $this->CDRS->rating_settings['rate_on_net_diverted_calls']
+            && ($this->flow == 'on-net-diverted-off-net'
+                || $this->flow == 'on-net-diverted-on-net'
+                || $this->flow= 'diverted-on-net')
+            && !$this->normalized
+            && $this->duration != '0'
+            && $this->disconnect == $this->disconnectOrig) {
+                $query = sprintf("
+                    update
+                            radacct201602
+                    set
+                            AcctStopTime ='%s',
+                            Normalized='0',
+                            AcctSessionTime='%s',
+                            SipResponseCode='200'
+                    where
+                            AcctSessionId='%s'
+                            and SipFromTag='%s'
+                            and SipToTag!='%s'
+                            and (
+                                ServiceType='on-net'
+                                or ServiceType='on-net-diverted-on-net'
+                                or ServiceType='diverted-on-net')
+                            and AcctSessionTime=''",
+                    $this->stopTime,
+                    $this->duration,
+                    $this->callId,
+                    $this->SipFromTag,
+                    $this->SipToTag);
+                $this->tdb = new DB_radius;
+                dprint($query);
+                $this->tdb->query($query);
+        }
+
         if ($this->application == "presence") {
             $this->destinationPrint     = $this->cNumberUsername.$this->cNumberDelimiter.$this->cNumberDomain;
             $this->DestinationForRating = $this->cNumberNormalized;
@@ -2816,6 +2852,12 @@ class CDR_opensips extends CDR {
 
         if ($this->disconnect) {
             $this->disconnectPrint    = $this->NormalizeDisconnect($this->disconnect);
+        }
+
+        if ($this->disconnectOrig != $this->disconnect
+            && $this->disconnect
+            && $this->CDRS->rating_settings['rate_on_net_diverted_calls']) {
+            $this->disconnectOrigPrint =$this->CDRS->disconnectCodesDescription[$this->disconnectOrig]." (".$this->disconnectOrig.")";
         }
 
         $this->traceIn();
@@ -3300,9 +3342,30 @@ class CDR_opensips extends CDR {
             $status_color="<span class=\"pull-right label\">";
         }
 
+        if ($this->disconnectOrig != $this->disconnect
+            && $this->CDRS->rating_settings['rate_on_net_diverted_calls']) {
+            $disclass=substr($this->disconnectOrig,0,1);
+            if ($disclass == "6" || $disclass=="5") {
+                $status1_color="<span class=\"pull-right label label-important\">";
+            } else if ($disclass=="4" ) {
+                $status1_color="<span class=\"pull-right label label-info\">";
+            } else if ($disclass=="3" ) {
+                $status1_color="<span class=\"pull-right label label-success\">";
+            } else if ($disclass=="2" ) {
+                $status1_color="<span class=\"pull-right label label-success\">";
+            } else  {
+                $status1_color="<span class=\"pull-right label\">";
+            }
+        }
+
         print "
         <td valign=top align=right>$this->SipCodec</td>
-        <td valign=top align=right>$status_color $this->disconnectPrint</span></td>
+        <td valign=top align=right>$status_color $this->disconnectPrint</span>";
+        if ($this->disconnectOrig != $this->disconnect
+            && $this->CDRS->rating_settings['rate_on_net_diverted_calls']) {
+                print "$status1_color $this->disconnectOrigPrint</span>";
+        }
+        print "</td>
         </tr>
         <tr class=extrainfo id='row$found'>
         <td></td>
