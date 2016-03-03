@@ -1,3 +1,25 @@
+cdrtool (9.4.5) unstable; urgency=low
+
+  [ Rating ]
+  * Added rating for diverted-on-net calls
+
+  [ NGNPro Client ]
+
+  * Fixed bulk deleting customers
+  * Limit no answer setting to 900s
+
+  [ Web Interface ]
+
+  * Updated Fav Icons
+  * Fixed various HTML display bugs
+  * Improved usage grid
+  * Rework donut graph (responsive)
+  * Fixed overlapping labels in donut graph
+  * Improve fomatting of time and speed for larger values in media-sessions
+  * Removed highcharts script from header
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Tue, 01 Mar 2016 12:17:11 +0100
+
 cdrtool (9.4.0) unstable; urgency=low
 
   * Added more logging
