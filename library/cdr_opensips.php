@@ -2757,7 +2757,7 @@ class CDR_opensips extends CDR {
             && $this->disconnect == $this->disconnectOrig) {
                 $query = sprintf("
                     update
-                            radacct201602
+                            %s
                     set
                             AcctStopTime ='%s',
                             Normalized='0',
@@ -2772,6 +2772,7 @@ class CDR_opensips extends CDR {
                                 or ServiceType='on-net-diverted-on-net'
                                 or ServiceType='diverted-on-net')
                             and AcctSessionTime=''",
+                    $this->CDRS->table,
                     $this->stopTime,
                     $this->duration,
                     $this->callId,
