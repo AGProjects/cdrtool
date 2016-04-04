@@ -1,3 +1,10 @@
+cdrtool (9.4.6) unstable; urgency=low
+
+  [ Rating ]
+  * Fixed radting for diverted calls
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Mon, 04 Apr 2016 12:26:15 +0200
+
 cdrtool (9.4.5) unstable; urgency=low
 
   [ Rating ]
