@@ -2751,7 +2751,8 @@ class CDR_opensips extends CDR {
             && $this->CDRS->rating_settings['rate_on_net_diverted_calls']
             && ($this->flow == 'on-net-diverted-off-net'
                 || $this->flow == 'on-net-diverted-on-net'
-                || $this->flow == 'diverted-on-net')
+                || $this->flow == 'diverted-on-net'
+                || $this->flow == 'diverted-off-net')
             && !$this->normalized
             && $this->duration != '0'
             && $this->disconnect == $this->disconnectOrig) {
@@ -2770,7 +2771,8 @@ class CDR_opensips extends CDR {
                             and (
                                 ServiceType='on-net'
                                 or ServiceType='on-net-diverted-on-net'
-                                or ServiceType='diverted-on-net')
+                                or ServiceType='diverted-on-net'
+                                or ServiceType='incoming')
                             and AcctSessionTime=''",
                     $this->CDRS->table,
                     $this->stopTime,
