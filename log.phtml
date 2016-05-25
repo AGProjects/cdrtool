@@ -170,7 +170,7 @@ if  ($rows>0)  {
     if (!$_max_rows) {
         $_max_rows = 10;
     }
-    $query = sprintf("select * from log where %s order by id desc limit %d, %d",addslashes($where),intval($i),$_max_rows);
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,intval($i),$_max_rows);
 
     $db->query($query);
 
