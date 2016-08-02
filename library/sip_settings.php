@@ -4133,6 +4133,14 @@ class SipSettings {
             $this->setPreference('yubikey',$yubikey);
             $this->somethingChanged=1;
         }
+        
+        if (is_array($result->acl) and count($result->acl)) {
+            foreach (array_keys($result->acl) as $key) {
+                if (isset($result->acl[$key]->tag) && $result->acl[$key]->tag == '') {
+                    unset($result->acl[$key]->tag);
+                }
+            }
+        }
 
         if ($this->IPAccessListChangePolicy()) {
             if (isset($ip_access_list) and $this->ip_access_list != $ip_access_list) {
