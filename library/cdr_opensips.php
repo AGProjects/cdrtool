@@ -2944,7 +2944,7 @@ class CDR_opensips extends CDR {
             $fromtag_enc      = urlencode(quoted_printable_decode($this->SipFromTag));
             $totag_enc        = urlencode(quoted_printable_decode($this->SipToTag));
 
-            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+            $this->traceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', '_blank',
             'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1300px,height=600')\"><font color=red>Click here for the SIP trace</font></a> &nbsp;";
 
             $this->cdr_details.= "
@@ -3097,7 +3097,7 @@ class CDR_opensips extends CDR {
             if ($this->CDRS->mediaTrace) {
                 $media_trace_datasource = $this->CDRS->mediaTrace;
     
-                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', 'Trace',
+                $this->mediaTraceLink="<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?cdr_source=$media_trace_datasource&callid=$callid_enc&fromtag=$fromtag_enc&totag=$totag_enc&proxyIP=$this->SipProxyServer', '_blank',
                 'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for media information</a> &nbsp;";
     
                 $this->cdr_details.= sprintf("
@@ -4865,7 +4865,7 @@ class SIP_trace {
 
             print "<th align=center class=border>";
             if ($proxyIP != $IPels[0] && $this->isProxy($IPels[0],$proxyIP)) {
-                $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', 'Trace',
+                $trace_link=sprintf("<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=%s&callid=%s&fromtag=%s&totag=%s&proxyIP=%s', '_self',
                 'toolbar=0,status=1,menubar=1,scrollbars=1,resizable=1,width=1000,height=600')\"><font color=red><b>%s:%s (Trace) </b></font></a>",
                 urlencode($this->cdr_source),
                 urlencode($callid),
