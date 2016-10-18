@@ -10798,7 +10798,12 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         !strstr($_REQUEST['action'],'put_') &&
         !strstr($_REQUEST['action'],'export_') &&
         !strstr($_REQUEST['action'],'add_')) {
-        $title  = "SIP settings of $account";
+        $title  = "$account";
+
+	if (array_key_exists($SipSettings->tab, $SipSettings->tabs)) {
+	    $title = $SipSettings->tabs[$SipSettings->tab]. " - ". $title;
+	}
+
         $header = $SipSettings->headerFile;
         $css    = $SipSettings->cssFile;
 
