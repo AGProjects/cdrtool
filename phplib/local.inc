@@ -1,570 +1,590 @@
 <?php
-class CDRTool_CT_Sql extends CT_Sql {
-  var $database_class = "DB_CDRTool";          ## Which database to connect...
-  var $database_table = "active_sessions";     ## and find our session data in this table.
+class CDRTool_CT_Sql extends CT_Sql
+{
+    public $database_class = "DB_CDRTool";          ## Which database to connect...
+    public $database_table = "active_sessions";     ## and find our session data in this table.
 }
 
-class CDRTool_Session extends Session {
-  var $classname      = "CDRTool_Session";
-  var $auto_init      = "setup.inc";
-  var $cookiename     = "CDRc";            ## defaults to classname
-  var $magic          = "bzssdgaune";      ## ID seed
-  var $mode           = "cookie";          ## We propagate session IDs with cookies
-  var $fallback_mode  = "get";
-  var $allowcache     = "no";
-  var $allowcache_expires     = "5";
-  var $lifetime       = 0;                 ## 0 = do session cookies, else minutes
-  var $that_class     = "CDRTool_CT_Sql"; ## name of data storage container
-  var $gc_probability = 5;
+class CDRTool_Session extends Session
+{
+    public $classname      = "CDRTool_Session";
+    public $auto_init      = "setup.inc";
+    public $cookiename     = "CDRc";            ## defaults to classname
+    public $magic          = "bzssdgaune";      ## ID seed
+    public $mode           = "cookie";          ## We propagate session IDs with cookies
+    public $fallback_mode  = "get";
+    public $allowcache     = "no";
+    public $allowcache_expires     = "5";
+    public $lifetime       = 0;                 ## 0 = do session cookies, else minutes
+    public $that_class     = "CDRTool_CT_Sql"; ## name of data storage container
+    public $gc_probability = 5;
 }
 
-class CDRTool_User extends User {
-    var $classname = "CDRTool_User";
-    var $magic          = "Abraacdascadabra";     ## ID seed
-    var $that_class     = "CDRTool_CT_Sql"; ## data storage container
+class CDRTool_User extends User
+{
+    public $classname = "CDRTool_User";
+    public $magic          = "Abraacdascadabra";     ## ID seed
+    public $that_class     = "CDRTool_CT_Sql"; ## data storage container
 }
 
-class CDRTool_Auth extends Auth {
-  var $classname      = "CDRTool_Auth";
-  var $lifetime       =  240;
-  var $database_class = "DB_CDRTool";
-  var $database_table = "auth_user";
+class CDRTool_Auth extends Auth
+{
+    public $classname      = "CDRTool_Auth";
+    public $lifetime       =  240;
+    public $database_class = "DB_CDRTool";
+    public $database_table = "auth_user";
 
-  function auth_loginform() {
-    global $sess;
-    global $_PHPLIB;
-    global $max_login_attempts;
-    global $CDRTool;
+    function auth_loginform()
+    {
+        global $sess;
+        global $_PHPLIB;
+        global $max_login_attempts;
+        global $CDRTool;
 
-    $username    = $_POST["username"];
-    $sendotp     = $_POST["sendotp"];
-    $password    = $_POST["password"];
-    $challenge   = $_POST["challenge"];
-    $response    = $_POST["response"];
+        $username    = $_POST["username"];
+        $sendotp     = $_POST["sendotp"];
+        $password    = $_POST["password"];
+        $challenge   = $_POST["challenge"];
+        $response    = $_POST["response"];
 
-    $max_login_attempts=5;
+        $max_login_attempts=5;
 
-    $sess->register("challenge");
-	if (!$challenge) {
-		$challenge = md5(uniqid($this->magic));
-	}
-
-	$query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER['REMOTE_ADDR']));
-    $this->db->query($query);
-
-    if ($this->db->num_rows()) {
-        $this->db->next_record();
-
-        $spam_login_ip    = $this->db->f('ip');
-        $spam_login_tries = $this->db->f('tries');
-        $spam_login_stamp = $this->db->f('stamp');
-        $next_try	      = $spam_login_stamp+120;
-        $remains          = $next_try-time();
-        $next_try	      = Date("Y-m-d H:i:s",$next_try);
-        $now	          = Date("Y-m-d H:i:s",time());
-
-	}
-
-    if ($remains < 0) {
-        $query=sprintf("delete from spam where ip = '%s'", addslashes($spam_login_ip));
-        if ($this->db->query($query)) {
-            unset($spam_login_tries);
-        }
-    }
-
-	if ($spam_login_tries < $max_login_attempts) {
-        $title="Login";
-        if (is_readable("/etc/cdrtool/local/header.phtml")) {
-            include("/etc/cdrtool/local/header.phtml");
-        } else {
-            include("$CDRTool[Path]/header.phtml");
+        $sess->register("challenge");
+        if (!$challenge) {
+            $challenge = md5(uniqid($this->magic));
         }
 
-        $layout = new pageLayoutLocal();
-        $layout->showLoginForm($this);
-        $layout->showFooter();
-
-	} else {
-        if ($spam_login_tries == $max_login_attempts) {
-            $log_time=Date("Y-m-d H:i:s",time());
-            $log_query=sprintf("insert into log (date,login,ip,description,results)
-            values ('%s','%s','%s','%s attempts to wrong login', 'IP blocked until %s')",
-            addslashes($log_time),
-            addslashes($username),
-            addslashes($_SERVER['REMOTE_ADDR']),
-            addslashes($spam_login_tries),
-            addslashes($next_try)
-            );
-
-            $this->db->query($log_query);
-
-        }
-
-        $new_stamp=time();
-        $query=sprintf("update spam
-        set tries = tries + 1
-        where ip =  '%s' ",addslashes($_SERVER['REMOTE_ADDR']));
+        $query=sprintf("select * from spam where ip = '%s'", addslashes($_SERVER['REMOTE_ADDR']));
         $this->db->query($query);
 
-        print "
-        <html>
-        <body>
-        <p>The current time on this system is $now.
-        <p>Too many wrong attempts to login, wait until
-        $next_try (over $remains seconds) and try again.
-        <p>
-        If you forgot your password please contact your system administrator for obtaining a new one.
-        </body>
-        </html>
-        ";
-        exit;
+        if ($this->db->num_rows()) {
+            $this->db->next_record();
 
-	}
-  }
+            $spam_login_ip      = $this->db->f('ip');
+            $spam_login_tries   = $this->db->f('tries');
+            $spam_login_stamp   = $this->db->f('stamp');
+            $next_try           = $spam_login_stamp+120;
+            $remains            = $next_try-time();
+            $next_try           = Date("Y-m-d H:i:s", $next_try);
+            $now                = Date("Y-m-d H:i:s", time());
+        }
 
-  function auth_validatelogin() {
-    global $d_cli, $d_card, $prepaid_login, $cust_form, $codeFilter, $aNumberFilter,$login_for;
-    global $CDRTool;
-    global $otp_error, $otpasswd;
-    global $verbose;
-    global $DATASOURCES;
+        if ($remains < 0) {
+            $query=sprintf("delete from spam where ip = '%s'", addslashes($spam_login_ip));
+            if ($this->db->query($query)) {
+                unset($spam_login_tries);
+            }
+        }
 
-    $username    = $_POST["username"];
-    $sendotp     = $_POST["sendotp"];
-    $password    = $_POST["password"];
-    $challenge   = $_POST["challenge"];
-    $response    = $_POST["response"];
-    $response_ha1    = $_POST["response_ha1"];
-    $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
-    //dprint_r("response: $response");
-    $otp_yubikey = $_POST["yubikey"];
-
-    $yubi_id = substr($otp_yubikey, 0, 12);
-
-    $use_yubikey=0;
-    if (stream_resolve_include_path('Auth/Yubico.php')) {
-        require_once 'Auth/Yubico.php';
-        $use_yubikey=1;
-    } else {
-        require_once 'PEAR.php';
-    }
-
-    if(isset($username)) {
-      $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
-    }
-
-    $uid = false;
-
-    if ($username || $use_yubikey ) {
-        $username=trim($username);
-        if (preg_match ("/\@/",$username)) {
-            $a=explode("@",$username);
-            $domainAuth = new DomainAuthLocal();
-
-            $ret=$domainAuth->validate($a[0],$a[1],$password,$response_ha1, $otp_yubikey);
-            //dprint("here");
-            //dprint_r($ret);
-            if ($ret[0]) {
-                foreach ($ret[2] as $allowedDS) {
-                    $CDRTool[dataSourcesAllowed][]=$allowedDS;
-                }
-
-                if ($ret[1] == "subscriber") {
-                    $CDRTool[filter][aNumber] = $username;
-                	$this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
-                } else {
-                    $CDRTool[filter][domain]  = $a[1];
-                	$this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
-                }
+        if ($spam_login_tries < $max_login_attempts) {
+            $title="Login";
+            if (is_readable("/etc/cdrtool/local/header.phtml")) {
+                include("/etc/cdrtool/local/header.phtml");
+            } else {
+                include("$CDRTool[Path]/header.phtml");
             }
 
-            return $ret[0];
-
+            $layout = new pageLayoutLocal();
+            $layout->showLoginForm($this);
+            $layout->showFooter();
         } else {
-            $query = sprintf("select * from auth_user where (username = '%s' or (yubikey='%s' and yubikey !='')) and expire > NOW()", addslashes($username),addslashes($yubi_id));
-            $this->db->query($query);
-            $this->db->next_record();
-            $otp_enabled_db =$this->db->f('otp_enable');
-            $otp_email      =$this->db->f('email');
-            $otp_tel        =$this->db->f('tel');
-            $otp_passwd	    =$this->db->f('otp_passwd');
-            $otp_passwd_md5 =md5($this->db->f('otp_passwd'));
-
-            if ($sendotp) {
-                if ($otp_email || $otp_tel) {
-                    $interval="15";
-                    print "<p>Sending OneTimePassword ";
-                    $random_otp=random_passwd_gen();
-                    $expire_otp= date("Y-m-d H:i:s", mktime(date("H"),date("i")+$interval,0,date("m") ,date("d"),date("Y")));
-
-                    $update=sprintf("update auth_user set otp_passwd='%s', otp_expire = '%s' where username = '%s'",
-                    addslashes($random_otp),
-                    addslashes($expire_otp),
-                    addslashes($username)
-                    );
-
-                    if ($this->db->query($update)) {
-                        if ($otp_email) {
-							$body=sprintf("%s valid until %s CET (GMT+1) requested from %s",$random_otp,$expire_otp,$_SERVER['REMOTE_ADDR']);
-                            mail($otp_email, "OTP for CDRTool", $body, "From: support@ag-projects.com");
-                        }
-                        if ($otp_tel) {
-                        	$body=sprintf("Password is %s valid until %s CET (GMT+1) from %s",$random_otp,$expire_otp,$_SERVER['REMOTE_ADDR']);
-                            $otp_tel=preg_replace("/[^0-9+]/","",$otp_tel);
-                            otp_sms($otp_tel, $body,"1");
-                        }
-                        print "<p>
-                        Password will expire at: $expire_otp (in $interval minutes)<br>";
-                    }
-                } else {
-                    print "<p>No OTP recipient exists for this account. ";
-                }
-            }
-
-            $this->db->query(sprintf("
-            select *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp ,
-            UNIX_TIMESTAMP() as timestamp_now  ".
-            "       from %s ".
-            "       where (username = '%s'  or " .
-            "       (yubikey='%s' and yubikey != '')) ".
-            "       and expire > NOW()    " ,
-            addslashes($this->database_table),
-            addslashes($username),
-            addslashes($yubi_id)));
-
-            $this->db->next_record();
-            $uid            = $this->db->f("user_id");
-            $perm           = $this->db->f("perms");
-            $yubikey        = $this->db->f("yubikey");
-            $auth_method    = $this->db->f("auth_method");
-            $user_db   = $this->db->f("username");
-            $aclFilter   = array();
-            foreach (explode(" ", $this->db->f("aclFilter"))  as $ip) {
-                $ip = trim($ip);
-                if ($ip) {
-                    $aclFilter[] = $ip;
-                }
-
-            }
-            $acl_filter = false;
-            if ($aclFilter) {
-                  $acl_filter = true;
-                  foreach ($aclFilter as $f) {
-                      if (startsWith($_SERVER['REMOTE_ADDR'], $f)){
-                          $acl_filter = false;
-                          break; 
-                      }
-                  }
-            }
-            if ($acl_filter){
-                    $log=sprintf("CDRTool login with username %s using method %s from IP %s denied by ACL", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-            }
-
-            if ($CDRTool['provider']['clear_text_passwords']!=1) {
-
-                // Update hashed pass if none set and we need hashed ones
-                if ( $this->db->f("password_hashed") == '' && $this->db->f("password") != '') {
-                    $newpassmd5=md5($this->db->f("password"));
-                    $this->db->query(sprintf(
-                        "UPDATE %s".
-                        " set password_hashed='%s', password=''".
-                        " where username='%s'",
-                        addslashes($this->database_table),
-                        addslashes($newpassmd5),
-                        addslashes($username)));
-                    $pass     =  $newpassmd5;
-                    $pass_md5 =  $newpassmd5;
-                } else {
-                    $pass  		        = $this->db->f("password_hashed");
-                    $pass_md5  	        = $this->db->f("password_hashed");
-                }
-            } else {
-                $pass  		        = $this->db->f("password");
-                $pass_md5  	        = md5($this->db->f("password"));
-            }
-            $otp_passwd 	    = $this->db->f("otp_passwd");
-            if (strlen($this->db->f('otp_passwd'))) {
-            	$otp_passwd_md5	=md5($this->db->f('otp_passwd'));
-            } else {
-            	$otp_passwd_md5="garbage";
-            }
-
-            $timestamp_otp	    = $this->db->f("timestamp_otp");
-            $timestamp_now      = $this->db->f("timestamp_now");
-
-            $CDRTool['loginName']          = $this->db->f("name");
-            $CDRTool['loginEmail']         = $this->db->f("email");
-
-            $_dataSourcesAllowed = explode(",",$this->db->f("sources"));
-		    $_datasourceDefined  = array_keys($DATASOURCES);
-
-            $CDRTool['dataSourcesAllowed'] = array_intersect($_dataSourcesAllowed,$_datasourceDefined);
-
-            // limits per CDRTool login account
-            $CDRTool['filter']['user_id']    = $this->db->f("user_id");
-            $CDRTool['filter']['aNumber']    = $this->db->f('aNumberFilter');
-            $CDRTool['filter']['displayA']   = $this->db->f('display_cli');
-            $CDRTool['filter']['domain']     = $this->db->f('domainFilter');
-            $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
-            $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
-            $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
-
-            if (preg_match("/^(\d+)\.(\d+)$/",$this->db->f('impersonate'),$m)) {
-            	$CDRTool['filter']['customer']  = $m[1];
-                $CDRTool['filter']['reseller']  = $m[2];
-            } else if (preg_match("/^(\d+)$/",$this->db->f('impersonate'),$m)) {
-            	$CDRTool['filter']['customer']  = $m[1];
-                $CDRTool['filter']['reseller']  = $m[1];
-            } else {
-            	$CDRTool['filter']['customer']  = '';
-                $CDRTool['filter']['reseller']  = '';
-            }
-
-            $CDRTool['impersonate'] = $this->db->f('impersonate');
-
-            if ($this->db->f('afterDateFilter') && $this->db->f('afterDateFilter') != "0000-00-00") {
-            	$CDRTool['filter']['after_date']=$this->db->f('afterDateFilter');
-            }
-
-			if ($CDRTool['filter']['customer']) {
-                // get soap credentials from NGNPro database
-                global $soapEngines ;
-
-                require_once('SOAP/Client.php');
-                require("/etc/cdrtool/ngnpro_engines.inc");
-                require_once("ngnpro_soap_library.php");
-
-                $this->SOAPlogin=array(
-                                       "username" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['username'],
-                                       "password" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['password'],
-                                       "admin"    => true
+            if ($spam_login_tries == $max_login_attempts) {
+                $log_time=Date("Y-m-d H:i:s", time());
+                $log_query=sprintf(
+                    "insert into log (date,login,ip,description,results) values ('%s','%s','%s','%s attempts to wrong login', 'IP blocked until %s')",
+                    addslashes($log_time),
+                    addslashes($username),
+                    addslashes($_SERVER['REMOTE_ADDR']),
+                    addslashes($spam_login_tries),
+                    addslashes($next_try)
                 );
 
-                $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+                $this->db->query($log_query);
+            }
 
-                $this->CustomerPort  = new WebService_NGNPro_CustomerPort($soapEngines[$CDRTool['ngnpro_reseller_engine']]['url']);
-                $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
-                $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+            $new_stamp=time();
+            $query=sprintf(
+                "update spam set tries = tries + 1 where ip =  '%s' ",
+                addslashes($_SERVER['REMOTE_ADDR'])
+            );
+            $this->db->query($query);
 
-                $filter  = array('customer' => intval($CDRTool['filter']['customer']));
-                $range   = array('start' => 0,'count' => 1);
-                $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
-                $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+            print "
+                <html>
+                <body>
+                    <p>The current time on this system is $now.</p>
+                    <p>Too many wrong attempts to login, wait until $next_try (over $remains seconds) and try again.</p>
+                    <p>If you forgot your password please contact your system administrator for obtaining a new one.</p>
+                </body>
+                </html>
+                ";
+            exit;
+        }
+    }
 
-                // Call function
-                $this->CustomerPort->addHeader($this->SoapAuth);
-                $result     = $this->CustomerPort->getCustomers($Query);
+    function auth_validatelogin()
+    {
+        global $d_cli, $d_card, $prepaid_login, $cust_form, $codeFilter, $aNumberFilter,$login_for;
+        global $CDRTool;
+        global $otp_error, $otpasswd;
+        global $verbose;
+        global $DATASOURCES;
 
-                if (PEAR::isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-                    $log = sprintf ("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                    syslog(LOG_NOTICE, $log);
-                } else {
-                    if (count($result->accounts) == 1) {
-                        if ($result->accounts[0]->impersonate) {
-                            // get the credentials of the impersonate field
-                            $filter  = array('customer' => intval($result->accounts[0]->impersonate), 'reseller' => intval($result->accounts[0]->reseller));
-                            $range   = array('start' => 0,'count' => 1);
-                            $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
-                            $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+        $username    = $_POST["username"];
+        $sendotp     = $_POST["sendotp"];
+        $password    = $_POST["password"];
+        $challenge   = $_POST["challenge"];
+        $response    = $_POST["response"];
+        $response_ha1    = $_POST["response_ha1"];
+        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+        //dprint_r("response: $response");
+        $otp_yubikey = $_POST["yubikey"];
 
-                            // Call function
-			                $this->CustomerPort->addHeader($this->SoapAuth);
-                            $result     = $this->CustomerPort->getCustomers($Query);
+        $yubi_id = substr($otp_yubikey, 0, 12);
 
-                            if (PEAR::isError($result)) {
-                                $error_msg  = $result->getMessage();
-                                $error_fault= $result->getFault();
-                                $error_code = $result->getCode();
-                                $log = sprintf ("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-                                syslog(LOG_NOTICE, $log);
-                            } else {
-                                if (count($result->accounts) == 1) {
-                                    $CDRTool["soap_username"] = $result->accounts[0]->username;
-                                    $CDRTool["soap_password"] = $result->accounts[0]->password;
-                                } else {
-                        	    print "<p>Error retrieving customer data from the provisioning server, there is no such impersonate id. ";
-                                }
+        $use_yubikey=0;
+        if (stream_resolve_include_path('Auth/Yubico.php')) {
+            require_once 'Auth/Yubico.php';
+            $use_yubikey=1;
+        } else {
+            require_once 'PEAR.php';
+        }
+
+        if(isset($username)) {
+            $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
+        }
+
+        $uid = false;
+
+        if ($username || $use_yubikey ) {
+            $username=trim($username);
+            if (preg_match ("/\@/",$username)) {
+                $a=explode("@",$username);
+                $domainAuth = new DomainAuthLocal();
+
+                $ret=$domainAuth->validate($a[0], $a[1], $password, $response_ha1, $otp_yubikey);
+                //dprint("here");
+                //dprint_r($ret);
+                if ($ret[0]) {
+                    foreach ($ret[2] as $allowedDS) {
+                        $CDRTool[dataSourcesAllowed][]=$allowedDS;
+                    }
+
+                    if ($ret[1] == "subscriber") {
+                        $CDRTool[filter][aNumber] = $username;
+                        $this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
+                    } else {
+                        $CDRTool[filter][domain]  = $a[1];
+                        $this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
+                    }
+                }
+
+                return $ret[0];
+            } else {
+                $query = sprintf(
+                    "select * from auth_user where (username = '%s' or (yubikey='%s' and yubikey !='')) and expire > NOW()",
+                    addslashes($username),
+                    addslashes($yubi_id)
+                );
+                $this->db->query($query);
+                $this->db->next_record();
+                $otp_enabled_db = $this->db->f('otp_enable');
+                $otp_email      = $this->db->f('email');
+                $otp_tel        = $this->db->f('tel');
+                $otp_passwd     = $this->db->f('otp_passwd');
+                $otp_passwd_md5 = md5($this->db->f('otp_passwd'));
+
+                if ($sendotp) {
+                    if ($otp_email || $otp_tel) {
+                        $interval="15";
+                        print "<p>Sending OneTimePassword ";
+                        $random_otp = random_passwd_gen();
+                        $expire_otp = date("Y-m-d H:i:s", mktime(date("H"), date("i") + $interval, 0, date("m") ,date("d"), date("Y")));
+
+                        $update = sprintf(
+                            "UPDATE auth_user SET otp_passwd='%s', otp_expire = '%s' WHERE username = '%s'",
+                            addslashes($random_otp),
+                            addslashes($expire_otp),
+                            addslashes($username)
+                        );
+
+                        if ($this->db->query($update)) {
+                            if ($otp_email) {
+                                $body=sprintf("%s valid until %s CET (GMT+1) requested from %s", $random_otp, $expire_otp, $_SERVER['REMOTE_ADDR']);
+                                mail($otp_email, "OTP for CDRTool", $body, "From: support@ag-projects.com");
                             }
-                        } else {
-                            $CDRTool["soap_username"] = $result->accounts[0]->username;
-                            $CDRTool["soap_password"] = $result->accounts[0]->password;
+                            if ($otp_tel) {
+                                $body = sprintf("Password is %s valid until %s CET (GMT+1) from %s", $random_otp, $expire_otp, $_SERVER['REMOTE_ADDR']);
+                                $otp_tel=preg_replace("/[^0-9+]/", "", $otp_tel);
+                                otp_sms($otp_tel, $body, "1");
+                            }
+                            print "<p>Password will expire at: $expire_otp (in $interval minutes)</p>";
                         }
                     } else {
-                        print "<p>Error retrieving customer data from the provisioning server, there is no such customer id. ";
+                        print "<p>No OTP recipient exists for this account. ";
+                    }
+                }
+
+                $this->db->query(
+                    sprintf(
+                        "SELECT *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp, UNIX_TIMESTAMP() as timestamp_now FROM %s
+                        WHERE (username = '%s' OR (yubikey='%s' AND yubikey != '')) AND expire > NOW()",
+                        addslashes($this->database_table),
+                        addslashes($username),
+                        addslashes($yubi_id)
+                    )
+                );
+
+                $this->db->next_record();
+                $uid            = $this->db->f("user_id");
+                $perm           = $this->db->f("perms");
+                $yubikey        = $this->db->f("yubikey");
+                $auth_method    = $this->db->f("auth_method");
+                $user_db        = $this->db->f("username");
+                $aclFilter   = array();
+                foreach (explode(" ", $this->db->f("aclFilter")) as $ip) {
+                    $ip = trim($ip);
+                    if ($ip) {
+                        $aclFilter[] = $ip;
+                    }
+                }
+                $acl_filter = false;
+                if ($aclFilter) {
+                    $acl_filter = true;
+                    foreach ($aclFilter as $f) {
+                        if (startsWith($_SERVER['REMOTE_ADDR'], $f)) {
+                            $acl_filter = false;
+                            break;
+                        }
+                  }
+                }
+                if ($acl_filter){
+                    $log = sprintf("CDRTool login with username %s using method %s from IP %s denied by ACL", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($CDRTool['provider']['clear_text_passwords'] != 1) {
+
+                    // Update hashed pass if none set and we need hashed ones
+                    if ($this->db->f("password_hashed") == '' && $this->db->f("password") != '') {
+                        $newpassmd5=md5($this->db->f("password"));
+                        $this->db->query(
+                            sprintf(
+                                "UPDATE %s SET password_hashed='%s', password='' WHERE username='%s'",
+                                addslashes($this->database_table),
+                                addslashes($newpassmd5),
+                                addslashes($username)
+                            )
+                        );
+                        $pass     = $newpassmd5;
+                        $pass_md5 = $newpassmd5;
+                    } else {
+                        $pass  	    = $this->db->f("password_hashed");
+                        $pass_md5   = $this->db->f("password_hashed");
+                }
+                } else {
+                    $pass  	= $this->db->f("password");
+                    $pass_md5   = md5($this->db->f("password"));
+                }
+                $otp_passwd = $this->db->f("otp_passwd");
+                if (strlen($this->db->f('otp_passwd'))) {
+                    $otp_passwd_md5 = md5($this->db->f('otp_passwd'));
+                } else {
+                    $otp_passwd_md5 = "garbage";
+                }
+
+                $timestamp_otp = $this->db->f("timestamp_otp");
+                $timestamp_now = $this->db->f("timestamp_now");
+
+                $CDRTool['loginName']   = $this->db->f("name");
+                $CDRTool['loginEmail']  = $this->db->f("email");
+
+                $_dataSourcesAllowed = explode(",", $this->db->f("sources"));
+                $_datasourceDefined  = array_keys($DATASOURCES);
+
+                $CDRTool['dataSourcesAllowed'] = array_intersect($_dataSourcesAllowed, $_datasourceDefined);
+
+                // limits per CDRTool login account
+                $CDRTool['filter']['user_id']    = $this->db->f("user_id");
+                $CDRTool['filter']['aNumber']    = $this->db->f('aNumberFilter');
+                $CDRTool['filter']['displayA']   = $this->db->f('display_cli');
+                $CDRTool['filter']['domain']     = $this->db->f('domainFilter');
+                $CDRTool['filter']['gateway']    = $this->db->f('gatewayFilter');
+                $CDRTool['filter']['compid']     = $this->db->f('compidFilter');
+                $CDRTool['filter']['cscode']     = $this->db->f('cscodeFilter');
+
+                if (preg_match("/^(\d+)\.(\d+)$/", $this->db->f('impersonate'), $m)) {
+                    $CDRTool['filter']['customer']  = $m[1];
+                    $CDRTool['filter']['reseller']  = $m[2];
+                } else if (preg_match("/^(\d+)$/", $this->db->f('impersonate'), $m)) {
+                    $CDRTool['filter']['customer']  = $m[1];
+                    $CDRTool['filter']['reseller']  = $m[1];
+                } else {
+                    $CDRTool['filter']['customer']  = '';
+                    $CDRTool['filter']['reseller']  = '';
+                }
+
+                $CDRTool['impersonate'] = $this->db->f('impersonate');
+
+                if ($this->db->f('afterDateFilter') && $this->db->f('afterDateFilter') != "0000-00-00") {
+                    $CDRTool['filter']['after_date']=$this->db->f('afterDateFilter');
+                }
+
+                if ($CDRTool['filter']['customer']) {
+                    // get soap credentials from NGNPro database
+                    global $soapEngines ;
+
+                    require_once('SOAP/Client.php');
+                    require("/etc/cdrtool/ngnpro_engines.inc");
+                    require_once("ngnpro_soap_library.php");
+
+                    $this->SOAPlogin=array(
+                        "username" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['username'],
+                        "password" => $soapEngines[$CDRTool['ngnpro_reseller_engine']]['password'],
+                        "admin"    => true
+                    );
+
+                    $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
+
+                    $this->CustomerPort  = new WebService_NGNPro_CustomerPort($soapEngines[$CDRTool['ngnpro_reseller_engine']]['url']);
+                    $this->CustomerPort->setOpt('curl', CURLOPT_TIMEOUT, 5);
+                    $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+                    $this->CustomerPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+
+                    $filter  = array('customer' => intval($CDRTool['filter']['customer']));
+                    $range   = array('start' => 0,'count' => 1);
+                    $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+                    $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+
+                    // Call function
+                    $this->CustomerPort->addHeader($this->SoapAuth);
+                    $result     = $this->CustomerPort->getCustomers($Query);
+
+                    if (PEAR::isError($result)) {
+                        $error_msg  = $result->getMessage();
+                        $error_fault= $result->getFault();
+                        $error_code = $result->getCode();
+                        $log = sprintf(
+                            "SOAP request error from %s: %s (%s): %s",
+                            $this->SoapEngine->SOAPurl,
+                            $error_msg,
+                            $error_fault->detail->exception->errorcode,
+                            $error_fault->detail->exception->errorstring
+                        );
+                        syslog(LOG_NOTICE, $log);
+                    } else {
+                        if (count($result->accounts) == 1) {
+                            if ($result->accounts[0]->impersonate) {
+                                // get the credentials of the impersonate field
+                                $filter  = array('customer' => intval($result->accounts[0]->impersonate), 'reseller' => intval($result->accounts[0]->reseller));
+                                $range   = array('start' => 0,'count' => 1);
+                                $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
+                                $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+
+                                // Call function
+                                $this->CustomerPort->addHeader($this->SoapAuth);
+                                $result = $this->CustomerPort->getCustomers($Query);
+
+                                if (PEAR::isError($result)) {
+                                    $error_msg  = $result->getMessage();
+                                    $error_fault= $result->getFault();
+                                    $error_code = $result->getCode();
+                                    $log = sprintf(
+                                        "SOAP request error from %s: %s (%s): %s",
+                                        $this->SoapEngine->SOAPurl,
+                                        $error_msg,
+                                        $error_fault->detail->exception->errorcode,
+                                        $error_fault->detail->exception->errorstring
+                                    );
+                                    syslog(LOG_NOTICE, $log);
+                                } else {
+                                    if (count($result->accounts) == 1) {
+                                        $CDRTool["soap_username"] = $result->accounts[0]->username;
+                                        $CDRTool["soap_password"] = $result->accounts[0]->password;
+                                    } else {
+                                        print "<p>Error retrieving customer data from the provisioning server, there is no such impersonate id. ";
+                                    }
+                                }
+                            } else {
+                                $CDRTool["soap_username"] = $result->accounts[0]->username;
+                                $CDRTool["soap_password"] = $result->accounts[0]->password;
+                            }
+                        } else {
+                            print "<p>Error retrieving customer data from the provisioning server, there is no such customer id. ";
+                        }
+                    }
+                }
+
+                $expected_response = md5("$username:$pass_md5:$challenge");
+                $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
+
+                if ($use_yubikey == 1) {
+                    $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
+                    $auth = $yubi->verify($otp_yubikey);
+                }
+
+                //print_r($result);
+                ## True when JS is disabled
+                if ($response == "") {
+                    if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
+                        $password=md5($password);
+                    }
+                    if ($password == $pass
+                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
+                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
+                        || (!PEAR::isError($auth) && $auth_method =='4' )
+                        || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)
+                    ) {
+                        $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
+                        syslog(LOG_NOTICE, $log);
+                        if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
+                            $this->db->query(
+                                sprintf(
+                                    "UPDATE %s SET yubikey='%s' WHERE username='%s'",
+                                    addslashes($this->database_table),
+                                    addslashes($otp_yubikey),
+                                    addslashes($username)
+                                )
+                            );
+                        }
+                        $this->auth["perm"] = $perm;
+                        return $uid;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    ## Response is set, JS is enabled
+                    // we check if either otp or normal password match
+                    //print "<p>$response == $expected_response <p>$response == $expect_otp";
+                    if ($expected_response == $response
+                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
+                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
+                        || (!PEAR::isError($auth) && $auth_method =='4' )
+                        || ($response == $expect_otp && $timestamp_otp > $timestamp_now)
+                    ) {
+                        $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
+                        syslog(LOG_NOTICE, $log);
+                        if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
+                            $this->db->query(
+                                sprintf(
+                                    "UPDATE %s SET yubikey='%s' WHERE username='%s'",
+                                    addslashes($this->database_table),
+                                    addslashes($otp_yubikey),
+                                    addslashes($username)
+                                )
+                            );
+                        }
+                        $this->auth["perm"] = $perm;
+                        return $uid;
+                    } else {
+                        return false;
                     }
                 }
             }
-
-            $expected_response = md5("$username:$pass_md5:$challenge");
-            $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
-
+        } else {
             if ($use_yubikey == 1){
                 $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
                 $auth = $yubi->verify($otp_yubikey);
-            }
+                $yubi_id = substr($otp_yubikey, 0, 12);
 
-            //print_r($result);
-            ## True when JS is disabled
-            if ($response == "") {
-                if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
-                    $password=md5($password);
-                }
-                if ($password == $pass ||
-                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7') ||
-                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5') ||
-                    (!PEAR::isError($auth) && $auth_method =='4' )  ||
-                    ($password == $otp_passwd && $timestamp_otp > $timestamp_now)) {
-                    $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
-                    syslog(LOG_NOTICE, $log);
-                    if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
-                        $this->db->query(sprintf(
-                        "UPDATE %s".
-                        " set yubikey='%s'".
-                        " where username='%s'",
-                        addslashes($this->database_table),
-                        addslashes($otp_yubikey),
-                        addslashes($username)));
-                    }
-                    $this->auth["perm"] = $perm;
-                    return $uid;
-                } else {
-                    return false;
-                }
-            } else {
-                ## Response is set, JS is enabled
-                // we check if either otp or normal password match
-                //print "<p>$response == $expected_response <p>$response == $expect_otp";
-                if (
-                    $expected_response == $response ||
-                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7') ||
-                    (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5') ||
-                    (!PEAR::isError($auth) && $auth_method =='4' ) ||
-                    ($response == $expect_otp && $timestamp_otp > $timestamp_now) ) {
+                if (!PEAR::isError($auth)) {
+                    $this->db->query(
+                        sprintf(
+                            "SELECT *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp, UNIX_TIMESTAMP() as timestamp_now FROM %s WHERE yubikey = '%s' AND expire > NOW()",
+                            addslashes($this->database_table),
+                            addslashes($yubi_id)
+                        )
+                    );
+
+                    $this->db->next_record();
+                    $username           = $this->db->f("username");
+                    $this->auth["uname"]=$username;
+                    $uid                = $this->db->f("user_id");
+                    $perm               = $this->db->f("perms");
+                    $auth_method        = $this->db->f("auth_method");
 
                     $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
                     syslog(LOG_NOTICE, $log);
-                    if ($this->db->f("yubikey") == '' && $otp_yubikey != '') {
-                        $this->db->query(sprintf(
-                        "UPDATE %s".
-                        " set yubikey='%s'".
-                        " where username='%s'",
-                        addslashes($this->database_table),
-                        addslashes($otp_yubikey),
-                        addslashes($username)));
-                    }
+
                     $this->auth["perm"] = $perm;
                     return $uid;
-                } else {
-                    return false;
                 }
-            }
-    	}
-  	} else {
-        if ($use_yubikey == 1){
-            $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
-            $auth = $yubi->verify($otp_yubikey);
-            $yubi_id = substr($otp_yubikey, 0, 12);
-
-            if (!PEAR::isError($auth)) {
-                $this->db->query(sprintf("
-                    select *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp ,
-                    UNIX_TIMESTAMP() as timestamp_now  ".
-                    "       from %s ".
-                    "       where yubikey = '%s' " .
-                    "       and expire > NOW()    " ,
-                    addslashes($this->database_table),
-                    addslashes($yubi_id)));
-
-                $this->db->next_record();
-                $username           = $this->db->f("username");
-                $this->auth["uname"]=$username;
-                $uid                = $this->db->f("user_id");
-                $perm               = $this->db->f("perms");
-                $auth_method        = $this->db->f("auth_method");
-
-                $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
-                syslog(LOG_NOTICE, $log);
-
-                $this->auth["perm"] = $perm;
-                return $uid;
             }
         }
     }
-
-  }
-
 }
 
-class CDRTool_Perm extends Perm {
-  var $classname = "CDRTool_Perm";
-  var $permissions = array(
-            "admin"         => 1,
-            "callsearch"    => 2,
-            "statistics"    => 4,
-            "sqlquery"      => 8,
-            "soapclient"    => 16,
-            "rates"         => 32,
-            "showCallerId"  => 64,
-            "showPrice"     => 128,
-            "provisioning"  => 256,
-            "readonly"      => 512
-            );
+class CDRTool_Perm extends Perm
+{
+    public $classname = "CDRTool_Perm";
+    public $permissions = array(
+        "admin"         => 1,
+        "callsearch"    => 2,
+        "statistics"    => 4,
+        "sqlquery"      => 8,
+        "soapclient"    => 16,
+        "rates"         => 32,
+        "showCallerId"  => 64,
+        "showPrice"     => 128,
+        "provisioning"  => 256,
+        "readonly"      => 512
+    );
 
-  function perm_invalid($does_have, $must_have) {
-    global $perm, $auth, $sess;
-    global $_PHPLIB;
+    function perm_invalid($does_have, $must_have)
+    {
+        global $perm, $auth, $sess;
+        global $_PHPLIB;
 
-    include($_PHPLIB["libdir"] . "perminvalid.phtml");
-  }
+        include($_PHPLIB["libdir"] . "perminvalid.phtml");
+    }
 }
 
-class SIP_Subscriber_Session extends Session {
-  var $classname      = "SIP_Subscriber_Session";
-  var $auto_init      = "SIP_setup.inc";
-  var $cookiename     = "SIPCookie2";        ## defaults to classname
-  var $magic          = "3333jhjjjss13";      ## ID seed
-  var $mode           = "cookie";            ## We propagate session IDs with cookies
-  var $fallback_mode  = "get";
-  var $allowcache     = "public";
-  var $lifetime       = 0;                   ## 0 = do session cookies, else minutes
-  var $that_class     = "CDRTool_CT_Sql";     ## name of data storage container
-  var $gc_probability = 5;
+class SIP_Subscriber_Session extends Session
+{
+    public $classname      = "SIP_Subscriber_Session";
+    public $auto_init      = "SIP_setup.inc";
+    public $cookiename     = "SIPCookie2";        ## defaults to classname
+    public $magic          = "3333jhjjjss13";      ## ID seed
+    public $mode           = "cookie";            ## We propagate session IDs with cookies
+    public $fallback_mode  = "get";
+    public $allowcache     = "public";
+    public $lifetime       = 0;                   ## 0 = do session cookies, else minutes
+    public $that_class     = "CDRTool_CT_Sql";     ## name of data storage container
+    public $gc_probability = 5;
 }
 
-class SIP_Subscriber_Auth extends Auth {
-  // use this auth for SIP accounts
-  var $classname      = "SIP_Subscriber_Auth";
-  var $lifetime       =  0;
-  var $magic          = "d66mmmg111dsgzz";  ## Challenge seed
+class SIP_Subscriber_Auth extends Auth
+{
+    // use this auth for SIP accounts
+    public $classname      = "SIP_Subscriber_Auth";
+    public $lifetime       =  0;
+    public $magic          = "d66mmmg111dsgzz";  ## Challenge seed
 
-  function auth_loginform() {
+    function auth_loginform()
+    {
 
-    global $sess;
-    global $max_login_attempts;
+        global $sess;
+        global $max_login_attempts;
 
-    $username    = $_POST["username"];
-    $password    = $_POST["password"];
-    $challenge   = $_POST["challenge"];
-    $step        = $_POST["step"];
-    $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
-    $yubikey_p   = $_POST['yubikey'];
+        $username    = $_POST["username"];
+        $password    = $_POST["password"];
+        $challenge   = $_POST["challenge"];
+        $step        = $_POST["step"];
+        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+        $yubikey_p   = $_POST['yubikey'];
 
-    $sess->register("challenge");
+        $sess->register("challenge");
 
-    if (!$challenge) {
-		$challenge = md5(uniqid($this->magic));
-	}
+        if (!$challenge) {
+            $challenge = md5(uniqid($this->magic));
+        }
 
-    include("sip_login.phtml");
-  }
+        include("sip_login.phtml");
+    }
 
-  function auth_validatelogin() {
+    function auth_validatelogin()
+    {
         global $SIP;
 
         $username    = $_POST["username"];
@@ -582,19 +602,21 @@ class SIP_Subscriber_Auth extends Auth {
             require_once 'PEAR.php';
         }
 
-        if(isset($username)) {
+        if (isset($username)) {
             $this->auth["uname"]=$username;
         }
 
-        $a=explode("@",$username);
+        $a=explode("@", $username);
         $domain= $a[1];
-        if (count($a) !=2 ) return false;
+        if (count($a) !=2) {
+            return false;
+        }
 
-	    global $domainFilters, $resellerFilters, $soapEngines ;
+        global $domainFilters, $resellerFilters, $soapEngines ;
 
         require_once('SOAP/Client.php');
-      	require("/etc/cdrtool/ngnpro_engines.inc");
-	    require_once("ngnpro_soap_library.php");
+        require("/etc/cdrtool/ngnpro_engines.inc");
+        require_once("ngnpro_soap_library.php");
 
         $SIP['account']    = $username;
 
@@ -608,16 +630,16 @@ class SIP_Subscriber_Auth extends Auth {
         }
 
         $this->SOAPlogin=array(
-                               "username" => $soapEngines[$SIP['engine']]['username'],
-                               "password" => $soapEngines[$SIP['engine']]['password'],
-                               "admin"    => true
+            "username" => $soapEngines[$SIP['engine']]['username'],
+            "password" => $soapEngines[$SIP['engine']]['password'],
+            "admin"    => true
         );
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
         $this->SipPort  = new WebService_NGNPro_SipPort($soapEngines[$SIP['engine']]['url']);
 
-        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->SipPort->setOpt('curl', CURLOPT_TIMEOUT, 5);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         $this->SipPort->addHeader($this->SoapAuth);
@@ -628,7 +650,13 @@ class SIP_Subscriber_Auth extends Auth {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log = printf ("SOAP error from %s (SipPort): %s (%s): %s",$soapEngines[$SIP['engine']]['url'],$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = printf(
+                "SOAP error from %s (SipPort): %s (%s): %s",
+                $soapEngines[$SIP['engine']]['url'],
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -656,7 +684,7 @@ class SIP_Subscriber_Auth extends Auth {
         $SIP['customer'] = $result->customer;
         $SIP['reseller'] = $result->reseller;
 
-        $parts=explode(':',$pass_md5);
+        $parts=explode(':', $pass_md5);
 
         dprint_r($result);
         dprint($expected_response);
@@ -696,32 +724,36 @@ class SIP_Subscriber_Auth extends Auth {
     }
 }
 
-function otp_sms($tel,$message,$hideoutput) {
-    $tel=preg_replace("/[^0-9]/","",$tel);
+function otp_sms($tel,$message,$hideoutput)
+{
+    $tel=preg_replace("/[^0-9]/", "", $tel);
     $tel="+".$tel;
 
-    $message=substr($message,0,135);
+    $message = substr($message, 0, 135);
 
-    if (!$tel || !$message) return 0;
+    if (!$tel || !$message) {
+        return 0;
+    }
 
-	$cmd="/usr/bin/sms --destination $tel --message \"$message\"";
+    $cmd="/usr/bin/sms --destination $tel --message \"$message\"";
 
-    exec($cmd,$output,$returnCode);
+    exec($cmd, $output, $returnCode);
 
-	if ($returnCode == "0") {
-		if (!$hideoutput) {
-			print "<p>";
-            printf (_("SMS sent succesfully to %s. "), $tel);
-		}
-	} else {
+    if ($returnCode == "0") {
+        if (!$hideoutput) {
+            print "<p>";
+            printf(_("SMS sent succesfully to %s. "), $tel);
+        }
+    } else {
         print "<p>";
         print "<b>";
         print "OTP ";
         print _("Error");
-	}
+    }
 }
 
-function random_passwd_gen() {
+function random_passwd_gen()
+{
     # Calculating random password
     $alf=array("a","b","c","d","e","f",
                "h","i","j","k","l","m",
@@ -738,14 +770,16 @@ function random_passwd_gen() {
     return $random_otp;
 }
 
-function dprint($msg="") {
+function dprint($msg = "")
+{
     global $verbose;
     if ($verbose) {
         print "<br>$msg\n";
     }
 }
 
-function dprint_r($obj) {
+function dprint_r($obj)
+{
     global $verbose;
     if ($verbose) {
         print "<pre>\n";
@@ -754,36 +788,47 @@ function dprint_r($obj) {
     }
 }
 
-function checkEmail($email) {
+function dprint_sql($sql = "")
+{
     global $verbose;
-    dprint ("<b>checkEmail($email) </b>");
-    if (stristr($email,"-.") ||
-        !preg_match("/^[a-zA-Z0-9][a-zA-Z0-9_.-]*@([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i",$email)) {
+    require_once('SqlFormatter.php');
+    if ($verbose) {
+        echo SqlFormatter::format($sql);
+    }
+}
+
+function checkEmail($email)
+{
+    global $verbose;
+    dprint("<b>checkEmail($email)</b>");
+    if (stristr($email, "-.")
+        || !preg_match("/^[a-zA-Z0-9][a-zA-Z0-9_.-]*@([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i", $email)
+    ) {
         return 0;
     }
     return 1;
 }
 
-class OpenSIPS_DomainAuth {
+class OpenSIPS_DomainAuth
+{
 
-    function OpenSIPS_DomainAuth () {
+    function OpenSIPS_DomainAuth ()
+    {
         $this->userDB   = new DB_opensips;
         $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
     }
 
-    function validate ($user, $domain, $password) {
+    function validate ($user, $domain, $password)
+    {
+        $ha1 = md5($user. ':' . $domain . ':' . $password);
 
-      	$ha1 = md5($user. ':' . $domain . ':' . $password);
-
-        $query = sprintf("SELECT * FROM subscriber
-                  WHERE username = '%s'
-                  AND     domain = '%s'
-                  AND   ( password = '%s' or ha1 = '%s') ",
-                  addslashes($user),
-                  addslashes($domain),
-                  addslashes($password),
-                  addslashes($ha1)
-                  );
+        $query = sprintf(
+            "SELECT * FROM subscriber WHERE username = '%s' AND domain = '%s' AND (password = '%s' or ha1 = '%s') ",
+            addslashes($user),
+            addslashes($domain),
+            addslashes($password),
+            addslashes($ha1)
+        );
 
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
@@ -795,21 +840,22 @@ class OpenSIPS_DomainAuth {
     }
 }
 
-class SipThor_DomainAuth {
+class SipThor_DomainAuth
+{
 
-    function SipThor_DomainAuth () {
+    function SipThor_DomainAuth ()
+    {
         $this->userDB   = new DB_sipthor;
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate ($user, $domain, $password,$response,$otp_yubikey) {
-    	$query = sprintf("SELECT * FROM sip_accounts
-                  WHERE username = '%s'
-                  AND     domain = '%s'
-                  ",
-                  addslashes($user),
-                  addslashes($domain)
-                  );
+    function validate ($user, $domain, $password,$response,$otp_yubikey)
+    {
+        $query = sprintf(
+            "SELECT * FROM sip_accounts WHERE username = '%s' AND domain = '%s'",
+            addslashes($user),
+            addslashes($domain)
+        );
 
         $use_yubikey=0;
         if (stream_resolve_include_path('Auth/Yubico.php')) {
@@ -822,7 +868,7 @@ class SipThor_DomainAuth {
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
 
-            $profile=json_decode($this->userDB->f('profile'),'true');
+            $profile = json_decode($this->userDB->f('profile'), 'true');
 
             $check_password = $profile['password'];
 
@@ -830,8 +876,8 @@ class SipThor_DomainAuth {
 
             if ($profile['properties']['web_password']) {
                 $web_pass=$profile['properties']['web_password'];
-                if(strstr($web_pass,":")){
-                   $split=explode(":",$web_pass);
+                if (strstr($web_pass, ":")){
+                   $split = explode(":", $web_pass);
                     //if (preg_match('/^[a-f0-9]{32}$/', split[0])) {
                         $check_web_password=$split[0];
                     //}
@@ -840,7 +886,7 @@ class SipThor_DomainAuth {
                 }
             }
 
-            if ($use_yubikey ==1  && $profile['properties']['yubikey']) {
+            if ($use_yubikey == 1  && $profile['properties']['yubikey']) {
                 $yubi = new Auth_Yubico('11334', 'NDSXQN1QpwUvqtR5v5sYbwhPQ70=');
                 $yubikey=$profile['properties']['yubikey'];
                 $auth = $yubi->verify($otp_yubikey);
@@ -875,21 +921,21 @@ class SipThor_DomainAuth {
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
-            } else if (!PEAR::isError($auth) && $yubikey == $yubi_id ) {
+            } else if (!PEAR::isError($auth) && $yubikey == $yubi_id) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
-
             }
         }
     }
 }
 
-class pageLayout {
+class pageLayout
+{
 
-    function showLoginForm(&$parentAuth) {
-
+    function showLoginForm(&$parentAuth)
+    {
         global $username, $otp_error, $CDRTool;
         $auth=$parentAuth;
 
@@ -931,13 +977,13 @@ class pageLayout {
         </script>
         ";
 
-        $url=$auth->url();
+        $url = $auth->url();
         print "
             <div id=wrapper2>
-        <br>
+            <br>
     	";
-	$this->hasAGProjectslogo=1;
-	$logo=$CDRTool['tld']."/images/CDRTool.png";
+        $this->hasAGProjectslogo=1;
+        $logo = $CDRTool['tld']."/images/CDRTool.png";
         print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0 style='max-width:176px'></a></center><br>";
         print "
         <form class=form-horizontal style='margin-bottom:0' action=\"$url\" method=post name=login onsubmit='doChallengeResponse();'>
@@ -982,20 +1028,20 @@ class pageLayout {
          </div>";
 
         //dprint_r($CDRTool);
-        if ($use_yubikey == 1 ) {
+        if ($use_yubikey == 1) {
             print "
-        <div class=control-group>
-            <label class=control-label>
-            Yubikey</label>
-            <div class=controls>
-                <input rel='popover'  placeholder='This field is optional' data-trigger='hover' data-delay='1000'
-            data-original-title='OTP hardware authentication'
+                <div class=control-group>
+                    <label class=control-label>Yubikey</label>
+                    <div class=controls>
+                        <input rel='popover'  placeholder='This field is optional' data-trigger='hover' data-delay='1000'
+                            data-original-title='OTP hardware authentication'
             data-content=\"With this field you can login using a hardware OTP device called 'yubikey'.<br>
             If you login the first time with a CDRTool account and the username, password and OTP key filled in, the key identifier is stored into you account.<br>
             For info and purchase of this key see <a href='http://www.yubico.com' target='_blank'>http://www.yubico.com</a>
            \" type=text name=yubikey size=40>
+                </div>
             </div>
-        </div>";
+            ";
         }
 
         print "
@@ -1006,7 +1052,7 @@ class pageLayout {
             <br>
         ";
 
-        if ( isset($username)) {
+        if (isset($username)) {
             if (!$sendotp || $username) {
                 print "
                  <p class='alert alert-error'>
@@ -1070,12 +1116,14 @@ class pageLayout {
         ";
     }
 
-    function showHeader($title='') {
+    function showHeader($title = '')
+    {
     }
 
-    function showTopMenu($title='') {
+    function showTopMenu($title = '')
+    {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
-        $version=trim(file_get_contents('version'));
+        $version = trim(file_get_contents('version'));
         print '
         <div class="navbar navbar-fixed-top">
             <div class="navbar-inner">
@@ -1085,17 +1133,17 @@ class pageLayout {
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                    </a>
-                        ';
+        ';
 
-        $now_print=Date("Y-m-d H:i:s",time());
-        $tz=$CDRTool['provider']['timezone'];
+        $now_print = Date("Y-m-d H:i:s", time());
+        $tz = $CDRTool['provider']['timezone'];
 
         if (is_readable($CDRTool['Path']."/images/logo.gif")) {
-            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
+            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
         } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
-            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height:35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
+            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height:35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
         } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
-            printf ("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
+            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
         } else {
             $this->hasAGProjectslogo=1;
             print '<a class="brand" href=http://cdrtool.ag-projects.com target=agprojects>CDRTool</a>';
@@ -1253,12 +1301,13 @@ class pageLayout {
         //";
     }
 
-    function showTopMenuSubscriber($title="") {
+    function showTopMenuSubscriber($title = "")
+    {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
 
         $version=trim(file_get_contents(version));
 
-        $now_print=Date("Y-m-d H:i:s",time());
+        $now_print=Date("Y-m-d H:i:s", time());
         $tz=getenv('TZ');
 
         print '
@@ -1312,8 +1361,6 @@ class pageLayout {
         print "$title";
         print $DATASOURCES[$cdr_source]['name'];
         print "</h1></div>";
-
-
     }
 
     function showLegalNotice () {
@@ -1390,7 +1437,8 @@ class pageLayout {
         }
     }
 
-    function showLogout ($loginname) {
+    function showLogout($loginname)
+    {
        print "
        <table width=70% align=center>
        <td>
@@ -1411,23 +1459,26 @@ class pageLayout {
     }
 }
 
-function unLockTables ($dbid) {
-	$dbid->query("unlock tables");
+function unLockTables($dbid)
+{
+    $dbid->query("unlock tables");
 }
 
-function changeLanguage($lang='en',$domain='cdrtool') {
+function changeLanguage($lang = 'en', $domain = 'cdrtool')
+{
     // run dpkg-reconfigure locales and select support languages .utf8
 
     $lang = languageCodeFor(isset($lang) ? $lang : 'en');
     $lang.='.utf8';
     setlocale(LC_ALL, $lang);
     bindtextdomain($domain, '/var/www/CDRTool/po/locale');
-    bind_textdomain_codeset($domain,'UTF-8');
+    bind_textdomain_codeset($domain, 'UTF-8');
     textdomain($domain);
 }
 
 // return full language code for given 2 letter language code
-function languageCodeFor($lang='en') {
+function languageCodeFor($lang='en')
+{
     $lang = isset($lang) ? strtolower($lang) : 'en';
     switch ($lang) {
         case 'en': return 'en_US'; // this can be C or en_US
@@ -1437,7 +1488,8 @@ function languageCodeFor($lang='en') {
     return 'C'; // this will never be reached
 }
 
-function RandomString($len=11) {
+function RandomString($len=11)
+{
     $alf=array("a","b","c","d","e","f",
            "h","i","j","k","l","m",
            "n","p","r","s","t","w",
@@ -1453,7 +1505,8 @@ function RandomString($len=11) {
     return $string;
 }
 
-function RandomNumber($len=5,$skipzero=false) {
+function RandomNumber($len=5,$skipzero=false)
+{
 
     $alf=array("1","2","3","4","5",
                "9","8","7","6");
@@ -1469,12 +1522,14 @@ function RandomNumber($len=5,$skipzero=false) {
     return $string;
 }
 
-function microtime_float() {
+function microtime_float()
+{
     list($usec, $sec) = explode(" ", microtime());
     return ((float)$usec + (float)$sec);
 }
 
-function sec2hms ($duration) {
+function sec2hms($duration)
+{
     // return seconds in HH:MM:SS format
     $sum1=$duration;
     $duration_print="";
@@ -1498,7 +1553,7 @@ function sec2hms ($duration) {
         $duration_print="$duration_print"."00:";
     }
 
-    if ($sum1< 10 ) {
+    if ($sum1< 10) {
         $duration_sec="0"."$sum1";
     } else {
         $duration_sec=$sum1;
@@ -1508,7 +1563,8 @@ function sec2hms ($duration) {
     return $duration_print;
 }
 
-function get_location($ip) {
+function get_location($ip)
+{
     $geo_location=array();
     $geo_location['country'] = '';
     $geo_location['city'] = '' ;
@@ -1526,11 +1582,11 @@ function get_location($ip) {
     return json_encode($geo_location);
 }
 
-function startsWith($haystack,$needle,$case=true)
+function startsWith($haystack, $needle, $case=true)
 {
-    if ($case)
+    if ($case) {
         return strpos($haystack, $needle, 0) === 0;
-
+    }
     return stripos($haystack, $needle, 0) === 0;
 }
 
