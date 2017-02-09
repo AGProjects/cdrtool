@@ -55,7 +55,7 @@ require_once 'Net/Socket.php';
 /**
  * URL handling class
  */
-require_once 'Net/URL.php';
+require_once 'Net/URL2.php';
 
 /**#@+
  * Constants for HTTP request methods
@@ -791,7 +791,7 @@ class HTTP_Request
 
             // Absolute URL
             if (preg_match('/^https?:\/\//i', $redirect)) {
-                $this->_url = new Net_URL($redirect);
+                $this->_url = new Net_URL2($redirect);
                 $this->addHeader('Host', $this->_generateHostHeader());
             // Absolute path
             } elseif ($redirect{0} == '/') {
@@ -804,7 +804,7 @@ class HTTP_Request
                 } else {
                     $redirect = dirname($this->_url->path) . '/' . $redirect;
                 }
-                $redirect = Net_URL::resolvePath($redirect);
+                $redirect = Net_URL2::resolve($redirect);
                 $this->_url->path = $redirect;
 
             // Filename, no path
