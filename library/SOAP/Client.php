@@ -320,7 +320,7 @@ class SOAP_Client extends SOAP_Client_Overload
         $this->xml = null;
 
         $soap_data = $this->_generate($method, $params, $namespace, $soapAction);
-        if (PEAR::isError($soap_data)) {
+        if ((new PEAR)->isError($soap_data)) {
             $fault = $this->_raiseSoapFault($soap_data);
             return $fault;
         }
@@ -333,7 +333,7 @@ class SOAP_Client extends SOAP_Client_Overload
         if (!$this->_soap_transport ||
             $this->_endpoint != $this->_soap_transport->url) {
             $this->_soap_transport =& SOAP_Transport::getTransport($this->_endpoint);
-            if (PEAR::isError($this->_soap_transport)) {
+            if ((new PEAR)->isError($this->_soap_transport)) {
                 $fault =& $this->_soap_transport;
                 $this->_soap_transport = null;
                 $fault = $this->_raiseSoapFault($fault);
@@ -562,20 +562,20 @@ class SOAP_Client extends SOAP_Client_Overload
             if (!$this->_portName) {
                 $this->_portName = $this->_wsdl->getPortName($method);
             }
-            if (PEAR::isError($this->_portName)) {
+            if ((new PEAR)->isError($this->_portName)) {
                 return $this->_raiseSoapFault($this->_portName);
             }
 
             // Get endpoint.
             $this->_endpoint = $this->_wsdl->getEndpoint($this->_portName);
-            if (PEAR::isError($this->_endpoint)) {
+            if ((new PEAR)->isError($this->_endpoint)) {
                 return $this->_raiseSoapFault($this->_endpoint);
             }
 
             // Get operation data.
             $opData = $this->_wsdl->getOperationData($this->_portName, $method);
 
-            if (PEAR::isError($opData)) {
+            if ((new PEAR)->isError($opData)) {
                 return $this->_raiseSoapFault($opData);
             }
             $namespace = $opData['namespace'];
@@ -687,7 +687,7 @@ class SOAP_Client extends SOAP_Client_Overload
         }
         unset($this->headersOut);
 
-        if (PEAR::isError($soap_msg)) {
+        if ((new PEAR)->isError($soap_msg)) {
             return $this->_raiseSoapFault($soap_msg);
         }
 
@@ -704,7 +704,7 @@ class SOAP_Client extends SOAP_Client_Overload
                 $soap_msg = $this->_makeDIMEMessage($soap_msg, $this->_encoding);
                 $this->_options['headers']['Content-Type'] = 'application/dime';
             }
-            if (PEAR::isError($soap_msg)) {
+            if ((new PEAR)->isError($soap_msg)) {
                 return $this->_raiseSoapFault($soap_msg);
             }
         }
@@ -778,7 +778,7 @@ class SOAP_Client extends SOAP_Client_Overload
         }
 
         // Check for valid response.
-        if (PEAR::isError($response)) {
+        if ((new PEAR)->isError($response)) {
             $fault =& $this->_raiseSoapFault($response);
             return $fault;
         } elseif (!is_a($response, 'soap_value')) {
@@ -790,7 +790,7 @@ class SOAP_Client extends SOAP_Client_Overload
         $returnArray =& $this->_decode($response);
 
         // Fault?
-        if (PEAR::isError($returnArray)) {
+        if ((new PEAR)->isError($returnArray)) {
             $fault =& $this->_raiseSoapFault($returnArray);
             return $fault;
         }

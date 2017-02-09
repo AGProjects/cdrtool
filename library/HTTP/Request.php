@@ -600,11 +600,11 @@ class HTTP_Request
     function addFile($inputName, $fileName, $contentType = 'application/octet-stream')
     {
         if (!is_array($fileName) && !is_readable($fileName)) {
-            return PEAR::raiseError("File '{$fileName}' is not readable", HTTP_REQUEST_ERROR_FILE);
+            return (new PEAR)->raiseError("File '{$fileName}' is not readable", HTTP_REQUEST_ERROR_FILE);
         } elseif (is_array($fileName)) {
             foreach ($fileName as $name) {
                 if (!is_readable($name)) {
-                    return PEAR::raiseError("File '{$name}' is not readable", HTTP_REQUEST_ERROR_FILE);
+                    return (new PEAR)->raiseError("File '{$name}' is not readable", HTTP_REQUEST_ERROR_FILE);
                 }
             }
         }
@@ -690,7 +690,7 @@ class HTTP_Request
     function sendRequest($saveBody = true)
     {
         if (!is_a($this->_url, 'Net_URL')) {
-            return PEAR::raiseError('No URL given', HTTP_REQUEST_ERROR_URL);
+            return (new PEAR)->raiseError('No URL given', HTTP_REQUEST_ERROR_URL);
         }
 
         $host = isset($this->_proxy_host) ? $this->_proxy_host : $this->_url->host;
@@ -699,10 +699,10 @@ class HTTP_Request
         if (strcasecmp($this->_url->protocol, 'https') == 0) {
             // Bug #14127, don't try connecting to HTTPS sites without OpenSSL
             if (version_compare(PHP_VERSION, '4.3.0', '<') || !extension_loaded('openssl')) {
-                return PEAR::raiseError('Need PHP 4.3.0 or later with OpenSSL support for https:// requests',
+                return (new PEAR)->raiseError('Need PHP 4.3.0 or later with OpenSSL support for https:// requests',
                                         HTTP_REQUEST_ERROR_URL);
             } elseif (isset($this->_proxy_host)) {
-                return PEAR::raiseError('HTTPS proxies are not supported', HTTP_REQUEST_ERROR_PROXY);
+                return (new PEAR)->raiseError('HTTPS proxies are not supported', HTTP_REQUEST_ERROR_PROXY);
             }
             $host = 'ssl://' . $host;
         }
@@ -736,9 +736,9 @@ class HTTP_Request
             $this->_sock = new Net_Socket();
             $err = $this->_sock->connect($host, $port, null, $this->_timeout, $this->_socketOptions);
         }
-        PEAR::isError($err) or $err = $this->_sock->write($this->_buildRequest());
+        (new PEAR)->isError($err) or $err = $this->_sock->write($this->_buildRequest());
 
-        if (!PEAR::isError($err)) {
+        if (!(new PEAR)->isError($err)) {
             if (!empty($this->_readTimeout)) {
                 $this->_sock->setTimeout($this->_readTimeout[0], $this->_readTimeout[1]);
             }
@@ -768,7 +768,7 @@ class HTTP_Request
 
         ini_set('magic_quotes_runtime', $magicQuotes);
 
-        if (PEAR::isError($err)) {
+        if ((new PEAR)->isError($err)) {
             return $err;
         }
 
@@ -822,7 +822,7 @@ class HTTP_Request
 
         // Too many redirects
         } elseif ($this->_allowRedirects AND $this->_redirects > $this->_maxRedirects) {
-            return PEAR::raiseError('Too many redirects', HTTP_REQUEST_ERROR_REDIRECTS);
+            return (new PEAR)->raiseError('Too many redirects', HTTP_REQUEST_ERROR_REDIRECTS);
         }
 
         return true;
@@ -1222,7 +1222,7 @@ class HTTP_Response
         do {
             $line = $this->_sock->readLine();
             if (!preg_match('!^(HTTP/\d\.\d) (\d{3})(?: (.+))?!', $line, $s)) {
-                return PEAR::raiseError('Malformed response', HTTP_REQUEST_ERROR_RESPONSE);
+                return (new PEAR)->raiseError('Malformed response', HTTP_REQUEST_ERROR_RESPONSE);
             } else {
                 $this->_protocol = $s[1];
                 $this->_code     = intval($s[2]);
@@ -1281,7 +1281,7 @@ class HTTP_Response
             // Uncompress the body if needed
             if ($gzipped) {
                 $body = $this->_decodeGzip($this->_body);
-                if (PEAR::isError($body)) {
+                if ((new PEAR)->isError($body)) {
                     return $body;
                 }
                 $this->_body = $body;
@@ -1443,11 +1443,11 @@ class HTTP_Response
         }
         $method = ord(substr($data, 2, 1));
         if (8 != $method) {
-            return PEAR::raiseError('_decodeGzip(): unknown compression method', HTTP_REQUEST_ERROR_GZIP_METHOD);
+            return (new PEAR)->raiseError('_decodeGzip(): unknown compression method', HTTP_REQUEST_ERROR_GZIP_METHOD);
         }
         $flags = ord(substr($data, 3, 1));
         if ($flags & 224) {
-            return PEAR::raiseError('_decodeGzip(): reserved bits are set', HTTP_REQUEST_ERROR_GZIP_DATA);
+            return (new PEAR)->raiseError('_decodeGzip(): reserved bits are set', HTTP_REQUEST_ERROR_GZIP_DATA);
         }
 
         // header is 10 bytes minimum. may be longer, though.
@@ -1455,45 +1455,45 @@ class HTTP_Response
         // extra fields, need to skip 'em
         if ($flags & 4) {
             if ($length - $headerLength - 2 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $extraLength = unpack('v', substr($data, 10, 2));
             if ($length - $headerLength - 2 - $extraLength[1] < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $headerLength += $extraLength[1] + 2;
         }
         // file name, need to skip that
         if ($flags & 8) {
             if ($length - $headerLength - 1 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $filenameLength = strpos(substr($data, $headerLength), chr(0));
             if (false === $filenameLength || $length - $headerLength - $filenameLength - 1 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $headerLength += $filenameLength + 1;
         }
         // comment, need to skip that also
         if ($flags & 16) {
             if ($length - $headerLength - 1 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $commentLength = strpos(substr($data, $headerLength), chr(0));
             if (false === $commentLength || $length - $headerLength - $commentLength - 1 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $headerLength += $commentLength + 1;
         }
         // have a CRC for header. let's check
         if ($flags & 1) {
             if ($length - $headerLength - 2 < 8) {
-                return PEAR::raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
+                return (new PEAR)->raiseError('_decodeGzip(): data too short', HTTP_REQUEST_ERROR_GZIP_DATA);
             }
             $crcReal   = 0xffff & crc32(substr($data, 0, $headerLength));
             $crcStored = unpack('v', substr($data, $headerLength, 2));
             if ($crcReal != $crcStored[1]) {
-                return PEAR::raiseError('_decodeGzip(): header CRC check failed', HTTP_REQUEST_ERROR_GZIP_CRC);
+                return (new PEAR)->raiseError('_decodeGzip(): header CRC check failed', HTTP_REQUEST_ERROR_GZIP_CRC);
             }
             $headerLength += 2;
         }
@@ -1506,11 +1506,11 @@ class HTTP_Response
         // don't pass $dataSize to gzinflate, see bugs #13135, #14370
         $unpacked = gzinflate(substr($data, $headerLength, -8));
         if (false === $unpacked) {
-            return PEAR::raiseError('_decodeGzip(): gzinflate() call failed', HTTP_REQUEST_ERROR_GZIP_READ);
+            return (new PEAR)->raiseError('_decodeGzip(): gzinflate() call failed', HTTP_REQUEST_ERROR_GZIP_READ);
         } elseif ($dataSize != strlen($unpacked)) {
-            return PEAR::raiseError('_decodeGzip(): data size check failed', HTTP_REQUEST_ERROR_GZIP_READ);
+            return (new PEAR)->raiseError('_decodeGzip(): data size check failed', HTTP_REQUEST_ERROR_GZIP_READ);
         } elseif ((0xffffffff & $dataCrc) != (0xffffffff & crc32($unpacked))) {
-            return PEAR::raiseError('_decodeGzip(): data CRC check failed', HTTP_REQUEST_ERROR_GZIP_CRC);
+            return (new PEAR)->raiseError('_decodeGzip(): data CRC check failed', HTTP_REQUEST_ERROR_GZIP_CRC);
         }
         if (HTTP_REQUEST_MBSTRING) {
             mb_internal_encoding($oldEncoding);
