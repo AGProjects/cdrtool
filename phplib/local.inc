@@ -361,7 +361,7 @@ class CDRTool_Auth extends Auth
                     $this->CustomerPort->addHeader($this->SoapAuth);
                     $result     = $this->CustomerPort->getCustomers($Query);
 
-                    if (PEAR::isError($result)) {
+                    if ((new PEAR)->isError($result)) {
                         $error_msg  = $result->getMessage();
                         $error_fault= $result->getFault();
                         $error_code = $result->getCode();
@@ -386,7 +386,7 @@ class CDRTool_Auth extends Auth
                                 $this->CustomerPort->addHeader($this->SoapAuth);
                                 $result = $this->CustomerPort->getCustomers($Query);
 
-                                if (PEAR::isError($result)) {
+                                if ((new PEAR)->isError($result)) {
                                     $error_msg  = $result->getMessage();
                                     $error_fault= $result->getFault();
                                     $error_code = $result->getCode();
@@ -431,9 +431,9 @@ class CDRTool_Auth extends Auth
                         $password=md5($password);
                     }
                     if ($password == $pass
-                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
-                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
-                        || (!PEAR::isError($auth) && $auth_method =='4' )
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
+                        || (!(new PEAR)->isError($auth) && $auth_method =='4' )
                         || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)
                     ) {
                         $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
@@ -458,9 +458,9 @@ class CDRTool_Auth extends Auth
                     // we check if either otp or normal password match
                     //print "<p>$response == $expected_response <p>$response == $expect_otp";
                     if ($expected_response == $response
-                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
-                        || (!PEAR::isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
-                        || (!PEAR::isError($auth) && $auth_method =='4' )
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
+                        || (!(new PEAR)->isError($auth) && $auth_method =='4' )
                         || ($response == $expect_otp && $timestamp_otp > $timestamp_now)
                     ) {
                         $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
@@ -488,7 +488,7 @@ class CDRTool_Auth extends Auth
                 $auth = $yubi->verify($otp_yubikey);
                 $yubi_id = substr($otp_yubikey, 0, 12);
 
-                if (!PEAR::isError($auth)) {
+                if (!(new PEAR)->isError($auth)) {
                     $this->db->query(
                         sprintf(
                             "SELECT *,UNIX_TIMESTAMP(otp_expire) as timestamp_otp, UNIX_TIMESTAMP() as timestamp_now FROM %s WHERE yubikey = '%s' AND expire > NOW()",
@@ -646,7 +646,7 @@ class SIP_Subscriber_Auth extends Auth
 
         $result     = $this->SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -702,7 +702,7 @@ class SIP_Subscriber_Auth extends Auth
             $yubi_id = substr($yubikey_p, 0, 12);
         }
 
-        if (!PEAR::isError($auth) && $yubikey == $yubi_id && $use_yubikey == 1) {
+        if (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $use_yubikey == 1) {
             $log=sprintf("SIP settings page: %s logged in with yubikey from %s", $username, $_SERVER['REMOTE_ADDR']);
             syslog(LOG_NOTICE, $log);
             return true;
@@ -921,7 +921,7 @@ class SipThor_DomainAuth
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
-            } else if (!PEAR::isError($auth) && $yubikey == $yubi_id) {
+            } else if (!(new PEAR)->isError($auth) && $yubikey == $yubi_id) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);

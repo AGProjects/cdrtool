@@ -64,7 +64,7 @@ class NetworkStatistics {
         $this->soapclient->addHeader($this->SoapAuth);
         $result = $this->soapclient->getStatistics();
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
@@ -115,7 +115,7 @@ class NetworkStatistics {
         $this->soapclient->addHeader($this->SoapAuth);
         $result = $this->soapclient->getStatus();
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();

@@ -660,7 +660,7 @@ class SoapEngine {
 
         $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $this->error_msg   = $result->getMessage();
             $this->error_fault = $result->getFault();
             $this->error_code  = $result->getCode();
@@ -1091,7 +1091,7 @@ class Records {
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1150,7 +1150,7 @@ class Records {
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1212,7 +1212,7 @@ class Records {
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1246,7 +1246,7 @@ class Records {
             // Call function
             $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -1387,7 +1387,7 @@ class Records {
         $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1416,7 +1416,7 @@ class Records {
         $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1520,7 +1520,7 @@ class Records {
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
         $this->log_action('getProperties');
         $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($customer));
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1557,7 +1557,7 @@ class Records {
         $this->log_action('setProperties');
         $result     = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer),$properties);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1677,7 +1677,7 @@ class SipDomains extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1945,13 +1945,13 @@ class SipDomains extends Records {
                 $customer['balance'] = floatval($customer['balance']);
                 // Call function
                 $result     = $this->SoapEngine->soapclientCustomers->addAccount($customer);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 5001) {
                         $result     = $this->SoapEngine->soapclientCustomers->updateCustomer($customer);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -1975,7 +1975,7 @@ class SipDomains extends Records {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $this->log_action('addDomain');
                 $result = $this->SoapEngine->soapclient->addDomain($domain);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -1983,7 +1983,7 @@ class SipDomains extends Records {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                         $this->log_action('updateDomain');
                         $result = $this->SoapEngine->soapclient->updateDomain($domain);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -2018,14 +2018,14 @@ class SipDomains extends Records {
                 $this->log_action('addAccount');
                 $result = $this->SoapEngine->soapclient->addAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 1011) {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                         $result = $this->SoapEngine->soapclient->updateAccount($account);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -2064,7 +2064,7 @@ class SipDomains extends Records {
                 $this->log_action('addAlias');
                 $result = $this->SoapEngine->soapclient->addAlias($alias);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -2139,7 +2139,7 @@ class SipDomains extends Records {
         $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2182,7 +2182,7 @@ class SipDomains extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2354,7 +2354,7 @@ class SipDomains extends Records {
         $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2382,7 +2382,7 @@ class SipDomains extends Records {
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,'getAccounts'),array($Query));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2402,7 +2402,7 @@ class SipDomains extends Records {
                 $this->SoapEngine->soapclientVoicemail->addHeader($this->SoapEngine->SoapAuthVoicemail);
                 $result = $this->SoapEngine->soapclientVoicemail->getAccount($sipId);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -2432,7 +2432,7 @@ class SipDomains extends Records {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $this->log_action('getAliases');
                 $result = $this->SoapEngine->soapclient->getAliases($Query);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -2463,7 +2463,7 @@ class SipDomains extends Records {
 
             // Call function
             $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -2571,7 +2571,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2640,7 +2640,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
-         if (PEAR::isError($result)) {
+         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2718,7 +2718,7 @@ class SipAccounts extends Records {
 
                     // Call function
                     $result1     = $this->SoapEngine->soapclient->getPrepaidStatus($_prepaid_accounts);
-                    if (!PEAR::isError($result1)) {
+                    if (!(new PEAR)->isError($result1)) {
                         $j=0;
 
                         foreach ($result1 as $_account) {
@@ -3320,7 +3320,7 @@ class SipAccounts extends Records {
         $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3506,7 +3506,7 @@ class SipAccounts extends Records {
         $this->log_action('getAccounts');
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3557,7 +3557,7 @@ class SipAccounts extends Records {
         $this->log_action('getAccounts');
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3607,7 +3607,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3647,7 +3647,7 @@ class SipAccounts extends Records {
 
         dprint_r($result);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3768,7 +3768,7 @@ class SipAliases extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAliases($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3830,7 +3830,7 @@ class SipAliases extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAliases($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4199,7 +4199,7 @@ class SipAliases extends Records {
         $this->log_action('getDomains');
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4330,7 +4330,7 @@ class EnumRanges extends Records {
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4509,7 +4509,7 @@ class EnumRanges extends Records {
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4632,7 +4632,7 @@ class EnumRanges extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
 
         dprint_r($result);
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4690,7 +4690,7 @@ class EnumRanges extends Records {
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4895,7 +4895,7 @@ class EnumRanges extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
         dprint_r($result);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4939,7 +4939,7 @@ class EnumRanges extends Records {
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5127,7 +5127,7 @@ class EnumMappings extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5456,7 +5456,7 @@ class EnumMappings extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5550,7 +5550,7 @@ class EnumMappings extends Records {
         $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
-        if (!PEAR::isError($result)) {
+        if (!(new PEAR)->isError($result)) {
             // the number exists and we make an update
             $result_new=$result;
 
@@ -5577,7 +5577,7 @@ class EnumMappings extends Records {
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -5596,7 +5596,7 @@ class EnumMappings extends Records {
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -5743,7 +5743,7 @@ class EnumMappings extends Records {
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5912,7 +5912,7 @@ class EnumMappings extends Records {
         $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
             $error_fault=$result->getFault();
             $error_code=$result->getCode();
@@ -5926,7 +5926,7 @@ class EnumMappings extends Records {
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -5974,7 +5974,7 @@ class EnumMappings extends Records {
 
             $result = $this->SoapEngine->execute($function,$this->html);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -6025,7 +6025,7 @@ class EnumMappings extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getNumbers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6187,7 +6187,7 @@ class EnumMappings extends Records {
         $this->log_action('getNumber');
         $result     = $this->SoapEngine->soapclient->getNumber($enumid);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6294,7 +6294,7 @@ class EnumMappings extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
 
         dprint_r($result)    ;
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6405,7 +6405,7 @@ class DnsZones extends Records {
         $this->log_action('getZones');
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6575,7 +6575,7 @@ class DnsZones extends Records {
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6665,13 +6665,13 @@ class DnsZones extends Records {
                 $this->log_action('addAccount');
 
                 $result     = $this->SoapEngine->soapclientCustomers->addAccount($customer);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode == 5001) {
                         $result     = $this->SoapEngine->soapclientCustomers->updateCustomer($customer);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -6699,7 +6699,7 @@ class DnsZones extends Records {
                 $this->log_action('addZone');
                 $result = $this->SoapEngine->soapclient->addZone($zone);
                 $name_servers[$zone['name']] = $zone['nameservers'];
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -6707,7 +6707,7 @@ class DnsZones extends Records {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                         $this->log_action('updateZone');
                         $result = $this->SoapEngine->soapclient->updateZone($zone);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -6740,7 +6740,7 @@ class DnsZones extends Records {
                 $this->log_action('addRecord');
                 $result = $this->SoapEngine->soapclient->addRecord($record);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -6748,7 +6748,7 @@ class DnsZones extends Records {
                         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                         $this->log_action('updateRecord');
                         $result = $this->SoapEngine->soapclient->updateRecord($record);
-                        if (PEAR::isError($result)) {
+                        if ((new PEAR)->isError($result)) {
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
@@ -6818,7 +6818,7 @@ class DnsZones extends Records {
             $result = $this->SoapEngine->execute($function,$this->html);
             dprint_r($result);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -7014,7 +7014,7 @@ class DnsZones extends Records {
 
         dprint_r($result);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -7056,7 +7056,7 @@ class DnsZones extends Records {
         $this->log_action('getZones');
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -7107,7 +7107,7 @@ class DnsZones extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getZones($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -7548,7 +7548,7 @@ class DnsRecords extends Records {
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -7862,7 +7862,7 @@ class DnsRecords extends Records {
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8025,7 +8025,7 @@ class DnsRecords extends Records {
         $this->log_action('getZones');
         $result = $this->SoapEngine->soapclient->getZones($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8194,7 +8194,7 @@ class DnsRecords extends Records {
             $result = $this->SoapEngine->execute($function,$this->html);
             dprint_r($result);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -8289,7 +8289,7 @@ class DnsRecords extends Records {
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -8358,7 +8358,7 @@ class DnsRecords extends Records {
         // Call function
         $result = $this->SoapEngine->soapclient->getRecords($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8523,7 +8523,7 @@ class DnsRecords extends Records {
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8574,7 +8574,7 @@ class DnsRecords extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
         dprint_r($result);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8680,7 +8680,7 @@ class TrustedPeers extends Records {
 
         $result     = $this->SoapEngine->soapclient->getTrustedPeers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8958,7 +8958,7 @@ class Carriers extends Records {
         $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9200,7 +9200,7 @@ class Carriers extends Records {
         $this->log_action('getCarriers');
         $result     = $this->SoapEngine->soapclient->getCarriers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9292,7 +9292,7 @@ class Carriers extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
 
         dprint_r($result)    ;
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9382,7 +9382,7 @@ class Gateways extends Records {
         $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9786,7 +9786,7 @@ class Gateways extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
 
         dprint_r($result)    ;
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9828,7 +9828,7 @@ class Gateways extends Records {
         $this->log_action('getGateways');
         $result     = $this->SoapEngine->soapclient->getGateways($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -9917,7 +9917,7 @@ class GatewayRules extends Records {
         $this->log_action('getGatewayRules');
         $result     = $this->SoapEngine->soapclient->getGatewayRules($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10305,7 +10305,7 @@ class GatewayRules extends Records {
         $result = $this->SoapEngine->execute($function,$this->html);
 
         dprint_r($result)    ;
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10347,7 +10347,7 @@ class GatewayRules extends Records {
         $this->log_action('getGatewayRules');        
         $result     = $this->SoapEngine->soapclient->getGatewayRules($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10432,7 +10432,7 @@ class Routes extends Records {
         $this->log_action('getRoutes');
         $result     = $this->SoapEngine->soapclient->getRoutes($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10742,7 +10742,7 @@ class Routes extends Records {
         $this->log_action('getRoutes');
         $result     = $this->SoapEngine->soapclient->getRoutes($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10843,7 +10843,7 @@ class Routes extends Records {
                         );
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11546,7 +11546,7 @@ class Customers extends Records {
             $result     = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11753,7 +11753,7 @@ class Customers extends Records {
         $this->log_action('getAccount');
         $result     = $this->SoapEngine->soapclient->getAccount(intval($id));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -12457,7 +12457,7 @@ class Customers extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -12929,7 +12929,7 @@ class Customers extends Records {
             $result     = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -12965,7 +12965,7 @@ class Customers extends Records {
         $this->log_action('getCustomers');
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -12997,7 +12997,7 @@ class Customers extends Records {
         $this->log_action('getCustomers');
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -13290,7 +13290,7 @@ class Presence {
 
         $result = $this->PresencePort->setPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password'], $presentity);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -13321,7 +13321,7 @@ class Presence {
 
         $result = $this->PresencePort->getPresenceInformation(array("username" =>$SIPaccount['username'],"domain"   =>$SIPaccount['domain']),$SIPaccount['password']);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -14358,7 +14358,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14389,7 +14389,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14420,7 +14420,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14452,7 +14452,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14492,7 +14492,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14525,7 +14525,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14562,7 +14562,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14599,7 +14599,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14636,7 +14636,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14667,7 +14667,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14698,7 +14698,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14734,7 +14734,7 @@ class SipAccountsActions extends Actions {
                 $this->log_action('getAccount');
                 $result     = $this->SoapEngine->soapclient->getAccount($account);
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -14857,7 +14857,7 @@ class EnumMappingsActions extends Actions {
                 $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
-                if (PEAR::isError($number)) {
+                if ((new PEAR)->isError($number)) {
                     $error_msg  = $number->getMessage();
                     $error_fault= $number->getFault();
                     $error_code = $number->getCode();
@@ -14905,7 +14905,7 @@ class EnumMappingsActions extends Actions {
                 $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
-                if (PEAR::isError($number)) {
+                if ((new PEAR)->isError($number)) {
                     $error_msg  = $number->getMessage();
                     $error_fault= $number->getFault();
                     $error_code = $number->getCode();
@@ -14940,7 +14940,7 @@ class EnumMappingsActions extends Actions {
                 $this->log_action('getNumber');
                 $number     = $this->SoapEngine->soapclient->getNumber($enum_id);
 
-                if (PEAR::isError($number)) {
+                if ((new PEAR)->isError($number)) {
                     $error_msg  = $number->getMessage();
                     $error_fault= $number->getFault();
                     $error_code = $number->getCode();
@@ -15014,7 +15014,7 @@ class DnsRecordsActions extends Actions {
                 $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
-                if (PEAR::isError($record)) {
+                if ((new PEAR)->isError($record)) {
                     $error_msg  = $record->getMessage();
                     $error_fault= $record->getFault();
                     $error_code = $record->getCode();
@@ -15044,7 +15044,7 @@ class DnsRecordsActions extends Actions {
                 $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
-                if (PEAR::isError($record)) {
+                if ((new PEAR)->isError($record)) {
                     $error_msg  = $record->getMessage();
                     $error_fault= $record->getFault();
                     $error_code = $record->getCode();
@@ -15073,7 +15073,7 @@ class DnsRecordsActions extends Actions {
                 $this->log_action('getRecord');
                 $record     = $this->SoapEngine->soapclient->getRecord($key['id']);
 
-                if (PEAR::isError($record)) {
+                if ((new PEAR)->isError($record)) {
                     $error_msg  = $record->getMessage();
                     $error_fault= $record->getFault();
                     $error_code = $record->getCode();
@@ -15163,7 +15163,7 @@ class DnsZonesActions extends Actions {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $this->log_action('getZone');
                 $result     = $this->SoapEngine->soapclient->getZone($key['name']);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -15185,7 +15185,7 @@ class DnsZonesActions extends Actions {
                 // Call function
                 $result = call_user_func_array(array($this->SoapEngine->soapclient,'getRecords'),array($Query));
 
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
@@ -15200,7 +15200,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15229,7 +15229,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15259,7 +15259,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15289,7 +15289,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15315,7 +15315,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15345,7 +15345,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15375,7 +15375,7 @@ class DnsZonesActions extends Actions {
                 $this->log_action('getZone');
                 $zone     = $this->SoapEngine->soapclient->getZone($key['name']);
 
-                if (PEAR::isError($zone)) {
+                if ((new PEAR)->isError($zone)) {
                     $error_msg  = $zone->getMessage();
                     $error_fault= $zone->getFault();
                     $error_code = $zone->getCode();
@@ -15415,7 +15415,7 @@ class DnsZonesActions extends Actions {
 
                 // Call function
                 $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
-                if (PEAR::isError($result)) {
+                if ((new PEAR)->isError($result)) {
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();

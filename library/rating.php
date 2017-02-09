@@ -7462,7 +7462,7 @@ class OpenSIPSQuota {
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->addToGroup(array("username" => $username,"domain"=> $domain), "quota");
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
@@ -7506,7 +7506,7 @@ class OpenSIPSQuota {
             $this->soapclient->addHeader($this->SoapAuth);
             $result     = $this->soapclient->removeFromGroup(array("username" => $username,"domain"=> $domain), "quota");
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg   = $result->getMessage();
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();

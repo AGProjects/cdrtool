@@ -797,7 +797,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getAccount(array("username" =>$username,"domain"   =>$domain));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -981,7 +981,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getDomains($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1038,7 +1038,7 @@ class SipSettings {
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount($owner);
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1102,7 +1102,7 @@ class SipSettings {
         // Call function
         $result     = $this->SipPort->getAliases($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1126,7 +1126,7 @@ class SipSettings {
         $entity="subscriber://".$this->username."@".$this->domain;
         $result     = $this->RatingPort->getEntityProfiles($entiry);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1175,7 +1175,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->addAlias($_aliasObject);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -1208,7 +1208,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->deleteAlias($_aliasObject);
  
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -1226,7 +1226,7 @@ class SipSettings {
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->getAccount($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1467,7 +1467,7 @@ class SipSettings {
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->loginCredentials['customer']));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1546,7 +1546,7 @@ class SipSettings {
         $this->CustomerPort->addHeader($this->SoapAuthCustomer);
         $result     = $this->CustomerPort->getAccount(intval($this->reseller));
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1713,7 +1713,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getCallDiversions($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -1753,7 +1753,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getSipDeviceLocations(array($this->sipId));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3772,7 +3772,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getBarringPrefixes($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -3800,7 +3800,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setBarringPrefixes($this->sipId,$prefixes);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4294,7 +4294,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->updateAccount($result);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -4450,7 +4450,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversionsSOAP);
     
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -4472,7 +4472,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getCallDiversions($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4537,7 +4537,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setCallDiversions($this->sipId,$result);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4565,7 +4565,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
     
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -4600,7 +4600,7 @@ class SipSettings {
             $this->SipPort->addHeader($this->SoapAuth);
             $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
     
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -4627,7 +4627,7 @@ class SipSettings {
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->updateAccount($account);
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
             $error_fault=$result->getFault();
             $error_code=$result->getCode();
@@ -4655,7 +4655,7 @@ class SipSettings {
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->addAccount($_account);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
             $error_fault=$result->getFault();
             $error_code=$result->getCode();
@@ -4674,7 +4674,7 @@ class SipSettings {
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
         $result     = $this->VoicemailPort->deleteAccount($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
             $error_fault=$result->getFault();
             $error_code=$result->getCode();
@@ -4954,7 +4954,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getPrepaidStatus(array($this->sipId));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4977,7 +4977,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result = $this->SipPort->addBalanceFromVoucher($this->sipId,$card);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -4992,7 +4992,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->addBalance($this->sipId,floatval($value),$description);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5009,7 +5009,7 @@ class SipSettings {
 
         $result     = $this->SipPort->getCreditHistory($this->sipId,200);
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5028,7 +5028,7 @@ class SipSettings {
 
         $result     = $this->SipPort->getCreditHistory($this->sipId,200);
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5503,7 +5503,7 @@ class SipSettings {
         $this->EnumPort->addHeader($this->SoapAuthEnum);
         $result = $this->EnumPort->getNumbers($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -5929,7 +5929,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getCalls($this->sipId,$CallsQuery);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6014,7 +6014,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getCallStatistics($this->sipId,$CallsQuery);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6047,7 +6047,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->addPhoneBookEntry($this->sipId,$phonebookEntry);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6076,7 +6076,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->updatePhoneBookEntry($this->sipId,$phonebookEntry);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6097,7 +6097,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
  
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6135,7 +6135,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getPhoneBookEntries($this->sipId,$match,$range);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6492,7 +6492,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getRejectMembers($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6524,7 +6524,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6821,7 +6821,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->getAcceptRules($this->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -6922,7 +6922,7 @@ class SipSettings {
         $this->SipPort->addHeader($this->SoapAuth);
         $result     = $this->SipPort->setAcceptRules($this->sipId,$rules);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -7990,7 +7990,7 @@ class SipSettings {
         $this->RatingPort->addHeader($this->SoapAuthRating);
         $result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8093,7 +8093,7 @@ class SipSettings {
         $this->RatingPort->addHeader($this->SoapAuthRating);
         $result     = $this->RatingPort->getEntityProfiles("subscriber://".$this->account);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -8119,7 +8119,7 @@ class SipSettings {
         if ($this->billingProfiles->profileWeekday && !$profiles['profileWeekday']) {
             // delete profile
             $result     = $this->RatingPort->deleteEntityProfiles('subscriber://'.$this->account);
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -8134,7 +8134,7 @@ class SipSettings {
 
             $result     = $this->RatingPort->setEntityProfiles($profiles);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -8410,7 +8410,7 @@ class SipSettings {
         // Call function
         $result     = $this->SipPort->getAccounts($Query);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -10852,7 +10852,7 @@ function getSipAccountFromX509Certificate() {
 
      $result     = $SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
 
-     if (PEAR::isError($result)) {
+     if ((new PEAR)->isError($result)) {
          $error_msg  = $result->getMessage();
          $error_fault= $result->getFault();
          $error_code = $result->getCode();
@@ -10960,7 +10960,7 @@ function getSipAccountFromHTTPDigest () {
 
     $result = $SipPort->getAccount(array("username" =>$username,"domain"   =>$domain));
 
-    if (PEAR::isError($result)) {
+    if ((new PEAR)->isError($result)) {
         $error_msg  = $result->getMessage();
         $error_fault= $result->getFault();
         $error_code = $result->getCode();
@@ -11133,7 +11133,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -11239,7 +11239,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result = $SipSettings->SipPort->addBalanceFromVoucher($SipSettings->sipId,$card);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11274,7 +11274,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getSipDeviceLocations(array($SipSettings->sipId));
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11313,7 +11313,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId,$SipSettings->acceptRules);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11341,7 +11341,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId,$SipSettings->acceptRules);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11361,7 +11361,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->addToGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11381,7 +11381,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->removeFromGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11425,7 +11425,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
 
         $result     = $SipSettings->SipPort->addAlias($_aliasObject);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11445,7 +11445,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getCallDiversions($SipSettings->sipId);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -11507,7 +11507,7 @@ function renderUI($SipSettings_class,$account,$login_credentials,$soapEngines) {
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result     = $SipSettings->SipPort->setCallDiversions($SipSettings->sipId,$new_diversions);
     
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
@@ -12502,7 +12502,7 @@ class DIDProcessor {
 
         $result = $this->did_engine->didww_getdidwwregions($this->auth_string,$country);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
 
             $error_fault= $result->getFault();
@@ -12569,7 +12569,7 @@ class DIDProcessor {
 
     	$result = $this->did_engine->didww_getdidwwapidetails($this->auth_string);
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
 
             $error_fault= $result->getFault();
@@ -12600,7 +12600,7 @@ class DIDProcessor {
                                                        $data['uniq_hash']
                                                        );
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
 
             $error_fault= $result->getFault();
@@ -12685,7 +12685,7 @@ class DIDProcessor {
                                                           $data['uniq_hash']
                                                           );
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
 
             $error_fault= $result->getFault();
@@ -12723,7 +12723,7 @@ class DIDProcessor {
                                                           $data['number']
                                                           );
 
-        if (PEAR::isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
 
             $error_fault= $result->getFault();
