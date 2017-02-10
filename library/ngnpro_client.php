@@ -2765,15 +2765,6 @@ class SipAccounts extends Records {
                         $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
                     }
 
-                    unset($groups);
-                    if (is_array($account->groups)) foreach ($account->groups as $_grp) {
-                        if ($_grp == 'free-pstn') {
-                            $groups.='pstn ';
-                        } else {
-                            $groups.=$_grp.' ';
-                        }
-                    }
-
                     /*
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SoapEngine->customer_engine),
