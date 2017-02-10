@@ -6378,7 +6378,9 @@ class RatingTables {
 
                 if ($this->table == 'prepaid') {
                     $active_sessions = json_decode($this->db->f('active_sessions'),true);
-
+                    if (!isset($active_sessions)) {
+                        $active_sessions = array();
+                    }
                     $account=$this->db->f('account');
 
                     $extraInfo="
