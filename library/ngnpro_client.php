@@ -1289,7 +1289,7 @@ class Records {
     }
 
     function addFiltersToURL() {
-
+        $url = '';
         $j=0;
         foreach(array_keys($this->filters) as $filter) {
             if (strlen(trim($this->filters[$filter]))) {
@@ -2584,6 +2584,7 @@ class SipAccounts extends Records {
                       'groups'   => array($this->filters['group'])
                       );
 
+        $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
         // Range
         $range=array('start' => intval($this->next),
                      'count' => intval($this->maxrowsperpage)
@@ -2620,7 +2621,7 @@ class SipAccounts extends Records {
 
             $this->rows = $result->total;
 
-            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+            if ($this->rows && $action != 'PerformActions' && $action != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -2721,7 +2722,7 @@ class SipAccounts extends Records {
 
                     $_url.= sprintf("&key=%s",urlencode($account->id->username));
 
-                    if ($_REQUEST['action'] == 'Delete' &&
+                    if ($action == 'Delete' &&
                         $_REQUEST['key'] == $account->id->username &&
                         $_REQUEST['domain_filter'] == $account->id->domain) {
                         $_url .= "&confirm=1";

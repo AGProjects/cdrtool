@@ -1496,10 +1496,11 @@ function RandomString($len=11)
            "x","y","1","2","3","4",
            "5","6","7","8","9");
     $i=0;
+    $string = '';
     while($i < $len) {
         srand((double)microtime()*1000000);
         $randval = rand(0,28);
-        $string="$string"."$alf[$randval]";
+        $string = "$string"."$alf[$randval]";
         $i++;
     }
     return $string;

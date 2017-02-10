@@ -38,9 +38,8 @@ $callid      = $_REQUEST['callid'];
 $fromtag     = $_REQUEST['fromtag'];
 $totag       = $_REQUEST['totag'];
 $cdr_source  = $_REQUEST['cdr_source'];
-$format      = $_REQUEST['format'];
+$format      = isset($_REQUEST['format']) ? $_REQUEST['format'] : 'html';
 
-if (!$format) $format='html';
 
 $title=sprintf("CDRTool SIP trace for session %s",$callid);
 
