@@ -189,7 +189,7 @@ class SOAP_Client_Custom extends SOAP_Client {
 
 
 
-	function addHeader(&$soap_value) {
+	function addHeader($soap_value) {
         // add a new header to the SOAP message if not already exists
 
 		if (is_array($soap_value) && is_array($this->headersOut)) {

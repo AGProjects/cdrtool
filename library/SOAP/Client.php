@@ -311,7 +311,7 @@ class SOAP_Client extends SOAP_Client_Overload
      *
      * @return mixed  The method result or a SOAP_Fault on error.
      */
-    function &call($method, &$params, $namespace = false, $soapAction = false)
+    function &call($method, $params, $namespace = false, $soapAction = false)
     {
         $this->headersIn = null;
         $this->_last_request = null;

@@ -1840,7 +1840,7 @@ class SipSettings {
         ";
     }
 
-    function addInvoice() {
+    function addInvoice($cardProcessor) {
         // called after CC payment sucessfull
     }
 

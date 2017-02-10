@@ -921,7 +921,7 @@ class Records {
     function addRecord($dictionary=array()) {
     }
 
-    function deleteRecord() {
+    function deleteRecord($dictionary=array()) {
     }
 
     function showSortCaret($sortSearch) {
@@ -980,7 +980,7 @@ class Records {
         print "</select>";
     }
 
-    function showTimezones() {
+    function showTimezones($timezone) {
         if (!$fp = fopen("timezones", "r")) {
             print _("Failed to open timezone file.");
             return false;
@@ -1310,7 +1310,7 @@ class Records {
         }
     }
 
-    function getRecord () {
+    function getRecord($domain) {
     }
 
     function updateRecord () {
@@ -1319,7 +1319,7 @@ class Records {
     function copyRecord () {
     }
 
-    function showRecord () {
+    function showRecord($record) {
     }
 
     function RandomString($len=11) {
@@ -4533,7 +4533,7 @@ class EnumRanges extends Records {
         ";
     }
 
-    function addRecord() {
+    function addRecord($dictionary=array()) {
         $tld    = trim($_REQUEST['tld']);
         $prefix = trim($_REQUEST['prefix']);
         $size   = trim($_REQUEST['size']);
@@ -6583,7 +6583,7 @@ class DnsZones extends Records {
         ";
     }
 
-    function addRecord() {
+    function addRecord($dictionary=array()) {
         $name         = trim($_REQUEST['name']);
         $info         = trim($_REQUEST['info']);
         $name_servers = trim($_REQUEST['name_servers']);
@@ -8618,7 +8618,7 @@ class TrustedPeers extends Records {
         print "Owner";
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
     }
 
 }
@@ -8892,7 +8892,7 @@ class Carriers extends Records {
         printf (" <div class='input-prepend'><span class='add-on'>Name</span><input type=text size=20 name=name_filter value='%s'></div>",$this->filters['name']);
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
     }
 
     function showTextBeforeCustomerSelection() {
@@ -9407,7 +9407,7 @@ class Gateways extends Records {
 
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
     }
 
     function showTextBeforeCustomerSelection() {
@@ -9930,7 +9930,7 @@ class GatewayRules extends Records {
         printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input class=span1 type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
     }
 
     function showTextBeforeCustomerSelection() {
@@ -10429,7 +10429,7 @@ class Routes extends Records {
         $this->showResellerForm('reseller');
     }
 
-    function showCustomerForm() {
+    function showCustomerForm($name='customer_filter') {
     }
 
     function showTextBeforeCustomerSelection() {
@@ -11438,7 +11438,7 @@ class Customers extends Records {
         }
     }
 
-    function deleteRecord($dictionary) {
+    function deleteRecord($dictionary= Array()) {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;

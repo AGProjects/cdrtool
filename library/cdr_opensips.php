@@ -1832,7 +1832,7 @@ class CDRS_opensips extends CDRS {
                     $found=$i+1;
                     $this->CDRdb->next_record();                                            
 
-                    $Structure=$this->_readCDRFieldsFromDB();
+                    $Structure=$this->_readCDRFieldsFromDB('');
                     //dprint_r($Structure);
                     $CDR = new $this->CDR_class($this, $Structure);
 
