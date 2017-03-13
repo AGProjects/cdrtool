@@ -10493,10 +10493,13 @@ function checkPhonebookURI($uri) {
     return true;
 }
 
-function getLocalTime($timezone,$timestamp) {
-    $tz=getenv('TZ');
+function getLocalTime($timezone, $timestamp) {
+    $tz = getenv('TZ');
     putenv("TZ=$timezone");
-    $LocalTime=date("Y-m-d H:i:s", $timestamp);
+    if (!$timestamp) {
+        return;
+    }
+    $LocalTime = date("Y-m-d H:i:s", $timestamp);
     putenv("TZ=$tz");
     return $LocalTime;
 }
