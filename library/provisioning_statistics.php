@@ -8,18 +8,21 @@
 class ProvisioningStatistics {
     // Obtain statistics from database for NGNPro
 
-    function getTopRequestsProvisioning($class, $start_date, $stop_date) {
+    public function getTopRequestsProvisioning($class, $start_date, $stop_date)
+    {
         global $CDRTool;
 
-        $number_of_requests=0;
-        $requests=array();
-        $requests_ip=array();
-        $temp=array();
+        $number_of_requests = 0;
+        $requests = array();
+        $requests_ip = array();
+        $temp = array();
 
-        if (!class_exists($class)) return array();
+        if (!class_exists($class)) {
+            return array();
+        }
 
         $today = new DateTime(); // This object represents current date/time
-        $today->setTime( 23, 59, 00 ); // reset time part, to prevent partial comparison
+        $today->setTime(23, 59, 00); // reset time part, to prevent partial comparison
 
         if ($stop_date == $today) {
              $new_stop_date = $stop_date->add(new DateInterval('P1D'));
@@ -27,7 +30,7 @@ class ProvisioningStatistics {
             $new_stop_date = $stop_date;
         }
         $db = new $class();
-        $start = (float) array_sum(explode(' ',microtime()));
+        $start = (float) array_sum(explode(' ', microtime()));
 
         $query = sprintf(
             "select port, sum(number) as number
@@ -54,16 +57,18 @@ class ProvisioningStatistics {
             $new_stop_date->format('Y-m-d 00:00:00')
         );
 
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
 
-        if (!$db->num_rows()) return array();
+        if (!$db->num_rows()) {
+            return array();
+        }
 
         $requests['total'] = 0;
         while ($db->next_record()) {
@@ -73,8 +78,9 @@ class ProvisioningStatistics {
 
         dprint_r($requests);
 
-        foreach($temp as $key=> $value) {
-            $query = sprintf("select sum(number) as number, function, port, method
+        foreach ($temp as $key => $value) {
+            $query = sprintf(
+                "select sum(number) as number, function, port, method
                 from (
                     select sum(total) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method
                     from ngnpro_logs_functions
@@ -102,28 +108,30 @@ class ProvisioningStatistics {
                 $new_stop_date->format('Y-m-d 00:00:00')
             );
             #$query = "select sum(total) as number, function, substring_index(function,':',1) as port,substring_index(function,':',-1) as method from ngnpro_logs_functions where function like '$key:%' group by function order by number desc limit 0,5 ";
-            dprint("$query");
+            dprint_sql("$query");
 
-            if (!$db->query($query))  {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            if (!$db->query($query)) {
+                $log=sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return array();
             }
 
-            if (!$db->num_rows()) return array();
+            if (!$db->num_rows()) {
+                return array();
+            }
             while ($db->next_record()) {
                  $requests[$db->f('port')][$db->f('method')] = intval($db->f('number'));
                  $requests[$db->f('port')]['total'] = $requests[$db->f('port')]['total'] + intval($db->f('number'));
             }
-
         }
-        $end = (float) array_sum(explode(' ',microtime()));
+        $end = (float) array_sum(explode(' ', microtime()));
         dprint("Processing time: ". sprintf("%.4f", ($end-$start))." seconds<br>");
 
-        $start = (float) array_sum(explode(' ',microtime()));
+        $start = (float) array_sum(explode(' ', microtime()));
 
-        $query = sprintf("select sum(number) as number,function, ip
+        $query = sprintf(
+            "select sum(number) as number,function, ip
             from
             (
                 select total as number, function, ip
@@ -148,46 +156,53 @@ class ProvisioningStatistics {
         );
 
         #$query ="select total as number, function, ip from ngnpro_logs_functions group by ip,function order by number desc";
-        dprint("$query");
+        dprint_sql("$query");
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
 
-        if (!$db->num_rows()) return array();
+        if (!$db->num_rows()) {
+            return array();
+        }
         while ($db->next_record()) {
             list($port,$method) = explode(":", $db->f('function'));
             $requests_ip[$port][$method][$db->f('ip')] = intval($db->f('number'));
         }
 
-        $end = (float) array_sum(explode(' ',microtime()));
+        $end = (float) array_sum(explode(' ', microtime()));
         dprint("Processing time for getTopRequestsProvisioningNew: ". sprintf("%.4f", ($end-$start))." seconds");
         return array($requests,$requests_ip);
     }
 
 
-    function getNumber($class, $start_date, $stop_date) {
+    public function getNumber($class, $start_date, $stop_date)
+    {
         global $CDRTool;
 
         $temp = array();
 
-        if (!class_exists($class)) return array();
+        if (!class_exists($class)) {
+            return array();
+        }
         $db = new $class();
         // Get total
         $query = "select sum(total) as total from ngnpro_logs where date between '". $start_date->format('Y-m-d H:i:s')."' and '".$stop_date->format('Y-m-d H:i:s')."'";
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
 
-        if (!$db->num_rows()) return array();
+        if (!$db->num_rows()) {
+            return array();
+        }
 
         while ($db->next_record()) {
             $temp = array($db->f('total'));
@@ -196,17 +211,19 @@ class ProvisioningStatistics {
 
         // Also get from archived entries
         $query = "select sum(total) as total from ngnpro_logs_summary where date between '". $start_date->format('Y-m-d H:i:s')."' and '".$stop_date->format('Y-m-d H:i:s')."'";
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
 
 
-        if (!$db->num_rows()) return array();
+        if (!$db->num_rows()) {
+            return array();
+        }
 
         while ($db->next_record()) {
             $temp[0] = $temp[0]+$db->f('total');
@@ -214,17 +231,18 @@ class ProvisioningStatistics {
         return $temp;
     }
 
-    function getData($requests,$data1) {
-        $port_data= array();
-        $port_data['name']="";
-        $port_data['children']=array();
-        foreach($requests as $key => $value) {
-            if ($key != 'total'){
+    public function getData($requests, $data1)
+    {
+        $port_data = array();
+        $port_data['name'] = "";
+        $port_data['children'] = array();
+        foreach ($requests as $key => $value) {
+            if ($key != 'total') {
                 $children1 = array();
-                foreach($requests[$key] as $key1 => $value1) {
-                    if ($key1 != 'total'){
+                foreach ($requests[$key] as $key1 => $value1) {
+                    if ($key1 != 'total') {
                         $children2 = array();
-                        foreach($data1[$key][$key1] as $key2 => $value2) {
+                        foreach ($data1[$key][$key1] as $key2 => $value2) {
                             $children2[] = array(name=> "$key2", size=>$value2);
                         }
                         $children1[] = array(
@@ -241,7 +259,8 @@ class ProvisioningStatistics {
         return $return;
     }
 
-    function printChartDonut($titlex,$good_data) {
+    public function printChartDonut($titlex, $good_data)
+    {
         // Create the chart
         print "<h2>$titlex</h2>";
         print "<div id='pie_provisioning'></div>";
@@ -301,11 +320,14 @@ class ProvisioningStatistics {
         print $chart;
     }
 
-    function purge($class) {
+    private function purge($class)
+    {
         global $CDRTool;
         $interval = 547;
 
-        if (!class_exists($class)) return array();
+        if (!class_exists($class)) {
+            return array();
+        }
 
         $db = new $class();
 
@@ -313,10 +335,10 @@ class ProvisioningStatistics {
                . "select sum(total) as number, date, sum(total_time) as data from ngnpro_logs "
                . "where date < DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY UNIX_TIMESTAMP(date) DIV 3600 order by date";
 
-        dprint($query);
+        dprint_sql($query);
 
         if (!$db->query($query)) {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -325,10 +347,10 @@ class ProvisioningStatistics {
         $query = "delete from ngnpro_logs "
                 ."where date < DATE_SUB(NOW(), INTERVAL 30 DAY)";
 
-        dprint($query);
+        dprint_sql($query);
 
         if (!$db->query($query)) {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -336,10 +358,10 @@ class ProvisioningStatistics {
 
         $query = sprintf("delete from ngnpro_logs_summary where date < date_sub(now(), interval %u day)", $interval);
 
-        dprint($query);
+        dprint_sql($query);
 
         if (!$db->query($query)) {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -347,10 +369,10 @@ class ProvisioningStatistics {
 
         $query = sprintf("delete from ngnpro_logs_functions where date < date_sub(now(), interval %u day)", $interval);
 
-        dprint($query);
+        dprint_sql($query);
 
         if (!$db->query($query)) {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -358,23 +380,26 @@ class ProvisioningStatistics {
 
         $query = sprintf("delete from ngnpro_logs_functions_history where date < date_sub(now(), interval %u day)", $interval);
 
-        dprint($query);
+        dprint_sql($query);
 
         if (!$db->query($query)) {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
         }
     }
 
-    function getRequestsProvisioning($class,$days, $start_date, $stop_date) {
+    public function getRequestsProvisioning($class, $days, $start_date, $stop_date)
+    {
         global $CDRTool;
         $requests = array();
         $period = '300';
         $this->purge($class);
 
-        if (!class_exists($class)) return array();
+        if (!class_exists($class)) {
+            return array();
+        }
 
         $db = new $class();
 
@@ -390,10 +415,10 @@ class ProvisioningStatistics {
                . $stop_date->format('Y-m-d H:i:s')
                . "' order by date";
 
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -411,10 +436,10 @@ class ProvisioningStatistics {
                . $stop_date->format('Y-m-d H:i:s')
                . "' GROUP BY UNIX_TIMESTAMP(date) DIV $period";
 
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -430,13 +455,16 @@ class ProvisioningStatistics {
     }
 
 
-    function getRequestsTime($class, $days, $start_date, $stop_date) {
+    public function getRequestsTime($class, $days, $start_date, $stop_date)
+    {
         global $CDRTool;
         $requests = array();
         $period = '300';
 
-        if (!class_exists($class)) return array();
-        $start = (float) array_sum(explode(' ',microtime()));
+        if (!class_exists($class)) {
+            return array();
+        }
+        $start = (float) array_sum(explode(' ', microtime()));
         $db = new $class();
 
         if ($days >= 10) {
@@ -454,10 +482,10 @@ class ProvisioningStatistics {
                . $stop_date->format('Y-m-d H:i:s')
                . "' order by date ";
 
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -476,10 +504,10 @@ class ProvisioningStatistics {
                . $stop_date->format('Y-m-d H:i:s')
                . "' GROUP BY UNIX_TIMESTAMP(date) DIV $period order by date";
 
-        dprint($query);
+        dprint_sql($query);
 
-        if (!$db->query($query))  {
-            $log = sprintf ("Database error for query %s: %s (%s)",$query,$db->Error,$db->Errno);
+        if (!$db->query($query)) {
+            $log = sprintf("Database error for query %s: %s (%s)", $query, $db->Error, $db->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return array();
@@ -491,7 +519,7 @@ class ProvisioningStatistics {
                  $requests[] = array($db->f('date'),($total/intval($db->f('number')))*1000);
             }
         }
-        $end = (float) array_sum(explode(' ',microtime()));
+        $end = (float) array_sum(explode(' ', microtime()));
         dprint("<br>Processing time for getRequestsTime: ". sprintf("%.4f", ($end-$start))." seconds<br>");
         // echo "<pre>";
         // print_r($requests);
@@ -499,7 +527,8 @@ class ProvisioningStatistics {
         return json_encode($requests);
     }
 
-    function printLineCharts($name,$requests,$requests_time) {
+    public function printLineCharts($name, $requests, $requests_time)
+    {
         $chart = "
         <style type=\"text/css\">
         .graph {

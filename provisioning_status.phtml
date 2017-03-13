@@ -9,7 +9,8 @@ page_open(
     array("sess" => "CDRTool_Session",
           "auth" => "CDRTool_Auth",
           "perm" => "CDRTool_Perm"
-          ));
+    )
+);
 
 require("provisioning_statistics.php");
 $perm->check("statistics");
@@ -19,7 +20,9 @@ include("header.phtml");
 
 global $CDRTool;
 
-if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+if (strlen($CDRTool['filter']['domain'])) {
+    $allowedDomains = explode(' ', $CDRTool['filter']['domain']);
+}
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
@@ -27,7 +30,7 @@ $layout->showTopMenu($title);
 $start_date = isset($_REQUEST['start_date']) ? new DateTime($_REQUEST['start_date']) : new DateTime('-30 days');
 $stop_date = isset($_REQUEST['stop_date']) ? new DateTime($_REQUEST['stop_date']) : new DateTime('now');
 
-if ($start_date == $stop_date){
+if ($start_date == $stop_date) {
     $start_date = $start_date->setTime(00, 00, 00);
     $stop_date = $stop_date->setTime(00, 00, 00);
     $stop_date->add(new DateInterval('P1D'));
@@ -36,11 +39,10 @@ if ($start_date == $stop_date){
 print "<script type=\"text/javascript\">var start_date_set=\"".$start_date->format('Y-m-d H:i:s')."\";var stop_date_set=\"".$stop_date->format('Y-m-d H:i:s')."\";</script>";
 
 foreach (array_keys($DATASOURCES) as $datasource) {
-
     if ($DATASOURCES[$datasource]['db_ngnpro_stats']) {
         $stats= new ProvisioningStatistics();
 
-        list($data1,$data2) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$start_date,$stop_date);
+        list($data1, $data2) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'], $start_date, $stop_date);
 
         // Fetch the required data
         $donutData = $stats->getData($data1, $data2);
@@ -48,8 +50,8 @@ foreach (array_keys($DATASOURCES) as $datasource) {
         $requests_number = $stats->getNumber($DATASOURCES[$datasource]['db_ngnpro_stats'], $start_date, $stop_date);
         $interval = $start_date->diff($stop_date);
 
-        $requests_time_new = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days,$start_date,$stop_date);
-        $requests_new = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'],$interval->days ,$start_date,$stop_date);
+        $requests_time_new = $stats->getRequestsTime($DATASOURCES[$datasource]['db_ngnpro_stats'], $interval->days, $start_date, $stop_date);
+        $requests_new = $stats->getRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'], $interval->days, $start_date, $stop_date);
 
         print "<div id=\"reportrange\" class=\"btn pull-right\">
         <i class=\"icon-calendar\"></i>
@@ -67,7 +69,7 @@ foreach (array_keys($DATASOURCES) as $datasource) {
         $stats->printChartDonut("Top 5 distribution of request types", $donutData);
         print "</div></div>";
         print "<div class='row-fluid' style='min-height:280px'>";
-        $stats->printLineCharts($datasource,$requests_new,$requests_time_new);
+        $stats->printLineCharts($datasource, $requests_new, $requests_time_new);
         print "</div>";
     }
 }
