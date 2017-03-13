@@ -1028,8 +1028,8 @@ class Records {
         $class_name=get_class($this).'Actions';
 
         if (class_exists($class_name)) {
-            $actions=new $class_name($this->SoapEngine);
-            $actions->showActionsForm($this->filters,$this->sorting);
+            $actions = new $class_name($this->SoapEngine, $this->login_credentials);
+            $actions->showActionsForm($this->filters, $this->sorting);
         }
     }
 
