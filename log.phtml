@@ -2,84 +2,87 @@
 require("/etc/cdrtool/global.inc");
 
 page_open(
-    array("sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm"));
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 $loginname=$auth->auth["uname"];
 
 $title           = "Logs";
-$search_text     = $_REQUEST['search_text'];
-$task            = $_REQUEST['task'];
-$current_log     = $_REQUEST['current_log'];
-$log_description = $_REQUEST['log_description'];
-$next            = intval($_REQUEST['next']);
+$search_text     = isset($_REQUEST['search_text']) ? $_REQUEST['search_text'] : '';
+$task            = isset($_REQUEST['task']) ? $_REQUEST['task'] : '';
+$current_log     = isset($_REQUEST['current_log']) ? $_REQUEST['current_log'] : '';
+$log_description = isset($_REQUEST['log_description']) ? $_REQUEST['log_description'] : '';
+$next            = isset($_REQUEST['next']) ? intval($_REQUEST['next']) : 0;
 $maxrowsperpage  = 20;
 $PHP_SELF        = $_SERVER['PHP_SELF'];
-$thisMonth       = $_REQUEST['thisMonth'];
+$thisMonth       = isset($_REQUEST['thisMonth']) ? $_REQUEST['thisMonth'] : '';
 
 $db              = new DB_CDRTool;
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
-	include("/etc/cdrtool/local/header.phtml");
+    include("/etc/cdrtool/local/header.phtml");
 } else {
-	include("header.phtml");
+    include("header.phtml");
 }
 
 if ($search_text) {
-	$search_text=preg_replace("/[^\d|\w| -\.@_]/s","",$search_text);
+    $search_text=preg_replace("/[^\d|\w| -\.@_]/s", "", $search_text);
 }
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
 if ($thisMonth) {
-	$checked_thisMonth='checked';
+    $checked_thisMonth='checked';
 } else {
-	$checked_thisMonth='';
+    $checked_thisMonth='';
 }
 
 $where = " (1=1) ";
 
 if ($CDRTool['filter']['reseller']) {
-	$where .= sprintf (' and reseller_id = %s',addslashes($CDRTool['filter']['reseller']));
+    $where .= sprintf(' and reseller_id = %s', addslashes($CDRTool['filter']['reseller']));
 } else if (!$perm->have_perm("admin")) {
-    $where.=sprintf(" and login = '%s'",addslashes($auth->auth["uname"]));
+    $where .= sprintf(" and login = '%s'", addslashes($auth->auth["uname"]));
 }
 
-if ($perm->have_perm(admin)) {
-	$query="select * from auth_user where perms like '%admin%'";
+if ($perm->have_perm('admin')) {
+    $query="select * from auth_user where perms like '%admin%'";
     $db->query($query);
     while ($db->next_record()) {
-    	$Collegues[$db->f('email')] =$db->f('name');
+        $Collegues[$db->f('email')] = $db->f('name');
         if ($loginname == $db->f('username')) {
             $myEmailAddress=$db->f('email');
             $myName=$db->f('name');
         }
     }
 } else {
-	$Collegues[$CDRTool['provider']['toEmail']] = $CDRTool['provider']['name'];
-    $myName	=$CDRTool["loginName"];
-    $myEmailAddress=$CDRTool["loginEmail"];
+    $Collegues[$CDRTool['provider']['toEmail']] = $CDRTool['provider']['name'];
+    $myName = $CDRTool["loginName"];
+    $myEmailAddress = $CDRTool["loginEmail"];
 }
 
-if ($current_log ) {
+if ($current_log) {
     if ($task == "edit") {
-    
-        $query=sprintf("update log set description = '%s' where %s and id = %d",
-        addslashes($log_description),
-        $where,
-        intval($current_log));
+        $query = sprintf(
+            "update log set description = '%s' where %s and id = %d",
+            addslashes($log_description),
+            $where,
+            intval($current_log)
+        );
 
         $db->query($query);
-
     } else if ($task == "mailLog" && $recipient) {
-        $query=sprintf("select * from log where %s and id = %d",$where,intval($current_log));
+        $query=sprintf("select * from log where %s and id = %d", $where, intval($current_log));
 
         $db->query($query);
         $db->next_record();
-        $rerun         	=$db->f('rerun');
-	    $description    =$db->f('description');
+        $rerun = $db->f('rerun');
+        $description = $db->f('description');
 
         if ($_SERVER['HTTPS']=="on") {
             $protocolURL="https://";
@@ -87,37 +90,42 @@ if ($current_log ) {
             $protocolURL="http://";
         }
 
-		$subject="CDRTool";
+        $subject="CDRTool";
 
         $fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$CDRTool['tld']."/".$rerun;
         $body="CDRTool query to analize:\n\n$fullURL\n\n";
         if ($description) {
             $body=$body."The query id $current_log is saved with name \"$description\"\n\n";
-			$subject=$subject.": ".$description;
+            $subject=$subject.": ".$description;
         }
 
         $body=$body."This notification has been sent to you from CDRTool log interface by $myName";
 
-        mail($recipient,$subject,$body,"From: $myEmailAddress");
+        mail($recipient, $subject, $body, "From: $myEmailAddress");
         print "<p>Notified $recipient.";
     }
 }
 
+$url_log = '';
 if ($search_text) {
-    $where.= sprintf(" and (description like '%s%s%s' or url like '%s' or id = '%s')",
-    "%",addslashes($search_text),"%",
-    addslashes($search_text),
-    addslashes($search_text));
-    $search_text_enc=urlencode($search_text);
-    $url_log .="&search_text=$search_text_enc";
+    $where.= sprintf(
+        " and (description like '%s%s%s' or url like '%s' or id = '%s')",
+        "%",
+        addslashes($search_text),
+        "%",
+        addslashes($search_text),
+        addslashes($search_text)
+    );
+    $search_text_enc = urlencode($search_text);
+    $url_log .= "&search_text=$search_text_enc";
 }
 
 if ($thisMonth) {
-    $where.= sprintf(" and date like '%s'",date ('Y-m').'%');
+    $where .= sprintf(" and date like '%s'", date('Y-m').'%');
     $url_log .= "&thisMonth=1";
 }
 
-$query = sprintf("select count(*) as records from log where %s ",$where);
+$query = sprintf("select count(*) as records from log where %s ", $where);
 
 if ($db->query($query)) {
     $db->next_record();
@@ -130,7 +138,7 @@ if (!$next) {
     $i=0;
     $next=0;
 } else {
-	$i=intval($next);
+    $i = intval($next);
 }
 $j=0;
 $z=0;
@@ -155,12 +163,12 @@ Only this month?
 </form>
 ";
 
-if  ($rows>0)  {
-    if ($rows  >  $maxrowsperpage)  {
-        $maxrows=$maxrowsperpage+$next;
-        if  ($maxrows  >  $rows)  {
-            $maxrows=$rows;
-            $prev_rows=$maxrows;
+if ($rows > 0) {
+    if ($rows > $maxrowsperpage) {
+        $maxrows=$maxrowsperpage + $next;
+        if ($maxrows > $rows) {
+            $maxrows = $rows;
+            $prev_rows = $maxrows;
         }
     } else {
         $maxrows=$rows;
@@ -170,7 +178,7 @@ if  ($rows>0)  {
     if (!$_max_rows) {
         $_max_rows = 10;
     }
-    $query = sprintf("select * from log where %s order by id desc limit %d, %d",$where,intval($i),$_max_rows);
+    $query = sprintf("select * from log where %s order by id desc limit %d, %d", $where, intval($i), $_max_rows);
 
     $db->query($query);
 
@@ -192,61 +200,60 @@ if  ($rows>0)  {
            </thead>
 	";
 
-	while  ($i<$maxrows)  {
-            
+    while ($i<$maxrows) {
         $found=$i+1;
-        $db->next_record();											
+        $db->next_record();
 
-        $current_log    =$db->f('id');
-        $reseller_id    =$db->f('reseller_id');
-       	$log_date		=$db->f('date');
-       	$login		    =$db->f('login');
-       	$ip	         	=$db->f('ip');
-       	$url         	=$db->f('url');
-        $reedit         =$db->f('reedit');
-        $rerun         	=$db->f('rerun');
-       	$results        =$db->f('results');
-	    $description    =$db->f('description');
-        $datasource     =$db->f('datasource');
+        $current_log = $db->f('id');
+        $reseller_id = $db->f('reseller_id');
+        $log_date = $db->f('date');
+        $login = $db->f('login');
+        $ip = $db->f('ip');
+        $url = $db->f('url');
+        $reedit = $db->f('reedit');
+        $rerun = $db->f('rerun');
+        $results = $db->f('results');
+        $description = $db->f('description');
+        $datasource = $db->f('datasource');
 
         if ($rerun && $DATASOURCES[$datasource]['name']) {
-        	$datasource_print=$DATASOURCES[$datasource]['name'];
+            $datasource_print=$DATASOURCES[$datasource]['name'];
         } else {
-        	$datasource_print=$datasource;
+            $datasource_print=$datasource;
         }
 
         if (!$reedit || !$rerun) {
             if (preg_match("/do_search/", $url)) {
-                $url_run="<a href=\"../search_call/$url"."&history_id=$current_log"."\">Run</a>";
-                $url_edit=preg_replace("/do_/","",$url);
-                $url_edit="<a href=\"../search_call/$url_edit\">Edit</a>";
-                $display_form=1;
+                $url_run = "<a href=\"../search_call/$url"."&history_id=$current_log"."\">Run</a>";
+                $url_edit = preg_replace("/do_/", "", $url);
+                $url_edit = "<a href=\"../search_call/$url_edit\">Edit</a>";
+                $display_form = 1;
             } elseif (preg_match("/do_statistics/", $url)) {
-                $url_run="<a href=\"../statistics/$url"."&history_id=$current_log"."\">Run</a>";
-                $url_edit=preg_replace("/do_/","",$url);
-                $url_edit="<a href=\"../statistics/$url_edit\">Edit stat</a>";
-                $display_form=1;
+                $url_run = "<a href=\"../statistics/$url"."&history_id=$current_log"."\">Run</a>";
+                $url_edit = preg_replace("/do_/", "", $url);
+                $url_edit = "<a href=\"../statistics/$url_edit\">Edit stat</a>";
+                $display_form = 1;
             } else {
-                $url_edit="";
-                $url_run="";
-                $display_form=0;
+                $url_edit = "";
+                $url_run = "";
+                $display_form = 0;
             }
         } else {
             $display_form=1;
-        	$url_run="<a class='btn' href=\"$rerun\">Run</a>";
+            $url_run="<a class='btn' href=\"$rerun\">Run</a>";
             $url_edit="<a class='btn btn-info' href=\"$reedit\">Edit</a>";
         }
 
         $rr=floor($found/2);
         $mod=$found-$rr*2;
-    
+
         if ($mod ==0) {
             //$bgcolor="lightgrey";
         } else {
             //$bgcolor="white";
         }
 
-    	print  "
+        print  "
 		<tr>
 		<td class=cdr><b>$found.</b></td>
 		<td class=cdr>$current_log</td>
@@ -258,7 +265,7 @@ if  ($rows>0)  {
 		<td class=cdr>$results</td>
         <td class=cdr><form class='cform form-inline' method=post>";
 
-		if ($display_form == 1) {
+        if ($display_form == 1) {
             print "
             <input type=hidden name=current_log value=\"$current_log\">
             <input type=hidden name=task value=edit>
@@ -268,9 +275,9 @@ if  ($rows>0)  {
             <input type=text class=span2 size=25 name=log_description value=\"$description\"><button class=btn type=submit value=Save>Save</button>
             </div>
             ";
-		} else {
-			print "$description";
-		}
+        } else {
+            print "$description";
+        }
 
         print "</form>
         </td>        <td class=cdr>
@@ -284,9 +291,9 @@ if  ($rows>0)  {
             <button class='btn' type=submit value=Notify>Notify</button>
             <select class=span3 name=recipient>
             ";
-                foreach(array_keys($Collegues) as $col) {
-                    print "<option value=\"$col\">$Collegues[$col]";
-                }
+            foreach (array_keys($Collegues) as $col) {
+                print "<option value=\"$col\">$Collegues[$col]";
+            }
 
             print "
             </select>
@@ -295,35 +302,34 @@ if  ($rows>0)  {
             <input type=hidden name=next value=$next>
             <input type=hidden name=search_text value=\"$search_text\">
             ";
-        } 
+        }
         print "</div></form>
         </td>
 		</tr>
 
 		";
-	    $i++;
-	}
-	print "</table>
+        $i++;
+    }
+    print "</table>
     ";
-
 }
 
 print "
 <ul class=\"pager\">
 ";
 
-if  ($next!=0  ) {
+if ($next!=0) {
     $show_next=$maxrowsperpage-$next;
-    if  ($show_next < 0)  {
+    if ($show_next < 0) {
         $mod_show_next  =  $show_next-2*$show_next;
     }
-    $url_prev	=$PHP_SELF."?".$url_log."&action=search&next=$mod_show_next";
+    $url_prev = $PHP_SELF."?".$url_log."&action=search&next=$mod_show_next";
     print "<li><a href=\"$url_prev\">&larr; Previous</a></li>";
 }
 
-if ($rows>$maxrowsperpage && $rows!=$maxrows)  {
-    $show_next  =$maxrowsperpage+$next;
-    $url_next	=$PHP_SELF."?".$url_log."&action=search&next=$show_next";
+if ($rows>$maxrowsperpage && $rows!=$maxrows) {
+    $show_next = $maxrowsperpage + $next;
+    $url_next = $PHP_SELF."?".$url_log."&action=search&next=$show_next";
     print "<li><a href=\"$url_next\">Next &rarr;</a></li>";
 }
 
