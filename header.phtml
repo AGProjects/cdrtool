@@ -41,8 +41,8 @@ printf("<HTML>
   <link rel=\"stylesheet\" type=\"text/css\" href=\"%s/style.css\">
 ",$CDRTool['tld']);
 
-if ($refreshURL) {
-	if (!$refreshTime) $refreshTime=0;
+if (isset($refreshURL)) {
+    if (!$refreshTime) $refreshTime=0;
     printf ("<meta http-equiv='Refresh' content='%s; URL=%s'>",$refreshTime,$refreshURL);
 }
 
