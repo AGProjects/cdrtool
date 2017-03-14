@@ -735,6 +735,7 @@ class MRTGGraphs {
 
         $SIPstatistics = new SIPstatistics ();
 
+        $allowedDomains = '';
         if (strlen($CDRTool['filter']['domain'])) {
             $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
         }
