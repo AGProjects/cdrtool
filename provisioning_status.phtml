@@ -39,7 +39,7 @@ if ($start_date == $stop_date) {
 print "<script type=\"text/javascript\">var start_date_set=\"".$start_date->format('Y-m-d H:i:s')."\";var stop_date_set=\"".$stop_date->format('Y-m-d H:i:s')."\";</script>";
 
 foreach (array_keys($DATASOURCES) as $datasource) {
-    if ($DATASOURCES[$datasource]['db_ngnpro_stats']) {
+    if (isset($DATASOURCES[$datasource]['db_ngnpro_stats'])) {
         $stats= new ProvisioningStatistics();
 
         list($data1, $data2) = $stats->getTopRequestsProvisioning($DATASOURCES[$datasource]['db_ngnpro_stats'], $start_date, $stop_date);

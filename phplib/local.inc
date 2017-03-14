@@ -1213,7 +1213,9 @@ class pageLayout
         print "<div class=\"page-header\">";
         print "<h1>";
         print "$title";
-        print $DATASOURCES[$cdr_source]['name'];
+        if (isset($DATASOURCES[$cdr_source]['name'])) {
+            print $DATASOURCES[$cdr_source]['name'];
+        }
 
         // Dirty hack
 

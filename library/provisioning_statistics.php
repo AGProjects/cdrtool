@@ -120,6 +120,7 @@ class ProvisioningStatistics {
             if (!$db->num_rows()) {
                 return array();
             }
+            $requests[$key]['total'] = 0;
             while ($db->next_record()) {
                  $requests[$db->f('port')][$db->f('method')] = intval($db->f('number'));
                  $requests[$db->f('port')]['total'] = $requests[$db->f('port')]['total'] + intval($db->f('number'));
@@ -243,7 +244,7 @@ class ProvisioningStatistics {
                     if ($key1 != 'total') {
                         $children2 = array();
                         foreach ($data1[$key][$key1] as $key2 => $value2) {
-                            $children2[] = array(name=> "$key2", size=>$value2);
+                            $children2[] = array('name'=> "$key2", 'size'=>$value2);
                         }
                         $children1[] = array(
                             "name"  => $key1,
@@ -251,7 +252,7 @@ class ProvisioningStatistics {
                         );
                     }
                 }
-                $port_data['children'][]=array(name =>$key,children => $children1);
+                $port_data['children'][]=array('name' =>$key, 'children' => $children1);
             }
         }
 
