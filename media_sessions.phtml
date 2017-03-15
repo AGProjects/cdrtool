@@ -1,11 +1,13 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
 page_open(
-    array("sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm"
-          ));
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 $perm->check("statistics");
 
@@ -15,45 +17,47 @@ $title="Media sessions";
 include("header.phtml");
 
 global $CDRTool;
-if (strlen($CDRTool['filter']['domain'])) $allowedDomains=explode(' ',$CDRTool['filter']['domain']);
+$allowedDomains = array();
+if (strlen($CDRTool['filter']['domain'])) {
+    $allowedDomains = explode(' ', $CDRTool['filter']['domain']);
+}
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
-if ($_REQUEST['datasource']) {
-	$datasources=array($_REQUEST['datasource']);
+if (isset($_REQUEST['datasource'])) {
+    $datasources = array($_REQUEST['datasource']);
 } else {
-    $datasources=array_keys($DATASOURCES);
+    $datasources = array_keys($DATASOURCES);
 }
 
+$user = isset($_REQUEST['user']) ? $_REQUEST['user'] : '';
+
 foreach ($datasources as $datasource) {
-    if (in_array($datasource,$CDRTool['dataSourcesAllowed'])) {
-        if ($DATASOURCES[$datasource]['mediaSessions']) {
+    if (in_array($datasource, $CDRTool['dataSourcesAllowed'])) {
+        if (array_key_exists('mediaSessions', $DATASOURCES[$datasource])) {
             // MediaProxy 2 over NGNPro
-	    	printf ("<h2>%s (MediaProxy 2)</h2><br />",$DATASOURCES[$datasource]['name']);
 
-           	$filters=array('user'=>$_REQUEST['user']);
-           
-           	$MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'],$allowedDomains,$filters);
-        	$MediaSessions->getSessions();
-           	$MediaSessions->showAll();
-
-        } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+            printf("<h2>%s (MediaProxy 2)</h2><br />", $DATASOURCES[$datasource]['name']);
+            $filters = array('user' => $user);
+            $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions'], $allowedDomains, $filters);
+            $MediaSessions->getSessions();
+            $MediaSessions->showAll();
+        } else if (array_key_exists('mediaDispatcher', $DATASOURCES[$datasource])) {
             // MediaProxy 2 via dispatcher tcp socket
-	    	printf ("<h2>%s (MediaProxy 2.x)</h2><br />",$DATASOURCES[$datasource]['name']);
 
-           	$filters=array('user'=>$_REQUEST['user']);
-           
-           	$MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'],$allowedDomains,$filters);
-        	$MediaSessions->getSessions();
-           	$MediaSessions->showAll();
-
-        } else if ($DATASOURCES[$datasource]['mediaServers']){
+            printf("<h2>%s (MediaProxy 2.x)</h2><br />", $DATASOURCES[$datasource]['name']);
+            $filters = array('user' => $user);
+            $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher'], $allowedDomains, $filters);
+            $MediaSessions->getSessions();
+            $MediaSessions->showAll();
+        } else if (array_key_exists('mediaServers', $DATASOURCES[$datasource])) {
             // MediaProxy 1 via relay tcp socket
-	    	printf ("<h2>%s (MediaProxy 1.x)</h2><br />",$DATASOURCES[$datasource]['name']);
-           	$MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'],$allowedDomains);
-        	$MediaSessions->getSessions();
-           	$MediaSessions->show();
+
+            printf("<h2>%s (MediaProxy 1.x)</h2><br />", $DATASOURCES[$datasource]['name']);
+            $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'], $allowedDomains);
+            $MediaSessions->getSessions();
+            $MediaSessions->show();
         }
     }
 }
