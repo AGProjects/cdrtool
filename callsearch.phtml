@@ -1,21 +1,22 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
 page_open(
-    array("sess" => "CDRTool_Session",
-          "auth" => "CDRTool_Auth",
-          "perm" => "CDRTool_Perm"
-          )
-          );
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 $loginname=$auth->auth["uname"];
 $perm->check('callsearch');
 
-$export     = $_REQUEST['export'];
-$cdr_source = $_REQUEST["cdr_source"];
-$trace      = $_REQUEST["trace"];
-$action     = $_REQUEST["action"];
-
+$export     = isset($_REQUEST['export']) ? $_REQUEST['export'] : '';
+$cdr_source = isset($_REQUEST["cdr_source"]) ? $_REQUEST['cdr_source'] : '';
+$trace      = isset($_REQUEST["trace"])? $_REQUEST['trace'] : '';
+$action     = isset($_REQUEST["action"])? $_REQUEST['action'] : '';
+$previous_page = isset($_REQUEST['previous_page']) ? $_REQUEST['previous_page'] : '';
 require("cdr_generic.php");
 require("rating.php");
 
@@ -29,16 +30,16 @@ if (!$export) {
         include("header.phtml");
     }
 
-    if ($_REQUEST['previous_page'] == 'license_page') {
-
+    if ($previous_page == 'license_page') {
         $db = new DB_CDRTool();
 
-        $query = sprintf("insert into settings (billing_party, var_module,var_name,var_value)
-        values ('%s','login','I_agree_with_license','True')",$auth->auth["uname"]);
+        $query = sprintf(
+            "insert into settings (billing_party, var_module,var_name,var_value) values ('%s','login','I_agree_with_license','True')",
+            $auth->auth["uname"]
+        );
 
         $db->query($query);
-     }
-
+    }
 } else {
     Header("Content-type: text/plain");
     Header("Content-Disposition: inline; filename=cdr.txt");
@@ -48,7 +49,9 @@ if (isset($CDRTool['dataSourcesAllowed'])) {
     while (list($k,$v)=each($CDRTool['dataSourcesAllowed'])) {
         $cdr_source_els[]=array("label"=>$DATASOURCES[$v]['name'],"value"=>$v);
     }
-    if (!$cdr_source) $cdr_source = $cdr_source_els[0]['value'];
+    if (!$cdr_source) {
+        $cdr_source = $cdr_source_els[0]['value'];
+    }
 }
 
 $CDR_class=$DATASOURCES[$cdr_source]["class"];
@@ -66,29 +69,27 @@ if (!$export && !$trace) {
 if (is_array($DATASOURCES[$cdr_source])) {
     if (class_exists($CDR_class)) {
         $CDRS = new $CDR_class($cdr_source);
-    
-        if ($action=='edit' || !$action ) {
+
+        if ($action=='edit' || !$action) {
             if ($CDRTool['filter']['aNumber']) {
                 $CDRS->searchFormSubscriber();
             } else {
                 $CDRS->searchForm();
             }
-        
         } elseif ($action==search) {
             $CDRS->show();
         }
-    
+
         if (!$export && !$trace) {
             $layout->showFooter();
         }
-    
     } else {
-        $log=sprintf("Error initializing datasource '%s', class '%s' is not defined",$cdr_source,$CDR_class);
-        print "<p>$log";
+        $log = sprintf("Error initializing datasource '%s', class '%s' is not defined", $cdr_source, $CDR_class);
+        print "<p class='alert alert-danger'>$log</p>";
     }
 } else {
-	$log=sprintf("Error: datasource '%s' is not defined",$cdr_source);
-    print "<p>$log";
+    $log = sprintf("Error: datasource '%s' is not defined", $cdr_source);
+    print "<p class='alert alert-danger'>$log</p>";
 }
 
 if (!$export && !$trace) {
