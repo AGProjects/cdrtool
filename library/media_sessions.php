@@ -99,6 +99,11 @@ class MediaSessions {
         $_sessions=$this->fetchSessionFromNetwork();
 
         if (count($this->allowedDomains)) {
+            $this->domain_statistics['total'] = array(
+                'sessions' => 0,
+                'caller'   => 0,
+                'callee'   => 0
+            );
             foreach ($_sessions as $_session) {
 
                 list($user1,$domain1)=explode("@",$_session->from_uri);
@@ -110,6 +115,13 @@ class MediaSessions {
                     continue;
                 }
 
+                if (!array_key_exists($domain1, $this->domain_statistics)) {
+                    $this->domain_statistics[$domain1]= array(
+                        'sessions' => 0,
+                        'caller'   => 0,
+                        'callee'   => 0
+                    );
+                }
                 $this->domain_statistics[$domain1]['sessions']++;
                 $this->domain_statistics['total']['sessions']++;
                 
@@ -134,20 +146,32 @@ class MediaSessions {
                 $_sessions2[] = $_session;
             }
         } else {
+            $this->domain_statistics['total'] = array(
+                'sessions' => 0,
+                'caller'   => 0,
+                'callee'   => 0
+            );
             foreach ($_sessions as $_session) {
                 list($user1,$domain1)=explode("@",$_session->from_uri);
                 list($user2,$domain2)=explode("@",$_session->to_uri);
                 if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
 
+                if (!array_key_exists($domain1, $this->domain_statistics)) {
+                    $this->domain_statistics[$domain1]= array(
+                        'sessions' => 0,
+                        'caller'   => 0,
+                        'callee'   => 0
+                    );
+                }
                 $this->domain_statistics[$domain1]['sessions']++;
                 $this->domain_statistics['total']['sessions']++;
 
                 foreach ($_session->streams as $streamInfo) {
                     if ($_session->duration) {
-                        $this->domain_statistics[$domain1]['caller']=$this->domain_statistics[$domain1]['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                        $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                        $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
-                        $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                        $this->domain_statistics[$domain1]['caller'] = $this->domain_statistics[$domain1]['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
+                        $this->domain_statistics['total']['caller'] = $this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
+                        $this->domain_statistics[$domain1]['callee'] = $this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                        $this->domain_statistics['total']['callee'] = $this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
                     }
                 }
 
@@ -201,7 +225,7 @@ class MediaSessions {
             </form></div>
             ",
             $_SERVER['PHP_SELF'],
-            $_REQUEST['user']
+            isset($_REQUEST['user']) ? $_REQUEST['user'] : ''
         );
 
         print "<script type=\"text/javascript\">
@@ -316,11 +340,11 @@ class MediaSessions {
             unset($media_types);
             unset($streams);
 
-			$media_types=count($relay['stream_count']);
+            $streams = '';
+            $media_types=count($relay['stream_count']);
 
             if ($media_types > 1) {
                 //$streams = "<table border=0>";
-                
                 foreach (array_keys($relay['stream_count']) as $key) {
                     $streams .= sprintf("%s %s, ",$key,$relay['stream_count'][$key]);
                 }
@@ -629,7 +653,6 @@ class MediaSessionsNGNPro extends MediaSessions {
         if (!strlen($engineId)) return false;
 
         $this->soapEngineId   = $engineId;
-        $this->dispatcher     = $dispatcher;
         $this->filters        = $filters;
         $this->allowedDomains = $allowedDomains;
 
