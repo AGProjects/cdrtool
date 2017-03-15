@@ -4,29 +4,45 @@
 // a broken replication process
 
 class DBx extends DB_Sql {
-  function DBx($host='localhost', $user, $password) {
-      $this->Host = $host;
-      $this->User = $user;
-      $this->Password = $password;
-      $this->Database = 'mysql';
-      parent::DB_Sql();
-  }
+    function DBx($host='localhost', $user, $password) {
+        $this->Host = $host;
+        $this->User = $user;
+        $this->Password = $password;
+        $this->Database = 'mysql';
+        parent::DB_Sql();
+    }
 }
 
 class MySQLReplicationStatus {
-	var $slave_status_query="show slave status";
+    var $slave_status_query="show slave status";
     var $master_status_query="show master status";
 
     function MySQLReplicationStatus($host,$clusters) {
 
         $db = new DBx ($clusters[$host]['ip'],$clusters[$host]['user'],$clusters[$host]['password']);
 
+        $this->slave_master         = '';
+        $this->slave_user           = '';
+        $this->slave_master_port    = '';
+        $this->slave_log_file	    = '';
+        $this->slave_position       = '';
+        $this->slave_sql_running	= '';
+        $this->slave_io_running	    = '';
+        $this->slave_last_errno	    = '';
+        $this->slave_last_error 	= '';
+        $this->slave_seconds_behind = '';
+
+    	$this->master_position	    = '';
+    	$this->master_log_file	    = '';
+        $this->slave_of     	    = $clusters[$host]['slave_of'];
+        $this->color         	    = $clusters[$host]['color'];
+
         if (!$db->query($this->slave_status_query)) {
             printf ("<p><font color=red>Error from MySQL server %s: %s (%s) for query: %s</font>",$clusters[$host]['ip'],$db->Error,$db->Errno,$this->slave_status_query);
             return false;
         }
 
-		$db->next_record();
+        $db->next_record();
 
         $this->slave_master         = $db->f('Master_Host');
         $this->slave_user           = $db->f('Master_User');
@@ -48,8 +64,6 @@ class MySQLReplicationStatus {
 
     	$this->master_position	    = $db->f('Position');
     	$this->master_log_file	    = $db->f('File');
-        $this->slave_of     	    = $clusters[$host]['slave_of'];
-        $this->color         	    = $clusters[$host]['color'];
     }
 }
 
@@ -59,8 +73,8 @@ class ReplicationOverview {
     function ReplicationOverview($clusters=array()) {
     	$this->clusters = $clusters;
 
-        $this->cluster = $_REQUEST['cluster'];
-        $this->repair['server_to_repair']  = $_REQUEST['server'];
+        $this->cluster = isset($_REQUEST['cluster']) ? $_REQUEST['cluster'] : '';
+        $this->repair['server_to_repair'] = isset($_REQUEST['server']) ? $_REQUEST['server'] : '';
 
 		$cluster_names=array_keys($this->clusters);
 
@@ -74,6 +88,12 @@ class ReplicationOverview {
         	foreach (array_keys($this->clusters[$this->cluster]) as $key2) {
                 if ($key == $key2) continue;
                 if ($this->clusters[$this->cluster][$key2]['slave_of'] == $key) {
+                    if (!isset($this->is_master)) {
+                        $this->is_master = array();
+                    }
+                    if (!array_key_exists($key, $this->is_master)) {
+                       $this->is_master[$key]=0;
+                    }
                     $this->is_master[$key]++;
                 }
             }
@@ -97,13 +117,12 @@ class ReplicationOverview {
                 }
             }
 
-            if (!$this->repair['snapshot_server']) {
-                $this->repair['snapshot_server']=$this->repair['master_server'];
+            if (!array_key_exists('snapshot_server', $this->repair)) {
+                $this->repair['snapshot_server'] = $this->repair['master_server'];
             }
-
-			if ($this->repair['snapshot_server'] != $this->repair['master_server']) {
-                if ($this->clusters[$this->cluster][$this->repair['snapshot_server']]['active_master']) {
-                	$this->repair['snapshot_server'] = $this->repair['master_server'];
+            if ($this->repair['snapshot_server'] != $this->repair['master_server']) {
+                if (array_key_exists('active_master', $this->clusters[$this->cluster][$this->repair['snapshot_server']])) {
+                    $this->repair['snapshot_server'] = $this->repair['master_server'];
                 }
             }
 
@@ -167,7 +186,7 @@ class ReplicationOverview {
                 $io_color="white";
             }
 
-			if ($this->is_master[$key]) {
+            if (array_key_exists($key, $this->is_master)) {
             	printf ("<tr><td colspan=2 bgcolor=lightgrey><b>Master status</b></td></tr>");
                 printf ("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",$this->status[$key]->color,$this->status[$key]->master_log_file);
                 printf ("<tr><td class=border>Position</td><td>%s</td></tr>",$this->status[$key]->master_position);
