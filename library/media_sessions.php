@@ -1,27 +1,27 @@
-<?
+<?php
 class MediaSessions {
 
-    var $dispatcher_port   = 25061;
-    var $sessions          = array();
-    var $summary           = array();
-    var $domain_statistics = array();
-    var $timeout           = 3;
+    public $dispatcher_port   = 25061;
+    public $sessions          = array();
+    public $summary           = array();
+    public $domain_statistics = array();
+    public $timeout           = 3;
 
-    function MediaSessions ($dispatcher='',$allowedDomains=array(),$filters=array()) {
-
+    public function MediaSessions($dispatcher = '', $allowedDomains = array(), $filters = array())
+    {
         $this->dispatcher     = $dispatcher;
         $this->filters        = $filters;
         $this->allowedDomains = $allowedDomains;
         $this->getUserAgentPictures();
-
     }
 
-    function getUserAgentPictures (){
+    public function getUserAgentPictures()
+    {
         global $userAgentImages;
         global $userAgentImagesFile;
 
         if (!isset($userAgentImagesFile)) {
-            $userAgentImagesFile="phone_images.php";
+            $userAgentImagesFile = "phone_images.php";
         }
 
         require_once($userAgentImagesFile);
@@ -29,10 +29,13 @@ class MediaSessions {
         $this->userAgentImages = $userAgentImages;
     }
 
-    function connectSocket() {
-        if (!strlen($this->dispatcher)) return false;
+    private function connectSocket()
+    {
+        if (!strlen($this->dispatcher)) {
+            return false;
+        }
 
-        if (preg_match("/^(tls|tcp):(.*):(.*)$/",$this->dispatcher,$m)) {
+        if (preg_match("/^(tls|tcp):(.*):(.*)$/", $this->dispatcher, $m)) {
             $hostname  = $m[1].'://'.$m[2];
             $port      = $m[3];
             $target= 'tcp://'.$m[2].':'.$m[3];
@@ -42,7 +45,7 @@ class MediaSessions {
 
             if ($m[1] == 'tls') {
                 if (!file_exists($this->mp_tls_cert_file)) {
-                    printf ("<p><font color=red>Error: mediaproxy certificate file %s does not exist. </font>\n",$this->mp_tls_cert_file);
+                    printf("<p><font color=red>Error: mediaproxy certificate file %s does not exist. </font>\n", $this->mp_tls_cert_file);
                     return false;
                 }
 
@@ -52,51 +55,59 @@ class MediaSessions {
             } else {
                 $context=stream_context_create(array());
             }
-
         } else {
-            printf ("<p><font color=red>Error: MediaProxy dispatcher '%s' must be in the form: tls:hostname:port or tcp:hostname:port</font>",$this->dispatcher);
+            printf("<p><font color=red>Error: MediaProxy dispatcher '%s' must be in the form: tls:hostname:port or tcp:hostname:port</font>", $this->dispatcher);
             return false;
         }
 
-        if ($fp = stream_socket_client ($target, $errno, $errstr,$this->timeout,STREAM_CLIENT_CONNECT,$context)) {
-            if ( $transport == "tls") {
-                if ( !stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_SSLv3_CLIENT)){
-                   printf ("<p><font color=red>Error connecting to %s: (Could not enable crypto) </font>\n", $target);
-                   return false;
+        if ($fp = stream_socket_client($target, $errno, $errstr, $this->timeout, STREAM_CLIENT_CONNECT, $context)) {
+            if ($transport == "tls") {
+                if (!stream_socket_enable_crypto($fp, true, STREAM_CRYPTO_METHOD_SSLv3_CLIENT)) {
+                    printf("<p><font color=red>Error connecting to %s: (Could not enable crypto) </font>\n", $target);
+                    return false;
                 }
             }
             return $fp;
         } else {
-            printf ("<p><font color=red>Error connecting to %s: %s (%s) </font>\n",$target,$errstr,$errno);
-                                 return false;
+            printf("<p><font color=red>Error connecting to %s: %s (%s) </font>\n", $target, $errstr, $errno);
+            return false;
         }
     }
 
-    function fetchSessionFromNetwork() {
+    public function fetchSessionFromNetwork()
+    {
         // get sessions from MediaProxy2 dispatcher
 
-        if (!$fp = $this->connectSocket()) return array();
+        if (!$fp = $this->connectSocket()) {
+            return array();
+        }
 
         fputs($fp, "sessions\r\n");
         $line = fgets($fp);
         return json_decode($line);
     }
 
-    function fetchSummaryFromNetwork() {
+    public function fetchSummaryFromNetwork()
+    {
         // get summary from MediaProxy2 dispatcher
 
-        if (count($this->allowedDomains)) return array();
-        if (!$fp = $this->connectSocket()) return array();
+        if (count($this->allowedDomains)) {
+            return array();
+        }
+        if (!$fp = $this->connectSocket()) {
+            return array();
+        }
 
         fwrite($fp, "summary\r\n");
 
         $line = fgets($fp);
         fclose($fp);
-        return json_decode($line,true);
+        return json_decode($line, true);
     }
 
-    function getSessions () {
-        $_sessions=$this->fetchSessionFromNetwork();
+    public function getSessions()
+    {
+        $_sessions = $this->fetchSessionFromNetwork();
 
         if (count($this->allowedDomains)) {
             $this->domain_statistics['total'] = array(
@@ -105,18 +116,19 @@ class MediaSessions {
                 'callee'   => 0
             );
             foreach ($_sessions as $_session) {
+                list($user1, $domain1) = explode("@", $_session->from_uri);
+                list($user2, $domain2) = explode("@", $_session->to_uri);
 
-                list($user1,$domain1)=explode("@",$_session->from_uri);
-                list($user2,$domain2)=explode("@",$_session->to_uri);
+                if (preg_match("/^(.*):/", $domain1, $m)) {
+                    $domain1 = $m[1];
+                }
 
-                if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
-
-                if (!in_array($domain1,$this->allowedDomains) && !in_array($domain2,$this->allowedDomains)) {
+                if (!in_array($domain1, $this->allowedDomains) && !in_array($domain2, $this->allowedDomains)) {
                     continue;
                 }
 
                 if (!array_key_exists($domain1, $this->domain_statistics)) {
-                    $this->domain_statistics[$domain1]= array(
+                    $this->domain_statistics[$domain1] = array(
                         'sessions' => 0,
                         'caller'   => 0,
                         'callee'   => 0
@@ -124,21 +136,20 @@ class MediaSessions {
                 }
                 $this->domain_statistics[$domain1]['sessions']++;
                 $this->domain_statistics['total']['sessions']++;
-                
-                foreach ($_session->streams as $streamInfo) {
 
-                    list($relay_ip,$relay_port)=explode(":",$streamInfo->caller_local);
-                    $_relay_statistics[$relay_ip]['stream_count'][$streamInfo->media_type]++;;
+                foreach ($_session->streams as $streamInfo) {
+                    list($relay_ip, $relay_port) = explode(":", $streamInfo->caller_local);
+                    $_relay_statistics[$relay_ip]['stream_count'][$streamInfo->media_type]++;
 
                     if ($_session->duration) {
-                        $session_bps=($streamInfo->caller_bytes+$streamInfo->callee_bytes)/$_session->duration*8;
-                    	$_relay_statistics[$relay_ip]['bps_relayed'] = $_relay_statistics[$relay_ip]['bps_relayed'] + $session_bps;
+                        $session_bps =($streamInfo->caller_bytes + $streamInfo->callee_bytes) / $_session->duration * 8;
+                        $_relay_statistics[$relay_ip]['bps_relayed'] = $_relay_statistics[$relay_ip]['bps_relayed'] + $session_bps;
                     }
 
-                    $this->domain_statistics[$domain1]['caller'] = $this->domain_statistics[$domain1]['caller'] + intval($streamInfo->caller_bytes/$_session->duration*2);
-                    $this->domain_statistics['total']['caller']=$this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                    $this->domain_statistics[$domain1]['callee']=$this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
-                    $this->domain_statistics['total']['callee']=$this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                    $this->domain_statistics[$domain1]['caller'] = $this->domain_statistics[$domain1]['caller'] + intval($streamInfo->caller_bytes / $_session->duration * 2);
+                    $this->domain_statistics['total']['caller'] = $this->domain_statistics['total']['caller'] + intval($streamInfo->caller_bytes / $_session->duration * 2);
+                    $this->domain_statistics[$domain1]['callee'] = $this->domain_statistics[$domain1]['callee'] + intval($streamInfo->callee_bytes / $_session->duration * 2);
+                    $this->domain_statistics['total']['callee'] = $this->domain_statistics['total']['callee'] + intval($streamInfo->callee_bytes/$_session->duration * 2);
                 }
 
                 $_relay_statistics[$relay_ip]['session_count']++;
@@ -152,9 +163,11 @@ class MediaSessions {
                 'callee'   => 0
             );
             foreach ($_sessions as $_session) {
-                list($user1,$domain1)=explode("@",$_session->from_uri);
-                list($user2,$domain2)=explode("@",$_session->to_uri);
-                if (preg_match("/^(.*):/",$domain1,$m)) $domain1=$m[1];
+                list($user1, $domain1) = explode("@", $_session->from_uri);
+                list($user2, $domain2) = explode("@", $_session->to_uri);
+                if (preg_match("/^(.*):/", $domain1, $m)) {
+                    $domain1=$m[1];
+                }
 
                 if (!array_key_exists($domain1, $this->domain_statistics)) {
                     $this->domain_statistics[$domain1]= array(
@@ -174,7 +187,6 @@ class MediaSessions {
                         $this->domain_statistics['total']['callee'] = $this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
                     }
                 }
-
             }
 
             $_sessions2 = $_sessions;
@@ -196,29 +208,31 @@ class MediaSessions {
             foreach ($_sessions2 as $_session) {
                 $user=$this->filters['user'];
 
-                if (preg_match("/$user/",$_session->from_uri) ||
-                    preg_match("/$user/",$_session->to_uri)) {
+                if (preg_match("/$user/", $_session->from_uri) ||
+                    preg_match("/$user/", $_session->to_uri)) {
                     $this->sessions[] = $_session;
                 }
             }
         } else {
-        	$this->sessions = $_sessions2;
+            $this->sessions = $_sessions2;
         }
-
     }
 
-    function getSummary () {
-        if (count($this->allowedDomains)){
-        	if (is_array($this->relay_statistics)) {
-        	   $this->summary = $this->relay_statistics;
-                }
+    public function getSummary()
+    {
+        if (count($this->allowedDomains)) {
+            if (is_array($this->relay_statistics)) {
+                $this->summary = $this->relay_statistics;
+            }
         } else {
             $this->summary = $this->fetchSummaryFromNetwork();
         }
     }
 
-    function showSearch() {
-        printf ("
+    public function showSearch()
+    {
+        printf(
+            "
             <div class='pull-right' id='session_search'><form method=post class='form-inline' action=%s>
             <div class='input-append'>
             <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'><button class='btn btn-primary' type=submit><i class='icon-search'></i></button></div>
@@ -235,66 +249,40 @@ class MediaSessions {
                 });</script>";
     }
 
-    function showHeader() {
+    public function showHeader()
+    {
         print "
         <html>
         <head>
           <title>Media sessions</title>
         </head>
-        
-        <body marginwidth=20 leftmargin=20 link=#000066 vlink=#006666 bgcolor=white>
-        <style type=\"text/css\">
-        <!--
-        
-        .border {
-            /*border: 1px solid #999999;*/
-            border-collapse: collapse;
-        }
-        
-        .bordertb {
-            border-top: 1px solid #999999;
-            border-bottom: 1px solid #999999;
-            border-collapse: collapse;
-        }
-        
-        body {
-            background-color: #FFFFFF;
-            /*font-family: Luxino Sans, Verdana, Arial, Helvetica, sans-serif;*/
-            font-size: 8pt;
-            /*font-style: normal; */
-            /*padding-top: 60px; *//* 60px to make the container go all the way to the bottom of the topbar */
-        }
 
-        
-        -->
-        </style>
+        <body marginwidth=20 leftmargin=20 link=#000066 vlink=#006666 bgcolor=white>
         ";
     }
 
-    function showFooter() {
+    public function showFooter()
+    {
     }
 
-    function showAll() {
-
+    public function showAll()
+    {
         $this->showHeader();
-
         $this->showSummary();
-        
         $this->showSearch();
-
         $this->showSessions();
-
         $this->showFooter();
     }
 
-    function showSummary() {
+    public function showSummary()
+    {
+        $this->getSummary();
 
-	$this->getSummary();
-
-        if (!count($this->summary)) return;
+        if (!count($this->summary)) {
+            return;
+        }
 
         if (count($this->allowedDomains)) {
-
             print "<div class=row>
             <table class='span10 table table-striped table-condesed'>
               <thead>
@@ -336,7 +324,6 @@ class MediaSessions {
         $i = 1;
 
         foreach ($this->summary as $relay) {
-
             unset($media_types);
             unset($streams);
 
@@ -344,61 +331,61 @@ class MediaSessions {
             $media_types=count($relay['stream_count']);
 
             if ($media_types > 1) {
-                //$streams = "<table border=0>";
                 foreach (array_keys($relay['stream_count']) as $key) {
-                    $streams .= sprintf("%s %s, ",$key,$relay['stream_count'][$key]);
+                    $streams .= sprintf("%s %s, ", $key, $relay['stream_count'][$key]);
                 }
-                $streams=chop($streams,', ');
-                //$streams .= "</tab"
+                $streams=chop($streams, ', ');
             } else {
                 foreach (array_keys($relay['stream_count']) as $key) {
-                    $streams=sprintf("%s %s",$key,$relay['stream_count'][$key]);
+                    $streams=sprintf("%s %s", $key, $relay['stream_count'][$key]);
                 }
             }
             $rClass= 'label-success';
             if ($relay['status'] == 'halting') {
                 $rClass = 'label-warning';
             }
-            $relayStatus = sprintf("<span class=\"label %s\">%s</span>",$rClass, ucfirst($relay['status']));
+            $relayStatus = sprintf("<span class=\"label %s\">%s</span>", $rClass, ucfirst($relay['status']));
 
             if (count($this->allowedDomains)) {
-                printf ("
-                  <tr>
-                    <td>%d</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%d</td>
-                    <td valign=top>%s</td>
-                    <td>%s</td>
-                  </tr>",
-                  $i,
-                  $this->ip2host($relay['ip']),
-                  $this->normalizeTraffic($relay['bps_relayed']),
-                  $relay['session_count'],
-                  $streams,
-                  $relayStatus
-                  );
+                printf(
+                    "
+                    <tr>
+                        <td>%d</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%d</td>
+                        <td valign=top>%s</td>
+                        <td>%s</td>
+                    </tr>",
+                    $i,
+                    $this->ip2host($relay['ip']),
+                    $this->normalizeTraffic($relay['bps_relayed']),
+                    $relay['session_count'],
+                    $streams,
+                    $relayStatus
+                );
             } else {
-                printf ("
-                  <tr>
-                    <td>%d</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%d</td>
-                    <td valign=top>%s</td>
-                    <td>%s</td>
-                  </tr>",
-                  $i,
-                  $this->ip2host($relay['ip']),
-                  $relay['version'],
-                  $this->normalizeTime($relay['uptime']),
-                  $this->normalizeTraffic($relay['bps_relayed']),
-                  $relay['session_count'],
-                  $streams,
-                  $relayStatus
-                  );
+                printf(
+                    "
+                    <tr>
+                        <td>%d</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%d</td>
+                        <td valign=top>%s</td>
+                        <td>%s</td>
+                    </tr>",
+                    $i,
+                    $this->ip2host($relay['ip']),
+                    $relay['version'],
+                    $this->normalizeTime($relay['uptime']),
+                    $this->normalizeTraffic($relay['bps_relayed']),
+                    $relay['session_count'],
+                    $streams,
+                    $relayStatus
+                );
             }
             $i++;
         }
@@ -408,9 +395,12 @@ class MediaSessions {
         ";
     }
 
-    function showSessions () {
+    public function showSessions()
+    {
         print "<h2 id='sessions_title'>Sessions</h2>";
-        if (!count($this->sessions)) return;
+        if (!count($this->sessions)) {
+            return;
+        }
 
         print "
             <table id='sessions' class='table-bordered table-condensed table'>
@@ -432,7 +422,7 @@ class MediaSessions {
                     <th>Bytes<br>Called</th>
                 </tr>
             </thead>";
-    
+
         $i = 1;
 
         foreach ($this->sessions as $session) {
@@ -445,12 +435,12 @@ class MediaSessions {
             $sc = count($session->streams);
 
             print "
-                <tr valign=top>
-                 <td class=border height='39px' rowspan=$sc>
+                <tr>
+                 <td style='height: 39px' rowspan=$sc>
                    <nobr><b>From:</b> $from</nobr><br>
                    <nobr><b>To:</b> $to</nobr><br>
                  </td>
-                 <td class=border rowspan=$sc style='text-align:center; vertical-align:middle'>
+                 <td rowspan=$sc style='text-align:center; vertical-align:middle'>
                  ";
             if ($fromImage == 'unknown.png') {
                 print "<i style=\"font-size:28px\" class=\"icon-question\"
@@ -475,7 +465,7 @@ class MediaSessions {
             }
             print "
                  </td>
-                 <td class=border rowspan=$sc style='text-align:center; vertical-align:middle'>";
+                 <td rowspan=$sc style='text-align:center; vertical-align:middle'>";
             if ($toImage == 'unknown.png') {
                 print "<i style=\"font-size:28px\" class=\"icon-question\"
                         title=\"$toAgent\"
@@ -496,11 +486,10 @@ class MediaSessions {
                         border=0
                         style='max-height:30px; max-width: 30px'
                         />";
-            } 
+            }
             print "</td>";
             $duration = $this->normalizeTime($session->duration);
             if (count($session->streams) > 0) {
-
                 foreach ($session->streams as $streamInfo) {
                     $status   = $streamInfo->status;
                     $statusClass = "";
@@ -508,7 +497,7 @@ class MediaSessions {
                     if ($status=="idle" || $status=='hold') {
                         $idletime = $this->normalizeTime($streamInfo->timeout_wait);
                         $status = sprintf("%s %s", $status, $idletime);
-                    } else if ($status == "closed" ) {
+                    } else if ($status == "closed") {
                         $statusClass = "muted";
                     }
 
@@ -517,15 +506,15 @@ class MediaSessions {
                     $relay_caller  = $streamInfo->caller_local;
                     $relay_callee  = $streamInfo->callee_local;
 
-                    if (substr_count($relay_caller,":") == 1) {
+                    if (substr_count($relay_caller, ":") == 1) {
                         // Probaly ipv4
-                        $relay_caller_data = explode(":",$relay_caller);
+                        $relay_caller_data = explode(":", $relay_caller);
                         $relay_caller = $this->ip2host($relay_caller_data[0]).":".$relay_caller_data[1];
                     }
 
-                    if (substr_count($relay_callee,":") == 1) {
+                    if (substr_count($relay_callee, ":") == 1) {
                         // Probaly ipv4
-                        $relay_callee_data = explode(":",$relay_callee);
+                        $relay_callee_data = explode(":", $relay_callee);
                         $relay_callee = $this->ip2host($relay_callee_data[0]).":".$relay_callee_data[1];
                     }
                     $codec  = $streamInfo->caller_codec;
@@ -560,20 +549,20 @@ class MediaSessions {
                     $bytes_in1 = $this->normalizeBytes($streamInfo->caller_bytes);
                     $bytes_in2 = $this->normalizeBytes($streamInfo->callee_bytes);
                     print "
-                        <td class=\"border $statusClass\"   align=$align1>$caller</td>
-                        <td class=\"border $statusClass\"  align=left>$relay_caller</td>
-                        <td class=\"border $statusClass\"  align=left>$relay_callee</td>
-                        <td class=\"border $statusClass\"  align=$align2>$callee</td>
+                        <td class=\"$statusClass\"   align=$align1>$caller</td>
+                        <td class=\"$statusClass\">$relay_caller</td>
+                        <td class=\"$statusClass\">$relay_callee</td>
+                        <td class=\"$statusClass\"  align=$align2>$callee</td>
 
-                        <td class=\"border $statusClass\"  align=center><nobr>$status</nobr></td>
-                        <td class=\"border $statusClass\"   align=center><nobr>$type $codec</nobr></td>
-                        <td class=\"border $statusClass\"  align=right>$duration</td>
-                        <td class=\"border $statusClass\" align=right>$bytes_in1</td>
-                        <td class=\"border $statusClass\" align=right>$bytes_in2</td>
+                        <td class=\"$statusClass\" style='text-align: center;'><nobr>$status</nobr></td>
+                        <td class=\"$statusClass\"><nobr>$type $codec</nobr></td>
+                        <td class=\"$statusClass\" style='text-align:right;'>$duration</td>
+                        <td class=\"$statusClass\" style='text-align:right;'>$bytes_in1</td>
+                        <td class=\"$statusClass\" style='text-align:right;'>$bytes_in2</td>
                         </tr>";
                 }
             } else {
-                print "<td colspan='10'></td></tr>";
+                print "<td colspan='9'>&nbsp;</td></tr>";
             }
             $i++;
         }
@@ -582,9 +571,10 @@ class MediaSessions {
             <br />";
     }
 
-    function normalizeBytes($bytes) {
-        $mb = $bytes/1024/1024.0;
-        $kb = $bytes/1024.0;
+    private function normalizeBytes($bytes)
+    {
+        $mb = $bytes /1024 /1024.0;
+        $kb = $bytes /1024.0;
         if ($mb >= 0.95) {
             return sprintf("%.2fM", $mb);
         } else if ($kb >= 1) {
@@ -593,12 +583,13 @@ class MediaSessions {
             return sprintf("%d", $bytes);
         }
     }
-    
-    function normalizeTime($period) {
+
+    private function normalizeTime($period)
+    {
         $sec = $period % 60;
-        $min = floor($period/60);
-        $h   = floor($min/60);
-        $d   = floor($h/24);
+        $min = floor($period / 60);
+        $h   = floor($min / 60);
+        $d   = floor($h / 24);
         $min = $min % 60;
         $h   = $h % 24;
 
@@ -610,37 +601,39 @@ class MediaSessions {
             return sprintf('%d\' %02d"', $min, $sec);
         }
     }
-    
-    function normalizeTraffic($traffic) {
+
+    private function normalizeTraffic($traffic)
+    {
         // input is in bits/second
-        $mb = $traffic/1024/1024.0;
-        $gb = $traffic/1024/1024/1024;
-        $kb = $traffic/1024.0;
+        $mb = $traffic / 1024 / 1024.0;
+        $gb = $traffic/ 1024 / 1024 / 1024;
+        $kb = $traffic / 1024.0;
         if ($gb >= 0.95) {
             return sprintf("%.2f Gbit/s", $gb);
         } else if ($mb >= 0.95) {
             return sprintf("%.2f Mbit/s", $mb);
         } else if ($kb >= 1) {
-            return sprintf("%.2f Kbit/s",$kb);
+            return sprintf("%.2f Kbit/s", $kb);
         } else if ($traffic == 0) {
             return $traffic;
         } else {
-            return sprintf("%d bit/s",$traffic);
+            return sprintf("%d bit/s", $traffic);
         }
     }
-    
-    function getImageForUserAgent($agent) {
-    
+
+    public function getImageForUserAgent($agent)
+    {
         foreach ($this->userAgentImages as $agentRegexp => $image) {
             if (preg_match("/$agentRegexp/i", $agent)) {
                 return $image;
             }
         }
-    
+
         return "unknown.png";
     }
 
-    function ip2host($ip) {
+    public function ip2host($ip)
+    {
         return $ip;
     }
 }
@@ -648,9 +641,12 @@ class MediaSessions {
 class MediaSessionsNGNPro extends MediaSessions {
     // get Media session from NGNPro
 
-    function MediaSessionsNGNPro($engineId,$allowedDomains=array(),$filters=array()) {
+    public function MediaSessionsNGNPro($engineId, $allowedDomains=array(), $filters=array())
+    {
 
-        if (!strlen($engineId)) return false;
+        if (!strlen($engineId)) {
+            return false;
+        }
 
         $this->soapEngineId   = $engineId;
         $this->filters        = $filters;
@@ -661,8 +657,12 @@ class MediaSessionsNGNPro extends MediaSessions {
         require("/etc/cdrtool/ngnpro_engines.inc");
         require_once("ngnpro_soap_library.php");
 
-        if (!strlen($this->soapEngineId)) return false;
-        if (!$soapEngines[$this->soapEngineId]) return false;
+        if (!strlen($this->soapEngineId)) {
+            return false;
+        }
+        if (!$soapEngines[$this->soapEngineId]) {
+            return false;
+        }
 
         $this->SOAPlogin = array(
                                "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -677,7 +677,7 @@ class MediaSessionsNGNPro extends MediaSessions {
         // Instantiate the SOAP client
         $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
 
-        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+        $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 5);
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
@@ -688,8 +688,11 @@ class MediaSessionsNGNPro extends MediaSessions {
         }
     }
 
-    function fetchSessionFromNetwork() {
-        if (!is_object($this->soapclient)) return false;
+    public function fetchSessionFromNetwork()
+    {
+        if (!is_object($this->soapclient)) {
+            return false;
+        }
 
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->getMediaSessions();
@@ -699,39 +702,40 @@ class MediaSessionsNGNPro extends MediaSessions {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf("<font color=red>Error from %s: %s: %s</font>", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             return false;
         }
 
         return json_decode($result);
-
     }
 
-    function fetchSummaryFromNetwork() {
-        if (!is_object($this->soapclient)) return array();
-    
+    public function fetchSummaryFromNetwork()
+    {
+        if (!is_object($this->soapclient)) {
+            return array();
+        }
+
         $this->soapclient->addHeader($this->SoapAuth);
         $result     = $this->soapclient->getMediaSummary();
-    
+
         if (PEAR::isError($result)) {
             $error_msg   = $result->getMessage();
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
-    
-            printf("<font color=red>Error from %s: %s: %s</font>",$this->SOAPurl,$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+
+            printf("<font color=red>Error from %s: %s: %s</font>", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             return array();
         }
-    
-        return json_decode($result,true);
-	}
+        return json_decode($result, true);
+    }
 
-    function ip2host($ip) {
-		if ($this->hostnames[$ip]) {
+    public function ip2host($ip)
+    {
+        if ($this->hostnames[$ip]) {
             return $this->hostnames[$ip];
         } else {
             return $ip;
         }
     }
-
 }
 ?>
