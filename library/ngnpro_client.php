@@ -7864,8 +7864,8 @@ class DnsRecords extends Records {
 
         $name=rtrim($name,".");
 
-        if (preg_match("/^(.+)@(.*)$/",$name,$m)) {
-            $zone=$m[2];
+        if (preg_match("/^(.+)@(.*)$/", $name, $m)) {
+            $zone = $m[2];
         } else {
             if ($dictionary['zone']) {
                 $zone=$dictionary['zone'];
@@ -7935,6 +7935,15 @@ class DnsRecords extends Records {
         }
 
         if (in_array($type,array_keys($this->recordTypes))) {
+            // See RFC 1912 - Section 2.4
+            if (trim($name).trim($zone) == trim($zone) && $type == 'CNAME') {
+                printf(
+                    "<p class='alert alert-danger'><strong>Error</strong>: CNAME (%s) equal to zone name (%s) is not allowed</p>",
+                    trim($name).trim($zone),
+                    trim($zone)
+                );
+                return false;
+            }
 
             if (!strlen($value)) {
         		if ($this->html) {
