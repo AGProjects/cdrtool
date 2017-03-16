@@ -8148,56 +8148,75 @@ class DnsRecords extends Records {
     }
 
     function showRecord($record) {
+        echo "<h3>Record</h3>";
+        printf("<form class='form-horizontal' method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
+        echo "<input type=hidden name=action value=Update>";
 
-        print "<h3>Record</h3>";
-
-        print "<table border=0>";
-
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-        print "<input type=hidden name=action value=Update>";
-
-        printf ("<tr><td class=border>Name</td><td class=border>%s</td></td>",
-        $record->name);
+        printf(
+            "
+            <div class='control-group'>
+                <label class='control-label'>Name</label>
+                <div class='controls' style='padding-top: 5px'>%s</div>
+            </div>",
+            $record->name
+        );
 
         foreach (array_keys($this->Fields) as $item) {
-            if (is_array($this->havePriority) && $item == 'priority' && !in_array($record->type,$this->havePriority)) continue;
+            if (is_array($this->havePriority) && $item == 'priority' && !in_array($record->type,$this->havePriority)) {
+                continue;
+            }
 
             if ($this->Fields[$item]['name']) {
-                $item_name=$this->Fields[$item]['name'];
+                $item_name = $this->Fields[$item]['name'];
             } else {
-                $item_name=ucfirst($item);
+                $item_name = ucfirst($item);
             }
 
             if ($item == 'type') {
             	$selected_type[$record->$item]='selected';
 
-				$select_box=sprintf("<select name=%s_form>",$item);
+                $select_box=sprintf("<select name=%s_form>",$item);
                 foreach(array_keys($this->recordTypes) as $_type) {
-                    $select_box.=sprintf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
+                    $select_box .= sprintf(
+                        "<option value='%s' %s>%s - %s",
+                        $_type,
+                        $selected_type[$_type],
+                        $_type,
+                        $this->recordTypes[$_type]
+                    );
                 }
     
                 foreach(array_keys($this->recordTypesTemplate) as $_type) {
-                    $select_box.=sprintf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
+                    $select_box .= sprintf(
+                        "<option value='%s' %s>%s",
+                        $_type,
+                        $selected_type[$_type],
+                        $this->recordTypesTemplate[$_type]['name']
+                    );
                 }
 
-				$select_box.="</select>";
+                $select_box .= "</select>";
 
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border>%s</td>
-                </tr>",
-                $item_name,
-                $select_box
+                printf(
+                    "
+                    <div class='control-group'>
+                        <label class='control-label'>%s</label>
+                        <div class='controls'>%s</div>
+                    </div>",
+                    $item_name,
+                    $select_box
                 );
 
             } else if ($this->Fields[$item]['type'] == 'text') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=0 name=%s_form rows=4>%s</textarea></td>
-                </tr>",
-                $item_name,
-                $item,
-                $record->$item
+                printf(
+                    "
+                    <div class='control-group'>
+                        <label class='control-label'>%s</label>
+                        <div class='controls'><textarea cols=0 name=%s_form rows=4>%s</textarea></div>
+                    </div>",
+                    $item_name,
+                    $item,
+                    $record->$item
                 );
             } else {
                 if ($record->type == 'NAPTR' and $item == 'value') {
@@ -8206,35 +8225,34 @@ class DnsRecords extends Records {
                     $help_text = '';
                 }
 
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><input name=%s_form size=40 type=text value='%s'></td>
-                ",
-                $item_name,
-                $item,
-                $record->$item
+                printf(
+                    "
+                    <div class='control-group'>
+                        <label class='control-label'>%s</label>
+                        <div class='controls'><input name=%s_form size=40 type=text value='%s'>
+                    ",
+                    $item_name,
+                    $item,
+                    $record->$item
                 );
                 if ($help_text) {
-                printf ("<td class=border valign=top>%s</td>",$help_text);
+                    printf("<span class='help-inline'>%s</span>", $help_text);
                 }
-                print "</tr>";
+                echo "</div></div>";
             }
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'>",$record->id);
+        printf("<input type=hidden name=id_filter value='%s'>", $record->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
 
-        print "
-        <tr>
-        <td>
-        <input type=submit value=Update>
-        </td>
-        </tr>
+        echo "
+            <div class='form-actions'>
+                <input type=submit value=Update class='btn btn-warning'>
+            </div>
         ";
-        print "</form>";
-        print "</table>";
+        echo "</form>";
 
     }
 
