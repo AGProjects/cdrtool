@@ -4433,45 +4433,43 @@ class EnumRanges extends Records {
                         $_nameservers.= $_ns.' ';
                     }
                     printf("
-                    <tr>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>+%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a class='btn-small btn-danger' href=%s>%s</a>%s</td>
-                    </tr>",
-                    $index,
-                    $_customer_url,
-                    $range->customer,
-                    $range->reseller,
-                    $range_url,
-                    $range->id->tld,
-                    $range->serial,
-                    $range->ttl,
-                    $range->info,
-                    $range->minDigits,
-                    $range->maxDigits,
-                    $range->size,
-                    $range->used,
-                    $bar,
-                    $range->changeDate,
-                    $_url,
-                    $actionText,
-                    $generator_url
+                        <tr>
+                            <td>%s</td>
+                            <td><a href=%s>%s.%s</a></td>
+                            <td>+%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td><a class='btn-small btn-danger' href=%s>%s</a>%s</td>
+                        </tr>",
+                        $index,
+                        $_customer_url,
+                        $range->customer,
+                        $range->reseller,
+                        $range_url,
+                        $range->id->tld,
+                        $range->serial,
+                        $range->ttl,
+                        $range->info,
+                        $range->minDigits,
+                        $range->maxDigits,
+                        $range->size,
+                        $range->used,
+                        $bar,
+                        $range->changeDate,
+                        $_url,
+                        $actionText,
+                        $generator_url
                     );
                     $i++;
-
                 }
-
             }
 
             print "</table>";
@@ -4588,40 +4586,48 @@ class EnumRanges extends Records {
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
         if (!trim($_REQUEST['ttl'])) {
-            $ttl=3600;
+            $ttl = 3600;
         } else {
-            $ttl=intval(trim($_REQUEST['ttl']));
+            $ttl = intval(trim($_REQUEST['ttl']));
         }
 
-        $range=array(
-                     'id'         => array('prefix' => $prefix,
-                                           'tld'    => $tld),
-                     'ttl'        => $ttl,
-                     'info'       => $info,
-                     'minDigits'  => intval(trim($_REQUEST['minDigits'])),
-                     'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
-                     'size'       => intval($size),
-                     'customer'   => intval($customer),
-                     'reseller'   => intval($reseller)
-                    );
+        $range = array(
+            'id'         => array(
+                'prefix' => $prefix,
+                'tld'    => $tld
+            ),
+            'ttl'        => $ttl,
+            'info'       => $info,
+            'minDigits'  => intval(trim($_REQUEST['minDigits'])),
+            'maxDigits'  => intval(trim($_REQUEST['maxDigits'])),
+            'size'       => intval($size),
+            'customer'   => intval($customer),
+            'reseller'   => intval($reseller)
+        );
 
-        $deleteRange=array('prefix'=>$prefix,
-                           'tld'=>$tld);
+        $deleteRange = array(
+            'prefix'=>$prefix,
+            'tld'=>$tld
+        );
 
-        $_p=array(
-                  array('name'       => 'enum_ranges_last_tld',
-                        'category'   => 'web',
-                        'value'      => "$tld",
-                        'permission' => 'customer'
-                       )
-                  );
+        $_p = array(
+            array(
+                'name'       => 'enum_ranges_last_tld',
+                'category'   => 'web',
+                'value'      => "$tld",
+                'permission' => 'customer'
+            )
+        );
 
         $this->setCustomerProperties($_p);
 
-        $function=array('commit'   => array('name'       => 'addRange',
-                                            'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld)))
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'addRange',
+                'parameters' => array($range),
+                'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld))
+            )
+        );
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
@@ -7131,34 +7137,36 @@ class DnsRecords extends Records {
     var $default_ttl         = 3600;
     var $fancy               = false;
 
-    var $sortElements=array('changeDate' => 'Change date',
-                            'type'       => 'Type',
-                            'name'       => 'Name'
-                            );
+    var $sortElements = array(
+        'changeDate' => 'Change date',
+        'type'       => 'Type',
+        'name'       => 'Name'
+    );
 
-    var $FieldsReadOnly=array(
-                              'customer',
-                              'reseller'
+    var $FieldsReadOnly = array(
+        'customer',
+        'reseller'
+    );
 
-                              );
-    var $Fields=array(
-                              'type'     => array('type'=>'string'),
-                              'priority' => array('type'=>'integer'),
-                              'value'    => array('type'=>'string'),
-                              'ttl'      => array('type'=>'integer')
-                              );
+    var $Fields = array(
+        'type'     => array('type'=>'string'),
+        'priority' => array('type'=>'integer'),
+        'value'    => array('type'=>'string'),
+        'ttl'      => array('type'=>'integer')
+    );
 
-    var $recordTypes=array('A'     => 'IP address',
-                           'AAAA'  => 'IP v6 address',
-                           'CNAME' => 'Hostname alias',
-                           'MX'    => 'Mail server address',
-                           'SRV'   => 'Server resource',
-                           'NS'    => 'Name server address',
-                           'NAPTR' => 'Name authority',
-                           'PTR'   => 'Reverse IP address',
-                           'TXT'   => 'Text',
-                           'LOC'   => 'Geo location'
-                           );
+    var $recordTypes = array(
+        'A'     => 'IP address',
+        'AAAA'  => 'IP v6 address',
+        'CNAME' => 'Hostname alias',
+        'MX'    => 'Mail server address',
+        'SRV'   => 'Server resource',
+        'NS'    => 'Name server address',
+        'NAPTR' => 'Name authority',
+        'PTR'   => 'Reverse IP address',
+        'TXT'   => 'Text',
+        'LOC'   => 'Geo location'
+    );
 
     var $havePriority         = array('MX','SRV','NAPTR');
 
@@ -7168,321 +7176,370 @@ class DnsRecords extends Records {
     var $getRecordsFunction   = 'getRecords';
     var $getRecordFunction    = 'getRecord';
 
-    var $recordTypesTemplate=array(
-                               'sip2sip' =>  array('name'    => 'SIP2SIP infrastructure',
-                                                  'records' =>  array(
-                                                                      'naptr1' => array('name'    => '',
-                                                                                       'type'    => 'NAPTR',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '10 100 "s" "SIP+D2T" "" _sip._tcp'
-                                                                                       ),
-                                                                      'naptr2' => array('name'  => '',
-                                                                                       'type'   => 'NAPTR',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '30 100 "s" "SIP+D2U" "" _sip._udp'
-                                                                                       ),
-                                                                      'srv1'   => array('name'  => '_sip._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '100 5060 proxy.sipthor.net'
-                                                                                       ),
-                                                                      'srv2'   => array('name'   => '_sip._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '100 5060 proxy.sipthor.net'
-                                                                                       ),
-                                                                      'srv3'   => array('name'  => '_stun._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 3478 stun1.dns-hosting.info'
-                                                                                       ),
-                                                                      'srv4'   => array('name'  => '_stun._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 3478 stun2.dns-hosting.info'
-                                                                                       ),
-                                                                      'srv5'   => array('name'  => '_msrps._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 2855 msrprelay.sipthor.net'
-                                                                                       ),
-                                                                      'txt1'   => array('name'  => 'xcap',
-                                                                                       'type'   => 'TXT',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => 'https://xcap.sipthor.net/xcap-root'
-                                                                                       )
-                                                                      ),
-                                                 ),
-                               'siptcp' =>  array('name'    => 'SIP - TCP transport',
-                                                  'records' =>  array(
-                                                                      'naptr' => array('name'    => '',
-                                                                                       'type'    => 'NAPTR',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '10 100 "s" "SIP+D2T" "" _sip._tcp'
-                                                                                       ),
-                                                                      'srv'   => array('name'  => '_sip._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '100 5060 #VALUE#|10 5060 sip'
-                                                                                       )
-                                                                      ),
-                                                  ),
-                               'siptls' =>  array('name'    => 'SIP - TLS transport',
-                                                  'records' =>  array(
-                                                                      'naptr' => array('name'  => '',
-                                                                                       'type'   => 'NAPTR',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '20 100 "s" "SIPS+D2T" "" _sips._tcp'
-                                                                                       ),
-                                                                      'srv'   => array('name'  => '_sips._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '100 5061 #VALUE#|10 5061 sip'
-                                                                                       )
-                                                                      )
-
-    											),
-                               'sipudp' =>  array('name'    => 'SIP - UDP transport',
-                                                  'records' =>  array(
-                                                                      'naptr' => array('name'  => '',
-                                                                                       'type'   => 'NAPTR',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value' => '30 100 "s" "SIP+D2U" "" _sip._udp'
-                                                                                       ),
-                                                                      'srv'   => array('name'   => '_sip._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '100',
-                                                                                       'ttl'     => '3600',
-                                                                                       'value'  => '100 5060 #VALUE#|10 5060 sip'
-                                                                                       )
-                                                                      ),
-                                                 ),
-                               'stun' =>  array('name'    => 'STUN - NAT mirror',
-                                                  'records' =>  array(
-                                                                      'srv'   => array('name'  => '_stun._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 3478 #VALUE#|10 3478 stun'
-                                                                                       )
-                                                                      ),
-                                                  ),
-                               'xmpp-server' =>  array('name'    => 'XMPP server',
-                                                  'records' =>  array(
-                                                                      'srv'   => array('name'  => '_xmpp-server._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 5269 #VALUE#|10 5269 xmpp'
-                                                                                       ),
-                                                                      'srv1'   => array('name'  => '_jabber._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 5269 #VALUE#|10 5269 xmpp'
-                                                                                       )
-                                                                      ),
-                                                  ),
-                               'xmpp-client' =>  array('name'    => 'XMPP client',
-                                                  'records' =>  array('srv'   => array('name'  => '_xmpp-client._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '0',
-                                                                                       'value' => '10 5222 #VALUE#|10 5222 xmpp'
-                                                                                       )
-                                                                      ),
-                                                  ),
-                               'msrp' =>  array('name'    => 'MSRP - IM relay',
-                                                  'records' =>  array(
-                                                                      'srv'   => array('name'  => '_msrps._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 2855 msrprelay'
-                                                                                       )
-                                                                      )
-    											),
-                               'sipthor' =>  array('name'    => 'SIP - Thor network',
-                                                   'records' =>
-                                                                array(
-                                                                      'eventserver' => array('name'  => '_eventserver._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 8000 eventserver'
-                                                                                       ),
-                                                                      'sipserver' => array('name'  => '_sip._udp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '30 5060 proxy'
-                                                                                       ),
-                                                                      'sipns1' => array('name'  => 'proxy',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'sipns2' => array('name'  => 'proxy',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'sipns3' => array('name'  => 'proxy',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       ),
-                                                                      'ngnproserver' => array('name'  => '_ngnpro._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 9200 ngnpro'
-                                                                                       ),
-                                                                      'ngnns1' => array('name'  => 'ngnpro',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'ngnns2' => array('name'  => 'ngnpro',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'ngnns3' => array('name'  => 'ngnpro',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       ),
-                                                                      'xcapserver' => array('name'  => '_xcap._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 443 xcap'
-                                                                                       ),
-                                                                      'xcapns1' => array('name'  => 'xcap',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'xcapns2' => array('name'  => 'xcap',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'xcapns3' => array('name'  => 'xcap',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       ),
-                                                                      'msrpserver' => array('name'  => '_msrps._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 2855 msrprelay'
-                                                                                       ),
-                                                                      'msrpns1' => array('name'  => 'msrprelay',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'msrpns2' => array('name'  => 'msrprelay',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'msrpns3' => array('name'  => 'msrprelay',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       ),
-                                                                      'voicemail' => array('name'  => '_voicemail._tcp',
-                                                                                       'type'   => 'SRV',
-                                                                                       'priority'=> '10',
-                                                                                       'value' => '0 9200 voicemail'
-                                                                                       ),
-                                                                      'vmns1' => array('name'  => 'voicemail',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns1'
-                                                                                       ),
-                                                                      'vmns2' => array('name'  => 'voicemail',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns2'
-                                                                                       ),
-                                                                      'vmns3' => array('name'  => 'voicemail',
-                                                                                       'type'   => 'NS',
-                                                                                       'value' => 'ns3'
-                                                                                       )
-                                                                      )
-
-
-    											)
-                              );
+    var $recordTypesTemplate = array(
+        'sip2sip' =>  array(
+            'name'    => 'SIP2SIP infrastructure',
+            'records' =>  array(
+                'naptr1' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '10 100 "s" "SIP+D2T" "" _sip._tcp'
+                ),
+                'naptr2' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '30 100 "s" "SIP+D2U" "" _sip._udp'
+                ),
+                'srv1'   => array(
+                    'name'     => '_sip._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '100 5060 proxy.sipthor.net'
+                ),
+                'srv2'   => array(
+                    'name'     => '_sip._udp',
+                    'type'     => 'SRV',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '100 5060 proxy.sipthor.net'
+                ),
+                'srv3'   => array(
+                    'name'     => '_stun._udp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 3478 stun1.dns-hosting.info'
+                ),
+                'srv4'   => array(
+                    'name'     => '_stun._udp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 3478 stun2.dns-hosting.info'
+                ),
+                'srv5'   => array(
+                    'name'     => '_msrps._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 2855 msrprelay.sipthor.net'
+                ),
+                'txt1'   => array(
+                    'name'     => 'xcap',
+                    'type'     => 'TXT',
+                    'priority' => '10',
+                    'value'    => 'https://xcap.sipthor.net/xcap-root'
+                )
+            ),
+        ),
+        'siptcp' =>  array(
+            'name'    => 'SIP - TCP transport',
+            'records' =>  array(
+                'naptr' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '10 100 "s" "SIP+D2T" "" _sip._tcp'
+                ),
+                'srv'   => array(
+                    'name'     => '_sip._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '100 5060 #VALUE#|10 5060 sip'
+                )
+            ),
+        ),
+        'siptls' =>  array(
+            'name'    => 'SIP - TLS transport',
+            'records' =>  array(
+                'naptr' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '20 100 "s" "SIPS+D2T" "" _sips._tcp'
+                ),
+                'srv'   => array(
+                    'name'     => '_sips._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '100 5061 #VALUE#|10 5061 sip'
+                )
+            )
+        ),
+        'sipudp' =>  array(
+            'name'    => 'SIP - UDP transport',
+            'records' =>  array(
+                'naptr' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '30 100 "s" "SIP+D2U" "" _sip._udp'
+                ),
+                'srv'   => array(
+                    'name'     => '_sip._udp',
+                    'type'     => 'SRV',
+                    'priority' => '100',
+                    'ttl'      => '3600',
+                    'value'    => '100 5060 #VALUE#|10 5060 sip'
+                )
+            ),
+        ),
+        'stun' =>  array(
+            'name'    => 'STUN - NAT mirror',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_stun._udp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 3478 #VALUE#|10 3478 stun'
+                )
+            ),
+        ),
+        'xmpp-server' =>  array(
+            'name'    => 'XMPP server',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_xmpp-server._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5269 #VALUE#|10 5269 xmpp'
+                ),
+                'srv1'   => array(
+                    'name'     => '_jabber._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5269 #VALUE#|10 5269 xmpp'
+                )
+            ),
+        ),
+        'xmpp-client' =>  array(
+            'name'    => 'XMPP client',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_xmpp-client._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5222 #VALUE#|10 5222 xmpp'
+                )
+            ),
+        ),
+        'msrp' =>  array(
+            'name'    => 'MSRP - IM relay',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_msrps._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 2855 msrprelay'
+                )
+            )
+        ),
+        'sipthor' =>  array(
+            'name'    => 'SIP - Thor network',
+            'records' => array(
+                'eventserver' => array(
+                    'name'     => '_eventserver._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 8000 eventserver'
+                ),
+                'sipserver' => array(
+                    'name'     => '_sip._udp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '30 5060 proxy'
+                ),
+                'sipns1' => array(
+                    'name'     => 'proxy',
+                    'type'     => 'NS',
+                    'value'    => 'ns1'
+                ),
+                'sipns2' => array(
+                    'name'     => 'proxy',
+                    'type'     => 'NS',
+                    'value'    => 'ns2'
+                ),
+                'sipns3' => array(
+                    'name'     => 'proxy',
+                    'type'     => 'NS',
+                    'value'    => 'ns3'
+                ),
+                'ngnproserver' => array(
+                    'name'     => '_ngnpro._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 9200 ngnpro'
+                ),
+                'ngnns1' => array(
+                    'name'     => 'ngnpro',
+                    'type'     => 'NS',
+                    'value'    => 'ns1'
+                ),
+                'ngnns2' => array(
+                    'name'     => 'ngnpro',
+                    'type'     => 'NS',
+                    'value'    => 'ns2'
+                ),
+                'ngnns3' => array(
+                    'name'     => 'ngnpro',
+                    'type'     => 'NS',
+                    'value'    => 'ns3'
+                ),
+                'xcapserver' => array(
+                    'name'     => '_xcap._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 443 xcap'
+                ),
+                'xcapns1' => array(
+                    'name'     => 'xcap',
+                    'type'     => 'NS',
+                    'value'    => 'ns1'
+                ),
+                'xcapns2' => array(
+                    'name'     => 'xcap',
+                    'type'     => 'NS',
+                    'value'    => 'ns2'
+                ),
+                'xcapns3' => array(
+                    'name'     => 'xcap',
+                    'type'     => 'NS',
+                    'value'    => 'ns3'
+                ),
+                'msrpserver' => array(
+                    'name'     => '_msrps._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 2855 msrprelay'
+                ),
+                'msrpns1' => array(
+                    'name'     => 'msrprelay',
+                    'type'     => 'NS',
+                    'value'    => 'ns1'
+                ),
+                'msrpns2' => array(
+                    'name'     => 'msrprelay',
+                    'type'     => 'NS',
+                    'value'    => 'ns2'
+                ),
+                'msrpns3' => array(
+                    'name'     => 'msrprelay',
+                    'type'     => 'NS',
+                    'value'    => 'ns3'
+                ),
+                'voicemail' => array(
+                    'name'     => '_voicemail._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '10',
+                    'value'    => '0 9200 voicemail'
+                ),
+                'vmns1' => array(
+                    'name'     => 'voicemail',
+                    'type'     => 'NS',
+                    'value'    => 'ns1'
+                ),
+                'vmns2' => array(
+                    'name'     => 'voicemail',
+                    'type'     => 'NS',
+                    'value'    => 'ns2'
+                ),
+                'vmns3' => array(
+                    'name'     => 'voicemail',
+                    'type'     => 'NS',
+                    'value'    => 'ns3'
+                )
+            )
+        )
+    );
 
 
     function DnsRecords($SoapEngine) {
-
         dprint("init DnsRecords");
 
-        $_name=trim($_REQUEST['name_filter']);
+        $_name = trim($_REQUEST['name_filter']);
 
-        if (strlen($_name) && !strstr($_name,'.') && !strstr($_name,'%')) $_name.='%';
+        if (strlen($_name) && !strstr($_name,'.') && !strstr($_name,'%')) {
+            $_name .= '%';
+        }
 
         if ($this->typeFilter) {
             $this->filters   = array(
-                                     'id'           => trim($_REQUEST['id_filter']),
-                                     'zone'         => trim($_REQUEST['zone_filter']),
-                                     'name'         => $_name,
-                                     'type'         => $this->typeFilter,
-                                     'value'        => trim($_REQUEST['value_filter']),
-                                     'owner'        => trim($_REQUEST['owner_filter'])
-                                    );
+                'id'           => trim($_REQUEST['id_filter']),
+                'zone'         => trim($_REQUEST['zone_filter']),
+                'name'         => $_name,
+                'type'         => $this->typeFilter,
+                'value'        => trim($_REQUEST['value_filter']),
+                'owner'        => trim($_REQUEST['owner_filter'])
+            );
         } else {
             $this->filters   = array(
-                                     'id'           => trim($_REQUEST['id_filter']),
-                                     'zone'         => trim($_REQUEST['zone_filter']),
-                                     'name'         => $_name,
-                                     'type'         => trim($_REQUEST['type_filter']),
-                                     'value'        => trim($_REQUEST['value_filter']),
-                                     'owner'        => trim($_REQUEST['owner_filter'])
-                                    );
+                'id'           => trim($_REQUEST['id_filter']),
+                'zone'         => trim($_REQUEST['zone_filter']),
+                'name'         => $_name,
+                'type'         => trim($_REQUEST['type_filter']),
+                'value'        => trim($_REQUEST['value_filter']),
+                'owner'        => trim($_REQUEST['owner_filter'])
+            );
         }
 
         $this->Records($SoapEngine);
         $this->getAllowedDomains();
-
     }
 
     function listRecords() {
         $this->showSeachForm();
 
         if ($this->typeFilter) {
-            $filter=array(
-                          'id'       => intval($this->filters['id']),
-                          'zone'     => $this->filters['zone'],
-                          'name'     => $this->filters['name'],
-                          'type'     => $this->typeFilter,
-                          'value'    => $this->filters['value'],
-                          'owner'    => intval($this->filters['owner']),
-                          'customer' => intval($this->filters['customer']),
-                          'reseller' => intval($this->filters['reseller'])
-                          );
+            $filter = array(
+                'id'       => intval($this->filters['id']),
+                'zone'     => $this->filters['zone'],
+                'name'     => $this->filters['name'],
+                'type'     => $this->typeFilter,
+                'value'    => $this->filters['value'],
+                'owner'    => intval($this->filters['owner']),
+                'customer' => intval($this->filters['customer']),
+                'reseller' => intval($this->filters['reseller'])
+            );
         } else {
-            $filter=array(
-                          'id'       => intval($this->filters['id']),
-                          'zone'     => $this->filters['zone'],
-                          'name'     => $this->filters['name'],
-                          'type'     => $this->filters['type'],
-                          'value'    => $this->filters['value'],
-                          'owner'    => intval($this->filters['owner']),
-                          'customer' => intval($this->filters['customer']),
-                          'reseller' => intval($this->filters['reseller'])
-                          );
+            $filter = array(
+                'id'       => intval($this->filters['id']),
+                'zone'     => $this->filters['zone'],
+                'name'     => $this->filters['name'],
+                'type'     => $this->filters['type'],
+                'value'    => $this->filters['value'],
+                'owner'    => intval($this->filters['owner']),
+                'customer' => intval($this->filters['customer']),
+                'reseller' => intval($this->filters['reseller'])
+            );
          }
         // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -7495,11 +7552,16 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             $this->rows = $result->total;
 
             if ($this->rows > 1 && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
@@ -7560,17 +7622,19 @@ class DnsRecords extends Records {
 
             if ($this->rows) {
                 while ($i < $maxrows)  {
-
-                    if (!$result->records[$i]) break;
+                    if (!$result->records[$i]) {
+                        break;
+                    }
 
                     $record = $result->records[$i];
                     $index=$this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($record->name),
-                    urlencode($record->zone),
-                    urlencode($record->id)
+                    $_url = $this->url.sprintf(
+                        "&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($record->name),
+                        urlencode($record->zone),
+                        urlencode($record->id)
                     );
 
                     if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$record->reseller);
@@ -7583,105 +7647,110 @@ class DnsRecords extends Records {
                         $actionText = "Delete";
                     }
 
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($record->customer)
+                    $_customer_url = $this->url.sprintf(
+                        "&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($record->customer)
                     );
 
-                    $_zone_url = $this->url.sprintf("&service=dns_zones@%s&name_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($record->zone)
+                    $_zone_url = $this->url.sprintf(
+                        "&service=dns_zones@%s&name_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($record->zone)
                     );
 
-                    if ($this->adminonly) $_zone_url.= sprintf ("&reseller_filter=%s",$record->reseller);
+                    if ($this->adminonly) {
+                        $_zone_url.= sprintf("&reseller_filter=%s", $record->reseller);
+                    }
 
-                    $_record_url = $this->url.sprintf("&service=%s@%s&zone_filter=%s&id_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($record->zone),
-                    urlencode($record->id)
+                    $_record_url = $this->url.sprintf(
+                        "&service=%s@%s&zone_filter=%s&id_filter=%s",
+                        urlencode($this->SoapEngine->service),
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($record->zone),
+                        urlencode($record->id)
                     );
 
                     if ($this->adminonly) $_record_url.= sprintf ("&reseller_filter=%s",$record->reseller);
 
                     if ($record->owner) {
-                        $_owner_url = sprintf
-                        ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                        $this->url,
-                        urlencode($this->SoapEngine->soapEngine),
-                        urlencode($record->owner),
-                        $record->owner
+                        $_owner_url = sprintf(
+                            "<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
+                            $this->url,
+                            urlencode($this->SoapEngine->soapEngine),
+                            urlencode($record->owner),
+                            $record->owner
                         );
                     } else {
                         $_owner_url='';
                     }
 
-		            if ($this->fancy) {
-                        printf("
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                        </tr>",
-                        $index,
-                        $_customer_url,
-                        $record->customer,
-                        $record->reseller,
-                        $_zone_url,
-                        $record->zone,
-                        $_record_url,
-                        $record->id,
-                        $record->name,
-                        $record->type,
-                        $record->value,
-                        $record->owner,
-                        $record->changeDate,
-                        $_url,
-                        $actionText
+                    if ($this->fancy) {
+                        printf(
+                            "
+                            <tr>
+                                <td>%s</td>
+                                <td><a href=%s>%s.%s</a></td>
+                                <td><a href=%s>%s</a></td>
+                                <td><a href=%s>%s</a></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                            </tr>",
+                            $index,
+                            $_customer_url,
+                            $record->customer,
+                            $record->reseller,
+                            $_zone_url,
+                            $record->zone,
+                            $_record_url,
+                            $record->id,
+                            $record->name,
+                            $record->type,
+                            $record->value,
+                            $record->owner,
+                            $record->changeDate,
+                            $_url,
+                            $actionText
                         );
                     } else {
                         printf("
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td align=right>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                        </tr>",
-                        $index,
-                        $_customer_url,
-                        $record->customer,
-                        $record->reseller,
-                        $_zone_url,
-                        $record->zone,
-                        $_record_url,
-                        $record->id,
-                        $record->name,
-                        $record->type,
-                        $record->priority,
-                        $record->value,
-                        $record->ttl,
-                        $record->changeDate,
-                        $_url,
-                        $actionText
+                            <tr>
+                                <td>%s</td>
+                                <td><a href=%s>%s.%s</a></td>
+                                <td><a href=%s>%s</a></td>
+                                <td><a href=%s>%s</a></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td align=right>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                            </tr>",
+                            $index,
+                            $_customer_url,
+                            $record->customer,
+                            $record->reseller,
+                            $_zone_url,
+                            $record->zone,
+                            $_record_url,
+                            $record->id,
+                            $record->name,
+                            $record->type,
+                            $record->priority,
+                            $record->value,
+                            $record->ttl,
+                            $record->changeDate,
+                            $_url,
+                            $actionText
                         );
 
                     }
-                	$i++;
-
+                    $i++;
                 }
             }
 
@@ -7700,36 +7769,69 @@ class DnsRecords extends Records {
 
     function showSeachFormCustom() {
 
-        printf (" <div class='input-prepend'><span class='add-on'>Record Id</span><input class=span1 type=text size=7 name=id_filter value='%s'></div>",$this->filters['id']);
-        printf (" <div class='input-prepend'><span class='add-on'>Name</span><input class=span2 type=text size=20 name=name_filter value='%s'></div>",$this->filters['name']);
+        printf(
+            "
+            <div class='input-prepend'><span class='add-on'>Record Id</span><input class=span1 type=text size=7 name=id_filter value='%s'></div>
+            ",
+            $this->filters['id']
+        );
+        printf(
+            "
+            <div class='input-prepend'><span class='add-on'>Name</span><input class=span2 type=text size=20 name=name_filter value='%s'></div>
+            ",
+            $this->filters['name']
+        );
 
         if (count($this->allowedDomains) > 0) {
             $selected_zone[$this->filters['zone']]='selected';
             print "<select class=span2 name=zone_filter><option value=''>Zone";
             foreach ($this->allowedDomains as $_zone) {
-                printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+                printf(
+                    "<option value='%s' %s>%s",
+                    $_zone,
+                    $selected_zone[$_zone],
+                    $_zone
+                );
             }
             print "</select>";
         } else {
-        	printf (" <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text name=zone_filter value='%s'></div>",$this->filters['zone']);
+            printf(
+                "
+                <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text name=zone_filter value='%s'></div>
+                ",
+                $this->filters['zone']
+            );
         }
 
         if ($this->typeFilter) {
-            printf ("<input type=hidden name=%s_filter> Type %s",$this->typeFilter,$this->typeFilter);
+            printf(
+                "<input type=hidden name=%s_filter> Type %s",
+                $this->typeFilter,
+                $this->typeFilter
+            );
         } else {
             $selected_type[$this->filters['type']]='selected';
-            printf (" <select name=type_filter class=span1><option value=''>Type");
+            echo "
+                <select name=type_filter class=span1><option value=''>Type";
             foreach (array_keys($this->recordTypes) as $_type) {
-                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$_type);
+                printf(
+                    "<option value='%s' %s>%s",
+                    $_type,
+                    $selected_type[$_type],
+                    $_type
+                );
             }
-            print "</select>";
+            echo "</select>";
         }
-        printf (" <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value_filter value='%s'></div>",$this->filters['value']);
-
+        printf(
+            "
+            <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value_filter value='%s'></div>
+            ",
+            $this->filters['value']
+        );
     }
 
     function deleteRecord($dictionary=array()) {
-
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -7746,12 +7848,15 @@ class DnsRecords extends Records {
             return false;
         }
 
-        $function=array('commit'   => array('name'       => $this->deleteRecordFunction,
-                                            'parameters' => array($id),
-                                            'logs'       => array('success' => sprintf('DNS record %s has been deleted',$id)))
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => $this->deleteRecordFunction,
+                'parameters' => array($id),
+                'logs'       => array('success' => sprintf('DNS record %s has been deleted',$id))
+            )
+        );
 
-		$zone=$this->filters['zone'];
+        $zone=$this->filters['zone'];
        	unset($this->filters);
         $this->filters['zone']=$zone;
 
@@ -7761,7 +7866,13 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -7771,7 +7882,6 @@ class DnsRecords extends Records {
     }
 
     function showAddForm() {
-
         /*
         if ($this->adminonly) {
         	if (!$this->filters['reseller']) {
@@ -7781,24 +7891,30 @@ class DnsRecords extends Records {
         }
         */
 
-        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form class=form-inline method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
 
         print "<div class='well well-small'>";
 
         if ($this->adminonly) {
-        	printf (" <input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
+            printf(
+                "<input type=hidden name=reseller_filter value='%s'>",
+                $this->filters['reseller']
+            );
         }
 
         print "
-        <input class='btn btn-warning' type=submit name=action value=Add>
+            <input class='btn btn-warning' type=submit name=action value=Add>
+                <div class='input-prepend'><span class='add-on'>Name</span>
         ";
 
-        printf (" <div class='input-prepend'><span class='add-on'>Name</span>");
-
-        printf ("<input type=text class=span2 size=20 name=name value='%s'></div>",trim($_REQUEST['name']));
+        printf(
+            "
+            <input type=text class=span2 size=20 name=name value='%s'></div>
+            ",
+            trim($_REQUEST['name'])
+        );
 
         if (count($this->allowedDomains) > 0) {
-
             if ($_REQUEST['zone']) {
                 $selected_zone[$_REQUEST['zone']]='selected';
             } else if ($this->filters['zone']) {
@@ -7809,7 +7925,12 @@ class DnsRecords extends Records {
 
             print ".<select name=zone>";
             foreach ($this->allowedDomains as $_zone) {
-                printf ("<option value='%s' %s>%s",$_zone,$selected_zone[$_zone],$_zone);
+                printf(
+                    "<option value='%s' %s>%s",
+                    $_zone,
+                    $selected_zone[$_zone],
+                    $_zone
+                );
             }
             print "</select>";
         } else {
@@ -7820,14 +7941,18 @@ class DnsRecords extends Records {
             } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
                 $_zone_selected=$_zone;
             }
-        	printf (" <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>",$_zone_selected);
+            printf(
+                "
+                <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>
+                ",
+                $_zone_selected
+            );
         }
 
         if ($this->typeFilter) {
-            printf ("Type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
+            printf("Type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
         } else {
-            print " <div class='input-prepend'><span class='add-on'>Type</span><select name=type>
-            ";
+            print "<div class='input-prepend'><span class='add-on'>Type</span><select name=type>";
 
             if ($_REQUEST['type']) {
                 $selected_type[$_REQUEST['type']]='selected';
@@ -7836,11 +7961,11 @@ class DnsRecords extends Records {
             }
 
             foreach(array_keys($this->recordTypes) as $_type) {
-                printf ("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
+                printf("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
             }
 
             foreach(array_keys($this->recordTypesTemplate) as $_type) {
-                printf ("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
+                printf("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
             }
 
             print "
@@ -7848,10 +7973,20 @@ class DnsRecords extends Records {
             ";
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value value='%s'></div>",trim($_REQUEST['value']));
+        printf(
+            "
+            <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value value='%s'></div>
+            ",
+            trim($_REQUEST['value'])
+        );
 
         if (!$this->fancy)  {
-        	printf (" <div class='input-prepend'><span class='add-on'>Priority</span><input class=span1 type=text size=5 name=priority value='%s'></div>",trim($_REQUEST['priority']));
+            printf(
+                "
+                <div class='input-prepend'><span class='add-on'>Priority</span><input class=span1 type=text size=5 name=priority value='%s'></div>
+                ",
+                trim($_REQUEST['priority'])
+            );
         }
 
         $this->printHiddenFormElements();
@@ -7863,35 +7998,44 @@ class DnsRecords extends Records {
 
     function getAllowedDomains() {
         // Filter
-        $filter=array(
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
+        $filter = array(
+            'customer' => intval($this->filters['customer']),
+            'reseller' => intval($this->filters['reseller'])
+        );
         // Range
-        $range=array('start' => 0,
-                     'count' => $this->max_zones_selection
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => $this->max_zones_selection
+        );
 
         // Order
-        $orderBy = array('attribute' => 'name',
-                         'direction' => 'ASC'
-                         );
+        $orderBy = array(
+            'attribute' => 'name',
+            'direction' => 'ASC'
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getZones');
-        $result     = $this->SoapEngine->soapclient->getZones($Query);
+        $result = $this->SoapEngine->soapclient->getZones($Query);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -7920,7 +8064,7 @@ class DnsRecords extends Records {
             $name = trim($_REQUEST['name']);
         }
 
-        $name=rtrim($name,".");
+        $name = rtrim($name,".");
 
         if (preg_match("/^(.+)@(.*)$/", $name, $m)) {
             $zone = $m[2];
@@ -7932,8 +8076,8 @@ class DnsRecords extends Records {
                 $zone=$_REQUEST['zone'];
             }
 
-            if ($type=='MBOXFW') {
-                $name.='@'.$zone;
+            if ($type == 'MBOXFW') {
+                $name .= '@'.$zone;
             }
         }
 
@@ -8010,37 +8154,42 @@ class DnsRecords extends Records {
                 return false;
             }
 
-            $record=array('name'     => trim($name),
-                          'zone'     => trim($zone),
-                          'type'     => $type,
-                          'value'    => trim($value),
-                          'owner'    => intval($owner),
-                          'ttl'      => intval($ttl),
-                          'priority' => intval($priority)
-                          );
+            $record = array(
+                'name'     => trim($name),
+                'zone'     => trim($zone),
+                'type'     => $type,
+                'value'    => trim($value),
+                'owner'    => intval($owner),
+                'ttl'      => intval($ttl),
+                'priority' => intval($priority)
+            );
 
             if (!$this->skipSaveProperties=true) {
-
-                $_p=array(
-                          array('name'       => 'dns_records_last_zone',
-                                'category'   => 'web',
-                                'value'      => $_REQUEST['zone'],
-                                'permission' => 'customer'
-                               ),
-                          array('name'       => 'dns_records_last_type',
-                                'category'   => 'web',
-                                'value'      => "$type",
-                                'permission' => 'customer'
-                               )
-                          );
+                $_p = array(
+                    array(
+                        'name'       => 'dns_records_last_zone',
+                        'category'   => 'web',
+                        'value'      => $_REQUEST['zone'],
+                        'permission' => 'customer'
+                    ),
+                    array(
+                        'name'       => 'dns_records_last_type',
+                        'category'   => 'web',
+                        'value'      => "$type",
+                        'permission' => 'customer'
+                    )
+                );
 
                 $this->setCustomerProperties($_p);
             }
 
-            $function=array('commit'   => array('name'       => $this->addRecordFunction,
-                                                'parameters' => array($record),
-                                                'logs'       => array('success' => sprintf('DNS record %s under %s has been added',$name,$zone))),
-                            );
+            $function = array(
+                'commit'   => array(
+                    'name'       => $this->addRecordFunction,
+                    'parameters' => array($record),
+                    'logs'       => array('success' => sprintf('DNS record %s under %s has been added',$name,$zone))
+                )
+            );
 
             $result = $this->SoapEngine->execute($function,$this->html);
             dprint_r($result);
@@ -8050,7 +8199,13 @@ class DnsRecords extends Records {
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
                 if ($this->html) {
-                  $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log = sprintf(
+                        "SOAP request error from %s: %s (%s): %s",
+                        $this->SoapEngine->SOAPurl,
+                        $error_msg,
+                        $error_fault->detail->exception->errorcode,
+                        $error_fault->detail->exception->errorstring
+                    );
                 }
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -8094,37 +8249,43 @@ class DnsRecords extends Records {
 
                     // save value if type sip server
                     if ($save_new_value && $_records['name'] && preg_match("/^_sip/",$_records['name'])) {
-                        $_p=array(
-                                  array('name'       => 'dns_records_last_sip_server',
-                                        'category'   => 'web',
-                                        'value'      => $value,
-                                        'permission' => 'customer'
-                                       )
-                                  );
+                        $_p = array(
+                            array(
+                                'name'       => 'dns_records_last_sip_server',
+                                'category'   => 'web',
+                                'value'      => $value,
+                                'permission' => 'customer'
+                            )
+                        );
 
                         $this->setCustomerProperties($_p);
                     }
                 }
 
-		        if (!in_array($_records['type'],array_keys($this->recordTypes))) {
+                if (!in_array($_records['type'],array_keys($this->recordTypes))) {
                     continue;
                 }
 
-                $record=array('name'     => $_records['name'],
-                              'zone'     => trim($zone),
-                              'type'     => $_records['type'],
-                              'value'    => $value_new,
-                              'owner'    => intval($owner),
-                              'ttl'      => intval($_records['ttl']),
-                              'priority' => intval($_records['priority'])
-                              );
+                $record = array(
+                    'name'     => $_records['name'],
+                    'zone'     => trim($zone),
+                    'type'     => $_records['type'],
+                    'value'    => $value_new,
+                    'owner'    => intval($owner),
+                    'ttl'      => intval($_records['ttl']),
+                    'priority' => intval($_records['priority'])
+                );
 
                 //print_r($record);
-                $function=array('commit'   => array('name'       => $this->addRecordFunction,
-                                                    'parameters' => array($record),
-                                                    'logs'       => array('success' => sprintf('Dns %s record under %s has been added',$_records['type'],$zone))
-                                                    )
-                                );
+                $function=array(
+                    'commit'   => array(
+                        'name'       => $this->addRecordFunction,
+                        'parameters' => array($record),
+                        'logs'       => array(
+                            'success' => sprintf('Dns %s record under %s has been added', $_records['type'], $zone)
+                        )
+                    )
+                );
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
@@ -8134,14 +8295,18 @@ class DnsRecords extends Records {
                     $error_code = $result->getCode();
 
                     if ($this->html) {
-                    	$log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        $log = sprintf(
+                            "SOAP request error from %s: %s (%s): %s",
+                            $this->SoapEngine->SOAPurl,
+                            $error_msg,
+                            $error_fault->detail->exception->errorcode,
+                            $error_fault->detail->exception->errorstring
+                        );
                     }
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
             }
-
-
         } else {
             if ($this->html) {
             	printf ("<div class='alert alert-danger'><strong>Error</strong>: Invalid or missing record type.</div>");
@@ -8152,50 +8317,58 @@ class DnsRecords extends Records {
     }
 
     function getRecordKeys() {
-
         // Filter
-        $filter=array(
-                      'id'       => intval($this->filters['id']),
-                      'zone'     => $this->filters['zone'],
-                      'name'     => $this->filters['name'],
-                      'type'     => $this->filters['type'],
-                      'value'    => $this->filters['value'],
-                      'owner'    => intval($this->filters['owner']),
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller'])
-                      );
+        $filter = array(
+            'id'       => intval($this->filters['id']),
+            'zone'     => $this->filters['zone'],
+            'name'     => $this->filters['name'],
+            'type'     => $this->filters['type'],
+            'value'    => $this->filters['value'],
+            'owner'    => intval($this->filters['owner']),
+            'customer' => intval($this->filters['customer']),
+            'reseller' => intval($this->filters['reseller'])
+        );
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 1000
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 1000
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getRecords');
 
         // Call function
-        $result     = $this->SoapEngine->soapclient->getRecords($Query);
+        $result = $this->SoapEngine->soapclient->getRecords($Query);
 
         if (PEAR::isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -8216,7 +8389,8 @@ class DnsRecords extends Records {
             <div class='control-group'>
                 <label class='control-label'>Name</label>
                 <div class='controls' style='padding-top: 5px'>%s</div>
-            </div>",
+            </div>
+            ",
             $record->name
         );
 
@@ -8322,23 +8496,26 @@ class DnsRecords extends Records {
             return false;
         }
 
-        $filter=array('id'   => $id);
+        $filter = array('id'   => $id);
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 1
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 1
+        );
 
         // Order
-        $orderBy = array('attribute' => 'changeDate',
-                         'direction' => 'DESC'
-                         );
+        $orderBy = array(
+            'attribute' => 'changeDate',
+            'direction' => 'DESC'
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                     );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action($this->getRecordsFunction);
@@ -8350,7 +8527,13 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -8395,7 +8578,13 @@ class DnsRecords extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -8412,7 +8601,7 @@ class DnsRecords extends Records {
 class FancyRecords extends DnsRecords {
     var $fancy = true;
 
-	var $addRecordFunction    = 'addFancyRecord';
+    var $addRecordFunction    = 'addFancyRecord';
     var $deleteRecordFunction = 'deleteFancyRecord';
     var $updateRecordFunction = 'updateFancyRecord';
     var $getRecordsFunction   = 'getFancyRecords';
@@ -14784,20 +14973,20 @@ class EnumMappingsActions extends Actions {
 }
 
 class DnsRecordsActions extends Actions {
-	var $sub_action_parameter_size = 50;
+    var $sub_action_parameter_size = 50;
 
-    var $actions=array(
-                       'changettl'      => 'Change TTL to:',
-                       'changepriority' => 'Change Priority to:',
-                       'changevalue'    => 'Change value to:',
-                       'delete'         => 'Delete records'
-                       );
+    var $actions = array(
+        'changettl'      => 'Change TTL to:',
+        'changepriority' => 'Change Priority to:',
+        'changevalue'    => 'Change value to:',
+        'delete'         => 'Delete records'
+    );
 
     function DnsRecordsActions($SoapEngine, $login_credentials) {
         $this->Actions($SoapEngine, $login_credentials);
     }
 
-    function execute($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys, $action, $sub_action_parameter) {
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
             return false;
