@@ -7880,8 +7880,8 @@ class DnsRecords extends Records {
         }
 
         if (!strlen($zone)) {
-        	if ($this->html) {
-            	printf ("<div class='alert alert-error'><strong>Error</strong>: Missing zone name. </div>");
+            if ($this->html) {
+            	echo "<div class='alert alert-danger'><strong>Error</strong>: Missing zone name. </div>";
             }
             return false;
         }
@@ -7889,8 +7889,8 @@ class DnsRecords extends Records {
         $this->filters['zone']=$zone;
 
         if (!strlen($type)) {
-        	if ($this->html) {
-            	printf ("<p><font color=red>Error: Missing record type. </font>");
+            if ($this->html) {
+                echo "<div class='alert alert-danger'><strong>Error</strong>: Missing record type.</div>";
             }
             return false;
         }
@@ -7908,7 +7908,7 @@ class DnsRecords extends Records {
             } else if ($this->filters['reseller']) {
             } else {
                 if ($this->html) {
-                	printf ("<p><font color=red>Error: Missing reseller, please first search zones for a given reseller </font>");
+                    echo "<div class='alert alert-danger'><strong>Error</strong>: Missing reseller, please first search zones for a given reseller</div>";
                 }
                 return false;
             }
@@ -7938,7 +7938,7 @@ class DnsRecords extends Records {
             // See RFC 1912 - Section 2.4
             if (trim($name).trim($zone) == trim($zone) && $type == 'CNAME') {
                 printf(
-                    "<p class='alert alert-danger'><strong>Error</strong>: CNAME (%s) equal to zone name (%s) is not allowed</p>",
+                    "<div class='alert alert-danger'><strong>Error</strong>: CNAME (%s) equal to zone name (%s) is not allowed</div>",
                     trim($name).trim($zone),
                     trim($zone)
                 );
@@ -7946,8 +7946,8 @@ class DnsRecords extends Records {
             }
 
             if (!strlen($value)) {
-        		if ($this->html) {
-                	printf ("<p><font color=red>Error: Missing record value. </font>");
+                if ($this->html) {
+                	echo "<div class='alert alert-danger'><strong>Error</strong>: Missing record value.</div>";
                 }
                 return false;
             }
@@ -8085,8 +8085,8 @@ class DnsRecords extends Records {
 
 
         } else {
-        	if ($this->html) {
-            	printf ("<p><font color=red>Error: Invalid or missing record type. </font>");
+            if ($this->html) {
+            	printf ("<div class='alert alert-danger'><strong>Error</strong>: Invalid or missing record type.</div>");
             }
             return false;
         }
