@@ -1,7 +1,7 @@
-<?
+<?php
 
 /*
-    Copyright (c) 2007-2009 AG Projects
+    Copyright (c) 2007-2016 AG Projects
     http://ag-projects.com
 
     This page provides the functions for managing SIP accounts,
@@ -15,12 +15,14 @@ require("ngnpro_client.php");
 set_time_limit(600);
 
 page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm")
-         );
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
-$title="Provisioning";
+$title = "Provisioning";
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
@@ -47,41 +49,41 @@ global $CDRTool;
 $login_credentials=array();
 
 if ($CDRTool['impersonate']) {
-    if (preg_match("/^([0-9]*)\.([0-9]*)$/",$CDRTool['impersonate'],$m)) {
+    if (preg_match("/^([0-9]*)\.([0-9]*)$/", $CDRTool['impersonate'], $m)) {
         $_customer=$m[1];
         $_reseller=$m[2];
 
     } else {
         page_close();
-        printf ("Error: Invalid impersonate value %s",$CDRTool['impersonate']);
+        printf("Error: Invalid impersonate value %s", $CDRTool['impersonate']);
         exit;
     }
 
     if ($_customer == "0" && $_reseller == "0" ) {
         $login_credentials['login_type']=  'admin';
-
+        $login_credentials['reseller']=  '0';
     } else if ($_customer == $_reseller) {
         $login_credentials=array(
-                        'soap_username'      => $CDRTool['soap_username'],
-                        'soap_password'      => $CDRTool['soap_password'],
-                        'customer'           => $_customer,
-                        'reseller'           => $_reseller,
-                        'login_type'         => 'reseller'
-                        );
+            'soap_username'      => $CDRTool['soap_username'],
+            'soap_password'      => $CDRTool['soap_password'],
+            'customer'           => $_customer,
+            'reseller'           => $_reseller,
+            'login_type'         => 'reseller'
+        );
     } else {
         $login_credentials=array(
-                        'soap_username'      => $CDRTool['soap_username'],
-                        'soap_password'      => $CDRTool['soap_password'],
-                        'customer'           => $_customer,
-                        'reseller'           => $_reseller,
-                        'login_type'         => 'customer'
-                        );
+            'soap_username'      => $CDRTool['soap_username'],
+            'soap_password'      => $CDRTool['soap_password'],
+            'customer'           => $_customer,
+            'reseller'           => $_reseller,
+            'login_type'         => 'customer'
+        );
     }
 
-    $login_credentials['username']=$auth->auth["uname"];
+    $login_credentials['username'] = $auth->auth["uname"];
 } else {
     page_close();
-    printf ("Please define impersonate field for login account <b>%s</b>",$auth->auth["uname"]);
+    printf("Please define impersonate field for login account <b>%s</b>", $auth->auth["uname"]);
     exit;
 }
 
@@ -89,43 +91,54 @@ if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
     require("/etc/cdrtool/ngnpro_engines.inc");
 } else {
     page_close();
-    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
+    printf("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
     exit;
 }
 
-if ($resellerFilters[$login_credentials['reseller']]) {
-	$login_credentials['soap_filter']      = $resellerFilters[$login_credentials['reseller']]['soap_filter'];
+if (array_key_exists($login_credentials['reseller'], $resellerFilters)) {
+    $login_credentials['soap_filter']      = $resellerFilters[$login_credentials['reseller']]['soap_filter'];
     $login_credentials['record_generator'] = $resellerFilters[$login_credentials['reseller']]['record_generator'];
     $login_credentials['name_servers']     = $resellerFilters[$login_credentials['reseller']]['name_servers'];
 } else if ($resellerFilters['default']) {
-	$login_credentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
-    $login_credentials['record_generator'] = $resellerFilters['default']['record_generator'];
-    $login_credentials['name_servers']     = $resellerFilters['default']['name_servers'];
+    $login_credentials['soap_filter']      = $resellerFilters['default']['soap_filter'];
+    $login_credentials['record_generator'] = isset($resellerFilters['default']['record_generator']) ? $resellerFilters['default']['record_generator'] : '';
+    $login_credentials['name_servers']     = isset($resellerFilters['default']['name_servers']) ? $resellerFilters['default']['name_servers'] : '' ;
 }
 
 $login_credentials['reseller_filters'] = $resellerFilters;
 
-if ($_REQUEST['generatorId']) {
-    $generator  = new recordGenerator($_REQUEST['generatorId'],$recordGenerators,$soapEngines,$login_credentials);
-    if ($_REQUEST['action']=='Generate') {
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
+if (isset($_REQUEST['generatorId'])) {
+    $generator  = new recordGenerator($_REQUEST['generatorId'], $recordGenerators, $soapEngines, $login_credentials);
+    if ($action == 'Generate') {
         $generator->generateRecords();
         $generator->showGeneratorForm();
     } else {
         $generator->showGeneratorForm();
     }
 } else {
-	$SoapEngine = new SoapEngine($_REQUEST['service'],$soapEngines,$login_credentials);
+    $service = isset($_REQUEST['service']) ? $_REQUEST['service'] : '' ;
+    $SoapEngine = new SoapEngine($service, $soapEngines, $login_credentials);
     $_class     = $SoapEngine->records_class;
     $RECORDS    = new $_class($SoapEngine);
 
     $RECORDS->showWelcomeMessage();
 
-    if ($_REQUEST['action']=='Add')    $RECORDS->addRecord();
-    if ($_REQUEST['action']=='Copy')   $RECORDS->copyRecord();
-    if ($_REQUEST['action']=='Delete') $RECORDS->deleteRecord();
-    if ($_REQUEST['action']=='Update') $RECORDS->updateRecord();
+    if ($action=='Add') {
+        $RECORDS->addRecord();
+    }
+    if ($action=='Copy') {
+        $RECORDS->copyRecord();
+    }
+    if ($action=='Delete') {
+        $RECORDS->deleteRecord();
+    }
+    if ($action=='Update') {
+        $RECORDS->updateRecord();
+    }
 
-    if ($_REQUEST['action']=='PerformActions') {
+    if ($action == 'PerformActions') {
         $RECORDS->executeActions();
     } else {
         $RECORDS->listRecords();
@@ -135,7 +148,7 @@ if ($_REQUEST['generatorId']) {
 if (!$export) {
     $layout->showFooter();
 
-    print "
+    echo "
     </body>
     </html>
     ";
