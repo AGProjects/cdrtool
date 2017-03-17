@@ -5572,9 +5572,14 @@ class Media_trace {
             $w_start_time = intval($_index*$w_legend_bar/$this->info->duration);
             $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
             $w_duration_p = ($w_legend_bar/$w_duration) * 100;
-            $w_timeout_p  = ($w_legend_bar/$w_timeout)* 100;
-            $w_start_p  = ($w_legend_bar/$w_start)* 100;
-
+            $w_timeout = 0;
+            if ($w_timeout > 0 ) {
+                $w_timeout_p  = ($w_legend_bar/$w_timeout) * 100;
+            }
+            $w_start_p = 0;
+            if ($w_start_time > 0) {
+                $w_start_p  = ($w_legend_bar/$w_start_time)* 100;
+            }
             //printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
             
             if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
