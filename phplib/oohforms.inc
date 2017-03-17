@@ -276,7 +276,7 @@ class form {
       $this->elements[$name]["which"] = 0;
    
     $el = $this->elements[$name]["ob"];
-    if (true == $falg_nametranslation)
+    if (true == $flag_nametranslation)
       $el->name = $org_name; 
 
     if (false == $value) 
