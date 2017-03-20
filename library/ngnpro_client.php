@@ -10775,7 +10775,7 @@ class Customers extends Records {
                               'credit'      => array('type'       => 'float',
                                                      'adminonly'  => true
                                                      ),
-                              'username'    => array('type'       =>'text', 'extra_html' => 'autocomplete="off"'
+                              'username'    => array('type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
                                                      ),
                               'password'    => array('type'=>'text',
                                                      'name'=>'Password'),
@@ -11478,7 +11478,6 @@ class Customers extends Records {
                                             'parameters' => array(intval($customer)),
                                             'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
                         );
-
         if ($this->SoapEngine->execute($function,$this->html)) {
             unset($this->filters);
             return true;
@@ -11846,7 +11845,7 @@ class Customers extends Records {
                 <td class=border>%s</td>
                 <td class=border>%s</td>
                 <td class=border>%s</td>
-                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                <td class=border><input type=text size=45 name='%s_form' value='%s' autocomplete='no'></td>
                 <td class=border>%s</td>
                 </tr>",
                 $this->allProperties[$item]['category'],
