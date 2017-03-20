@@ -135,19 +135,19 @@ class NetworkStatistics {
 
         foreach (array_keys($this->status) as $_id) {
             foreach ($this->status[$_id]['roles'] as $_role) {
-                if ($_role=='sip_proxy') {
+                if ($_role == 'sip_proxy') {
                     $this->sip_proxies[$this->status[$_id]['ip']]++;
                 }
-                if ($_role=='thor_dnsmanager') {
+                if ($_role == 'thor_dnsmanager') {
                     $this->dns_managers[$this->status[$_id]['ip']]++;
                 }
-                if ($_role=='thor_manager') {
+                if ($_role == 'thor_manager') {
                     $this->thor_managers[$this->status[$_id]['ip']]++;
                 }
-                if ($_role=='conference_server') {
+                if ($_role == 'conference_server') {
                     $this->conference_servers[$this->status[$_id]['ip']]++;
                 }
-                if ($_role=='voicemail_server') {
+                if ($_role == 'voicemail_server') {
                     $this->voicemail_servers[$this->status[$_id]['ip']]++;
                 }
 
@@ -275,10 +275,9 @@ class SipThorNetworkImage {
         }
 
         if (is_array($display_options)) {
-            $this->display_options=$display_options;
+            $this->display_options = $display_options;
         }
-
-        if ($this->display_options['accounts_item']) {
+        if (array_key_exists('accounts_item', $this->display_options)) {
             $this->accounts_item=$this->display_options['accounts_item'];
         }
 
