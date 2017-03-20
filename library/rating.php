@@ -5847,8 +5847,9 @@ class RatingTables {
         $metadata  = $this->db->metadata($this->table);
         $cc        = count($metadata);
         // end init table structure
-
+        //
         // delimiter for exporting records
+
         if ($this->settings['csv_delimiter']) {
             $delimiter=$this->settings['csv_delimiter'];
         } else {
@@ -8408,7 +8409,7 @@ class RatingEngine {
 
         $this->runtime['start']=microtime_float();
 
-        syslog(LOG_NOTICE, $tinput);
+        syslog(LOG_NOTICE, "Got command: $tinput");
 
         if (!$_els[0]) return 0;
 
@@ -8448,25 +8449,25 @@ class RatingEngine {
         if ($NetFields['action']=="maxsessiontime") {
 
             if (!$NetFields['from']) {
-                $log=sprintf ("error: missing From parameter");
+                $log = sprintf("error: missing From parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
-                $log=sprintf ("error: missing To parameter");
+                $log = sprintf("error: missing To parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['gateway']) {
-                $log=sprintf ("error: missing gateway parameter");
+                $log = sprintf("error: missing gateway parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
-                $log=sprintf ("error: missing Call Id parameter");
+                $log = sprintf("error: missing Call Id parameter");
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
@@ -9411,10 +9412,10 @@ class RatingEngine {
     }
 
     function keepAlive() {
-        $query=sprintf("select * from auth_user");
+        $query = sprintf("select * from auth_user");
 
         if (!$this->db->query($query) || !$this->db->num_rows()) {
-            $log=sprintf ("Database error for keepalive query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf("Database error for keepalive query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
             syslog(LOG_NOTICE, $log);
             return false;
         }
