@@ -37,14 +37,56 @@ td select[size] {
 }
 
 .extrainfo {
-   display: none;
+    display: none;
+}
+
+.extrainfo .row-fluid [class*="span"] {
+    min-height:13px ;
 }
 
 .siptrace .extrainfo {
-   display: none;
-   background-color: #efefef;
-   border-top: 2px solid #bbb;
-   border-bottom: 2px solid #bbb;
+    display: none;
+    background-color: #efefef;
+    border-top: 2px solid #555555;
+    border-bottom: 2px solid #555555;
+}
+
+.siptrace tbody tr:not(.extrainfo):hover td, .siptrace tbody tr:hover th {
+    background-color: #f5f5f5;
+}
+
+.siptrace .extrainfo.red {
+    background-color: rgba(189,54,47,.05);
+}
+
+.siptrace .extrainfo.blue {
+    background-color: rgba(44,104,161,.1);
+}
+
+.siptrace .extrainfo.orange {
+    background-color: rgba(192, 152, 83,.1);
+}
+
+.siptrace .extrainfo.green {
+    background-color: rgba(104, 161, 44,.1);
+}
+
+.siptrace .extrainfo.cyan {
+    background-color: rgba(0, 204, 204,.1);
+}
+
+.siptrace .extrainfo.magenta {
+    background-color: rgba(136, 0, 136,.05);
+}
+
+#trace {
+    margin-left:-20px;
+    margin-right: -20px;
+    padding-top: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 0;
+    margin-bottom:0;
 }
 
 .nav li a {
@@ -102,9 +144,6 @@ ul.dropdown-menu  li{
     margin-bottom: 0px;
 }
 
-.extrainfo .row-fluid [class*="span"] {
-    min-height:13px ;
-}
 
 #search.table th, #search.table td ,#log.table td, #rates_table.table td {
     vertical-align: middle;
@@ -151,9 +190,6 @@ input[type="checkbox"] {
     padding-top: 0px;
 }
 
-#trace {
-    padding-top: 5px;
-}
 
 .muted {
     background-color: #f9f9f9;
@@ -171,3 +207,133 @@ input[type="checkbox"] {
 .input-append .btn {
     vertical-align: middle !important;
 }
+
+div.arrow {
+    height:2px;
+    background-color: #ccc;
+    width: calc(100% - 24px);
+    margin-left: 12px;
+    margin-bottom: 7px;
+    margin-top: 7px;
+    position: relative;
+}
+
+div.arrow.right:before {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: #ccc;
+    content: '';
+    position:absolute;
+    margin-top: -5px;
+    margin-left: -12px;
+}
+
+
+div.arrow.right:after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: 100%;
+    margin-top: -5px;
+    border-top: 6px solid transparent;
+    border-left: 12px solid #ccc;
+    border-bottom: 6px solid transparent;
+}
+
+div.arrow.left:after {
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+    background-color: #ccc;
+    content: '';
+    position:absolute;
+    left: 100%;
+    margin-top: -5px;
+}
+
+div.arrow.left:before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    margin-top: -5px;
+    margin-left: -12px;
+    border-top: 6px solid transparent;
+    border-right: 12px solid #ccc;
+    border-bottom: 6px solid transparent;
+}
+
+div.arrow.blue,
+div.arrow.blue.right:before,
+div.arrow.blue.left:after {
+    background-color: #2c68a1;
+}
+div.arrow.blue.right:after {
+    border-left-color: #2c68a1;
+}
+div.arrow.blue.left:before {
+    border-right-color: #2c68a1;
+}
+
+div.arrow.green,
+div.arrow.green.right:before,
+div.arrow.green.left:after {
+    background-color: #68a12c;
+}
+div.arrow.green.right:after {
+    border-left-color: #68a12c;
+}
+div.arrow.green.left:before {
+    border-right-color: #68a12c;
+}
+
+div.arrow.red,
+div.arrow.red.right:before,
+div.arrow.red.left:after {
+    background-color: #b94a48;
+}
+div.arrow.red.right:after {
+    border-left-color: #b94a48;
+}
+div.arrow.red.left:before {
+    border-right-color: #b94a48;
+}
+
+div.arrow.orange,
+div.arrow.orange.right:before,
+div.arrow.orange.left:after {
+    background-color: #c09853;
+}
+div.arrow.orange.right:after {
+    border-left-color: #c09853;
+}
+div.arrow.orange.left:before {
+    border-right-color: #c09853;
+}
+
+div.arrow.cyan,
+div.arrow.cyan.right:before,
+div.arrow.cyan.left:after {
+    background-color: #00cccc;
+}
+div.arrow.cyan.right:after {
+    border-left-color: #00cccc;
+}
+div.arrow.cyan.left:before {
+    border-right-color: #00cccc;
+}
+
+div.arrow.magenta,
+div.arrow.magenta.right:before,
+div.arrow.magenta.left:after {
+    background-color: #880088;
+}
+div.arrow.magenta.right:after {
+    border-left-color: #880088;
+}
+div.arrow.magenta.left:before {
+    border-right-color: #880088;
+}
+
