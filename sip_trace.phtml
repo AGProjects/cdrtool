@@ -41,7 +41,7 @@ $cdr_source  = $_REQUEST['cdr_source'];
 $format      = isset($_REQUEST['format']) ? $_REQUEST['format'] : 'html';
 
 
-$title=sprintf("CDRTool SIP trace for session %s",$callid);
+$title = sprintf("CDRTool SIP trace for session %s", $callid);
 
 include("header.phtml");
 require("cdr_generic.php");
@@ -49,10 +49,10 @@ require("cdr_generic.php");
 if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $sipTrace = new SIP_trace($cdr_source);
-    if ($format=='html') {
-    	$sipTrace->show($proxyIP,$callid,$fromtag,$totag);
-    } else if ($format == 'text') {
-    	$sipTrace->showText($proxyIP,$callid,$fromtag,$totag);
+    if ($format == 'html') {
+        $sipTrace->show($proxyIP, $callid, $fromtag, $totag);
+    } elseif ($format == 'text') {
+        $sipTrace->showText($proxyIP, $callid, $fromtag, $totag);
     }
 
 } else {
