@@ -1,62 +1,65 @@
-<?
+<?php
 header("Cache-Control: no-cache, must-revalidate");
 header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
 header("Expires: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("ETag: ",randomstring());
+header("ETag: ", randomstring());
 
 global $CDRTool;
 
-print "<!DOCTYPE html>\n";
+echo "<!DOCTYPE html>\n";
 
-printf("<HTML>
-<HEAD>
-  <TITLE>CDRTool - $title</TITLE>
-  <META NAME=Description CONTENT=
-  \"CDR mediation and rating engine for OpenSIPS\">
-  <META NAME=Keywords CONTENT=\"OpenSIPS, Asterisk, SIP Express router, Cisco\">
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-  <link rel=\"apple-touch-icon\" sizes=\"57x57\" href=\"images/favicons/apple-touch-icon-57x57.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"60x60\" href=\"images/favicons/apple-touch-icon-60x60.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"72x72\" href=\"images/favicons/apple-touch-icon-72x72.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"76x76\" href=\"images/favicons/apple-touch-icon-76x76.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"114x114\" href=\"images/favicons/apple-touch-icon-114x114.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"120x120\" href=\"images/favicons/apple-touch-icon-120x120.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"144x144\" href=\"images/favicons/apple-touch-icon-144x144.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"152x152\" href=\"images/favicons/apple-touch-icon-152x152.png\">
-  <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"images/favicons/apple-touch-icon-180x180.png\">
-  <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-32x32.png\" sizes=\"32x32\">
-  <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-194x194.png\" sizes=\"194x194\">
-  <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-96x96.png\" sizes=\"96x96\">
-  <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/android-chrome-192x192.png\" sizes=\"192x192\">
-  <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-16x16.png\" sizes=\"16x16\">
-  <link rel=\"manifest\" href=\"images/favicons/manifest.json\">
-  <link rel=\"mask-icon\" href=\"images/favicons/safari-pinned-tab.svg\" color=\"#5670d4\">
-  <meta name=\"msapplication-TileColor\" content=\"#2d89ef\">
-  <meta name=\"msapplication-TileImage\" content=\"images/favicons/mstile-144x144.png\">
-  <meta name=\"theme-color\" content=\"#5670d4\">
-  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>
-  <script>(function(w){var dpr=((w.devicePixelRatio===undefined)?1:w.devicePixelRatio);if(!!w.navigator.standalone){var r=new XMLHttpRequest();r.open('GET','/retinaimages.php?devicePixelRatio='+dpr,false);r.send()}else{document.cookie='devicePixelRatio='+dpr+'; path=/'}})(window)</script>
-  <noscript><style id=\"devicePixelRatio\" media=\"only screen and (-moz-min-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2)\">html{background-image:url(\"/retinaimages.php?devicePixelRatio=2\")}</style></noscript>
-  <SCRIPT language=\"JavaScript1.2\" src=\"main.js\" type=\"text/javascript\"></SCRIPT>
-  <link href=\"bootstrap/css/bootstrap.css\" rel=\"stylesheet\">
-  <link href=\"bootstrap/css/bootstrap-responsive.css\" rel=\"stylesheet\">
-  <link href=\"bootstrap/css/datepicker.css\" rel=\"stylesheet\">
-  <link href=\"bootstrap/css/bootstrap-timepicker.min.css\" rel=\"stylesheet\">
-  <link rel=\"stylesheet\" type=\"text/css\" href=\"bootstrap/css/daterangepicker-bs2.css\" />
+printf(
+    "
+    <html>
+    <head>
+    <title>CDRTool - $title</title>
+    <meta name=Description content=\"CDR mediation and rating engine for OpenSIPS\">
+    <meta name=Keywords CONTENT=\"OpenSIPS, Asterisk, SIP Express router, Cisco\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <link rel=\"apple-touch-icon\" sizes=\"57x57\" href=\"images/favicons/apple-touch-icon-57x57.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"60x60\" href=\"images/favicons/apple-touch-icon-60x60.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"72x72\" href=\"images/favicons/apple-touch-icon-72x72.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"76x76\" href=\"images/favicons/apple-touch-icon-76x76.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"114x114\" href=\"images/favicons/apple-touch-icon-114x114.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"120x120\" href=\"images/favicons/apple-touch-icon-120x120.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"144x144\" href=\"images/favicons/apple-touch-icon-144x144.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"152x152\" href=\"images/favicons/apple-touch-icon-152x152.png\">
+    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"images/favicons/apple-touch-icon-180x180.png\">
+    <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-32x32.png\" sizes=\"32x32\">
+    <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-194x194.png\" sizes=\"194x194\">
+    <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-96x96.png\" sizes=\"96x96\">
+    <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/android-chrome-192x192.png\" sizes=\"192x192\">
+    <link rel=\"icon\" type=\"image/png\" href=\"images/favicons/favicon-16x16.png\" sizes=\"16x16\">
+    <link rel=\"manifest\" href=\"images/favicons/manifest.json\">
+    <link rel=\"mask-icon\" href=\"images/favicons/safari-pinned-tab.svg\" color=\"#5670d4\">
+    <meta name=\"msapplication-TileColor\" content=\"#2d89ef\">
+    <meta name=\"msapplication-TileImage\" content=\"images/favicons/mstile-144x144.png\">
+    <meta name=\"theme-color\" content=\"#5670d4\">
+    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"/>
+    <script>(function(w){var dpr=((w.devicePixelRatio===undefined)?1:w.devicePixelRatio);if(!!w.navigator.standalone){var r=new XMLHttpRequest();r.open('GET','/retinaimages.php?devicePixelRatio='+dpr,false);r.send()}else{document.cookie='devicePixelRatio='+dpr+'; path=/'}})(window)</script>
+    <noscript><style id=\"devicePixelRatio\" media=\"only screen and (-moz-min-device-pixel-ratio: 2), only screen and (-o-min-device-pixel-ratio: 2/1), only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min-device-pixel-ratio: 2)\">html{background-image:url(\"/retinaimages.php?devicePixelRatio=2\")}</style></noscript>
+    <SCRIPT language=\"JavaScript1.2\" src=\"main.js\" type=\"text/javascript\"></SCRIPT>
+    <link href=\"bootstrap/css/bootstrap.css\" rel=\"stylesheet\">
+    <link href=\"bootstrap/css/bootstrap-responsive.css\" rel=\"stylesheet\">
+    <link href=\"bootstrap/css/datepicker.css\" rel=\"stylesheet\">
+    <link href=\"bootstrap/css/bootstrap-timepicker.min.css\" rel=\"stylesheet\">
+    <link href=\"bootstrap/css/animate.css\" rel=\"stylesheet\">
+    <link rel=\"stylesheet\" type=\"text/css\" href=\"bootstrap/css/daterangepicker-bs2.css\" />
     <link href=\"bootstrap/css/picol.css\" rel=\"stylesheet\">
-  <link rel=\"stylesheet\" type=\"text/css\" href=\"%s/style.css\">
-",$CDRTool['tld']);
+    <link rel=\"stylesheet\" type=\"text/css\" href=\"%s/style.css\">
+    ",
+    $CDRTool['tld']
+);
 
 if (isset($refreshURL)) {
-    if (!$refreshTime) $refreshTime=0;
-    printf ("<meta http-equiv='Refresh' content='%s; URL=%s'>",$refreshTime,$refreshURL);
+    if (!$refreshTime) {
+        $refreshTime=0;
+    }
+    printf("<meta http-equiv='Refresh' content='%s; URL=%s'>", $refreshTime, $refreshURL);
 }
-
-printf ("</HEAD>
-<body data-offset=\"50\" data-spy=\"scroll\" background=\"images/gradient_texture.png\" >
-");
 ?>
-
+</head>
+<body data-offset="50" data-spy="scroll" background="images/gradient_texture.png">
     <script src="bootstrap/js-used/jquery.js"></script>
     <script src="bootstrap/js-used/bootstrap-transition.js"></script>
     <script src="bootstrap/js-used/bootstrap-scrollspy.js"></script>
@@ -73,26 +76,25 @@ printf ("</HEAD>
     <script src="library/d3/d3.min.js" charset="utf-8"></script>
     <script src="library/flotr2/flotr2.js"></script>
     <script src='library/svg/svg.js'></script>
-<script src='library/svg/svg.easing.min.js'></script>
-<script type="text/javascript" src="bootstrap/js-used/moment.min.js"></script>
-<script type="text/javascript" src="bootstrap/js-used/daterangepicker.js"></script>
+    <script src='library/svg/svg.easing.min.js'></script>
+    <script type="text/javascript" src="bootstrap/js-used/moment.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js-used/daterangepicker.js"></script>
     <script src="bootstrap/js-used/application.js"></script>
 
-<DIV id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100"></DIV>
-<SCRIPT language="JavaScript1.2" src="style.js" type="text/javascript"></SCRIPT>
-<SCRIPT>
-    function toggleVisibility(rowid) {
-        if (document.getElementById) {
-            row = document.getElementById(rowid);
-            if (row.style.display == "table-row") {
-                row.style.display = "none";
+    <div id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100"></div>
+    <script language="JavaScript1.2" src="style.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function toggleVisibility(rowid) {
+            if (document.getElementById) {
+                row = document.getElementById(rowid);
+                if (row.style.display == "table-row") {
+                    row.style.display = "none";
+                } else {
+                    row.style.display = "table-row";
+                }
+                return false;
             } else {
-                row.style.display = "table-row";
+                return true;
             }
-            return false;
-        } else {
-            return true;
         }
-    }
-
-</SCRIPT>
+</script>
