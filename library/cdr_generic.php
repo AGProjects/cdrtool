@@ -2298,7 +2298,7 @@ class CDR {
             }
 
             $query1 = sprintf("update %s set %s where %s = '%s'",addslashes($table),$query,addslashes($this->idField),addslashes($this->id));
-            dprint($query1);
+            dprint_sql($query1);
 
             #TODO remove me, I am used to temporary sync mysql data with mongo data
             if ($this->CDRS->mongo_table) {
