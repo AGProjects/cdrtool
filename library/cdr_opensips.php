@@ -5280,18 +5280,20 @@ class SIP_trace {
     }
 }
 
-class Media_trace {
-    var $enableThor  = false;
-    var $table       = 'media_sessions';
+class Media_trace
+{
+    public $enableThor  = false;
+    public $table       = 'media_sessions';
 
-    function Media_trace ($cdr_source) {
+    function Media_trace($cdr_source)
+    {
         global $DATASOURCES;
 
         $this->cdr_source = $cdr_source;
         $this->cdrtool  = new DB_CDRTool();
 
         if (!is_array($DATASOURCES[$this->cdr_source])) {
-            $log=sprintf("Error: datasource '%s' is not defined",$this->cdr_source);
+            $log = sprintf("Error: datasource '%s' is not defined", $this->cdr_source);
             print $log;
             return 0;
         }
@@ -5304,7 +5306,7 @@ class Media_trace {
             require("/etc/cdrtool/ngnpro_engines.inc");
             require_once("ngnpro_soap_library.php");
 
-            if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
+            if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 
                 $this->SOAPlogin = array(
@@ -5320,15 +5322,13 @@ class Media_trace {
                 // Instantiate the SOAP client
                 $this->soapclient = new WebService_NGNPro_SipPort($this->SOAPurl);
 
-                $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT,        5);
+                $this->soapclient->setOpt('curl', CURLOPT_TIMEOUT, 5);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
-
             } else {
                 print "Error: soapEngineID not defined in datasource $this->cdr_source";
                 return false;
             }
-
         } else {
             if ($DATASOURCES[$this->cdr_source]['table']) {
                 $this->table = $DATASOURCES[$this->cdr_source]['table'];
@@ -5338,18 +5338,25 @@ class Media_trace {
             if (class_exists($db_class)) {
                 $this->db                = new $db_class;
             } else {
-                printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>",$db_class,$this->cdr_source);
+                printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>", $db_class, $this->cdr_source);
                 return false;
             }
         }
     }
 
-    function getTrace ($proxyIP,$callid,$fromtag,$totag) {
+    private function getTrace($proxyIP, $callid, $fromtag, $totag)
+    {
 
         if ($this->enableThor) {
             // get trace using soap request
             if (!$proxyIP || !$callid || !$fromtag) {
-                print "<p><font color=red>Error: proxyIP or callid or fromtag are not defined</font>";
+                echo "
+                    <div style='display: flex; align-items: center; justify-content: center;'>
+                        <div class='span10' style='padding-top:40px;'>
+                            <p class='alert alert-danger'><strong>Error</strong>: proxyIP or callid or fromtag are not defined</p>
+                        </div>
+                    </div>
+                ";
                 return false;
             }
 
@@ -5358,33 +5365,40 @@ class Media_trace {
                 return false;
             }
 
-            $filter=array('nodeIp'  => $proxyIP,
-                          'callId'  => $callid,
-                          'fromTag' => $fromtag,
-                          'toTag'   => $totag
-                          );
+            $filter = array(
+                'nodeIp'  => $proxyIP,
+                'callId'  => $callid,
+                'fromTag' => $fromtag,
+                'toTag'   => $totag
+            );
 
             $this->soapclient->addHeader($this->SoapAuth);
 
-            $result     = $this->soapclient->getMediaTrace($filter);
+            $result = $this->soapclient->getMediaTrace($filter);
 
-            if (PEAR::isError($result)) {
+            if ((new PEAR)->isError($result)) {
                 $error_msg   = $result->getMessage();
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
 
                 if ($error_fault->detail->exception->errorcode != 1060) {
-                    printf("<font color=red>Error from %s: %s (%s)</font>",
-                    $this->SOAPurl,
-                    $error_fault->detail->exception->errorstring,
-                    $error_fault->detail->exception->errorcode
+                    printf(
+                        "
+                        <div style='display: flex; align-items: center; justify-content: center;'>
+                            <div class='span10' style='padding-top:40px;'>
+                                <div class='alert alert-danger'><h4>Error from %s</h4><br/>%s (%s)</div>
+                            </div>
+                        </div>
+                        ",
+                        $this->SOAPurl,
+                        $error_fault->detail->exception->errorstring,
+                        $error_fault->detail->exception->errorcode
                     );
                 }
                 return false;
             }
 
             $this->info = json_decode($result);
-
         } else {
             if (!is_object($this->db)) {
                 print "<p><font color=red>Error: no database connection defined</font>";
@@ -5392,15 +5406,21 @@ class Media_trace {
             }
 
             // get trace from SQL
-            $query=sprintf("select info from %s where call_id = '%s' and from_tag = '%s' and to_tag= '%s'",
-            addslashes($this->table),
-            addslashes($callid),
-            addslashes($fromtag),
-            addslashes($totag)
+            $query = sprintf(
+                "select info from %s where call_id = '%s' and from_tag = '%s' and to_tag= '%s'",
+                addslashes($this->table),
+                addslashes($callid),
+                addslashes($fromtag),
+                addslashes($totag)
             );
 
             if (!$this->db->query($query)) {
-                printf ("<p><font color=red>Database error for query %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
+                printf(
+                    "<p><font color=red>Database error for query %s: %s (%s)</font>",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 return false;
             }
 
@@ -5411,7 +5431,8 @@ class Media_trace {
         }
     }
 
-    function show($proxyIP,$callid,$fromtag,$totag) {
+    public function show($proxyIP, $callid, $fromtag, $totag)
+    {
 
         if ($_SERVER['HTTPS'] == "on") {
             $protocolURL = "https://";
@@ -5419,24 +5440,32 @@ class Media_trace {
             $protocolURL = "http://";
         }
 
-        $this->getTrace($proxyIP,$callid,$fromtag,$totag);
-        print "<div class=container-fluid'><div id=trace class='main'>";
+        $this->getTrace($proxyIP, $callid, $fromtag, $totag);
 
         if (!is_object($this->info)) {
-            print "<p>No information available.";
+            echo "
+                <div style='display: flex; align-items: center; justify-content: center;'>
+                    <div class='span10' style='padding-top:40px;'>
+                        <div class='alert'>No information available</div>
+                    </div>
+                </div>
+            ";
             return false;
         }
 
         if (!count($this->info->streams)) {
-            print "<p>
-            No RTP media streams have been established";
+            echo "
+                <div style='display: flex; align-items: center; justify-content: center;'>
+                    <div class='span10' style='padding-top:40px;'>
+                        <div class='alert alert-info'>No RTP media streams have been established</div>
+                    </div>
+                </div>
+            ";
             return;
         }
 
-        print "
-        <h1 class=page-header>CDRTool Media Trace
-        <small>Media Session $callid</small></h1>
-        ";
+        print "<div class='container-fluid'><div id=trace class='main'>";
+        print "<h1 class=page-header>CDRTool Media Trace<br/><small>Session: $callid</small></h1>";
 
         foreach (array_values($this->info->streams) as $_val) {
             $_diff=$_val->end_time-$_val->timeout_wait;
@@ -5449,9 +5478,9 @@ class Media_trace {
         print "<h2>Media Information</h2>";
 
         print "<table border=0>";
-        printf ("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>",$this->info->duration);
-        list($relay_ip,$relay_port)=explode(":",$this->info->streams[0]->caller_local);
-        printf ("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>",$relay_ip);
+        printf("<tr><td class=border>Call duration</td><td class=border>%s</td></tr>", $this->info->duration);
+        list($relay_ip, $relay_port)=explode(":", $this->info->streams[0]->caller_local);
+        printf("<tr><td class=border>Media relay</td><td class=border>%s</td></tr>", $relay_ip);
         print "</table>";
 
         print "<h2>Media Streams</h2>";
@@ -5460,59 +5489,58 @@ class Media_trace {
         print "<thead><tr><th></th>";
 
         foreach (array_values($media_types) as $_type) {
-            printf ("<th>%s</th>",ucfirst($_type));
+            printf("<th>%s</th>", ucfirst($_type));
         }
 
         print "</tr></thead>";
 
-        foreach ($this->info->streams[0]  as $_val => $_value) {
-            printf ("<tr><td class=border>%s</td>",ucfirst(preg_replace("/_/"," ",$_val)));
+        foreach ($this->info->streams[0] as $_val => $_value) {
+            printf("<tr><td class=border>%s</td>", ucfirst(preg_replace("/_/", " ", $_val)));
             $j=0;
             while ($j < count($media_types)) {
-                printf ("<td class=border>%s</td>",$this->info->streams[$j]->$_val);
+                printf("<td class=border>%s</td>", $this->info->streams[$j]->$_val);
                 $j++;
             }
 
-            printf ("</tr>\n");
+            printf("</tr>\n");
         }
 
         print "</table>";
 
         print "<br><h2>Stream Succession</h2>";
 
-        $w_legend_bar=500;
-        $w_text=30;
-        $stamps=array_keys($seen_stamp);
+        $w_legend_bar = 500;
+        $w_text = 30;
+        $stamps = array_keys($seen_stamp);
         sort($stamps);
 
-        $w_table=$w_legend_bar+$w_text;
+        $w_table = $w_legend_bar + $w_text;
 
         print "<table border=0 cellpadding=1 cellspacing=1 width=$w_table>";
 
-        $j=0;
+        $j = 0;
 
-        $_index=0;
+        $_index = 0;
         foreach (array_values($this->info->streams) as $_val) {
+            if ($_val->status == 'unselected ice candidate') {
+                continue;
+            }
 
-            if ($_val->status == 'unselected ice candidate') continue;
-
-            $_index=$_index+$_val->start_time;
+            $_index = $_index+$_val->start_time;
 
             $_duration   = $_val->end_time-$_val->start_time;
             $_timeout    = $_val->timeout_wait;
 
-            $duration_print= $_duration;
+            $duration_print = $_duration;
 
             if ($_val->status == 'conntrack timeout') {
                 $w_duration   = intval(($_duration-$_timeout)*$w_legend_bar/$this->info->duration);
                 $w_timeout    = intval($_timeout*$w_legend_bar/$this->info->duration);
                 $duration_print = $_duration - $_timeout;
-
-            } else if ($_val->status == 'no-traffic timeout') {
+            } elseif ($_val->status == 'no-traffic timeout') {
                 $w_duration   = intval($_duration*$w_legend_bar/$this->info->duration);
                 $w_timeout    = intval($_timeout*$w_legend_bar/$this->info->duration);
-
-            } else if ($_val->status == 'closed' ) {
+            } elseif ($_val->status == 'closed') {
                 $w_duration   = intval($_duration * $w_legend_bar / $this->info->duration);
                 $w_timeout    = 0;
             }
@@ -5522,7 +5550,7 @@ class Media_trace {
             $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
             $w_duration_p = ($w_legend_bar/$w_duration) * 100;
             $w_timeout = 0;
-            if ($w_timeout > 0 ) {
+            if ($w_timeout > 0) {
                 $w_timeout_p  = ($w_legend_bar/$w_timeout) * 100;
             }
             $w_start_p = 0;
@@ -5531,10 +5559,8 @@ class Media_trace {
             }
             //printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
 
-            if ($_val->caller_packets != '0' && $_val->callee_packets != '0'){
-
+            if ($_val->caller_packets != '0' && $_val->callee_packets != '0') {
                 print "<tr><td width=$w_text class=border>$_val->media_type</td>";
-
                 print "<td width=$w_legend_bar>\n";
                 //print "<table width=100% border=0 cellpadding=0 cellspacing=0><tr>\n";
                 print "<div class='progress progress-striped'>";
@@ -5551,7 +5577,7 @@ class Media_trace {
                 //print "</table>\n";
 
                 print "</td></tr>";
-            } elseif ( $_val->status == 'unselected ICE candidate')  {
+            } elseif ($_val->status == 'unselected ICE candidate') {
                 print "<tr><td>ICE session</td></tr>";
             } else {
                 print "<tr><td>No stream data found</td></tr>";
@@ -5570,12 +5596,14 @@ class Media_trace {
 }
 
 include_once("phone_images.php");
-function getImageForUserAgent($msg) {
+
+function getImageForUserAgent($msg)
+{
     global $userAgentImages;
 
-    $msg_lines=explode("\n",$msg);
-    foreach($msg_lines as $line) {
-        $els=explode(":",$line);
+    $msg_lines = explode("\n", $msg);
+    foreach ($msg_lines as $line) {
+        $els = explode(":", $line);
         if (strtolower($els[0]) == 'user-agent' || strtolower($els[0]) == 'server') {
             foreach ($userAgentImages as $agentRegexp => $image) {
                 if (preg_match("/^(user-agent|server):.*$agentRegexp/i", $line)) {
@@ -5583,15 +5611,15 @@ function getImageForUserAgent($msg) {
                 }
             }
         }
-
-
     }
     return "unknown.png";
 }
 
-function isThorNode($ip,$sip_proxy) {
-
-    if (!$ip || !$sip_proxy) return false;
+function isThorNode($ip, $sip_proxy)
+{
+    if (!$ip || !$sip_proxy) {
+        return false;
+    }
 
     $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
 
@@ -5599,10 +5627,10 @@ function isThorNode($ip,$sip_proxy) {
         return false;
     }
 
-    $request=sprintf("is_online %s as sip_proxy",$ip);
+    $request=sprintf("is_online %s as sip_proxy", $ip);
 
-    if (fputs($socket,"$request\r\n") !== false) {
-        $ret = trim(fgets($socket,4096));
+    if (fputs($socket, "$request\r\n") !== false) {
+        $ret = trim(fgets($socket, 4096));
         fclose($socket);
     } else {
         fclose($socket);
