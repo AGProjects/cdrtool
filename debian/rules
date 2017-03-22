@@ -10,6 +10,8 @@ configure-stamp:
 	dh_testdir
 	touch configure-stamp
 
+build-arch: build-stamp
+build-indep: build-stamp
 build: build-stamp
 
 build-stamp: configure-stamp
@@ -19,13 +21,13 @@ build-stamp: configure-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	dh_clean 
+	dh_clean
 	rm -f build-stamp configure-stamp
 
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
 	cp -a doc debian/cdrtool/usr/share/doc/cdrtool/
 	cp -a setup/*sample debian/cdrtool/etc/cdrtool/
@@ -50,15 +52,16 @@ install: build
 	cp debian/changelog debian/cdrtool/var/www/CDRTool/doc/
 	cp -a bootstrap debian/cdrtool/var/www/CDRTool/
 
-# Build architecture-independent files here.
-binary-indep: build install
-# We have nothing to do by default.
-
 # Build architecture-dependent files here.
 binary-arch: build install
+# We have nothing to do by default.
+
+# Build architecture-independent files here.
+binary-indep: build install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
+	dh_lintian
 #	dh_installdocs
 	dh_installexamples
 #	dh_install
