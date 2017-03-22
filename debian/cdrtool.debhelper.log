@@ -1,5 +1,7 @@
+dh_prep
 dh_installdirs
 dh_installchangelogs
+dh_lintian
 dh_installexamples
 dh_installinit
 dh_installcron
@@ -11,4 +13,5 @@ dh_installdeb
 dh_shlibdeps
 dh_gencontrol
 dh_md5sums
+dh_builddeb
 dh_builddeb
