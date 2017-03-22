@@ -17,6 +17,8 @@ NAME=cdrtool
 DESC=cdrtool
 RUN_ratingEngine=no
 
+. /lib/lsb/init-functions
+
 test -x $DAEMON || exit 0
 
 # Include cdrtool defaults if available
