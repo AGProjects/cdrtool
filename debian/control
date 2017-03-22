@@ -3,12 +3,28 @@ Section: web
 Priority: optional
 Maintainer: Adrian Georgescu <ag@ag-projects.com>
 Uploaders: Tijmen de Mes <tijmen@ag-projects.com>
-Build-Depends-Indep: debhelper (>= 8)
-Standards-Version: 3.9.1
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: http://cdrtool.ag-projects.com
 
 Package: cdrtool
 Architecture: all
-Depends: ${misc:Depends}, debconf (>= 0.5), apache2 | httpd, libapache2-mod-php5, php5, php5-cli, php5-mysql, php5-curl, php5-gd, php-pear, php-soap, mrtg, smarty, php5-geoip, geoip-database
+Depends: ${misc:Depends},
+         debconf (>= 1.5),
+         apache2 | httpd,
+         libapache2-mod-php | libapache2-mod-php5,
+         php | php5,
+         php-cli | php5-cli,
+         php-mysql | php5-mysql,
+         php-curl | php5-curl,
+         php-gd | php5-gd,
+         php-pear,
+         php-net-socket,
+         php-net-url2,
+         mrtg,
+         smarty,
+         php-geoip | php5-geoip,
+         geoip-database
 Suggests:
 Description:  CDR mediation and rating engine for OpenSIPS
  CDRTool provides a CDR mediation and rating engine for Call Details Records
