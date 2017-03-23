@@ -1,0 +1,13 @@
+[Unit]
+Description=CDR mediation and rating engine for Call Details Records.
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/var/run/ratingEngine.pid
+ExecStart=/var/www/CDRTool/scripts/ratingEngine.php
+ExecReload=/var/www/CDRTool/scripts/reloadRatingTables.php
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
