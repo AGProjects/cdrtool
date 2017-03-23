@@ -803,45 +803,41 @@ class CDRS {
         print "
         <tr>
             <td valign=middle align=left>
-            <b>Start Time</b>
+                <b>Start Time</b>
             </td>
-            <td>
+            <td><div class='input-append date'>
             ";
-            print "Date: ";
-            $f->show_element("begin_year","");
-            print "<div class=\"input-prepend\"><div class=\"input-prepend input-append\"><span class=add-on>-</span>";
-            $f->show_element("begin_month","");
-            print "<span class=add-on>-<span></div>";
-            $f->show_element("begin_day","");
-            print "</div> Time: ";
-            $f->show_element("begin_hour","");
-            print ":";
-            $f->show_element("begin_min","");
-            print "
+
+            $f->show_element("begin_date","");
+            print "<span class=\"add-on\">
+                <i class=\"icon-calendar\"></i>
+                </span></div> ";
+
+            print "Time: ";
+	        print "<div class=\"input-append bootstrap-timepicker\">";
+            $f->show_element("begin_time","");
+            print "<span class=\"add-on\"><i class=\"icon-time\"></i></span>
+        	</div>
             </td>
-        </tr>
-        <tr>
-        </tr>
-        <tr>
+            </tr>
+            <tr>
             <td valign=middle align=left>
             <b>Stop Time</b>
             </td>
-            <td>
-             ";
-             print "Date: ";
-             $f->show_element("end_year","");
-            print "<div class=\"input-prepend\"><div class=\"input-prepend input-append\"><span class=add-on>-</span>";
-             $f->show_element("end_month","");
-            print "<span class=add-on>-<span></div>";
-             $f->show_element("end_day","");
-             print "</div> Time: ";
-             $f->show_element("end_hour","");
-             print ":";
-             $f->show_element("end_min","");
-             print "
+            <td><div class='input-append date'>
+            ";
+
+            $f->show_element("end_date","");
+            print "<span class=\"add-on\">
+                <i class=\"icon-calendar\"></i>
+                </span></div> ";
+
+            print "Time: ";
+            print "<div class=\"input-append bootstrap-timepicker\">";
+            $f->show_element("end_time","");
+            print "<span class=\"add-on\"><i class=\"icon-time\"></i></span>
+                </div>
              </td>
-        </tr>
-        <tr>
         </tr>
         ";
     }
