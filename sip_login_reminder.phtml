@@ -1,7 +1,7 @@
 <?php
 
 /*
-    Copyright (c) 2013 AG Projects
+    Copyright (c) 2017 AG Projects
     http://ag-projects.com
 
 */
@@ -21,13 +21,13 @@ if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
     require("/etc/cdrtool/ngnpro_engines.inc");
 } else {
     page_close();
-    printf ("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");
+    echo "Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again";
     exit;
 }
 
-$login_credentials=array('login_type' => 'admin');
+$login_credentials = array('login_type' => 'admin');
 
-$SoapEngine = new SoapEngine('sip_accounts',$soapEngines,$login_credentials);
+$SoapEngine = new SoapEngine('sip_accounts', $soapEngines, $login_credentials);
 $_class     = $SoapEngine->records_class;
 $RECORDS    = new $_class($SoapEngine);
 
@@ -40,37 +40,39 @@ if ($_REQUEST['id']){
     $query="delete from memcache where `key` LIKE 'email_%' and NOW() >= `expire`";
 
     if (!$db->query($query)) {
-        $log=sprintf ("Database error for query %s: %s (%s)\n",$query,$db->Error,$db->Errno);
+        $log = sprintf("Database error for query %s: %s (%s)\n", $query, $db->Error, $db->Errno);
         syslog(LOG_NOTICE,$log);
     } else {
-        $log=sprintf ("Purged %d records from memcache\n",$db->affected_rows());
+        $log = sprintf("Purged %d records from memcache\n", $db->affected_rows());
         syslog(LOG_NOTICE,$log);
     }
 
-    $query=sprintf("select * from memcache where `key`='email_%s'",
-          addslashes($id));
+    $query = sprintf(
+        "select * from memcache where `key`='email_%s'",
+        addslashes($id)
+    );
     if (!$db->query($query)) return false;
 
     if ($db->num_rows()) {
         $db->next_record();
-        $account = json_decode($db->f('value'),true);
+        $account = json_decode($db->f('value'), true);
 
         if (!($_REQUEST['sip_password'] || $_REQUEST['web_password'])){
-            $RECORDS->showPasswordReminderUpdateFormEncrypted($_REQUEST['id'],$account['sip_account']);
+            $RECORDS->showPasswordReminderUpdateFormEncrypted($_REQUEST['id'], $account['sip_account']);
         } else {
-            $SipSettings = new SipSettings($account['sip_account'],$login_credentials,$soapEngines);
+            $SipSettings = new SipSettings($account['sip_account'], $login_credentials, $soapEngines);
             dprint_r($SipSettings->result);
 
             if($_REQUEST['sip_password']){
                 //print "$SipSettings->password";
                 if ($SipSettings->store_clear_text_passwords) {
-                    $SipSettings->result->password=$_REQUEST['sip_password'];
+                    $SipSettings->result->password = $_REQUEST['sip_password'];
                 } else {
-                    $md1=strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$sip_password;
+                    $md1 = strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$sip_password;
                     dprint($md1);
                     dprint(md5($md1));
-                    $md2=strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['sip_password'];
-                    $SipSettings->result->password=md5($md1).':'.md5($md2);
+                    $md2 = strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['sip_password'];
+                    $SipSettings->result->password = md5($md1).':'.md5($md2);
                 }
 
             }
@@ -78,29 +80,31 @@ if ($_REQUEST['id']){
             if($_REQUEST['web_password']){
                 //dprint_r($SipSettings->result->properties);
                 if ($SipSettings->store_clear_text_passwords) {
-                    $web_password_new=$_REQUEST['web_password'];
+                    $web_password_new = $_REQUEST['web_password'];
                 } else {
-                    $md1=strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
-                    $md2=strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
-                    $web_password_new=md5($md1).':'.md5($md2);
+                    $md1 = strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
+                    $md2 = strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['web_password'];
+                    $web_password_new = md5($md1).':'.md5($md2);
                 }
 
                 foreach (array_keys($SipSettings->result->properties) as $_key) {
-                   $_prop=$SipSettings->result->properties[$_key];
+                   $_prop = $SipSettings->result->properties[$_key];
                     if ($_prop->name == 'web_password') {
-                        $newProperties[]=array( 'name'=> 'web_password',
-                                                'value' => $web_password_new);
-                        $found=1;
+                        $newProperties[] = array(
+                            'name'=> 'web_password',
+                            'value' => $web_password_new
+                        );
+                        $found = 1;
                     } else {
-                        $newProperties[]=$_prop;
+                        $newProperties[] = $_prop;
                     }
-
                 }
 
                 if (!$found) {
-                    $newProperties[]=array('name'  => 'web_password',
-                                           'value' => $web_password_new);
-
+                    $newProperties[] = array(
+                        'name'  => 'web_password',
+                        'value' => $web_password_new
+                    );
                 }
 
                 //if ($SipSettings->result->properties!=$newProperties) $this->somethingChanged=1;
@@ -112,7 +116,7 @@ if ($_REQUEST['id']){
 
             dprint_r($SipSettings->result);
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
-            $result     = $SipSettings->SipPort->updateAccount($SipSettings->result);
+            $result = $SipSettings->SipPort->updateAccount($SipSettings->result);
             dprint_r($SipSettings->result);
             print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
             print _("Update passwords");
@@ -123,38 +127,39 @@ if ($_REQUEST['id']){
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("
-                    <div class=\"alert alert-error\"><strong>");
-                printf ("Error (SipPort):</strong><br/> %s (%s): %s</div></div>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                echo "<div class=\"alert alert-error\"><strong>";
+                printf(
+                    "Error (SipPort):</strong><br/> %s (%s): %s</div></div>",
+                    $error_msg,
+                    $error_fault->detail->exception->errorcode,
+                    $error_fault->detail->exception->errorstring
+                );
                 return false;
             } else {
-                printf ("
-                    <div class=\"alert alert-success\"><strong>");
+                echo "<div class=\"alert alert-success\"><strong>";
                 print _("Success");
                 print "</strong><br /> ";
                 print _("The password(s) have been updated");
                 print "</div></div>";
 
-                $query="delete from memcache where `key` LIKE 'email_$id'";
+                $query = "delete from memcache where `key` LIKE 'email_$id'";
 
                 if (!$db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)\n",$query,$db->Error,$db->Errno);
+                    $log = sprintf("Database error for query %s: %s (%s)\n", $query, $db->Error, $db->Errno);
                     syslog(LOG_NOTICE,$log);
                 }
-
                 flush();
             }
 
             unset($SipSettings);
         }
     } else {
-        print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
+        echo "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
         print _("Update passwords");
 
         print "</h2></div><div class=row-fluid>";
 
-        printf ("
-            <div class=\"alert alert-error\"><strong>");
+        echo "<div class=\"alert alert-error\"><strong>";
         print _("Error");
         print "</strong><br /> ";
         print _("ID not found in the database");
@@ -179,9 +184,9 @@ if ($_REQUEST['id']){
     if ($_REQUEST['email_filter'] || $_REQUEST['sip_filter']) {
         if ($count=count($accounts)) {
             if ($count == "1") {
-                printf ("<div class='alert alert-success'><p>Found a SIP account having email address set to <strong>'%s'</strong>:</p>",trim($_REQUEST['email_filter']));
+                printf("<div class='alert alert-success'><p>Found a SIP account having email address set to <strong>'%s'</strong>:</p>", trim($_REQUEST['email_filter']));
             } else {
-                printf ("<div class='alert alert-success'><p>Found multiple SIP accounts having email address set to <strong>'%s'</strong>:</p>",trim($_REQUEST['email_filter']));
+                printf("<div class='alert alert-success'><p>Found multiple SIP accounts having email address set to <strong>'%s'</strong>:</p>", trim($_REQUEST['email_filter']));
             }
             //printf ("<p>Found a SIP account having email address set to '%s'",trim($_REQUEST['email_filter']));
             print "<script type=\"text/javascript\">
@@ -193,7 +198,7 @@ if ($_REQUEST['id']){
             print "<ul id='list'class='hide'>";
             print "<li>";
             foreach ($accounts as $_account) {
-                $account=$_account['username'].'@'.$_account['domain'];
+                $account = $_account['username'].'@'.$_account['domain'];
                 //if ($account == $_REQUEST['sip_filter']) {
                     $SipSettings = new SipSettings($account,$login_credentials,$soapEngines);
                     $success = $success + $SipSettings->sendEmail(true);
@@ -226,9 +231,6 @@ if ($_REQUEST['id']){
     print "<p class='clearfix'><a href=sip_settings.phtml><u>Back</u></a> to login page";
 }
 
-print "
-</body>
-</html>
-";
+echo "</body></html>";
 
 ?>
