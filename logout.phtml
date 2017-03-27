@@ -1,17 +1,20 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
-page_open(array(
-	"sess" => "CDRTool_Session", 
-	"auth" => "CDRTool_Auth",
-	"perm" => "CDRTool_Perm"));
+page_open(
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
-$loginname=$auth->auth["uname"];
+$loginname = $auth->auth["uname"];
 
 $auth->logout();
 $sess->delete();
 
-$title="Logout";
+$title = "Logout";
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
 } else {

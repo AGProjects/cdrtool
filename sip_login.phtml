@@ -1,4 +1,4 @@
-<?
+<?php
 $title="Login";
 include("header.phtml");
 ?>
@@ -26,14 +26,14 @@ include("header.phtml");
   }
 
 </script>
-<?
+<?php
 print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
 print _("Login");
 print "</h2></div>";
 ?>
 
 <!-- failed login code -->
-<?  
+<?php
 if ($username) {
     print "<div class='alert alert-error'>";
     print _("Either your SIP account or password are invalid");
@@ -47,7 +47,7 @@ if ($username) {
 
     <form class='form-horizontal' action="<?php print $this->url() ?>" method=post name=login>
 
-<?
+<?php
 print "<div class=control-group>
         <label class='control-label'>";
 print _("SIP address");
@@ -131,7 +131,7 @@ $sess->hidden_session(); ?>
                 <input class='btn btn-primary' onClick="doChallengeResponse(); return false;" type="submit" name="submitbtn" value="Login now">
             </div>
 
-<?
+<?php
 ?>
 
 <!-- Set up the form with the challenge value and an empty reply value -->
