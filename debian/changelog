@@ -1,3 +1,31 @@
+cdrtool (9.5.0) unstable; urgency=medium
+
+  * Added mysqli database backend
+  * Reworked Debian packaging
+  * Switched to Net/URL2
+  * Update PEAR to use new syntax (prevents warnings)
+  * Fixed most PHP warning messages
+  * Cleaned code
+  * Formatted code
+  * Added systemd service
+
+  [ NGNPro Client ]
+
+  * Prevent adding DNS CNAME which is equal to zone name
+  * Made usename field read only
+
+  [ Web Interface ]
+
+  * Fixed search in logging screen
+  * Fixed updating subscriber ACLs
+  * Updated trace links in sip settings to use a new window for each trace
+  * Updated title in sip settings page
+  * Updated DNS error messages
+  * Added SQL debug printer
+  * Updated SIP Trace to look better
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Wed, 22 Mar 2017 14:52:39 +0100
+
 cdrtool (9.4.6) unstable; urgency=low
 
   [ Rating ]
