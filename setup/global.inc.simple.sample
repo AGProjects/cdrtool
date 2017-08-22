@@ -1,23 +1,25 @@
-<?
+<?php
 
-# Copy this file to /etc/cdrtool/global.inc
+// Copy this file to /etc/cdrtool/global.inc
 
-###########################################
-# System and web paths
-
+/**
+ * System and web paths
+ */
 $CDRTool['tld']    = "/CDRTool";
-$CDRTool['Path']   = "/var/www/CDRTool";
+$CDRTool['Path']   = "/public/www/CDRTool";
 $_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
 include($_PHPLIB["libdir"] . "prepend.php3");
 
-###########################################
-# PHP Error reporting
+/**
+ * PHP Error reporting
+ */
 $errorReporting = (E_ALL & ~E_NOTICE);
-$errorReporting = 1; 	// comment this out to enable PHP warnings
+$errorReporting = 1;                    // comment this out to enable PHP warnings
 error_reporting($errorReporting);
 
-###########################################
-# Service provider information 
+/**
+ * Service provider information
+ */
 $CDRTool['provider']['name']                  = "Provider name";
 $CDRTool['provider']['service']               = "SIP service";
 $CDRTool['provider']['timezone']              = "Europe/Amsterdam";
@@ -26,126 +28,147 @@ $CDRTool['provider']['toEmail']               = "support@example.com";
 $CDRTool['provider']['sampleLoginSubscriber'] = "number@example.com";
 $CDRTool['provider']['sampleLoginDomain']     = "example.com";
 
-###########################################
-# Rating engine settings
-$RatingEngine=array("socketIP"               => "IP.address",
-                    "socketPort"             => "9024",
-                    "cdr_source"             => "opensips_radius",
-                    "allow"                  => array ('10.')
-                    );
-###########################################
-# Normalize engine settings
-$CDRTool['normalize']['defaultCountryCode']      = "31";
+/**
+ * Rating engine settings
+ */
+$RatingEngine = array(
+    "socketIP"               => "IP.address",
+    "socketPort"             => "9024",
+    "cdr_source"             => "opensips_radius",
+    "allow"                  => array ('10.')
+);
 
-###########################################
-# Where to retrieve the reseller settings from
+/**
+ * Normalize engine settings
+ */
+$CDRTool['normalize']['defaultCountryCode'] = "31";
+
+/**
+ * Where to retrieve the reseller settings from
+ */
 $CDRTool['ngnpro_reseller_engine'] = 'sip';
 
-###########################################
-# Build graphical statistics for these domains:
-$CDRTool['statistics']['domains']=array("example.com");
+/**
+ * Build graphical statistics for these domains:
+ */
+$CDRTool['statistics']['domains'] = array("example.com");
 
-###########################################
-# Anti-fraud settings
-$UserQuota["default"]["cost"]     = 1000;
+/**
+ * Anti-fraud settings
+ */
+$UserQuota["default"]["cost"] = 1000;
 
-###########################################
-# CDRTool databases
-
-class DB_CDRTool extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "cdrtool";
-  var $User     = "cdradmin";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
+/**
+ * CDRTool databases
+ */
+class DB_CDRTool extends DB_Sql
+{
+    public $Host     = "sipdb";
+    public $Database = "cdrtool";
+    public $User     = "cdradmin";
+    public $Password = "PASSWORD";
+    public $Halt_On_Error ="yes";
 }
 
-class DB_Locker extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "cdrtool";
-  var $User     = "locker";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
+class DB_Locker extends DB_Sql
+{
+    public $Host     = "sipdb";
+    public $Database = "cdrtool";
+    public $User     = "locker";
+    public $Password = "PASSWORD";
+    public $Halt_On_Error ="yes";
 }
 
-class DB_radius extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "radius";
-  var $User     = "radius";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
+class DB_radius extends DB_Sql
+{
+    public $Host     = "sipdb";
+    public $Database = "radius";
+    public $User     = "radius";
+    public $Password = "PASSWORD";
+    public $Halt_On_Error ="yes";
 }
 
-class DB_opensips extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "opensips";
-  var $User     = "opensips";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
+class DB_opensips extends DB_Sql
+{
+    public $Host     = "sipdb";
+    public $Database = "opensips";
+    public $User     = "opensips";
+    public $Password = "PASSWORD";
+    public $Halt_On_Error ="yes";
 }
 
-class DB_mediaproxy extends DB_Sql {
-  var $Host     = "sipdb";
-  var $Database = "mediaproxy";
-  var $User     = "mediaproxy";
-  var $Password = "PASSWORD";
-  var $Halt_On_Error ="yes";
+class DB_mediaproxy extends DB_Sql
+{
+    public $Host     = "sipdb";
+    public $Database = "mediaproxy";
+    public $User     = "mediaproxy";
+    public $Password = "PASSWORD";
+    public $Halt_On_Error ="yes";
 }
 
 // Subscriber login
-class DomainAuthLocal extends OpenSIPS_DomainAuth {	// defined in phplib/local.inc
+class DomainAuthLocal extends OpenSIPS_DomainAuth       // defined in phplib/local.inc
+{
 }
 
-class PageLayoutLocal extends PageLayout {      // defined in phplib/local.inc
+class PageLayoutLocal extends PageLayout                // defined in phplib/local.inc
+{
 }
 
-###########################################
-# CDRTool datasources
-
-$DATASOURCES=array(
-"unknown"        => array("class"              => "CDRS_unknown"),
-"opensips_radius"=> array(
-                    "name"               => "OpenSIPS Proxy/Registrar",
-                    "class"              => "CDRS_opensips",
-                    "db_class"           => "DB_radius",
-                    "table"              => "radacct".date("Ym"),
-                    "normalizedField"    => "Normalized",
-                    "rating"             => "1",
-                    "db_subscribers"     => "DB_opensips",
-                    "db_registrar"       => "DB_opensips",
-                    "UserQuotaClass"     => "OpenSIPSQuota",
-                    "daily_quota"        => "10",
-                    "UserQuotaNotify"    => "1",
-                    "sipTrace"           => "sip_trace",
-                    "mediaTrace"         => "media_trace",
-                    "mediaDispatcher"    => "tls:10.0.0.1:25061"
-                    ),
-"asterisk_vm"  => array("name"            => "Voicemail server",
-                    "class"              => "CDRS_asterisk",
-                    "table"              => "asterisk_cdr",
-                    "db_class"           => "DB_radius",
-                    "rating"             => "0",
-                    "normalizedField"    => "Normalized",
-                    "purgeCDRsAfter"    => 180 // how many days to keep the CDRs
-                    ),
-"sip_trace"   => array(
-                    "name"               => "SIP trace",
-                    "db_class"           => "DB_opensips",
-                    "table"              => "sip_trace",
-                    "mediaTrace"         => "media_trace",
-                    "purgeRecordsAfter"  => "7",
-                    "invisible"          => 1 
-                    ),
-"media_trace"   =>array(
-                    "name"               => "Media trace",
-                    "db_class"           => "DB_mediaproxy",
-                    "invisible"          => 1 
-                    )
+/**
+ * CDRTool datasources
+ */
+$DATASOURCES = array(
+    "unknown"           => array(
+        "class"             => "CDRS_unknown"
+    ),
+    "opensips_radius"   => array(
+        "name"              => "OpenSIPS Proxy/Registrar",
+        "class"             => "CDRS_opensips",
+        "db_class"          => "DB_radius",
+        "table"             => "radacct".date("Ym"),
+        "normalizedField"   => "Normalized",
+        "rating"            => "1",
+        "db_subscribers"    => "DB_opensips",
+        "db_registrar"      => "DB_opensips",
+        "UserQuotaClass"    => "OpenSIPSQuota",
+        "daily_quota"       => "10",
+        "UserQuotaNotify"   => "1",
+        "sipTrace"          => "sip_trace",
+        "mediaTrace"        => "media_trace",
+        "mediaDispatcher"   => "tls:10.0.0.1:25061"
+    ),
+    "asterisk_vm"  => array(
+        "name"              => "Voicemail server",
+        "class"             => "CDRS_asterisk",
+        "table"             => "asterisk_cdr",
+        "db_class"          => "DB_radius",
+        "rating"            => "0",
+        "normalizedField"   => "Normalized",
+        "purgeCDRsAfter"    => 180                  // how many days to keep the CDRs
+    ),
+    "sip_trace"   => array(
+        "name"              => "SIP trace",
+        "db_class"          => "DB_opensips",
+        "table"             => "sip_trace",
+        "mediaTrace"        => "media_trace",
+        "purgeRecordsAfter" => "7",
+        "invisible"         => 1
+    ),
+    "media_trace"   =>array(
+        "name"              => "Media trace",
+        "db_class"          => "DB_mediaproxy",
+        "invisible"         => 1
+    )
 
 );
 
-###########################################
-# Load libraries from library/cdr_* 
-$CDRToolModules=array("opensips","asterisk");
+/**
+ * Load libraries from library/cdr_*
+ */
+$CDRToolModules = array(
+    "opensips",
+    "asterisk"
+);
 
 ?>
