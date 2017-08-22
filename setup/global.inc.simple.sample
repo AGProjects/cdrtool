@@ -6,7 +6,7 @@
  * System and web paths
  */
 $CDRTool['tld']    = "/CDRTool";
-$CDRTool['Path']   = "/public/www/CDRTool";
+$CDRTool['Path']   = "/var/www/CDRTool";
 $_PHPLIB['libdir'] = $CDRTool['Path']. "/phplib/";
 include($_PHPLIB["libdir"] . "prepend.php3");
 
