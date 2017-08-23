@@ -1,19 +1,22 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
-page_open(array("sess" => "SIP_Subscriber_Session",
-                    "auth" => "SIP_Subscriber_Auth")
-             );
+page_open(
+    array(
+        "sess" => "SIP_Subscriber_Session",
+        "auth" => "SIP_Subscriber_Auth"
+    )
+);
 
 
-$loginname=$auth->auth["uname"] ;
-$log=sprintf("SIP settings page: %s logged out from %s", $loginname, $_SERVER['REMOTE_ADDR']);
+$loginname = $auth->auth["uname"] ;
+$log = sprintf("SIP settings page: %s logged out from %s", $loginname, $_SERVER['REMOTE_ADDR']);
 syslog(LOG_NOTICE, $log);
 
 $auth->logout();
 $sess->delete();
 
-$title="Logout";
+$title = "Logout";
 include("sip_header.phtml");
 
 print "<h2>";
@@ -24,15 +27,16 @@ print "<p>";
 print _("You have been logged in as ");
 print "
 <b>$loginname</b>
-<p class=s>
+    <p class=s>
 ";
 print _("You have been logged out");
-print "
-<br>
-<br>
+print '</p>
+<br />
+<br />
 <p>
-<a href=sip_settings.phtml>Login again</a>
-";
+    <a href="sip_settings.phtml">Login again</a>
+</p>'
+;
 
 page_close();
 
