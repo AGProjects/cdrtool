@@ -1,4 +1,4 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
 // if ($_REQUEST['public']) {
@@ -46,25 +46,23 @@ $title = sprintf("CDRTool SIP trace for session %s", $callid);
 include("header.phtml");
 require("cdr_generic.php");
 
-if (!$authorize || in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
-
+if (!$authorize || in_array($cdr_source, $CDRTool['dataSourcesAllowed'])) {
     $sipTrace = new SIP_trace($cdr_source);
     if ($format == 'html') {
         $sipTrace->show($proxyIP, $callid, $fromtag, $totag);
     } elseif ($format == 'text') {
         $sipTrace->showText($proxyIP, $callid, $fromtag, $totag);
     }
-
 } else {
-    printf ("Error: Invalid datasource '%s' for user '%s'" ,$cdr_source,$auth->auth["uname"]);
+    printf("Error: Invalid datasource '%s' for user '%s'", $cdr_source, $auth->auth["uname"]);
 }
 
 print "
-</body>
+    </body>
 </html>
 ";
 
 if ($authorize=1) {
-	page_close();
+    page_close();
 }
 ?>
