@@ -2,13 +2,16 @@
 require("/etc/cdrtool/global.inc");
 
 page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 $perm->check("admin");
 
-$title="MySQL replication status";
+$title = "MySQL replication status";
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
@@ -23,11 +26,11 @@ require("mysql_replication.php");
 
 $ReplicationOverview = new ReplicationOverview($replicated_databases);
 $ReplicationOverview->showOverview();
-    
+
 $layout->showFooter();
 
 print "
-</body>
+    </body>
 </html>
 ";
 

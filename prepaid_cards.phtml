@@ -1,18 +1,21 @@
 <?php
 require("/etc/cdrtool/global.inc");
 
-page_open(array("sess" => "CDRTool_Session",
-                "auth" => "CDRTool_Auth",
-                "perm" => "CDRTool_Perm")
-          );
+page_open(
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 require("prepaid.php");
 
-$loginname=$auth->auth["uname"];
+$loginname = $auth->auth["uname"];
 
 $perm->check("rates");
 
-$title="Prepaid card generator";
+$title = "Prepaid card generator";
 
 $action   = $_REQUEST['action'];
 $batch    = $_REQUEST['batch'];
@@ -25,7 +28,7 @@ if ($action != "export") {
         include("header.phtml");
     }
     $layout = new pageLayoutLocal();
-	$layout->showTopMenu($title);
+    $layout->showTopMenu($title);
 } else {
     Header("Content-type: text/plain");
     Header("Content-Disposition: inline; filename=$batch.txt");
@@ -37,25 +40,24 @@ if ($action != "export") {
 $PrepaidCards = new PrepaidCards();
 
 if ($action == "generate") {
-	$PrepaidCards->generate();
-	$PrepaidCards->showGenerateForm();
-	$PrepaidCards->showBatches();
+    $PrepaidCards->generate();
+    $PrepaidCards->showGenerateForm();
+    $PrepaidCards->showBatches();
 } elseif ($action == "delete") {
-	$PrepaidCards->showGenerateForm();
-	$PrepaidCards->deleteBatch($batch,$confirm);
-	$PrepaidCards->showBatches();
+    $PrepaidCards->showGenerateForm();
+    $PrepaidCards->deleteBatch($batch, $confirm);
+    $PrepaidCards->showBatches();
 } elseif ($action == "export") {
-	$PrepaidCards->export($batch);
+    $PrepaidCards->export($batch);
 } else {
-	$PrepaidCards->showGenerateForm();
-	$PrepaidCards->showBatches();
+    $PrepaidCards->showGenerateForm();
+    $PrepaidCards->showBatches();
 }
 
 if ($action != "export") {
     print "
     </body>
-    </html>
-    ";
+</html>";
 }
 page_close();
 ?>
