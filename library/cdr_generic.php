@@ -1,4 +1,4 @@
-<?
+<?php
 $tz=$CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
