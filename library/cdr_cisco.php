@@ -1,4 +1,4 @@
-<?
+<?php
 
 class CDRS_cisco extends CDRS {
     var $table                    = "radacct";
