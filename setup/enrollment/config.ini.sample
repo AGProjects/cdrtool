@@ -1,27 +1,26 @@
-<?
-/*
-     This configuration is used for SIP account enrollment for NGNPro server
-     Copy this file to /etc/cdrtool/enrollment/config.ini
-*/
+<?php
+/**
+ * This configuration is used for SIP account enrollment for NGNPro server
+ * Copy this file to /etc/cdrtool/enrollment/config.ini
+ */
 
-$enrollment=array('ca_crt'                 => "/etc/cdrtool/enrollment/root_ca.crt",
-                  'ca_key'                 => array("file:///etc/cdrtool/enrollment/root_ca.key","root_ca_password"),
-		  'ca_conf'                => "/etc/cdrtool/enrollment/root_ca.conf"
-                  'sip_engine'             => 'sipthor',
-                  'reseller'               => '0',
-                  'sip_domain'             => 'example.com',
-	          'sip_class'              => 'SipSettings',
-                  'countryName'            => 'N/A',
-	    	  'stateOrProvinceName'    => 'N/A',
-    		  'localityName'           => 'N/A',
-    		  'organizationName'       => 'N/A',
-    		  'organizationalUnitName' => 'N/A',
-                  'nonce_key'              => 'changeme',
-                  'outbound_proxy'         => 'sip.example.com',
-                  'xcap_root'              => 'https://xcap.example.com/xcap-root/',
-                  'msrp_relay'             => 'msrprelay.example.com',
-                  'settings_url'           => 'https://cdrtool.example.com/CDRTool/sip_settings_digest.phtml',
-                  'download_url'           => 'https://blink.sipthor.net/download.phtml?download'
-                 );
-                 
-?>
+$enrollment = array(
+    'ca_crt'                 => "/etc/cdrtool/enrollment/root_ca.crt",
+    'ca_key'                 => array("file:///etc/cdrtool/enrollment/root_ca.key","root_ca_password"),
+    'ca_conf'                => "/etc/cdrtool/enrollment/root_ca.conf",
+    'sip_engine'             => 'sipthor',
+    'reseller'               => '0',
+    'sip_domain'             => 'example.com',
+    'sip_class'              => 'SipSettings',
+    'countryName'            => 'N/A',
+    'stateOrProvinceName'    => 'N/A',
+    'localityName'           => 'N/A',
+    'organizationName'       => 'N/A',
+    'organizationalUnitName' => 'N/A',
+    'nonce_key'              => 'changeme',
+    'outbound_proxy'         => 'sip.example.com',
+    'xcap_root'              => 'https://xcap.example.com/xcap-root/',
+    'msrp_relay'             => 'msrprelay.example.com',
+    'settings_url'           => 'https://cdrtool.example.com/CDRTool/sip_settings_digest.phtml',
+    'download_url'           => 'https://blink.sipthor.net/download.phtml?download'
+);
