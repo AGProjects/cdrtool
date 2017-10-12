@@ -1,4 +1,4 @@
-<?
+<?php
 class CDRS_asterisk extends CDRS {
     var $table               = "cdr";
     var $CDR_class           = "CDR_asterisk";
