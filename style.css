@@ -208,7 +208,7 @@ input[type="checkbox"] {
     vertical-align: middle !important;
 }
 
-div.arrow {
+div.sarrow {
     height:2px;
     background-color: #ccc;
     width: calc(100% - 24px);
@@ -218,7 +218,7 @@ div.arrow {
     position: relative;
 }
 
-div.arrow.right:before {
+div.sarrow.right:before {
     width: 12px;
     height: 12px;
     border-radius: 6px;
@@ -230,7 +230,7 @@ div.arrow.right:before {
 }
 
 
-div.arrow.right:after {
+div.sarrow.right:after {
     content: '';
     position: absolute;
     width: 0;
@@ -242,7 +242,7 @@ div.arrow.right:after {
     border-bottom: 6px solid transparent;
 }
 
-div.arrow.left:after {
+div.sarrow.left:after {
     width: 12px;
     height: 12px;
     border-radius: 6px;
@@ -253,7 +253,7 @@ div.arrow.left:after {
     margin-top: -5px;
 }
 
-div.arrow.left:before {
+div.sarrow.left:before {
     content: '';
     position: absolute;
     width: 0;
@@ -265,75 +265,75 @@ div.arrow.left:before {
     border-bottom: 6px solid transparent;
 }
 
-div.arrow.blue,
-div.arrow.blue.right:before,
-div.arrow.blue.left:after {
+div.sarrow.blue,
+div.sarrow.blue.right:before,
+div.sarrow.blue.left:after {
     background-color: #2c68a1;
 }
-div.arrow.blue.right:after {
+div.sarrow.blue.right:after {
     border-left-color: #2c68a1;
 }
-div.arrow.blue.left:before {
+div.sarrow.blue.left:before {
     border-right-color: #2c68a1;
 }
 
-div.arrow.green,
-div.arrow.green.right:before,
-div.arrow.green.left:after {
+div.sarrow.green,
+div.sarrow.green.right:before,
+div.sarrow.green.left:after {
     background-color: #68a12c;
 }
-div.arrow.green.right:after {
+div.sarrow.green.right:after {
     border-left-color: #68a12c;
 }
-div.arrow.green.left:before {
+div.sarrow.green.left:before {
     border-right-color: #68a12c;
 }
 
-div.arrow.red,
-div.arrow.red.right:before,
-div.arrow.red.left:after {
+div.sarrow.red,
+div.sarrow.red.right:before,
+div.sarrow.red.left:after {
     background-color: #b94a48;
 }
-div.arrow.red.right:after {
+div.sarrow.red.right:after {
     border-left-color: #b94a48;
 }
-div.arrow.red.left:before {
+div.sarrow.red.left:before {
     border-right-color: #b94a48;
 }
 
-div.arrow.orange,
-div.arrow.orange.right:before,
-div.arrow.orange.left:after {
+div.sarrow.orange,
+div.sarrow.orange.right:before,
+div.sarrow.orange.left:after {
     background-color: #c09853;
 }
-div.arrow.orange.right:after {
+div.sarrow.orange.right:after {
     border-left-color: #c09853;
 }
-div.arrow.orange.left:before {
+div.sarrow.orange.left:before {
     border-right-color: #c09853;
 }
 
-div.arrow.cyan,
-div.arrow.cyan.right:before,
-div.arrow.cyan.left:after {
+div.sarrow.cyan,
+div.sarrow.cyan.right:before,
+div.sarrow.cyan.left:after {
     background-color: #00cccc;
 }
-div.arrow.cyan.right:after {
+div.sarrow.cyan.right:after {
     border-left-color: #00cccc;
 }
-div.arrow.cyan.left:before {
+div.sarrow.cyan.left:before {
     border-right-color: #00cccc;
 }
 
-div.arrow.magenta,
-div.arrow.magenta.right:before,
-div.arrow.magenta.left:after {
+div.sarrow.magenta,
+div.sarrow.magenta.right:before,
+div.sarrow.magenta.left:after {
     background-color: #880088;
 }
-div.arrow.magenta.right:after {
+div.sarrow.magenta.right:after {
     border-left-color: #880088;
 }
-div.arrow.magenta.left:before {
+div.sarrow.magenta.left:before {
     border-right-color: #880088;
 }
 

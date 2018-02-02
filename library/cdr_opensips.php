@@ -5286,7 +5286,7 @@ class SIP_trace
 
 
                     if ($arrow_direction != 'loop') {
-                        print "<div class='arrow $arrowColor $arrow_direction'></div>";
+                        print "<div class='sarrow $arrowColor $arrow_direction'></div>";
                     }
 
                     if ($arrow_direction == "left") {
