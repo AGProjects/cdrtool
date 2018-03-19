@@ -1,5 +1,5 @@
-<?
-   unset($CDRTool);      
-   $sess->register('CDRTool');
+<?php
 
-?>
+unset($CDRTool);
+$sess->register('CDRTool');
+
