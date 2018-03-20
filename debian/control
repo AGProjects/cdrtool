@@ -22,7 +22,7 @@ Depends: ${misc:Depends},
          php-net-socket,
          php-net-url2,
          mrtg,
-         smarty,
+         smarty3,
          php-geoip | php5-geoip,
          geoip-database
 Suggests:
