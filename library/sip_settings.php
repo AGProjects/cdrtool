@@ -1,13 +1,14 @@
-<?
-/*
-    Copyright (c) 2007-2011 AG Projects
-    http://ag-projects.com
-    Author Adrian Georgescu
-
-    This library provide the functions for managing properties
-    of SIP Accounts retrieved from NGNPro
-
-*/
+<?php
+/**
+ *
+ * Copyright (c) 2007-2018 AG Projects
+ * http://ag-projects.com
+ * Author Adrian Georgescu
+ *
+ * This library provide the functions for managing properties
+ * of SIP Accounts retrieved from NGNPro
+ *
+ */
 
 require_once("ngnpro_client.php");
 
