@@ -1,4 +1,4 @@
-<?
+<?php
 require("/etc/cdrtool/global.inc");
 
 page_open(
@@ -11,7 +11,7 @@ $perm->check("statistics");
 
 require("sip_statistics.php");
 
-$title='Platform usage';
+$title = 'Platform usage';
 include("../../header.phtml");
 
 $SIPstatistics=new SIPstatistics ();
@@ -28,7 +28,7 @@ if (strlen($CDRTool['filter']['domain'])) {
 
 <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=10>
 
-<? if ($perm->have_perm('admin')) { ?>
+<?php if ($perm->have_perm('admin')) { ?>
 
 <TR>
 <TD><DIV align='center'><B> Total SIP accounts</B></DIV>
@@ -43,7 +43,7 @@ if (strlen($CDRTool['filter']['domain'])) {
 </TD></TR>
 <TR>
 
-<?
+<?php
 }
 
 if (is_array($allowedDomains))  {
@@ -93,7 +93,7 @@ foreach ($domains as $key) {
 </TABLE>
 </BODY>
 </HTML>
-<?
+<?php
 
 page_close();
 ?>
