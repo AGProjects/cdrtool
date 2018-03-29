@@ -1,14 +1,13 @@
-<?
-
-/*
-	Copyright (c) 2007-2011 AG Projects
-  	http://ag-projects.com
-  	Author Adrian Georgescu
-
-  	This library provide NGN-Pro soap client functions
-  	It requires the SOAP library from http://pear.php.net
-
-*/
+<?php
+/**
+ * Copyright (c) 2007-2018 AG Projects
+ * http://ag-projects.com
+ * Author Adrian Georgescu
+ *
+ * This library provide NGN-Pro soap client functions
+ * It requires the SOAP library from http://pear.php.net
+ *
+ */
 
 require_once('SOAP/Client.php');
 class SOAP_Client_Custom extends SOAP_Client {

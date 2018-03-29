@@ -1,10 +1,10 @@
 <?php
 /**
-  * Copyright (c) 2007-2018 AG Projects
-  * http://ag-projects.com
-  *
-  * This library contains classes and functions for rating functionality
-  */
+ * Copyright (c) 2007-2018 AG Projects
+ * http://ag-projects.com
+ *
+ * This library contains classes and functions for rating functionality
+ */
 
 class Rate {
     var $priceDenominator       = 10000; // allow sub cents

@@ -1,8 +1,8 @@
-<?
+<?php
 require_once('ngnpro_soap_library.php');
 
 /*
-    Copyright (c) 2007 AG Projects
+    Copyright (c) 2007-2018 AG Projects
     http://ag-projects.com
     Author Adrian Georgescu
 
