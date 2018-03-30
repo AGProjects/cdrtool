@@ -142,7 +142,7 @@ class CDRS {
         }
 
         if (!$DATASOURCES[$cdr_source]) {
-            $log = "Error: no such datasource defined ($cdr_source) \n";
+            $log = sprintf("Error: no such datasource defined (%s)\n", $cdr_source);
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -239,7 +239,7 @@ class CDRS {
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['BillingIdField']) {
-            $this->BillingIdField  = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
+            $this->BillingIdField = $this->DATASOURCES[$this->cdr_source]['BillingIdField'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['E164_class']) {
@@ -256,11 +256,11 @@ class CDRS {
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['sipTrace']) {
-            $this->sipTrace=$this->DATASOURCES[$this->cdr_source]['sipTrace'];
+            $this->sipTrace = $this->DATASOURCES[$this->cdr_source]['sipTrace'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['mediaTrace']) {
-            $this->mediaTrace=$this->DATASOURCES[$this->cdr_source]['mediaTrace'];
+            $this->mediaTrace = $this->DATASOURCES[$this->cdr_source]['mediaTrace'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['domain_table']) {
@@ -272,7 +272,7 @@ class CDRS {
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['enableThor']) {
-            $this->enableThor      = $this->DATASOURCES[$this->cdr_source]['enableThor'];
+            $this->enableThor = $this->DATASOURCES[$this->cdr_source]['enableThor'];
         }
 
         if (is_array($this->CDRTool['normalize']['CS_CODES'])) $this->CS_CODES=array_keys($this->CDRTool['normalize']['CS_CODES']);
@@ -286,9 +286,9 @@ class CDRS {
         $last  = count($spath)-1;
         $this->scriptFile=$spath[$last];
 
-        $this->next           = $_REQUEST["next"];
-        $this->export         = $_REQUEST["export"];
-        $this->trace          = $_REQUEST["trace"];
+        $this->next   = $_REQUEST["next"];
+        $this->export = $_REQUEST["export"];
+        $this->trace  = $_REQUEST["trace"];
 
         if ($this->export) {
             $this->maxrowsperpage=10000000;
@@ -330,10 +330,10 @@ class CDRS {
     function initDefaults()
     {
         if (is_readable('/etc/default/cdrtool')) {
-            $defaultContentLines=explode("\n",file_get_contents('/etc/default/cdrtool'));
+            $defaultContentLines = explode("\n", file_get_contents('/etc/default/cdrtool'));
 
             foreach ($defaultContentLines as $_line) {
-                list($defaults_key, $defaults_value)=explode("=",$_line);
+                list($defaults_key, $defaults_value) = explode("=", $_line);
                 if (strlen($defaults_value)) $this->defaults[trim($defaults_key)]=trim($defaults_value);
             }
         }
@@ -361,7 +361,7 @@ class CDRS {
         $this->destinations_count     = 0;
         $this->destinations_sip_count = 0;
 
-        $query=sprintf("select `value` from memcache where `key` = 'destinations'");
+        $query = sprintf("select `value` from memcache where `key` = 'destinations'");
 
         if (!$this->cdrtool->query($query)) {
             $log = sprintf(
@@ -465,7 +465,7 @@ class CDRS {
 
         $b=time();
 
-        $query="select * from destinations";
+        $query = "select * from destinations";
         if ($this->CDRTool['filter']['aNumber']) {
             $faNumber=$this->CDRTool['filter']['aNumber'];
             $query .= sprintf(" where subscriber = '%s' or (subscriber = '' and domain = '' and gateway = '') ", addslashes($faNumber));
@@ -514,22 +514,25 @@ class CDRS {
                 if ($subscriber) {
                     $this->_destinations_sip[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_sip_count++;
-                } else if ($domain) {
+                } elseif ($domain) {
                     $this->_destinations_sip[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_sip_count++;
-                } else if ($gateway) {
+                } elseif ($gateway) {
                     $this->_destinations_sip[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_sip_count++;
-                } else if ($dest_id) {
+                } elseif ($dest_id) {
                     $this->_destinations_sip[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_sip_count++;
                 }
-
             } else {
                 // PSTN destination
                 if (!is_numeric($dest_id)) {
-                    $log=sprintf("Error: cannot load non-numeric destination '%s' from row id %d",$dest_id,$this->cdrtool->Record['id']);
-                    syslog(LOG_NOTICE,$log);
+                    $log = sprintf(
+                        "Error: cannot load non-numeric destination '%s' from row id %d"
+                        ,$dest_id
+                        ,$this->cdrtool->Record['id']
+                    );
+                    syslog(LOG_NOTICE, $log);
                     continue;
                 }
 
@@ -537,18 +540,15 @@ class CDRS {
                     $this->destinations_subscriber_count++;
                     $this->_destinations[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_count++;
-
-                } else if ($domain) {
+                } elseif ($domain) {
                     $this->destinations_domain_count++;
                     $this->_destinations[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_count++;
-
-                } else if ($gateway) {
+                } elseif ($gateway) {
                     $this->destinations_gateway_count++;
                     $this->_destinations[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_count++;
-
-                } else if ($dest_id) {
+                } elseif ($dest_id) {
                     $this->destinations_default_count++;
                     $this->_destinations[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
                     $this->destinations_count++;
@@ -556,93 +556,133 @@ class CDRS {
             }
         }
 
-        $destinations_cache     =json_encode($this->_destinations);
-        $destinations_sip_cache =json_encode($this->_destinations_sip);
+        $destinations_cache     = json_encode($this->_destinations);
+        $destinations_sip_cache = json_encode($this->_destinations_sip);
 
-        $log=sprintf ("PSTN destinations cache size: %0.2f MB",strlen($destinations_cache)/1024/1024);
+        $log = sprintf("PSTN destinations cache size: %0.2f MB", strlen($destinations_cache) / 1024 / 1024);
         syslog(LOG_NOTICE, $log);
 
         if ($destinations_sip_cache) {
-            $log=sprintf ("SIP destinations cache size: %0.2f MB",strlen($destinations_sip_cache)/1024/1024);
+            $log = sprintf("SIP destinations cache size: %0.2f MB", strlen($destinations_sip_cache) / 1024 / 1024);
             syslog(LOG_NOTICE, $log);
         }
 
-        $query=sprintf("select `value` from memcache where `key` = 'destinations'");
+        $query = sprintf("select `value` from memcache where `key` = 'destinations'");
         if (!$this->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->cdrtool->Error,
+                $this->cdrtool->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         if ($this->cdrtool->num_rows()) {
-
-            $query=sprintf("update memcache set value = '%s' where `key` = 'destinations'",addslashes($destinations_cache));
+            $query = sprintf(
+                "update memcache set value = '%s' where `key` = 'destinations'",
+                addslashes($destinations_cache)
+            );
             if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->cdrtool->Error,
+                    $this->cdrtool->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
-            $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
-            $this->destinations_count,
-            $this->destinations_default_count,
-            $this->destinations_gateway_count,
-            $this->destinations_domain_count,
-            $this->destinations_subscriber_count
+            $log = sprintf(
+                "Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+                $this->destinations_count,
+                $this->destinations_default_count,
+                $this->destinations_gateway_count,
+                $this->destinations_domain_count,
+                $this->destinations_subscriber_count
             );
             syslog(LOG_NOTICE, $log);
-
         } else {
-            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations','%s')",addslashes($destinations_cache));
+            $query = sprintf(
+                "insert into memcache (`key`,`value`) values ('destinations','%s')",
+                addslashes($destinations_cache)
+            );
             if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->cdrtool->Error,
+                    $this->cdrtool->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
-            $log=sprintf("Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
-            $this->destinations_count,
-            $this->destinations_default_count,
-            $this->destinations_gateway_count,
-            $this->destinations_domain_count,
-            $this->destinations_subscriber_count
+            $log = sprintf(
+                "Cached %d total, %d default, %d gateway, %d domain, %d subscriber destinations",
+                $this->destinations_count,
+                $this->destinations_default_count,
+                $this->destinations_gateway_count,
+                $this->destinations_domain_count,
+                $this->destinations_subscriber_count
             );
             syslog(LOG_NOTICE, $log);
-
         }
 
-        $query=sprintf("select `value` from memcache where `key` = 'destinations_sip'");
+        $query = sprintf("select `value` from memcache where `key` = 'destinations_sip'");
         if (!$this->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->cdrtool->Error,
+                $this->cdrtool->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         if ($this->cdrtool->num_rows()) {
-            $query=sprintf("update memcache set value = '%s' where `key` = 'destinations_sip'",addslashes($destinations_sip_cache));
+            $query = sprintf(
+                "update memcache set value = '%s' where `key` = 'destinations_sip'",
+                addslashes($destinations_sip_cache)
+            );
             if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->cdrtool->Error,
+                    $this->cdrtool->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
-            $log=sprintf("Cached %d SIP destinations",$this->destinations_sip_count);
+            $log = sprintf("Cached %d SIP destinations", $this->destinations_sip_count);
             syslog(LOG_NOTICE, $log);
-
         } else {
-            $query=sprintf("insert into memcache (`key`,`value`) values ('destinations_sip','%s')",addslashes($destinations_sip_cache));
+            $query = sprintf(
+                "insert into memcache (`key`,`value`) values ('destinations_sip','%s')",
+                addslashes($destinations_sip_cache)
+            );
 
             if (!$this->cdrtool->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->cdrtool->Error,
+                    $this->cdrtool->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
-            $log=sprintf("Updated cache for %d SIP destinations",$this->destinations_sip_count);
+            $log = sprintf("Updated cache for %d SIP destinations", $this->destinations_sip_count);
             syslog(LOG_NOTICE, $log);
         }
 
@@ -657,7 +697,7 @@ class CDRS {
 
         $this->cdrtool->query($query);
 
-        while($this->cdrtool->next_record()) {
+        while ($this->cdrtool->next_record()) {
             $_ENUMtlds[trim($this->cdrtool->Record['enum_tld'])] = array(
                 'discount'    => trim($this->cdrtool->Record['discount']),
                 'e164_regexp' => trim($this->cdrtool->Record['e164_regexp'])
@@ -752,7 +792,7 @@ class CDRS {
                 }
 
                 if ($begin_datetime && $end_datetime) {
-                    printf(" between %s and %s",$begin_datetime,$end_datetime);
+                    printf(" between %s and %s", $begin_datetime, $end_datetime);
                 }
 
                 print "</center></div>
@@ -839,7 +879,8 @@ class CDRS {
         }
     }
 
-    function showDateTimeElements($f) {
+    function showDateTimeElements($f)
+    {
         print "
         <tr>
             <td valign=middle align=left>
@@ -882,7 +923,8 @@ class CDRS {
         ";
     }
 
-    function showDataSources ($f) {
+    function showDataSources($f)
+    {
         global $perm;
         print "
         <tr>
@@ -902,20 +944,20 @@ class CDRS {
         ";
     }
 
-    function showPagination($next,$maxrows) {
-        $PHP_SELF=$_SERVER["PHP_SELF"];
-
+    function showPagination($next, $maxrows)
+    {
+        $PHP_SELF = $_SERVER["PHP_SELF"];
 
         if (!$this->export) {
             print "
                 <ul class=\"pager\">
             ";
-            if  ($next!=0  ) {
-                $show_next=$this->maxrowsperpage-$next;
+            if  ($next != 0) {
+                $show_next = $this->maxrowsperpage - $next;
                 if  ($show_next < 0)  {
-                    $mod_show_next  =  $show_next-2*$show_next;
+                    $mod_show_next  =  $show_next - 2 * $show_next;
                 }
-                $url_prev=$PHP_SELF.$this->url."&action=search&next=$mod_show_next";
+                $url_prev = $PHP_SELF.$this->url."&action=search&next=$mod_show_next";
                 print "<li><a href=\"$url_prev\"> &larr; Previous</a></li>";
             }
 
@@ -923,7 +965,7 @@ class CDRS {
             </td>
             <td>
             ";
-            if ($this->rows>$this->maxrowsperpage && $this->rows!=$maxrows)  {
+            if ($this->rows > $this->maxrowsperpage && $this->rows != $maxrows) {
                 $show_next = $this->maxrowsperpage + $this->next;
                 $url_next  = $PHP_SELF.$this->url."&action=search&next=$show_next";
                 print "<li><a href=\"$url_next\">Next  &rarr;</a></li>";
@@ -934,13 +976,16 @@ class CDRS {
         }
     }
 
-    function show() {
+    function show()
+    {
     }
 
-    function dump() {
+    function dump()
+    {
     }
 
-    function unNormalize($where="",$table) {
+    function unNormalize($where = "", $table)
+    {
 
         if ($this->skipNormalize) {
             return 0;
@@ -958,23 +1003,25 @@ class CDRS {
 
         if (!$table) $table=$this->table;
 
-        $query=sprintf("update %s set %s = '0' where %s ",
-        addslashes($table),
-        addslashes($this->normalizedField),
-        $where
+        $query=sprintf(
+            "update %s set %s = '0' where %s ",
+            addslashes($table),
+            addslashes($this->normalizedField),
+            $where
         );
 
         $c=0;
 
         if ($this->CDRdb->query($query)) {
-            $c=$this->CDRdb->affected_rows();
-            $this->reNormalize=true;
+            $c = $this->CDRdb->affected_rows();
+            $this->reNormalize = true;
         }
 
         return $c;
     }
 
-    function buildWhereForUnnormalizedSessions () {
+    function buildWhereForUnnormalizedSessions()
+    {
 
         $this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
 
@@ -1017,10 +1064,10 @@ class CDRS {
 
             $this->whereUnnormalized .= " and (ConnectInfo_stop is not NULL or MediaInfo is NULL or MediaInfo != '' or (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(AcctStopTime) > 20)) ";
         }
-
     }
 
-    function getUnNormalized($where="",$table) {
+    function getUnNormalized($where = "", $table)
+    {
 
         if ($this->skipNormalize) {
             return 0;
@@ -1031,7 +1078,7 @@ class CDRS {
 
         $ReNormalize = $_REQUEST["ReNormalize"];
 
-        if ($ReNormalize) $this->unNormalize($where,$table);
+        if ($ReNormalize) $this->unNormalize($where, $table);
 
         if (!$this->normalizedField) {
             return 0;
@@ -1039,22 +1086,23 @@ class CDRS {
 
         $this->buildWhereForUnnormalizedSessions();
 
-        $query=sprintf("select count(*) as c from %s where %s and %s",
-        addslashes($table),
-        $where,
-        $this->whereUnnormalized
+        $query=sprintf(
+            "select count(*) as c from %s where %s and %s",
+            addslashes($table),
+            $where,
+            $this->whereUnnormalized
         );
 
         if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
-            $c=$this->CDRdb->f('c');
+            $c = $this->CDRdb->f('c');
         }
 
         return $c;
-
     }
 
-    function NormalizeCDRS($where="",$table="") {
+    function NormalizeCDRS($where = "", $table = "")
+    {
 
         $this->missing_destinations=array();
 
@@ -1071,7 +1119,7 @@ class CDRS {
             return 1;
         }
 
-        $lockName=sprintf("%s:%s",$this->cdr_source,$table);
+        $lockName = sprintf("%s:%s", $this->cdr_source, $table);
 
         if (!$this->getNormalizeLock($lockName)) {
             //printf("Cannot get obtain lock %s",$lockName);
@@ -1080,14 +1128,15 @@ class CDRS {
 
         $this->buildWhereForUnnormalizedSessions();
 
-        $this->status['cdr_to_normalize']=0;
-        $this->status['normalized']=0;
-        $this->status['normalize_failures']=0;
+        $this->status['cdr_to_normalize'] = 0;
+        $this->status['normalized'] = 0;
+        $this->status['normalize_failures'] = 0;
 
-        $query=sprintf("select count(*) as c from %s where %s and %s",
-        addslashes($table),
-        $where,
-        $this->whereUnnormalized
+        $query = sprintf(
+            "select count(*) as c from %s where %s and %s",
+            addslashes($table),
+            $where,
+            $this->whereUnnormalized
         );
 
         if ($this->CDRdb->query($query)) {
@@ -1102,23 +1151,21 @@ class CDRS {
         //print "<p>$query";
 
         if ($this->status['cdr_to_normalize'] > 0) {
-
             if ($this->ratingEnabled) {
                 // Load rating tables
                 $this->RatingTables = new RatingTables();
                 $this->RatingTables->LoadRatingTables();
             }
-
         } else {
             return 0;
         }
 
-        $this->usageKeysForDeletionFromCache=array();
+        $this->usageKeysForDeletionFromCache = array();
 
         // For loop to process 1k records each time
         for ($i = 0; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
-
-            $query=sprintf("select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
+            $query = sprintf(
+                "select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
                 from %s where %s and %s limit 0,1000",
                 addslashes($table),
                 $where,
@@ -1127,14 +1174,17 @@ class CDRS {
 
 
             if (!$this->CDRdb->query($query)) {
-                $log=sprintf ("Database error: %s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error: %s (%s)\n",
+                    $this->CDRdb->Error,
+                    $this->CDRdb->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 print $log;
                 return false;
             }
 
             while ($this->CDRdb->next_record()) {
-
                 //$Structure=$this->_readCDRNormalizationFieldsFromDB();
                 $Structure=$this->_readCDRFieldsFromDB('');
                 if ($this->csv_writter) {
@@ -1153,7 +1203,7 @@ class CDRS {
 
                 $CDR = new $this->CDR_class($this, $Structure);
 
-                if ($CDR->normalize("Save",$table)) {
+                if ($CDR->normalize("Save", $table)) {
                     $this->status['normalized']++;
                     if ($this->csv_file_ready) {
                         if (!$this->csv_writter->write_cdr($CDR)) {
@@ -1165,7 +1215,6 @@ class CDRS {
                     if ($CDR->broken_rate) {
                         $this->brokenRates[$CDR->DestinationId]++;
                     }
-
                 } else {
                     $this->status['normalize_failures']++;
                 }
@@ -1186,19 +1235,23 @@ class CDRS {
             }
         }
 
-        if ($this->ratingEnabled && count($this->brokenRates) >0 ) {
+        if ($this->ratingEnabled && count($this->brokenRates) > 0) {
             if ($this->rating_settings['reportMissingRates']) {
                 if (count($this->brokenRates)) {
                     foreach (array_keys($this->brokenRates) as $dest) {
                         $missingRatesBodytext=$missingRatesBodytext."\nDestination id $dest (".$this->brokenRates[$dest]." calls)";
                     }
 
-                    $to=$this->CDRTool['provider']['toEmail'];
+                    $to = $this->CDRTool['provider']['toEmail'];
 
-                    $from=$this->CDRTool['provider']['fromEmail'];
+                    $from = $this->CDRTool['provider']['fromEmail'];
 
-                    $log=sprintf("Mailing missing rates for %d destination(s) to %s",count($this->brokenRates),$to);
-                    syslog(LOG_NOTICE,$log);
+                    $log = sprintf(
+                        "Mailing missing rates for %d destination(s) to %s",
+                        count($this->brokenRates),
+                        $to
+                    );
+                    syslog(LOG_NOTICE, $log);
 
                     mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
                 }
@@ -1206,24 +1259,23 @@ class CDRS {
         }
 
         if (count($this->missing_destinations)) {
-            $to=$this->CDRTool['provider']['toEmail'];
-            $from=$this->CDRTool['provider']['fromEmail'];
+            $to = $this->CDRTool['provider']['toEmail'];
+            $from = $this->CDRTool['provider']['fromEmail'];
 
-            $body='';
-            foreach($this->missing_destinations as $_dest) {
+            $body = '';
+            foreach ($this->missing_destinations as $_dest) {
                 if (!$seen[$_dest]) {
-                    $body.=sprintf("No destination for number %s\n",$_dest);
+                    $body .= sprintf("No destination for number %s\n", $_dest);
                 }
                 $seen[$_dest]++;
             }
-            mail($to, "Missing CDRTool destinations",$body, "From: $from");
+            mail($to, "Missing CDRTool destinations", $body, "From: $from");
         }
 
-        if ($this->status['cdr_to_normalize']>0) {
-            $d=time()-$b;
-            $log=sprintf("Normalization done in %d s, memory usage: %0.2f MB",$d,memory_get_usage()/1024/1024);
-            syslog(LOG_NOTICE,$log );
-
+        if ($this->status['cdr_to_normalize'] > 0) {
+            $d = time() - $b;
+            $log = sprintf("Normalization done in %d s, memory usage: %0.2f MB", $d, memory_get_usage() / 1024 / 1024);
+            syslog(LOG_NOTICE, $log);
         }
 
         if ($this->csv_file_ready) {
