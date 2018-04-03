@@ -1290,14 +1290,15 @@ class CDRS {
         return 1;
     }
 
-    function NormalizeNumber($Number,$type="destination",$subscriber="",$domain="",$gateway="",$CountryCode="",$ENUMtld="",$reseller_id=0) {
+    function NormalizeNumber($Number, $type = "destination", $subscriber = "", $domain = "", $gateway = "", $CountryCode = "", $ENUMtld = "", $reseller_id = 0)
+    {
         $this->CSCODE="";
 
-        $Number=strtolower(quoted_printable_decode($Number));
+        $Number = strtolower(quoted_printable_decode($Number));
 
         if ($pos = strpos($Number, "@")) {
             // this is a SIP URI
-            $NumberStack['username']  = substr($Number,0,$pos);
+            $NumberStack['username']  = substr($Number, 0, $pos);
             if (strlen($NumberStack['username']) < 1) {
                 $NumberStack['username'] = "unknown";
             }
@@ -1306,18 +1307,18 @@ class CDRS {
 
             $pos = strpos($NumberStack['username'], ":");
             if ($pos) {
-                $NumberStack['protocol'] = substr($NumberStack['username'],0,$pos+1);
-                $NumberStack['username'] = substr($NumberStack['username'],$pos+1);
+                $NumberStack['protocol'] = substr($NumberStack['username'], 0, $pos+1);
+                $NumberStack['username'] = substr($NumberStack['username'], $pos+1);
             }
 
-            if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
-                $NumberStack['domain']    = $p[1];
+            if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)){
+                $NumberStack['domain'] = $p[1];
             }
 
-        } else if (preg_match("/^([a-z0-9]+:)(.*)$/i",$Number,$m)) {
+        } else if (preg_match("/^([a-z0-9]+:)(.*)$/i", $Number, $m)) {
             #$oct=preg_split("/\./",$m[2]);
-            $oct = explode(",",$m[2]);
-            if(sizeof($oct)==4) {
+            $oct = explode(",", $m[2]);
+            if(sizeof($oct) == 4) {
             // This is a SIP address without username
                 $NumberStack['username']  = "";
                 $NumberStack['domain']    = $m[2];
@@ -1336,42 +1337,53 @@ class CDRS {
             $NumberStack['domain']    = "";
         }
 
-        if (preg_match("/^(.*)[=:;]/U",$NumberStack['domain'],$p)){
+        if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)){
             $NumberStack['domain']    = $p[1];
         }
 
         // Translate the domain
-        if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination']) &&
-            isset($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']])) {
+        if (is_array($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'])
+            && isset($this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']])
+        ) {
             $NumberStack['domain'] = $this->DATASOURCES[$this->cdr_source]['domainTranslationDestination'][$NumberStack['domain']];
         }
 
         if ($type=="destination" && is_numeric($NumberStack['username'])) {
             // strip custom prefix from destination
-            $usernameLength=strlen($NumberStack['username']);
+            $usernameLength = strlen($NumberStack['username']);
             if (is_array($this->CS_CODES)) {
                 foreach ($this->CS_CODES as $strip_prefix) {
                     $prefixLength = strlen($strip_prefix);
                     $restLength   = $usernameLength-$prefixLength;
-                    if ($restLength > 0 and preg_match("/^$strip_prefix(.*)$/",$NumberStack['username'],$m)) {
-                        $NumberStack['username']=$m[1];
-                        $this->CSCODE=$strip_prefix;
+                    if ($restLength > 0 and preg_match("/^$strip_prefix(.*)$/", $NumberStack['username'], $m)) {
+                        $NumberStack['username'] = $m[1];
+                        $this->CSCODE = $strip_prefix;
                         break;
                     }
                 }
             }
 
-            if (!$CountryCode) $CountryCode=$this->CDRTool['normalize']['defaultCountryCode'];
+            if (!$CountryCode) $CountryCode = $this->CDRTool['normalize']['defaultCountryCode'];
 
-            $e164class=$this->E164_class;
-            $E164 =  new $e164class($this->intAccessCode, $this->natAccessCode,$CountryCode,$this->ENUMtlds[$ENUMtld]['e164_regexp']);
+            $e164class = $this->E164_class;
+            $E164 = new $e164class(
+                $this->intAccessCode,
+                $this->natAccessCode,
+                $CountryCode,
+                $this->ENUMtlds[$ENUMtld]['e164_regexp']
+            );
 
-            $NumberStack['E164']=$E164->E164Format($NumberStack['username']);
+            $NumberStack['E164'] = $E164->E164Format($NumberStack['username']);
         }
 
         if ($type=="destination" && $NumberStack['E164']) {
             // lookup destination id for the E164 number
-            $dst_struct                     = $this->lookupDestination($NumberStack['E164'],$subscriber,$domain,$gateway,$reseller_id);
+            $dst_struct                     = $this->lookupDestination(
+                $NumberStack['E164'],
+                $subscriber,
+                $domain,
+                $gateway,$reseller_id
+            );
             $NumberStack['DestinationId']   = $dst_struct[0];
             $NumberStack['destinationName'] = $dst_struct[1];
 
@@ -1389,7 +1401,13 @@ class CDRS {
                                               $NumberStack['domain'];
             }
         } else {
-            $dst_struct                     = $this->lookupDestination($Number,$subscriber,$domain,$gateway,$reseller_id);
+            $dst_struct                     = $this->lookupDestination(
+                $Number,
+                $subscriber,
+                $domain,
+                $gateway,
+                $reseller_id
+            );
             $NumberStack['DestinationId']   = $dst_struct[0];
             $NumberStack['destinationName'] = $dst_struct[1];
 
@@ -1400,49 +1418,49 @@ class CDRS {
             $NumberStack['Normalized']      = $NumberStack['username'].
                                               $NumberStack['delimiter'].
                                               $NumberStack['domain'];
-
         }
 
         return $NumberStack;
-
     }
 
-    function lookupDestination($destination,$subscriber="",$domain="",$gateway="",$reseller_id=0) {
+    function lookupDestination($destination, $subscriber = "", $domain = "", $gateway = "", $reseller_id = 0)
+    {
 
         if (!$destination) return;
 
-        if (is_numeric($destination)){
-            return $this->lookupPSTNDestination($destination,$subscriber,$domain,$gateway,$reseller_id);
+        if (is_numeric($destination)) {
+            return $this->lookupPSTNDestination($destination, $subscriber, $domain, $gateway, $reseller_id);
         } else {
-            return $this->lookupSipDestination($destination,$subscriber,$domain,$gateway,$reseller_id);
+            return $this->lookupSipDestination($destination, $subscriber, $domain, $gateway, $reseller_id);
         }
     }
 
-    function lookupSipDestination($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
+    function lookupSipDestination($destination = '', $subscriber = '', $domain = '', $gateway = '', $reseller_id = 0)
+    {
         if ($this->destinations_sip[$reseller_id][$subscriber]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$subscriber];
-            $fCustomer="subscriber=$subscriber";
+            $fCustomer = "subscriber=$subscriber";
         } else if ($this->destinations_sip[$reseller_id][$domain]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$domain];
-            $fCustomer="domain=$domain";
+            $fCustomer = "domain=$domain";
         } else if ($this->destinations_sip[$reseller_id][$gateway]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$gateway];
-            $fCustomer="gateway=$gateway";
+            $fCustomer = "gateway=$gateway";
         } else if ($this->destinations_sip[$reseller_id]['default']) {
             $destinations_sip = $this->destinations_sip[$reseller_id]['default'];
-            $fCustomer="default";
+            $fCustomer = "default";
         } else if ($this->destinations_sip[0][$subscriber]) {
             $destinations_sip = $this->destinations_sip[0][$subscriber];
-            $fCustomer="subscriber=$subscriber";
+            $fCustomer = "subscriber=$subscriber";
         } else if ($this->destinations_sip[0][$domain]) {
             $destinations_sip = $this->destinations_sip[0][$domain];
-            $fCustomer="domain=$domain";
+            $fCustomer = "domain=$domain";
         } else if ($this->destinations_sip[0][$gateway]) {
             $destinations_sip = $this->destinations_sip[0][$gateway];
-            $fCustomer="gateway=$gateway";
+            $fCustomer = "gateway=$gateway";
         } else if ($this->destinations_sip[0]['default']) {
             $destinations_sip = $this->destinations_sip[0]['default'];
-            $fCustomer="default";
+            $fCustomer = "default";
         }
 
         $ret = false;
@@ -1451,16 +1469,17 @@ class CDRS {
         } else {
             list($user,$domain) = explode("@", $destination);
             if ($domain) {
-                $domain=sprintf("@%s",$domain);
+                $domain = sprintf("@%s", $domain);
                 if ($destinations_sip[$domain]) {
-                    $ret = array($domain,$destinations_sip[$domain]['name']);
+                    $ret = array($domain, $destinations_sip[$domain]['name']);
                 }
             }
         }
         return $ret;
     }
 
-    function lookupPSTNDestination($destination='',$subscriber='',$domain='',$gateway='',$reseller_id=0) {
+    function lookupPSTNDestination($destination = '', $subscriber = '', $domain = '',$gateway = '', $reseller_id = 0)
+    {
 
         if ($this->destinations[$reseller_id][$subscriber]) {
             $_destinations = $this->destinations[$reseller_id][$subscriber];
@@ -1490,41 +1509,54 @@ class CDRS {
             $_destinations = $this->destinations[0][$gateway];
             $maxLength = $this->destinations_length[0][$gateway];
             $fCustomer="gateway=$gateway";
-        } else if ($this->destinations[0]['default']){
+        } else if ($this->destinations[0]['default']) {
             $_destinations = $this->destinations[0]['default'];
             $maxLength = $this->destinations_length[0]['default'];
             $fCustomer="default";
         } else {
-            $log=sprintf("Error: cannot find destinations for subscriber='%s', domain ='%s', gateway='%s', reseller='%s'\n",$subscriber,$domain,$gateway,$reseller_id);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Error: cannot find destinations for subscriber='%s', domain ='%s', gateway='%s', reseller='%s'\n",
+                $subscriber,
+                $domain,
+                $gateway,
+                $reseller_id
+            );
+            syslog(LOG_NOTICE, $log);
         }
 
-        if (count($_destinations)>0) {
+        if (count($_destinations) > 0) {
             $length = min(strlen($destination), $maxLength);
-            for ($i=$length; $i>0; $i--) {
+            for ($i = $length; $i > 0; $i--) {
                 $buf = substr($destination, 0, $i);
                 if ($_destinations[$buf]) {
-                    return array($buf,$_destinations[$buf]['name']);
+                    return array($buf, $_destinations[$buf]['name']);
                 }
             }
         }
 
-        $log=sprintf("Error: cannot find destination id for %s of customer = '%s', total destinations = %d\n",$destination,$fCustomer,count($_destinations));
-        syslog(LOG_NOTICE,$log);
+        $log = sprintf(
+            "Error: cannot find destination id for %s of customer = '%s', total destinations = %d\n",
+            $destination,
+            $fCustomer,
+            count($_destinations)
+        );
+        syslog(LOG_NOTICE, $log);
 
-        $this->missing_destinations[]=$destination;
+        $this->missing_destinations[] = $destination;
         return false;
     }
 
-    function import($file) {
+    function import($file)
+    {
     }
 
-    function RadiusRecordRead($fp) {
+    function RadiusRecordRead($fp)
+    {
         $keepreading=1;
 
         while ($keepreading) {
             $contents = fgets($fp, 8192);
-            if (preg_match("/^$/",$contents)) {
+            if (preg_match("/^$/", $contents)) {
                 $keepreading=0;
             } else {
                 $record[]=$contents;
@@ -1533,7 +1565,8 @@ class CDRS {
         return $record;
     }
 
-    function RadiusRecordParse($record) {
+    function RadiusRecordParse($record)
+    {
         unset($radiusParsed);
         if (!is_array($record)) {
             return 0;
@@ -1542,29 +1575,30 @@ class CDRS {
         foreach ($record as $line) {
             $line=trim($line);
             foreach (array_keys($this->radiusAttributes) as $attribute) {
-                if (preg_match("/$attribute = (.*)$/",$line,$m)) {
-                    $value=preg_replace("/\"/","",trim($m[1]));
-                    $radiusParsed[$attribute]= $value;
+                if (preg_match("/$attribute = (.*)$/", $line, $m)) {
+                    $value = preg_replace("/\"/", "", trim($m[1]));
+                    $radiusParsed[$attribute] = $value;
                 }
             }
         }
         return $radiusParsed;
     }
 
-    function getCDRtables() {
+    function getCDRtables()
+    {
         if (!is_object($this->CDRdb)) return 0;
         $_tables=$this->CDRdb->table_names();
         $t=count($_tables);
 
         if ($this->table) $this->tables[]=$this->table;
 
-        while ($t <> 0 ) {
+        while ($t <> 0) {
             $_table=$_tables[$t-1]["table_name"];
             if ($_table=='radacct') $this->tables[]='radacct';
 
-            if (preg_match("/^(\w+)(\d{6})$/",$_table,$m)) {
-                if ($list_t >24) break;
-                $this->tables[]=$_table;
+            if (preg_match("/^(\w+)(\d{6})$/", $_table, $m)) {
+                if ($list_t > 24) break;
+                $this->tables[] = $_table;
                 $list_t++;
             }
             $t--;
@@ -1572,58 +1606,59 @@ class CDRS {
         $this->tables=array_unique($this->tables);
     }
 
-    function rotateTable($sourceTable,$month,$action) {
+    function rotateTable($sourceTable, $month, $action)
+    {
         // create a new table tableYYYYMM and copy data from the main table into it
         // if no month is supplied, the default is the previous month
 
-        if (!$month) $month=date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
+        if (!$month) $month=date('Ym', mktime(0, 0, 0, date("m") - 1, "01", date("Y")));
 
-        if (!$sourceTable) $sourceTable=$this->table;
+        if (!$sourceTable) $sourceTable = $this->table;
 
-        if (preg_match("/^(\w+)\d{6}$/",$sourceTable,$m)) {
-            $destinationTable=$m[1].$month;
+        if (preg_match("/^(\w+)\d{6}$/", $sourceTable, $m)) {
+            $destinationTable = $m[1].$month;
         } else {
-            $destinationTable=$sourceTable.$month;
+            $destinationTable = $sourceTable.$month;
         }
 
-        print("rotateTable($sourceTable,$month,$destinationTable)\n");
+        print("rotateTable($sourceTable, $month, $destinationTable)\n");
 
         if ($sourceTable == $destinationTable) {
-            $log=sprintf("Error: cannot copy records to the same table %s.\n",$destinationTable);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Error: cannot copy records to the same table %s.\n", $destinationTable);
+            syslog(LOG_NOTICE, $log);
             print $log;
-            return 0;;
+            return 0;
         }
 
-        $createTableFile=$this->CDRTool['Path'].$this->createTableFile;
+        $createTableFile = $this->CDRTool['Path'].$this->createTableFile;
 
         if (!$this->createTableFile || !is_readable($createTableFile)) {
-            $log=sprintf("Error: cannot locate mysql creation file\n");
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Error: cannot locate mysql creation file\n");
+            syslog(LOG_NOTICE, $log);
             print $log;
-            return 0;;
+            return 0;
         }
 
         $lockFile="/var/lock/CDRTool_".$this->cdr_source."_rotateTable.lock";
 
-        $f=fopen($lockFile,"w");
+        $f = fopen($lockFile, "w");
         if (flock($f, LOCK_EX + LOCK_NB, $w)) {
             if ($w) {
-                $log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+                syslog(LOG_NOTICE, $log);
                 print $log;
-                return 0;;
+                return 0;
             }
         } else {
-            $log=sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Another CDRTool rotate table is in progress. Aborting.\n");
+            syslog(LOG_NOTICE, $log);
             print $log;
-            return 0;;
+            return 0;
         }
 
         $b=time();
 
-        if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+        if (!preg_match("/^(\d{4})(\d{2})$/", $month, $m)) {
             print "Error: Month $month must be in YYYYMM format\n";
             return 0;
         } else {
@@ -1632,92 +1667,95 @@ class CDRS {
                 return 0;
             }
 
-            $lastMonth=$month;
-            $startSQL=$m[1]."-".$m[2]."-01";
-            $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2]+1, "01", $m[1]));
+            $lastMonth = $month;
+            $startSQL = $m[1]."-".$m[2]."-01";
+            $stopSQL =date('Y-m-01', mktime(0, 0, 0, $m[2] + 1, "01", $m[1]));
         }
 
-        $query=sprintf("select count(*) as c from %s where %s >='%s' and %s < '%s'\n",
-                    addslashes($sourceTable),
-                    addslashes($this->CDRFields['startTime']),
-                    addslashes($startSQL),
-                    addslashes($this->CDRFields['startTime']),
-                    addslashes($stopSQL)
-                    );
+        $query = sprintf(
+            "select count(*) as c from %s where %s >='%s' and %s < '%s'\n",
+            addslashes($sourceTable),
+            addslashes($this->CDRFields['startTime']),
+            addslashes($startSQL),
+            addslashes($this->CDRFields['startTime']),
+            addslashes($stopSQL)
+        );
 
 
         if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
-            $rowsSourceTable=$this->CDRdb->f('c');
-            $log=sprintf ("Source table %s has %d records in month %s\n",$sourceTable,$rowsSourceTable,$month);
-            syslog(LOG_NOTICE,$log);
+            $rowsSourceTable = $this->CDRdb->f('c');
+            $log=sprintf("Source table %s has %d records in month %s\n", $sourceTable, $rowsSourceTable, $month);
+            syslog(LOG_NOTICE, $log);
             print $log;
             if (!$rowsSourceTable) return 1;
-
         } else {
-            $log=sprintf ("Error: %s (%s)\n",$this->table,$this->CDRdb->Error);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Error: %s (%s)\n", $this->table, $this->CDRdb->Error);
+            syslog(LOG_NOTICE, $log);
             print $log;
             return 0;
         }
 
-        $query=sprintf("select count(*) as c from %s\n", addslashes($destinationTable));
+        $query = sprintf("select count(*) as c from %s\n", addslashes($destinationTable));
 
         if ($this->CDRdb->query($query)) {
             $this->CDRdb->next_record();
             $rowsDestinationTable = $this->CDRdb->f('c');
-            $log=sprintf ("Destination table %s has %d records\n",$destinationTable,$rowsDestinationTable);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Destination table %s has %d records\n", $destinationTable, $rowsDestinationTable);
+            syslog(LOG_NOTICE, $log);
             print $log;
 
             if ($rowsDestinationTable != $rowsSourceTable) {
-                $log=sprintf ("Error: source table has %d records and destination table has %d records\n",$rowsSourceTable,$rowsDestinationTable);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Error: source table has %d records and destination table has %d records\n",
+                    $rowsSourceTable,
+                    $rowsDestinationTable
+                );
+                syslog(LOG_NOTICE, $log);
                 print $log;
             } else {
-                $log=sprintf ("Tables are in sync\n");
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf("Tables are in sync\n");
+                syslog(LOG_NOTICE, $log);
                 print $log;
             }
-
         } else {
-            $log=sprintf ("%s (%s)\n",$this->CDRdb->Error,$this->CDRdb->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("%s (%s)\n", $this->CDRdb->Error, $this->CDRdb->Errno);
+            syslog(LOG_NOTICE, $log);
             print $log;
 
             if ($this->CDRdb->Errno==1146) {
-
-                $destinationTableTmp=$destinationTable."_tmp";
-                $query=sprintf("drop table if exists %s",addslashes($destinationTableTmp));
+                $destinationTableTmp = $destinationTable."_tmp";
+                $query=sprintf("drop table if exists %s", addslashes($destinationTableTmp));
                 print($query);
                 $this->CDRdb->query($query);
 
                 if ($query=file_get_contents($createTableFile)) {
-                    $query=preg_replace("/CREATE TABLE.*/","CREATE TABLE $destinationTableTmp (",$query);
+                    $query=preg_replace("/CREATE TABLE.*/", "CREATE TABLE $destinationTableTmp (", $query);
                     if (!$this->CDRdb->query($query)) {
-                        $log=sprintf ("Error creating table %s: %s, %s\n",$destinationTableTmp,$this->CDRdb->Error,$query);
-                        syslog(LOG_NOTICE,$log);
+                        $log = sprintf("Error creating table %s: %s, %s\n", $destinationTableTmp, $this->CDRdb->Error,$query);
+                        syslog(LOG_NOTICE, $log);
                         print $log;
                         return 0;
                     }
                 } else {
-                    $log=sprintf ("Cannot read file %s\n",$createTableFile);
-                    syslog(LOG_NOTICE,$log);
+                    $log = sprintf("Cannot read file %s\n",$createTableFile);
+                    syslog(LOG_NOTICE, $log);
                     print $log;
                     return 0;
                 }
 
                 // if we reached this point we start to copy records
-                $query=sprintf("insert into %s select * from %s where %s >='%s' and %s < '%s'",
-                addslashes($destinationTableTmp),
-                addslashes($sourceTable),
-                addslashes($this->CDRFields['startTime']),
-                addslashes($startSQL),
-                addslashes($this->CDRFields['startTime']),
-                addslashes($stopSQL)
+                $query = sprintf(
+                    "insert into %s select * from %s where %s >='%s' and %s < '%s'",
+                    addslashes($destinationTableTmp),
+                    addslashes($sourceTable),
+                    addslashes($this->CDRFields['startTime']),
+                    addslashes($startSQL),
+                    addslashes($this->CDRFields['startTime']),
+                    addslashes($stopSQL)
                 );
 
-                return ;
+                return;
 
                 if ($this->CDRdb->query($query)) {
                     $e=time();
@@ -1725,7 +1763,7 @@ class CDRS {
                     $rps=0;
                     if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
 
-                    $log=printf ("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$destinationTableTmp,$d,$rps);
+                    $log = printf("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$destinationTableTmp,$d,$rps);
                     syslog(LOG_NOTICE,$log);
                     print $log;
 
@@ -1743,7 +1781,8 @@ class CDRS {
         }
     }
 
-    function purgeTable($sourceTable,$month) {
+    function purgeTable($sourceTable, $month)
+    {
         // delete records for a given month with minimal locking of database
         // this function is useful after archive of CDR data using rotate script
         $begin=time();
@@ -1765,14 +1804,15 @@ class CDRS {
 
         if (!$sourceTable) $sourceTable=$this->table;
 
-        $query=sprintf("select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
-        addslashes($this->CDRFields['id']),
-        addslashes($this->CDRFields['id']),
-        addslashes($sourceTable),
-        addslashes($this->CDRFields['startTime']),
-        addslashes($beginDate),
-        addslashes($this->CDRFields['startTime']),
-        addslashes($endDate)
+        $query = sprintf(
+            "select min(%s) as min,max(%s) as max from %s where %s >= '%s' and %s < '%s' ",
+            addslashes($this->CDRFields['id']),
+            addslashes($this->CDRFields['id']),
+            addslashes($sourceTable),
+            addslashes($this->CDRFields['startTime']),
+            addslashes($beginDate),
+            addslashes($this->CDRFields['startTime']),
+            addslashes($endDate)
         );
 
         dprint($query);
@@ -1858,7 +1898,8 @@ class CDRS {
         return 1;
     }
 
-    function cacheQuotaUsage($accounts=array()) {
+    function cacheQuotaUsage($accounts=array())
+    {
 
         if (!$this->quotaEnabled) return true;
 
@@ -2312,44 +2353,43 @@ class CDR {
             }
 
             if ($this->CDRS->ratingEnabled && ($this->duration || $this->application == 'message')) {
-
                 if ($this->DestinationId) {
                     $Rate    = new Rate($this->CDRS->rating_settings, $this->CDRS->cdrtool);
 
                     if ($this->application == 'message') {
-                        $RateDictionary=array(
-                                              'callId'          => $this->callId,
-                                              'timestamp'       => $this->timestamp,
-                                              'duration'        => $this->duration,
-                                              'DestinationId'   => $this->DestinationId,
-                                              'BillingPartyId'  => $this->BillingPartyId,
-                                              'ResellerId'      => $this->ResellerId,
-                                              'domain'          => $this->domain,
-                                              'gateway'         => $this->gateway,
-                                              'RatingTables'    => $this->CDRS->RatingTables,
-                                              'aNumber'         => $this->aNumber,
-                                              'cNumber'         => $this->cNumber
-                                              );
+                        $RateDictionary = array(
+                            'callId'          => $this->callId,
+                            'timestamp'       => $this->timestamp,
+                            'duration'        => $this->duration,
+                            'DestinationId'   => $this->DestinationId,
+                            'BillingPartyId'  => $this->BillingPartyId,
+                            'ResellerId'      => $this->ResellerId,
+                            'domain'          => $this->domain,
+                            'gateway'         => $this->gateway,
+                            'RatingTables'    => $this->CDRS->RatingTables,
+                            'aNumber'         => $this->aNumber,
+                            'cNumber'         => $this->cNumber
+                        );
 
                         $Rate->calculateMessage($RateDictionary);
                     } else {
-                        $RateDictionary=array(
-                                              'callId'          => $this->callId,
-                                              'timestamp'       => $this->timestamp,
-                                              'duration'        => $this->duration,
-                                              'DestinationId'   => $this->DestinationId,
-                                              'inputTraffic'    => $this->inputTraffic,
-                                              'outputTraffic'   => $this->outputTraffic,
-                                              'BillingPartyId'  => $this->BillingPartyId,
-                                              'ResellerId'      => $this->ResellerId,
-                                              'domain'          => $this->domain,
-                                              'gateway'         => $this->gateway,
-                                              'RatingTables'    => $this->CDRS->RatingTables,
-                                              'aNumber'         => $this->aNumber,
-                                              'cNumber'         => $this->cNumber,
-                                              'ENUMtld'         => $this->ENUMtld,
-                                              'application'     => $this->application
-                                              );
+                        $RateDictionary = array(
+                            'callId'          => $this->callId,
+                            'timestamp'       => $this->timestamp,
+                            'duration'        => $this->duration,
+                            'DestinationId'   => $this->DestinationId,
+                            'inputTraffic'    => $this->inputTraffic,
+                            'outputTraffic'   => $this->outputTraffic,
+                            'BillingPartyId'  => $this->BillingPartyId,
+                            'ResellerId'      => $this->ResellerId,
+                            'domain'          => $this->domain,
+                            'gateway'         => $this->gateway,
+                            'RatingTables'    => $this->CDRS->RatingTables,
+                            'aNumber'         => $this->aNumber,
+                            'cNumber'         => $this->cNumber,
+                            'ENUMtld'         => $this->ENUMtld,
+                            'application'     => $this->application
+                        );
 
                         $Rate->calculateAudio($RateDictionary);
                     }
@@ -2360,18 +2400,22 @@ class CDR {
                     $this->rateDuration = $Rate->duration;
 
                     if ($Rate->broken_rate) {
-                        $this->broken_rate=true;
+                        $this->broken_rate = true;
                     }
                 } else {
-                    $this->rateInfo='';
-                    $this->pricePrint='';
-                    $this->price='';
+                    $this->rateInfo = '';
+                    $this->pricePrint = '';
+                    $this->price = '';
                 }
 
                 if ($this->CDRS->priceField) {
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
-                    $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->priceField),addslashes($this->pricePrint));
+                    $query .= sprintf(
+                        " %s = '%s' ",
+                        addslashes($this->CDRS->priceField),
+                        addslashes($this->pricePrint)
+                    );
                     $mongo_field = array_search($this->CDRS->priceField, $this->CDRS->CDRFields);
                     $this->mongo_cdr[$mongo_field] = floatval($this->pricePrint);
 
@@ -2385,10 +2429,15 @@ class CDR {
                 }
             }
 
-            $query1 = sprintf("update %s set %s where %s = '%s'",addslashes($table),$query,addslashes($this->idField),addslashes($this->id));
+            $query1 = sprintf(
+                "update %s set %s where %s = '%s'",
+                addslashes($table),
+                $query,
+                addslashes($this->idField),
+                addslashes($this->id));
             dprint_sql($query1);
 
-            #TODO remove me, I am used to temporary sync mysql data with mongo data
+            // TODO remove me, I am used to temporary sync mysql data with mongo data
             if ($this->CDRS->mongo_table) {
                 $mongo_field = array_search($this->idField, $this->CDRS->CDRFields);
                 try {
@@ -2406,113 +2455,125 @@ class CDR {
                         if ( $this->isBillingPartyLocal() && $table == "radacct".date('Ym')) {
                                 // cache usage only if current month
 
-                                $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                                $_usage=array('calls'    => 1,
-                                              'duration' => $this->duration,
-                                              'cost'     => $this->price,
-                                              'cost_today' => $this->price,
-                                              'traffic'  => $_traffic
-                                             );
+                                $_traffic = ($this->inputTraffic + $this->outputTraffic) / 2;
+                                $_usage = array(
+                                    'calls'    => 1,
+                                    'duration' => $this->duration,
+                                    'cost'     => $this->price,
+                                    'cost_today' => $this->price,
+                                    'traffic'  => $_traffic
+                                );
 
                                 $this->cacheQuotaUsage($_usage);
                         }
-
                     } else {
-
-                        if (preg_match("/^(\w+)(\d{4})(\d{2})$/",$table,$m)) {
+                        if (preg_match("/^(\w+)(\d{4})(\d{2})$/", $table, $m)) {
                             $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
                             $query2 = sprintf("update %s set %s where %s = '%s'",addslashes($previousTable),$query,addslashes($this->idField),addslashes($this->id));
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
                                 if ($this->CDRS->CDRdb1->affected_rows()) {
-                                    if ( $this->isBillingPartyLocal() && $previousTable == "radacct".date('Ym')) {
+                                    if ($this->isBillingPartyLocal() && $previousTable == "radacct".date('Ym')) {
                                             // cache usage only if current month
 
-                                            $_traffic=($this->inputTraffic+$this->outputTraffic)/2;
-                                            $_usage=array('calls'    => 1,
-                                                          'duration' => $this->duration,
-                                                          'cost'     => $this->price,
-                                                          'cost_today' => $this->price,
-                                                          'traffic'  => $_traffic
-                                                          );
+                                            $_traffic = ($this->inputTraffic + $this->outputTraffic) / 2;
+                                            $_usage = array(
+                                                'calls'    => 1,
+                                                'duration' => $this->duration,
+                                                'cost'     => $this->price,
+                                                'cost_today' => $this->price,
+                                                'traffic'  => $_traffic
+                                            );
                                             $this->cacheQuotaUsage($_usage);
                                     }
                                 }
                             } else {
-                                $log=sprintf ("Database error: %s (%s)",$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
+                                $log = sprintf(
+                                    "Database error: %s (%s)",
+                                    $this->CDRS->CDRdb1->Error,
+                                    $this->CDRS->CDRdb1->Errno
+                                );
                                 syslog(LOG_NOTICE, $log);
                                 print($log);
                                 return 0;
                             }
-
                         }
-
                     }
 
                     return 1;
                 } else {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query1,$this->CDRS->CDRdb1->Error,$this->CDRS->CDRdb1->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query1,
+                        $this->CDRS->CDRdb1->Error,
+                        $this->CDRS->CDRdb1->Errno
+                    );
                     syslog(LOG_NOTICE, $log);
                     print($log);
                     return 0;
                 }
             }
-
         } else {
             if ($this->CDRS->BillingPartyIdField && $CarrierInfo['BillingPartyId']) {
                 $this->domain = $CarrierInfo['BillingDomain'];
             }
 
             if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
-                $this->username=$this->usernameNormalized;
+                $this->username = $this->usernameNormalized;
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
-                $this->aNumber=$this->aNumberNormalized;
+                $this->aNumber = $this->aNumberNormalized;
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
-                $this->domainNumber=$this->domainNormalized;
+                $this->domainNumber = $this->domainNormalized;
             }
 
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
-                $this->cNumber=$this->cNumberNormalized;
+                $this->cNumber = $this->cNumberNormalized;
             }
 
             if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
-                $this->RemoteAddress=$this->RemoteAddressNormalized;
+                $this->RemoteAddress = $this->RemoteAddressNormalized;
             }
         }
         return 1;
     }
 
-    function cacheQuotaUsage($usage) {
+    function cacheQuotaUsage($usage)
+    {
 
         if (!is_array($usage)) return ;
 
-        $accounts[$this->BillingPartyId]['usage']=$usage;
+        $accounts[$this->BillingPartyId]['usage'] = $usage;
         $this->CDRS->cacheQuotaUsage($accounts);
     }
 
-    function isCallerLocal() {
+    function isCallerLocal()
+    {
         return false;
     }
 
-    function isCalleeLocal() {
+    function isCalleeLocal()
+    {
         return false;
     }
 
-    function isBillingPartyLocal() {
+    function isBillingPartyLocal()
+    {
         return false;
     }
 
-    function obfuscateCallerId() {
+    function obfuscateCallerId()
+    {
         global $obfuscateCallerId;
         if ($obfuscateCallerId) {
         }
     }
 
-    function lookupRateFromNetwork($RateDictionary,$fp) {
+    function lookupRateFromNetwork($RateDictionary, $fp)
+    {
         $this->rateInfo='';
         $this->pricePrint='';
         $this->price='';
@@ -2528,7 +2589,6 @@ class CDR {
         $this->rateInfo    = "";
 
         if (fputs($fp,"$cmd\n") !== false) {
-
             $i=0;
             while ($i < 100) {
                 $i++;
@@ -2546,7 +2606,7 @@ class CDR {
 
                 if ($i == 1) {
                     $this->price = trim($line);
-                    $this->pricePrint = number_format($this->price,4);
+                    $this->pricePrint = number_format($this->price, 4);
                     continue;
                 }
 
@@ -2555,7 +2615,8 @@ class CDR {
         }
     }
 
-    function lookupGeoLocation ($ip) {
+    function lookupGeoLocation($ip)
+    {
         if ($_loc=geoip_record_by_name($ip)) {
             return $_loc['country_name'].'/'.$_loc['city'];
         } else if ($_loc=geoip_country_name_by_name($ip)) {
