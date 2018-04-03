@@ -2408,6 +2408,11 @@ class CDR {
                     $this->price = '';
                 }
 
+                // strict mysql query fails when price is being set to ''
+                if ($this->pricePrint === null || $this->pricePrint === '') {
+                    $this->pricePrint = '0.00';
+                }
+
                 if ($this->CDRS->priceField) {
                     if ($updatedFields) $query .= ", ";
                     $updatedFields++;
