@@ -1,7 +1,7 @@
 CDRTool
 =======
 
-Copyright (c) 2002-2017 AG Projects
+Copyright (c) 2002-2018 AG Projects
 http://ag-projects.com
 
 CDRTool provides a CDR mediation and rating engine for Call Details Records
@@ -42,7 +42,7 @@ Disclaimer
 The information provided by CDRTool documentation is not always enough to
 successfully complete the installation and deployment of CDRTool. Most of
 the configuration tasks are related to setting up components outside CDRTool
-environment. 
+environment.
 
 Good knowledge in the configuration of MySQL, FreeRadius, MediaProxy and
 OpenSIPS are required to successfully complete a CDRTool installation.
@@ -68,9 +68,9 @@ it with the customer.
  * Real-time rating engine for postpaid and prepaid accounting
  * Web and CSV file management for rating tables
  * CDR search with query criteria saved for later use
- * Search results can be grouped by any field available in the CDR 
+ * Search results can be grouped by any field available in the CDR
  * Links from CDR level down to SIP trace and Media trace level
- * Multiple data-sources with consistent search and export capabilities  
+ * Multiple data-sources with consistent search and export capabilities
  * Login accounts can restrict access to CDRs per subscriber, domain or gateway
  * Rating based on day of week, time of day, duration, destination and ENUM tree
  * Display ongoing media sessions from MediaProxy
