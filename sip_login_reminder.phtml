@@ -1,10 +1,9 @@
 <?php
-
-/*
-    Copyright (c) 2017 AG Projects
-    http://ag-projects.com
-
-*/
+/**
+ * Copyright (c) 2018 AG Projects
+ * http://ag-projects.com
+ *
+ */
 
 require("/etc/cdrtool/global.inc");
 require('sip_settings.php');
@@ -33,7 +32,7 @@ $RECORDS    = new $_class($SoapEngine);
 
 $login_credentials['sip_engine'] = $RECORDS->SoapEngine->sip_engine;
 
-if ($_REQUEST['id']){
+if ($_REQUEST['id']) {
     $id = $_REQUEST['id'];
     $db = new DB_CDRTool();
 
@@ -41,10 +40,10 @@ if ($_REQUEST['id']){
 
     if (!$db->query($query)) {
         $log = sprintf("Database error for query %s: %s (%s)\n", $query, $db->Error, $db->Errno);
-        syslog(LOG_NOTICE,$log);
+        syslog(LOG_NOTICE, $log);
     } else {
         $log = sprintf("Purged %d records from memcache\n", $db->affected_rows());
-        syslog(LOG_NOTICE,$log);
+        syslog(LOG_NOTICE, $log);
     }
 
     $query = sprintf(
@@ -57,13 +56,13 @@ if ($_REQUEST['id']){
         $db->next_record();
         $account = json_decode($db->f('value'), true);
 
-        if (!($_REQUEST['sip_password'] || $_REQUEST['web_password'])){
+        if (!($_REQUEST['sip_password'] || $_REQUEST['web_password'])) {
             $RECORDS->showPasswordReminderUpdateFormEncrypted($_REQUEST['id'], $account['sip_account']);
         } else {
             $SipSettings = new SipSettings($account['sip_account'], $login_credentials, $soapEngines);
             dprint_r($SipSettings->result);
 
-            if($_REQUEST['sip_password']){
+            if ($_REQUEST['sip_password']) {
                 //print "$SipSettings->password";
                 if ($SipSettings->store_clear_text_passwords) {
                     $SipSettings->result->password = $_REQUEST['sip_password'];
@@ -74,10 +73,9 @@ if ($_REQUEST['id']){
                     $md2 = strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['sip_password'];
                     $SipSettings->result->password = md5($md1).':'.md5($md2);
                 }
-
             }
 
-            if($_REQUEST['web_password']){
+            if ($_REQUEST['web_password']) {
                 //dprint_r($SipSettings->result->properties);
                 if ($SipSettings->store_clear_text_passwords) {
                     $web_password_new = $_REQUEST['web_password'];
@@ -88,7 +86,7 @@ if ($_REQUEST['id']){
                 }
 
                 foreach (array_keys($SipSettings->result->properties) as $_key) {
-                   $_prop = $SipSettings->result->properties[$_key];
+                    $_prop = $SipSettings->result->properties[$_key];
                     if ($_prop->name == 'web_password') {
                         $newProperties[] = array(
                             'name'=> 'web_password',
@@ -146,7 +144,7 @@ if ($_REQUEST['id']){
 
                 if (!$db->query($query)) {
                     $log = sprintf("Database error for query %s: %s (%s)\n", $query, $db->Error, $db->Errno);
-                    syslog(LOG_NOTICE,$log);
+                    syslog(LOG_NOTICE, $log);
                 }
                 flush();
             }
@@ -170,7 +168,6 @@ if ($_REQUEST['id']){
     }
 
     print "<p class='grey_footer clearfix'><a href=sip_settings.phtml><u>Back</u></a> to login page";
-
 } else {
     if ($_REQUEST['email_filter'] && $_REQUEST['sip_filter']) {
         sleep(2);
@@ -200,15 +197,15 @@ if ($_REQUEST['id']){
             foreach ($accounts as $_account) {
                 $account = $_account['username'].'@'.$_account['domain'];
                 //if ($account == $_REQUEST['sip_filter']) {
-                    $SipSettings = new SipSettings($account,$login_credentials,$soapEngines);
+                    $SipSettings = new SipSettings($account, $login_credentials, $soapEngines);
                     $success = $success + $SipSettings->sendEmail(true);
                     //print "$sucess";
                     sleep(1);
                     flush();
                 //}
             }
-            if ($success >= "1"){
-                if ($success > "1"){
+            if ($success >= "1") {
+                if ($success > "1") {
                     print "Login reminders and password resets have been sent to ";
                 } else {
                     print "Login reminder and password reset have been sent to ";
@@ -226,7 +223,6 @@ if ($_REQUEST['id']){
             }
             print "</ul></div>";
         }
-
     }
     print "<p class='clearfix'><a href=sip_settings.phtml><u>Back</u></a> to login page";
 }
