@@ -1,13 +1,12 @@
 <?php
-
-/*
-    Copyright (c) 2017 AG Projects
-    http://ag-projects.com
-
-    This page provides functions for management of
-    SIP account settings on a remote NGNPro server
-
-*/
+/**
+ * Copyright (c) 2018 AG Projects
+ * http://ag-projects.com
+ *
+ * This page provides functions for management of
+ * SIP account settings on a remote NGNPro server
+ *
+ */
 
 Header('Content-Type: text/html; charset=utf-8');
 
@@ -23,9 +22,12 @@ if ($_REQUEST['action'] == 'get_location') {
 
 if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
+        array(
+            "sess" => "CDRTool_Session",
+            "auth" => "CDRTool_Auth",
+            "perm" => "CDRTool_Perm"
+        )
+    );
 
     $account     = $_REQUEST['account'];
     $reseller    = $_REQUEST['reseller'];
@@ -39,12 +41,12 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
 
     $perm->check("provisioning");
 
-	global $CDRTool;
+    global $CDRTool;
 
     if ($CDRTool['impersonate']) {
-        if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/",$CDRTool['impersonate'],$m)) {
-            $_customer=$m[1];
-            $_reseller=$m[2];
+        if (preg_match("/^([1-9][0-9]*)\.([1-9][0-9]*)$/", $CDRTool['impersonate'], $m)) {
+            $_customer = $m[1];
+            $_reseller = $m[2];
             if ($_customer == $_reseller) {
                 $login_type = 'reseller';
             } else {
@@ -52,67 +54,66 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
             }
 
             $login_credentials=array(
-                            'customer'           => $_customer,
-                            'reseller'           => $_reseller,
-                            'login_type'         => $login_type
-                            );
-    
+                'customer'           => $_customer,
+                'reseller'           => $_reseller,
+                'login_type'         => $login_type
+            );
         } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
-            $login_credentials=array(
-                            'customer'           => $customer,
-                            'reseller'           => $reseller,
-                            'login_type'         => 'admin'
-                            );
+            $login_credentials = array(
+                'customer'           => $customer,
+                'reseller'           => $reseller,
+                'login_type'         => 'admin'
+            );
         } else {
             page_close();
-            printf ("Error: Invalid impersonate value %s",$CDRTool['impersonate']);
+            printf("Error: Invalid impersonate value %s", $CDRTool['impersonate']);
             exit;
         }
-
     } else {
-            page_close();
-            printf ("Error: Missing impersonate setting");
-            exit;
+        page_close();
+        printf("Error: Missing impersonate setting");
+        exit;
     }
-
 } else {
-    page_open(array("sess" => "SIP_Subscriber_Session",
-                    "auth" => "SIP_Subscriber_Auth")
-             );
-    $account	 = $SIP['account'];
-    $reseller  	 = $SIP['reseller'];
-    $customer  	 = $SIP['customer'];
-    $sip_engine  = $SIP['engine'];
-    $login_type  = "subscriber";
+    page_open(
+        array(
+            "sess" => "SIP_Subscriber_Session",
+            "auth" => "SIP_Subscriber_Auth"
+        )
+    );
+    $account    = $SIP['account'];
+    $reseller   = $SIP['reseller'];
+    $customer   = $SIP['customer'];
+    $sip_engine = $SIP['engine'];
+    $login_type = "subscriber";
 
     $login_credentials=array(
-                            'login_type' => $login_type,
-                            'customer'   => $customer,
-                            'reseller'   => $reseller,
-                            'sip_engine' => $sip_engine
-                            );
-
+        'login_type' => $login_type,
+        'customer'   => $customer,
+        'reseller'   => $reseller,
+        'sip_engine' => $sip_engine
+    );
 }
 
 
-$_class='SipSettings';
-$_reseller_class=$_class.$reseller;
+$_class = 'SipSettings';
+$_reseller_class = $_class.$reseller;
 
 if (class_exists($_reseller_class)) {
-	$SipSettings_class=$_reseller_class;
+    $SipSettings_class=$_reseller_class;
 } else {
-	$SipSettings_class=$_class;
+    $SipSettings_class=$_class;
 }
 
 if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
-	$login_credentials['sip_engine']      = $resellerFilters[$login_credentials['reseller']]['sip_engine'];
+    $login_credentials['sip_engine'] = $resellerFilters[$login_credentials['reseller']]['sip_engine'];
 } else if ($_REQUEST['sip_engine']) {
-    $login_credentials['sip_engine']=$_REQUEST['sip_engine'];
+    $login_credentials['sip_engine'] = $_REQUEST['sip_engine'];
 } else if ($resellerFilters['default']['sip_engine']) {
-	$login_credentials['sip_engine']      = $resellerFilters['default']['sip_engine'];
+    $login_credentials['sip_engine'] = $resellerFilters['default']['sip_engine'];
 }
 
-renderUI($SipSettings_class,$account,$login_credentials,$soapEngines);
+renderUI($SipSettings_class, $account, $login_credentials, $soapEngines);
 
 page_close();
 ?>

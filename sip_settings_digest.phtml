@@ -1,23 +1,23 @@
 <?php
-/*
-    Copyright (c) 2017 AG Projects
-    http://ag-projects.com
-
-    This page provides functions for management of
-    SIP account settings on a remote NGNPro server
-
-*/
+/**
+ * Copyright (c) 2018 AG Projects
+ * http://ag-projects.com
+ *
+ * This page provides functions for management of
+ * SIP account settings on a remote NGNPro server
+ *
+ */
 
 require("/etc/cdrtool/global.inc");
 require("/etc/cdrtool/ngnpro_engines.inc");
 require('sip_settings.php');
 
 if ($credentials=getSipAccountFromHTTPDigest()) {
-    $account	 = $credentials['account'];
-    $sip_engine  = $credentials['engine'];
-    $reseller  	 = $credentials['reseller'];
-    $customer  	 = $credentials['customer'];
-    $login_type  = "subscriber";
+    $account    = $credentials['account'];
+    $sip_engine = $credentials['engine'];
+    $reseller   = $credentials['reseller'];
+    $customer   = $credentials['customer'];
+    $login_type = "subscriber";
 } else {
     die('HTP digest Credentials error');
 }
@@ -35,15 +35,14 @@ if (class_exists($_reseller_class)) {
     $SipSettings_class=$_class;
 }
 
-$login_credentials=array(
-                        'reseller'       => $reseller,
-                        'customer'       => $customer,
-                        'login_type'     => $login_type,
-                        'sip_engine'     => $sip_engine,
-                        'templates_path' => './templates'
-
+$login_credentials = array(
+    'reseller'       => $reseller,
+    'customer'       => $customer,
+    'login_type'     => $login_type,
+    'sip_engine'     => $sip_engine,
+    'templates_path' => './templates'
 );
 
-renderUI($SipSettings_class,$account,$login_credentials,$soapEngines);
+renderUI($SipSettings_class, $account, $login_credentials, $soapEngines);
 
 ?>
