@@ -6,7 +6,8 @@
  * This library contains classes and functions for rating functionality
  */
 
-class Rate {
+class Rate
+{
     var $priceDenominator       = 10000; // allow sub cents
     var $priceDecimalDigits     = 4;     // web display
     var $durationPeriodRated    = 60;    // how the prices are indicated in the billing_rates, default is per minute
@@ -26,11 +27,12 @@ class Rate {
 
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
     var $broken_rate            = false;
-    var $mongo_db               = NULL;
-    var $db                     = NULL;
+    var $mongo_db               = null;
+    var $db                     = null;
     var $database_backend       = "mysql";
 
-    function Rate($settings, $db) {
+    public function Rate($settings, $db)
+    {
 
         $this->db = $db;
         $this->settings = $settings;
@@ -40,37 +42,37 @@ class Rate {
         }
 
         if ($this->settings['priceDenominator']) {
-            $this->priceDenominator=$this->settings['priceDenominator'];
+            $this->priceDenominator = $this->settings['priceDenominator'];
         }
 
         if ($this->settings['priceDecimalDigits']) {
-            $this->priceDecimalDigits=$this->settings['priceDecimalDigits'];
+            $this->priceDecimalDigits = $this->settings['priceDecimalDigits'];
         }
 
         if ($this->settings['durationPeriodRated']) {
-            $this->durationPeriodRated=$this->settings['durationPeriodRated'];
+            $this->durationPeriodRated = $this->settings['durationPeriodRated'];
         }
 
         if ($this->settings['trafficSizeRated']) {
-            $this->trafficSizeRated=$this->settings['trafficSizeRated'];
+            $this->trafficSizeRated = $this->settings['trafficSizeRated'];
         }
 
         if ($this->settings['rate_longer_than']) {
             // if call is shorter than this, it has zero cost
-            $this->rate_longer_than=$this->settings['rate_longer_than'];
+            $this->rate_longer_than = $this->settings['rate_longer_than'];
         }
 
         if ($this->settings['min_duration']) {
             // if call is shorter than this, it has zero cost
-            $this->min_duration=$this->settings['min_duration'];
+            $this->min_duration = $this->settings['min_duration'];
         }
 
         if ($this->settings['increment']) {
-            $this->increment=$this->settings['increment'];
+            $this->increment = $this->settings['increment'];
         }
 
         if ($this->settings['database_backend']) {
-            $this->database_backend=$this->settings['database_backend'];
+            $this->database_backend = $this->settings['database_backend'];
         }
 
         if ($this->database_backend == "mongo") {
@@ -82,14 +84,16 @@ class Rate {
                     $mongo_connection = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
                     $this->mongo_db = $mongo_connection->selectDB($mongo_database);
                 } catch (Exception $e) {
-                    syslog(LOG_NOTICE, sprintf("Error: cannot connect to mongo database %s: %s",$mongo_uri, $e->getMessage()));
-                    $this->mongo_db = NULL;
+                    $log = sprintf("Error: cannot connect to mongo database %s: %s", $mongo_uri, $e->getMessage());
+                    syslog(LOG_NOTICE, $log);
+                    $this->mongo_db = null;
                 }
             }
         }
     }
 
-    function calculateAudio($dictionary) {
+    public function calculateAudio($dictionary)
+    {
         // used for calculate rate for audio application
 
         $this->RatingTables      = $dictionary['RatingTables'];
@@ -119,13 +123,13 @@ class Rate {
 
         if ($this->ENUMtld && $this->ENUMtld != 'n/a' && $this->ENUMtld != 'none' && $this->RatingTables->ENUMtlds[$this->ENUMtld]) {
             $this->ENUMdiscount = $this->RatingTables->ENUMtlds[$this->ENUMtld]['discount'];
-            if (!is_numeric($this->ENUMdiscount ) || $this->ENUMdiscount < 0 || $this->ENUMdiscount > 100) {
+            if (!is_numeric($this->ENUMdiscount) || $this->ENUMdiscount < 0 || $this->ENUMdiscount > 100) {
                   syslog(LOG_NOTICE, "Error: ENUM discount for tld $this->ENUMtld must be between 0 and 100");
             }
         }
 
         if (!$this->gateway) {
-            $this->gateway="0.0.0.0";
+            $this->gateway = "0.0.0.0";
         }
 
         if (!$this->duration) {
@@ -143,7 +147,7 @@ class Rate {
 
         $durationRate = 0;
 
-        $foundRates=array();
+        $foundRates = array();
 
         if (!$this->DestinationId) {
             syslog(LOG_NOTICE, "Error: Cannot calculate rate without destination id for callid=$this->callId");
@@ -165,17 +169,17 @@ class Rate {
         // lookup discounts if any
         $this->lookupDiscounts();
 
-        $this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
-        list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
+        $this->startTimeBilling   = getLocalTime($this->billingTimezone, $this->timestamp);
+        list($dateText,$timeText) = explode(" ", trim($this->startTimeBilling));
 
-        $Bdate = explode("-",$dateText);
-        $Btime = explode(":",$timeText);
+        $Bdate = explode("-", $dateText);
+        $Btime = explode(":", $timeText);
 
         $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
 
-        $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
+        $this->startTimeBilling   = Date("Y-m-d H:i:s", $this->timestampBilling);
 
-        $this->trafficKB=number_format($this->traffic/1024,0,"","");
+        $this->trafficKB = number_format($this->traffic/1024, 0, "", "");
 
         // check min_duration and increment per destination
         if ($this->increment >= 1) {
@@ -185,34 +189,34 @@ class Rate {
 
         if ($this->max_duration &&  $this->duration > $this->max_duration) {
             // limit the maximum duration for rating
-            $this->duration=$this->max_duration;
+            $this->duration = $this->max_duration;
         }
 
-        $this->rateSyslog="";
+        $this->rateSyslog = "";
 
         if ($this->duration) {
             if ($this->increment >= 1) {
                 $this->rateInfo .=
-                "    Increment: $this->increment s\n";
-                $this->rateSyslog .= sprintf("Increment=%s ",$this->increment);
+                    "    Increment: $this->increment s\n";
+                $this->rateSyslog .= sprintf("Increment=%s ", $this->increment);
             }
 
             if ($this->min_duration) {
                 $this->rateInfo .=
-                " Min duration: $this->min_duration s\n";
-                $this->rateSyslog .= sprintf("MinDuration=%s ",$this->min_duration);
+                    " Min duration: $this->min_duration s\n";
+                $this->rateSyslog .= sprintf("MinDuration=%s ", $this->min_duration);
             }
 
             if ($this->max_duration) {
                 $this->rateInfo .=
-                " Max duration: $this->max_duration s\n";
-                $this->rateSyslog .= sprintf("MaxDuration=%s ",$this->max_duration);
+                    " Max duration: $this->max_duration s\n";
+                $this->rateSyslog .= sprintf("MaxDuration=%s ", $this->max_duration);
             }
 
             if ($this->max_price) {
                 $this->rateInfo .=
-                " Max price: $this->max_price\n";
-                $this->rateSyslog .= sprintf("MaxPrice=%s ",$this->max_price);
+                    " Max price: $this->max_price\n";
+                $this->rateSyslog .= sprintf("MaxPrice=%s ", $this->max_price);
             }
 
             unset($IntervalsForPricing);
@@ -225,13 +229,13 @@ class Rate {
                 "    Customer: $this->CustomerProfile\n";
 
             if ($this->region) {
-            $this->rateInfo .=
-                "      Region: $this->region\n";
+                $this->rateInfo .=
+                    "      Region: $this->region\n";
             }
 
             if ($this->discount_duration || $this->discount_connect) {
                 $this->rateInfo .=
-                "    Discount: ";
+                    "    Discount: ";
             }
 
             if ($this->discount_connect) {
@@ -247,7 +251,7 @@ class Rate {
             }
 
             if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'n/a') {
-            $this->rateInfo .=
+                $this->rateInfo .=
 
                 "    ENUM tld: $this->ENUMtld\n".
                 "    ENUM discount: $this->ENUMdiscount%\n";
@@ -260,18 +264,17 @@ class Rate {
             // until we billed the whole duration
 
             while ($durationRatedTotal < $this->duration) {
-
                 if ($i == "0") {
-                    $dayofweek       = date("w",$this->timestampBilling);
-                    $hourofday       = date("G",$this->timestampBilling);
-                    $dayofyear       = date("Y-m-d",$this->timestampBilling);
+                    $dayofweek       = date("w", $this->timestampBilling);
+                    $hourofday       = date("G", $this->timestampBilling);
+                    $dayofyear       = date("Y-m-d", $this->timestampBilling);
                 } else {
-                    $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
+                    $dayofweek       = date("w", $this->timestampBilling+$durationRatedTotal);
                     $hourofday       = $foundRate['nextHourOfDay'];
-                    $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
+                    $dayofyear       = date("Y-m-d", $this->timestampBilling+$durationRatedTotal);
                 }
 
-                $foundRate           = $this->lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+                $foundRate           = $this->lookupRateAudio($dayofyear, $dayofweek, $hourofday, $durationRatedTotal);
                 $durationRatedTotal  = $durationRatedTotal + $foundRate['duration'];
 
                 if (!$foundRate['rate']) {
@@ -286,28 +289,28 @@ class Rate {
                 if ($i > 10) {
                     // possible loop because of wrong coding make sure we end this loop somehow
                     $body="Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans. It could be a serious bug.\n";
-                    mail($this->toEmail, "CDRTool rating problem", $body , $this->extraHeaders);
+                    mail($this->toEmail, "CDRTool rating problem", $body, $this->extraHeaders);
                     syslog(LOG_NOTICE, "Error: Rating of call $this->callId (DestId=$this->DestinationId) has more than 10 spans.");
                     break;
                 }
             }
         }
 
-        $j=0;
-        $span=0;
+        $j = 0;
+        $span = 0;
 
         foreach ($foundRates as $thisRate) {
-            $spanPrice=0;
+            $spanPrice = 0;
             $span++;
             if ($j > 0) {
-                $payConnect=0;
-                $durationForRating=$thisRate['duration'];
+                $payConnect = 0;
+                $durationForRating = $thisRate['duration'];
             } else {
                 $payConnect=1;
                 if ($this->min_duration && $this->duration < $this->min_duration) {
-                    $durationForRating=$this->min_duration;
+                    $durationForRating = $this->min_duration;
                 } else {
-                    $durationForRating=$thisRate['duration'];
+                    $durationForRating = $thisRate['duration'];
                 }
             }
 
@@ -316,35 +319,34 @@ class Rate {
 
             // apply discounts for connect
             if ($this->discount_connect) {
-                $connectCost=$connectCost-$connectCost*$this->discount_connect/100;
+                $connectCost = $connectCost - $connectCost * $this->discount_connect / 100;
             }
 
             // apply discounts for duration
             if ($this->discount_duration) {
-                $durationRate=$durationRate-$durationRate*$this->discount_duration/100;
+                $durationRate = $durationRate - $durationRate * $this->discount_duration / 100;
             }
 
             $connectCostIn   = $thisRate['values']['connectCostIn'];
             $durationRateIn  = $thisRate['values']['durationRateIn'];
 
             if ($span=="1") {
+                $connectCostSpan = $connectCost;
+                $this->connectCost = number_format($connectCost/$this->priceDenominator, $this->priceDecimalDigits);
 
-                $connectCostSpan=$connectCost;
-                $this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+                $connectCostSpanIn = $connectCostIn;
 
-                $connectCostSpanIn=$connectCostIn;
-
-                $this->connectCostIn=number_format($connectCostIn/$this->priceDenominator,$this->priceDecimalDigits);
+                $this->connectCostIn = number_format($connectCostIn/$this->priceDenominator, $this->priceDecimalDigits);
             } else {
                 $connectCostSpan=0;
                 $connectCostSpanIn=0;
             }
 
-            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
-            $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
+            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator, $this->priceDecimalDigits);
+            $durationRatePrint    = number_format($durationRate/$this->priceDenominator, $this->priceDecimalDigits);
 
-            $connectCostPrintIn   = number_format($connectCostSpanIn/$this->priceDenominator,$this->priceDecimalDigits);
-            $durationRatePrintIn  = number_format($durationRateIn/$this->priceDenominator,$this->priceDecimalDigits);
+            $connectCostPrintIn   = number_format($connectCostSpanIn/$this->priceDenominator, $this->priceDecimalDigits);
+            $durationRatePrintIn  = number_format($durationRateIn/$this->priceDenominator, $this->priceDecimalDigits);
 
             if (!$connectCostSpan)     $connectCostSpan=0;
             if (!$durationRate)        $durationRate=0;
@@ -366,19 +368,19 @@ class Rate {
 
             */
 
-            $spanPrice      = $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
+            $spanPrice      = $durationRate * $durationForRating / $this->durationPeriodRated / $this->priceDenominator;
 
             $this->price    = $this->price+$spanPrice;
-            $spanPricePrint = number_format($spanPrice,$this->priceDecimalDigits);
+            $spanPricePrint = number_format($spanPrice, $this->priceDecimalDigits);
 
-            $spanPriceIn      = $durationRateIn*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
+            $spanPriceIn      = $durationRateIn * $durationForRating / $this->durationPeriodRated / $this->priceDenominator;
             $this->priceIn    = $this->priceIn+$spanPriceIn;
-            $spanPricePrintIn = number_format($spanPriceIn,$this->priceDecimalDigits);
+            $spanPricePrintIn = number_format($spanPriceIn, $this->priceDecimalDigits);
 
             if ($span=="1" && $thisRate['profile']) {
                 if ($connectCostIn) {
-                $this->rateInfo .=
-                "  Connect in: $connectCostPrintIn\n";
+                    $this->rateInfo .=
+                    "  Connect in: $connectCostPrintIn\n";
                 }
 
                 $this->rateInfo .=
@@ -386,8 +388,8 @@ class Rate {
                 "   StartTime: $this->startTimeBilling\n".
                 "--\n";
                 $this->rateSyslog .= "ConnectFee=$connectCostPrint ";
-                $this->price    = $this->price+$connectCostSpan/$this->priceDenominator*$payConnect;
-                $this->priceIn  = $this->priceIn+$connectCostSpanIn/$this->priceDenominator*$payConnect;
+                $this->price    = $this->price + $connectCostSpan / $this->priceDenominator * $payConnect;
+                $this->priceIn  = $this->priceIn + $connectCostSpanIn / $this->priceDenominator * $payConnect;
             }
 
             $this->rateInfo .=
@@ -395,7 +397,14 @@ class Rate {
             "    Duration: $durationForRating s\n";
 
 
-            $this->rateSyslog .= sprintf("CallId=%s Span=%s Duration=%s DestId=%s %s",$this->callId,$span,$durationForRating,$this->DestinationId,$thisRate['customer']);
+            $this->rateSyslog .= sprintf(
+                "CallId=%s Span=%s Duration=%s DestId=%s %s",
+                $this->callId,
+                $span,
+                $durationForRating,
+                $this->DestinationId,
+                $thisRate['customer']
+            );
 
             if ($thisRate['profile']) {
                 $this->rateInfo .=
@@ -405,28 +414,35 @@ class Rate {
                 "       Price: $spanPricePrint\n";
 
                 if ($spanPriceIn) {
-                $this->rateInfo .=
-                "    Price in: $spanPricePrintIn\n";
+                    $this->rateInfo .=
+                        "    Price in: $spanPricePrintIn\n";
                 }
 
-                $this->rateSyslog .= sprintf(" Profile=%s Period=%s Rate=%s Interval=%s Cost=%s/%s",$thisRate['profile'],$thisRate['day'],$thisRate['rate'],$thisRate['interval'],$durationRatePrint,$this->durationPeriodRated);
-
+                $this->rateSyslog .= sprintf(
+                    " Profile=%s Period=%s Rate=%s Interval=%s Cost=%s/%s",
+                    $thisRate['profile'],
+                    $thisRate['day'],
+                    $thisRate['rate'],
+                    $thisRate['interval'],
+                    $durationRatePrint,
+                    $this->durationPeriodRated
+                );
             } else {
                 $this->rateInfo .=
-                "   ProfileId: none\n".
-                "      RateId: none\n";
+                    "   ProfileId: none\n".
+                    "      RateId: none\n";
                 $this->rateSyslog .= " Profile=none, Rate=none";
             }
 
-            $this->rateSyslog .= " Price=".sprintf("%.4f",$spanPrice);
-            $this->rateSyslog .= " PriceIn=".sprintf("%.4f",$spanPriceIn);
+            $this->rateSyslog .= " Price=".sprintf("%.4f", $spanPrice);
+            $this->rateSyslog .= " PriceIn=".sprintf("%.4f", $spanPriceIn);
 
             if ($this->discount_connect) {
-                $this->rateSyslog .= sprintf(" DisCon=%s",$this->discount_connect);
+                $this->rateSyslog .= sprintf(" DisCon=%s", $this->discount_connect);
             }
 
             if ($this->discount_duration) {
-                $this->rateSyslog .= sprintf(" DisDur=%s",$this->discount_duration);
+                $this->rateSyslog .= sprintf(" DisDur=%s", $this->discount_duration);
             }
 
             syslog(LOG_NOTICE, $this->rateSyslog);
@@ -436,35 +452,35 @@ class Rate {
 
         if ($this->priceIn) {
                 $this->rateInfo .= "--\n".
-                "   Price out: ".sprintf("%.4f",$this->price)."\n".
-                "    Price in: ".sprintf("%.4f",$this->priceIn)."\n".
-                "      Margin: ".sprintf("%.4f",$this->price-$this->priceIn)."\n";
-
+                    "   Price out: ".sprintf("%.4f", $this->price)."\n".
+                    "    Price in: ".sprintf("%.4f", $this->priceIn)."\n".
+                    "      Margin: ".sprintf("%.4f", $this->price-$this->priceIn)."\n";
         }
 
         $this->rateInfo=trim($this->rateInfo);
 
         if ($this->max_price && $this->price > $this->max_price) {
-            $this->price=$this->max_price;
+            $this->price = $this->max_price;
         }
 
         if ($this->ENUMdiscount) {
-            $this->priceBeforeDiscount=sprintf("%.4f",$this->price);
-            $this->price = $this->price - $this->price*$this->ENUMdiscount/100;
-            $this->price=sprintf("%.4f",$this->price);
+            $this->priceBeforeDiscount = sprintf("%.4f", $this->price);
+            $this->price = $this->price - $this->price * $this->ENUMdiscount / 100;
+            $this->price = sprintf("%.4f", $this->price);
                 $this->rateInfo .=
-                "\n--\n".
-                "       Total: $this->priceBeforeDiscount\n".
-                "  Total after discount: $this->price\n";
+                    "\n--\n".
+                    "       Total: $this->priceBeforeDiscount\n".
+                    "  Total after discount: $this->price\n";
         }
 
-        $this->price=sprintf("%.4f",$this->price);
-        $this->pricePrint=number_format($this->price,$this->priceDecimalDigits);
+        $this->price = sprintf("%.4f", $this->price);
+        $this->pricePrint = number_format($this->price, $this->priceDecimalDigits);
 
         return true;
     }
 
-    function calculateMessage($dictionary) {
+    public function calculateMessage($dictionary)
+    {
         // used for calculate rate for SMS application
 
         $this->RatingTables      = $dictionary['RatingTables'];
@@ -483,10 +499,10 @@ class Rate {
         $this->cNumber           = $dictionary['cNumber'];
 
         if (!$this->gateway) {
-            $this->gateway="0.0.0.0";
+            $this->gateway = "0.0.0.0";
         }
 
-        $this->application='sms';
+        $this->application = 'sms';
 
         $foundRates=array();
 
@@ -504,18 +520,18 @@ class Rate {
         // lookup discounts if any
         $this->lookupDiscounts();
 
-        $this->startTimeBilling = getLocalTime($this->billingTimezone,$this->timestamp);
+        $this->startTimeBilling = getLocalTime($this->billingTimezone, $this->timestamp);
 
-        list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
+        list($dateText,$timeText) = explode(" ", trim($this->startTimeBilling));
 
-        $Bdate = explode("-",$dateText);
-        $Btime = explode(":",$timeText);
+        $Bdate = explode("-", $dateText);
+        $Btime = explode(":", $timeText);
 
         $this->timestampBilling = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
 
-        $dayofweek = date("w",$this->timestampBilling);
-        $hourofday = date("G",$this->timestampBilling);
-        $dayofyear = date("Y-m-d",$this->timestampBilling);
+        $dayofweek = date("w", $this->timestampBilling);
+        $hourofday = date("G", $this->timestampBilling);
+        $dayofyear = date("Y-m-d", $this->timestampBilling);
 
         $this->rateInfo .=
 
@@ -524,13 +540,13 @@ class Rate {
             "    Customer: $this->CustomerProfile\n";
 
         if ($this->region) {
-        $this->rateInfo .=
-            "      Region: $this->region\n";
+            $this->rateInfo .=
+                "      Region: $this->region\n";
         }
 
         if ($this->discount_duration || $this->discount_connect) {
             $this->rateInfo .=
-            "    Discount: ";
+                "    Discount: ";
         }
 
         if ($this->discount_connect) {
@@ -541,17 +557,17 @@ class Rate {
             $this->rateInfo .= "\n";
         }
 
-        $foundRate = $this->lookupRateMessage($dayofyear,$dayofweek,$hourofday);
+        $foundRate = $this->lookupRateMessage($dayofyear, $dayofweek, $hourofday);
 
         if (is_array($foundRate)) {
-            $this->price=number_format($foundRate['values']['connectCost']/$this->priceDenominator,$this->priceDecimalDigits);
-            $this->price=sprintf("%.4f",$this->price);
-            $this->pricePrint=$this->price;
+            $this->price = number_format($foundRate['values']['connectCost'] / $this->priceDenominator, $this->priceDecimalDigits);
+            $this->price = sprintf("%.4f", $this->price);
+            $this->pricePrint = $this->price;
 
             $this->rateInfo .=
-            "   ProfileId: $foundRate[profile] / $foundRate[day]\n".
-            "      RateId: $foundRate[rate]\n".
-            "       Price: $this->price\n";
+                "   ProfileId: $foundRate[profile] / $foundRate[day]\n".
+                "      RateId: $foundRate[rate]\n".
+                "       Price: $this->price\n";
 
             return true;
         } else {
@@ -559,7 +575,8 @@ class Rate {
         }
     }
 
-    function lookupDiscounts() {
+    private function lookupDiscounts()
+    {
         // get discounts for customer per region if set otherwise per destination id
 
         if (!$this->CustomerProfile) {
@@ -567,14 +584,14 @@ class Rate {
         }
 
         if ($this->region) {
-            $_field='region';
-            $_value=$this->region;
+            $_field = 'region';
+            $_value = $this->region;
         } else {
-            $_field='destination';
-            $_value=$this->DestinationId;
+            $_field = 'destination';
+            $_value = $this->DestinationId;
         }
 
-        if ($this->mongo_db != NULL) {
+        if ($this->mongo_db != null) {
             // mongo backend
             if ($this->CustomerProfile == 'default') {
                 $mongo_where['subscriber']  = '';
@@ -584,7 +601,7 @@ class Rate {
                 $mongo_where['application'] = $this->application;
                 $mongo_where[$_field]       = $_value;
             } else {
-                $els=explode("=",$this->CustomerProfile);
+                $els = explode("=", $this->CustomerProfile);
                 $mongo_where[$els[0]]  = $els[1];
                 $mongo_where['application'] = $this->application;
                 $mongo_where[$_field]       = $_value;
@@ -600,7 +617,7 @@ class Rate {
                 return false;
             }
 
-            if($result) {
+            if ($result) {
                 if ($result['connect'] > 0 && $result['connect'] <=100) {
                     $this->discount_connect  = $result['connect'];
                 }
@@ -613,36 +630,43 @@ class Rate {
         }
 
         if ($this->CustomerProfile == 'default') {
-            $query=sprintf("select * from billing_discounts
-            where subscriber     = ''
-            and domain           = ''
-            and gateway          = ''
-            and application      = '%s'
-            and %s               = '%s'
-            ",
-            addslashes($this->application),
-            addslashes($_field),
-            addslashes($_value)
+            $query = sprintf(
+                "select * from billing_discounts
+                where subscriber     = ''
+                and domain           = ''
+                and gateway          = ''
+                and application      = '%s'
+                and %s               = '%s'
+                ",
+                addslashes($this->application),
+                addslashes($_field),
+                addslashes($_value)
             );
         } else {
-            $els=explode("=",$this->CustomerProfile);
+            $els = explode("=", $this->CustomerProfile);
 
-            $query=sprintf("select * from billing_discounts
-            where %s = '%s'
-            and application = '%s'
-            and %s  = '%s'
-            ",
-            addslashes($els[0]),
-            addslashes($els[1]),
-            addslashes($this->application),
-            addslashes($_field),
-            addslashes($_value)
+            $query = sprintf(
+                "select * from billing_discounts
+                where %s = '%s'
+                and application = '%s'
+                and %s  = '%s'
+                ",
+                addslashes($els[0]),
+                addslashes($els[1]),
+                addslashes($this->application),
+                addslashes($_field),
+                addslashes($_value)
             );
         }
 
         // mysql backend
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -660,19 +684,23 @@ class Rate {
         return true;
     }
 
-    function lookupDestinationDetails() {
+    private function lookupDestinationDetails()
+    {
         // get rating related details for the destination id
         if (!$this->DestinationId) {
             syslog(LOG_NOTICE, "Error: Cannot lookup destination details without a destination id");
             return false;
         }
 
-        if ($this->mongo_db != NULL) {
+        if ($this->mongo_db != null) {
             // mongo backend
             $mongo_where['dest_id'] = $this->DestinationId;
-            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
-                                        array('reseller_id' => 0)
-                                        );
+            $mongo_where['$or'] = array(
+                array(
+                    'reseller_id' => intval($this->ResellerId)
+                ),
+                array('reseller_id' => 0)
+            );
 
             try {
                 $table = $this->mongo_db->selectCollection('destinations');
@@ -684,13 +712,13 @@ class Rate {
                 return false;
             }
 
-            if(!$result) {
-                $log=sprintf ("Error: cannot find mongo destination details for dest id %s",$this->DestinationId);
+            if (!$result) {
+                $log = sprintf("Error: cannot find mongo destination details for dest id %s", $this->DestinationId);
                 syslog(LOG_NOTICE, $log);
                 //return false;
             }
 
-            if($result) {
+            if ($result) {
                 $this->region          = $result['region'];
                 $this->max_duration    = $result['max_duration'];
                 $this->max_price       = $result['max_price'];
@@ -707,15 +735,22 @@ class Rate {
         }
 
         // mysql backend
-        $query=sprintf("select * from destinations
-        where dest_id = '%s'
-        and (reseller_id = %d or reseller_id = 0) order by reseller_id desc limit 1",
-        addslashes($this->DestinationId),
-        addslashes($this->ResellerId)
+        $query = sprintf(
+            "select * from destinations
+            where dest_id = '%s'
+            and (reseller_id = %d or reseller_id = 0) order by reseller_id desc limit 1
+            ",
+            addslashes($this->DestinationId),
+            addslashes($this->ResellerId)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -739,7 +774,8 @@ class Rate {
         return true;
     }
 
-    function lookupProfiles() {
+    private function lookupProfiles()
+    {
         unset($this->allProfiles);
 
         /*
@@ -754,17 +790,19 @@ class Rate {
             than lookup rates in profileX_alt
         */
 
-        if ($this->mongo_db != NULL) {
+        if ($this->mongo_db != null) {
             // mongo backend
 
-            $mongo_where['$or'] = array(array('subscriber' => $this->BillingPartyId),
-                                        array('domain'     => $this->domain),
-                                        array('gateway'    => $this->gateway),
-                                        array('gateway'    => '',
-                                              'domain'     => '',
-                                              'subscriber' => ''
-                                              )
-                                        );
+            $mongo_where['$or'] = array(
+                array('subscriber' => $this->BillingPartyId),
+                array('domain'     => $this->domain),
+                array('gateway'    => $this->gateway),
+                array(
+                    'gateway'    => '',
+                    'domain'     => '',
+                    'subscriber' => ''
+                )
+            );
 
             try {
                 $table = $this->mongo_db->selectCollection('billing_customers');
@@ -776,51 +814,67 @@ class Rate {
                 return false;
             }
 
-            if(!$result) {
-                $log=sprintf("Error: no customer found in mongo billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
+            if (!$result) {
+                $log = sprintf(
+                    "Error: no customer found in mongo billing_customers table for billing party=%s, domain=%s, gateway=%s",
+                    $this->BillingPartyId,
+                    $this->domain,
+                    $this->gateway
+                );
                 syslog(LOG_NOTICE, $log);
                 //return false;
             }
 
-            if($result) {
+            if ($result) {
                 if ($result['subscriber']) {
-                    $this->CustomerProfile = sprintf("subscriber=%s",$result['subscriber']);
-                } else if ($result['domain']) {
-                    $this->CustomerProfile = sprintf("domain=%s",$result['domain']);
-                } else if ($result['gateway']) {
-                    $this->CustomerProfile = sprintf("gateway=%s",$result['gateway']);
+                    $this->CustomerProfile = sprintf("subscriber=%s", $result['subscriber']);
+                } elseif ($result['domain']) {
+                    $this->CustomerProfile = sprintf("domain=%s", $result['domain']);
+                } elseif ($result['gateway']) {
+                    $this->CustomerProfile = sprintf("gateway=%s", $result['gateway']);
                 } else {
                     $this->CustomerProfile = "default";
                 }
 
                 if (!$result['profile_name1']) {
-                    $log=sprintf("Error: customer %s (id=%d) has no weekday profile assigned in profiles table",$this->CustomerProfile,$result['id']);
+                    $log = sprintf(
+                        "Error: customer %s (id=%d) has no weekday profile assigned in profiles table",
+                        $this->CustomerProfile,
+                        $result['id']
+                    );
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if (!$result['profile_name2']) {
-                    $log=sprintf("Error: customer %s (id=%d) has no weekend profile assigned in profiles table",$this->CustomerProfile,$result['id']);
+                    $log = sprintf(
+                        "Error: customer %s (id=%d) has no weekend profile assigned in profiles table",
+                        $this->CustomerProfile,
+                        $result['id']
+                    );
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
 
                 if (!$result['timezone']) {
-                    $log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
+                    $log = sprintf(
+                        "Error: missing timezone for customer %s",
+                        $this->CustomerProfile
+                    );
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 $this->billingTimezone = $result['timezone'];
 
-                $this->allProfiles = array (
-                                            "profile_workday"     => $result['profile_name1'],
-                                            "profile_weekend"     => $result['profile_name2'],
-                                            "profile_workday_alt" => $result['profile_name1_alt'],
-                                            "profile_weekend_alt" => $result['profile_name2_alt'],
-                                            "timezone"            => $result['timezone']
-                                        );
+                $this->allProfiles = array(
+                    "profile_workday"     => $result['profile_name1'],
+                    "profile_weekend"     => $result['profile_name2'],
+                    "profile_workday_alt" => $result['profile_name1_alt'],
+                    "profile_weekend_alt" => $result['profile_name2_alt'],
+                    "timezone"            => $result['timezone']
+                );
                 if ($result['increment']) {
                     $this->increment = $result['increment'];
                 }
@@ -833,20 +887,27 @@ class Rate {
         }
 
         // mysql backend
-        $query=sprintf("select * from billing_customers
-        where
+        $query = sprintf(
+            "select * from billing_customers
+            where
             (subscriber  = '%s' and domain       = '' and gateway = '' )
-        or (domain      = '%s' and subscriber   = '' and gateway = '' )
-        or (gateway     = '%s' and subscriber   = '' and domain  = '' )
-        or (subscriber  = ''   and domain       = '' and gateway = '' )
-        order by subscriber desc, domain desc, gateway desc limit 1 ",
-        addslashes($this->BillingPartyId),
-        addslashes($this->domain),
-        addslashes($this->gateway)
+            or (domain      = '%s' and subscriber   = '' and gateway = '' )
+            or (gateway     = '%s' and subscriber   = '' and domain  = '' )
+            or (subscriber  = ''   and domain       = '' and gateway = '' )
+            order by subscriber desc, domain desc, gateway desc limit 1
+            ",
+            addslashes($this->BillingPartyId),
+            addslashes($this->domain),
+            addslashes($this->gateway)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -855,43 +916,54 @@ class Rate {
             $this->db->next_record();
 
             if ($this->db->Record['subscriber']) {
-                $this->CustomerProfile = sprintf("subscriber=%s",$this->db->Record['subscriber']);
-            } else if ($this->db->Record['domain']) {
-                $this->CustomerProfile = sprintf("domain=%s",$this->db->Record['domain']);
-            } else if ($this->db->Record['gateway']) {
-                $this->CustomerProfile = sprintf("gateway=%s",$this->db->Record['gateway']);
+                $this->CustomerProfile = sprintf("subscriber=%s", $this->db->Record['subscriber']);
+            } elseif ($this->db->Record['domain']) {
+                $this->CustomerProfile = sprintf("domain=%s", $this->db->Record['domain']);
+            } elseif ($this->db->Record['gateway']) {
+                $this->CustomerProfile = sprintf("gateway=%s", $this->db->Record['gateway']);
             } else {
                 $this->CustomerProfile = "default";
             }
 
             if (!$this->db->Record['profile_name1']) {
-                $log=sprintf("Error: customer %s (id=%d) has no weekday profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
+                $log = sprintf(
+                    "Error: customer %s (id=%d) has no weekday profile assigned in profiles table",
+                    $this->CustomerProfile,
+                    $this->db->Record['id']
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             if (!$this->db->Record['profile_name2']) {
-                $log=sprintf("Error: customer %s (id=%d) has no weekend profile assigned in profiles table",$this->CustomerProfile,$this->db->Record['id']);
+                $log = sprintf(
+                    "Error: customer %s (id=%d) has no weekend profile assigned in profiles table",
+                    $this->CustomerProfile,
+                    $this->db->Record['id']
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
 
             if (!$this->db->Record['timezone']) {
-                $log = sprintf ("Error: missing timezone for customer %s",$this->CustomerProfile);
+                $log = sprintf(
+                    "Error: missing timezone for customer %s",
+                    $this->CustomerProfile
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             $this->billingTimezone = $this->db->Record['timezone'];
 
-            $this->allProfiles = array (
-                                        "profile_workday"     => $this->db->Record['profile_name1'],
-                                        "profile_weekend"     => $this->db->Record['profile_name2'],
-                                        "profile_workday_alt" => $this->db->Record['profile_name1_alt'],
-                                        "profile_weekend_alt" => $this->db->Record['profile_name2_alt'],
-                                        "timezone"            => $this->db->Record['timezone']
-                                    );
+            $this->allProfiles = array(
+                "profile_workday"     => $this->db->Record['profile_name1'],
+                "profile_weekend"     => $this->db->Record['profile_name2'],
+                "profile_workday_alt" => $this->db->Record['profile_name1_alt'],
+                "profile_weekend_alt" => $this->db->Record['profile_name2_alt'],
+                "timezone"            => $this->db->Record['timezone']
+            );
             if ($this->db->Record['increment']) {
                 $this->increment = $this->db->Record['increment'];
             }
@@ -902,13 +974,19 @@ class Rate {
 
             return true;
         } else {
-            $log=sprintf("Error: no customer found in billing_customers table for billing party=%s, domain=%s, gateway=%s",$this->BillingPartyId,$this->domain,$this->gateway);
+            $log = sprintf(
+                "Error: no customer found in billing_customers table for billing party=%s, domain=%s, gateway=%s",
+                $this->BillingPartyId,
+                $this->domain,
+                $this->gateway
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
     }
 
-    function lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedAlready) {
+    private function lookupRateAudio($dayofyear, $dayofweek, $hourofday, $durationRatedAlready)
+    {
 
         /*
         // Required information from CDR structure
@@ -954,13 +1032,11 @@ class Rate {
 
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
-
             $this->profileName           = $this->allProfiles['profile_weekend'];
             $this->profileNameAlt        = $this->allProfiles['profile_weekend_alt'];
             $this->PeriodOfProfile       = "weekend";
-
         } else {
-            if ($dayofweek >=1 && $dayofweek <=5 ) {
+            if ($dayofweek >=1 && $dayofweek <=5) {
                 $this->profileName       = $this->allProfiles['profile_workday'];
                 $this->profileNameAlt    = $this->allProfiles['profile_workday_alt'];
                 $this->PeriodOfProfile   = "weekday";
@@ -978,22 +1054,22 @@ class Rate {
         if (is_array($profileValues)) {
             $this->profileNameLog = $this->profileName;
 
-            if ($hourofday          < $profileValues['hour1'] ) {
+            if ($hourofday          < $profileValues['hour1']) {
                 $this->rateName     = $profileValues['rate_name1'];
                 $this->timeInterval = "0-".$profileValues['hour1'];
                 $foundProfile       = $profileValues['hour1'];
                 $this->nextProfile  = $profileValues['hour1'];
-            } else if ($hourofday   < $profileValues['hour2']) {
+            } elseif ($hourofday   < $profileValues['hour2']) {
                 $this->rateName     = $profileValues['rate_name2'];
                 $this->timeInterval = $profileValues['hour1']."-".$profileValues['hour2'];
                 $foundProfile       = $profileValues['hour2'];
                 $this->nextProfile  = $profileValues['hour2'];
-            } else if ($hourofday   < $profileValues['hour3']) {
+            } elseif ($hourofday   < $profileValues['hour3']) {
                 $this->rateName     = $profileValues['rate_name3'];
                 $this->timeInterval = $profileValues['hour2']."-".$profileValues['hour3'];
                 $foundProfile       = $profileValues['hour3'];
                 $this->nextProfile  = $profileValues['hour3'];
-            } else if ($hourofday   < $profileValues['hour4']) {
+            } elseif ($hourofday   < $profileValues['hour4']) {
                 $this->rateName     = $profileValues['rate_name4'];
                 $this->timeInterval = $profileValues['hour3']."-".$profileValues['hour4'];
                 $foundProfile       = $profileValues['hour4'];
@@ -1001,7 +1077,6 @@ class Rate {
             }
 
             if ($this->rateName) {
-
                 $found_history=false;
 
                 //get historical rating if exists
@@ -1010,7 +1085,6 @@ class Rate {
                     foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->application]) as $_idx) {
                         $h++;
                         if ($_idx['startDate'] <= $this->timestamp) {
-
                             if ($_idx['endDate'] > $this->timestamp) {
                                 // found historical rate
                                 $found_history=true;
@@ -1018,29 +1092,26 @@ class Rate {
                                 $this->rateValues=$_idx;
                                 break;
                             } else {
-                                $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
+                                $_log = sprintf("Interval missmatch %s < %s", $_idx['endDate'], $this->timestamp);
 
                                 continue;
                             }
                         } else {
-                            $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                            $_log = sprintf("Interval missmatch %s > %s", $_idx['startDate'], $this->timestamp);
                             continue;
                         }
-
                     }
-
                 }
 
                 if (!$found_history) {
                     if ($this->region) {
-                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->region);
+                        $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->region);
                         if (!$this->rateValues) {
                             // try the destination as last resort
-                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
+                            $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->DestinationId);
                         }
-
                     } else {
-                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
+                        $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->DestinationId);
                     }
                 }
             }
@@ -1051,22 +1122,22 @@ class Rate {
         if (!$this->rateValues && is_array($profileValuesAlt)) {
             $this->profileNameLog = $this->profileNameAlt;
 
-            if ($hourofday          < $profileValuesAlt['hour1'] ) {
+            if ($hourofday          < $profileValuesAlt['hour1']) {
                 $this->rateName     = $profileValuesAlt['rate_name1'];
                 $this->timeInterval = "0-".$profileValuesAlt['hour1'];
                 $foundProfile       = $profileValuesAlt['hour1'];
                 $this->nextProfile  = $profileValuesAlt['hour1'];
-            } else if ($hourofday   < $profileValuesAlt['hour2']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour2']) {
                 $this->rateName     = $profileValuesAlt['rate_name2'];
                 $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
                 $foundProfile       = $profileValuesAlt['hour2'];
                 $this->nextProfile  = $profileValuesAlt['hour2'];
-            } else if ($hourofday   < $profileValuesAlt['hour3']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour3']) {
                 $this->rateName     = $profileValuesAlt['rate_name3'];
                 $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
                 $foundProfile       = $profileValuesAlt['hour3'];
                 $this->nextProfile  = $profileValuesAlt['hour3'];
-            } else if ($hourofday   < $profileValuesAlt['hour4']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour4']) {
                 $this->rateName     = $profileValuesAlt['rate_name4'];
                 $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
                 $foundProfile       = $profileValuesAlt['hour4'];
@@ -1074,7 +1145,6 @@ class Rate {
             }
 
             if ($this->rateName) {
-
                 $found_history=false;
 
                 //get historical rating if exists
@@ -1083,19 +1153,18 @@ class Rate {
                     foreach (($this->RatingTables->ratesHistory[$this->rateName][$this->DestinationId][$this->application]) as $_idx) {
                         $h++;
                         if ($_idx['startDate'] <= $this->timestamp) {
-
                             if ($_idx['endDate'] > $this->timestamp) {
                                 // found historical rate
                                 $found_history=true;
                                 $this->rateValues=$_idx;
                                 break;
                             } else {
-                                $_log=sprintf("Interval missmatch %s < %s",$_idx['endDate'],$this->timestamp);
+                                $_log = sprintf("Interval missmatch %s < %s", $_idx['endDate'], $this->timestamp);
 
                                 continue;
                             }
                         } else {
-                            $_log=sprintf("Interval missmatch %s > %s",$_idx['startDate'],$this->timestamp);
+                            $_log = sprintf("Interval missmatch %s > %s", $_idx['startDate'], $this->timestamp);
                             continue;
                         }
                     }
@@ -1103,14 +1172,13 @@ class Rate {
 
                 if (!$found_history) {
                     if ($this->region) {
-                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->region);
+                        $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->region);
                         // try destination as last resort
                         if (!$this->rateValues) {
-                            $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
+                            $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->DestinationId);
                         }
-
                     } else {
-                        $this->rateValues=$this->lookupRateValuesAudio($this->rateName,$this->DestinationId);
+                        $this->rateValues = $this->lookupRateValuesAudio($this->rateName, $this->DestinationId);
                     }
                 }
             }
@@ -1118,27 +1186,35 @@ class Rate {
 
         if (!$this->rateValues) {
             $this->rateNotFound=true;
-            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
-            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName,$this->application);
+            $log = sprintf(
+                "Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=%s",
+                $this->callId,
+                $this->BillingPartyId,
+                $this->CustomerProfile,
+                $this->gateway,
+                $this->DestinationId,
+                $this->profileName,
+                $this->application
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         if ($this->nextProfile == "24") $this->nextProfile = 0;
 
-        $DST   = Date("I",$timestampNextProfile);
+        $DST   = Date("I", $timestampNextProfile);
 
         if (!$this->nextProfile) {
             // check it we change daylight saving time tomorrow
             // yes this cann happen and we must apply a different rate
             $timestampNextProfile =$timestampNextProfile+24*3600;
-            $DSTNext   = Date("I",$timestampNextProfile);
+            $DSTNext   = Date("I", $timestampNextProfile);
 
             if ($DST != $DSTNext) {
                 if ($DSTNext==0) {
-                    $timestampNextProfile=$timestampNextProfile+3600;
-                } else if ($DSTNext==1) {
-                    $timestampNextProfile=$timestampNextProfile-3600;
+                    $timestampNextProfile = $timestampNextProfile+3600;
+                } elseif ($DSTNext==1) {
+                    $timestampNextProfile = $timestampNextProfile-3600;
                 }
             }
         }
@@ -1151,39 +1227,40 @@ class Rate {
 
         $durationToRate=$this->duration-$durationRatedAlready;
 
-        $month = Date("m",$timestampNextProfile);
-        $day   = Date("d",$timestampNextProfile);
-        $year  = Date("Y",$timestampNextProfile);
+        $month = Date("m", $timestampNextProfile);
+        $day   = Date("d", $timestampNextProfile);
+        $year  = Date("Y", $timestampNextProfile);
 
-        $nextProfileTimestamp=mktime($this->nextProfile, 0, 0, $month,$day,$year);
+        $nextProfileTimestamp = mktime($this->nextProfile, 0, 0, $month, $day, $year);
 
         $npdt=Date("Y-m-d H:i", $nextProfileTimestamp);
 
-        $timeTillNextProfile=$nextProfileTimestamp-$this->timestampBilling;
+        $timeTillNextProfile = $nextProfileTimestamp - $this->timestampBilling;
 
         if ($durationToRate > $timeTillNextProfile) {
-            $diff=$durationToRate-$timeTillNextProfile;
-            $this->durationRated=$timeTillNextProfile;
+            $diff = $durationToRate - $timeTillNextProfile;
+            $this->durationRated = $timeTillNextProfile;
         } else {
-            $this->durationRated=$durationToRate;
+            $this->durationRated = $durationToRate;
         }
 
-        $rate=array(
-                    "customer"      => $this->CustomerProfile,
-                    "application"   => $this->application,
-                    "profile"       => $this->profileNameLog,
-                    "day"           => $this->PeriodOfProfile,
-                    "destinationId" => $this->DestinationId,
-                    "duration"      => $this->durationRated,
-                    "rate"          => $this->rateName,
-                    "values"        => $this->rateValues,
-                    "interval"      => $this->timeInterval,
-                    "nextHourOfDay" => $this->nextProfile
-                    );
+        $rate = array(
+            "customer"      => $this->CustomerProfile,
+            "application"   => $this->application,
+            "profile"       => $this->profileNameLog,
+            "day"           => $this->PeriodOfProfile,
+            "destinationId" => $this->DestinationId,
+            "duration"      => $this->durationRated,
+            "rate"          => $this->rateName,
+            "values"        => $this->rateValues,
+            "interval"      => $this->timeInterval,
+            "nextHourOfDay" => $this->nextProfile
+        );
         return $rate;
     }
 
-    function lookupRateMessage($dayofyear,$dayofweek,$hourofday) {
+    private function lookupRateMessage($dayofyear, $dayofweek, $hourofday)
+    {
 
         /*
         // Required information from CDR structure
@@ -1229,13 +1306,11 @@ class Rate {
 
         // get work-day or weekend profile
         if ($this->RatingTables->holidays[$dayofyear]) {
-
             $this->profileName           = $this->allProfiles['profile_weekend'];
             $this->profileNameAlt        = $this->allProfiles['profile_weekend_alt'];
             $this->PeriodOfProfile       = "weekend";
-
         } else {
-            if ($dayofweek >=1 && $dayofweek <=5 ) {
+            if ($dayofweek >=1 && $dayofweek <=5) {
                 $this->profileName       = $this->allProfiles['profile_workday'];
                 $this->profileNameAlt    = $this->allProfiles['profile_workday_alt'];
                 $this->PeriodOfProfile   = "weekday";
@@ -1253,19 +1328,19 @@ class Rate {
         if (is_array($profileValues)) {
             $this->profileNameLog = $this->profileName;
 
-            if ($hourofday          < $profileValues['hour1'] ) {
+            if ($hourofday          < $profileValues['hour1']) {
                 $this->rateName     = $profileValues['rate_name1'];
                 $this->timeInterval = "0-".$profileValues['hour1'];
                 $foundProfile       = $profileValues['hour1'];
-            } else if ($hourofday   < $profileValues['hour2']) {
+            } elseif ($hourofday   < $profileValues['hour2']) {
                 $this->rateName     = $profileValues['rate_name2'];
                 $this->timeInterval = $profileValues['hour1']."-".$profileValues['hour2'];
                 $foundProfile       = $profileValues['hour2'];
-            } else if ($hourofday   < $profileValues['hour3']) {
+            } elseif ($hourofday   < $profileValues['hour3']) {
                 $this->rateName     = $profileValues['rate_name3'];
                 $this->timeInterval = $profileValues['hour2']."-".$profileValues['hour3'];
                 $foundProfile       = $profileValues['hour3'];
-            } else if ($hourofday   < $profileValues['hour4']) {
+            } elseif ($hourofday   < $profileValues['hour4']) {
                 $this->rateName     = $profileValues['rate_name4'];
                 $this->timeInterval = $profileValues['hour3']."-".$profileValues['hour4'];
                 $foundProfile       = $profileValues['hour4'];
@@ -1273,13 +1348,13 @@ class Rate {
 
             if ($this->rateName) {
                 if ($this->region) {
-                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->region);
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName, $this->region);
                     if (!$this->rateValues) {
                         // try the destination as last resort
-                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
+                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName, $this->DestinationId);
                     }
                 } else {
-                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
+                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName, $this->DestinationId);
                 }
             }
         }
@@ -1289,66 +1364,72 @@ class Rate {
         if (!$this->rateValues && is_array($profileValuesAlt)) {
             $this->profileNameLog = $this->profileNameAlt;
 
-            if ($hourofday          < $profileValuesAlt['hour1'] ) {
+            if ($hourofday          < $profileValuesAlt['hour1']) {
                 $this->rateName     = $profileValuesAlt['rate_name1'];
                 $this->timeInterval = "0-".$profileValuesAlt['hour1'];
                 $foundProfile       = $profileValuesAlt['hour1'];
-            } else if ($hourofday   < $profileValuesAlt['hour2']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour2']) {
                 $this->rateName     = $profileValuesAlt['rate_name2'];
                 $this->timeInterval = $profileValuesAlt['hour1']."-".$profileValuesAlt['hour2'];
                 $foundProfile       = $profileValuesAlt['hour2'];
-            } else if ($hourofday   < $profileValuesAlt['hour3']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour3']) {
                 $this->rateName     = $profileValuesAlt['rate_name3'];
                 $this->timeInterval = $profileValuesAlt['hour2']."-".$profileValuesAlt['hour3'];
                 $foundProfile       = $profileValuesAlt['hour3'];
-            } else if ($hourofday   < $profileValuesAlt['hour4']) {
+            } elseif ($hourofday   < $profileValuesAlt['hour4']) {
                 $this->rateName     = $profileValuesAlt['rate_name4'];
                 $this->timeInterval = $profileValuesAlt['hour3']."-".$profileValuesAlt['hour4'];
                 $foundProfile       = $profileValuesAlt['hour4'];
             }
 
             if ($this->rateName) {
-
                 if ($this->region) {
-                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->region);
+                    $this->rateValues = $this->lookupRateValuesMessage($this->rateName, $this->region);
                     // try destination as last resort
                     if (!$this->rateValues) {
-                        $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
+                        $this->rateValues = $this->lookupRateValuesMessage($this->rateName, $this->DestinationId);
                     }
-
                 } else {
-                    $this->rateValues=$this->lookupRateValuesMessage($this->rateName,$this->DestinationId);
+                    $this->rateValues = $this->lookupRateValuesMessage($this->rateName, $this->DestinationId);
                 }
             }
         }
 
         if (!$this->rateValues) {
             $this->rateNotFound=true;
-            $log=sprintf("Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=sms",
-            $this->callId,$this->BillingPartyId,$this->CustomerProfile,$this->gateway,$this->DestinationId,$this->profileName);
+            $log=sprintf(
+                "Error: Cannot find rates for callid=%s, billing party=%s, customer %s, gateway=%s, destination=%s, profile=%s, app=sms",
+                $this->callId,
+                $this->BillingPartyId,
+                $this->CustomerProfile,
+                $this->gateway,
+                $this->DestinationId,
+                $this->profileName
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $rate=array(
-                    "customer"      => $this->CustomerProfile,
-                    "application"   => $this->application,
-                    "profile"       => $this->profileNameLog,
-                    "day"           => $this->PeriodOfProfile,
-                    "destinationId" => $this->DestinationId,
-                    "rate"          => $this->rateName,
-                    "values"        => $this->rateValues,
-                    );
+        $rate = array(
+            "customer"      => $this->CustomerProfile,
+            "application"   => $this->application,
+            "profile"       => $this->profileNameLog,
+            "day"           => $this->PeriodOfProfile,
+            "destinationId" => $this->DestinationId,
+            "rate"          => $this->rateName,
+            "values"        => $this->rateValues,
+        );
 
         return $rate;
     }
 
-    function MaxSessionTime($dictionary) {
+    public function MaxSessionTime($dictionary)
+    {
         // Used for prepaid application to return maximum session time based on a prepaid balance
 
-        $this->rateValuesCache=array();
+        $this->rateValuesCache = array();
 
-        $this->MaxSessionTimeSpans=0;
+        $this->MaxSessionTimeSpans = 0;
 
         $durationRate           = 0;
 
@@ -1372,7 +1453,7 @@ class Rate {
         if (!$this->application) $this->application='audio';
 
         if (!$this->DestinationId) {
-            $log=sprintf("Error: no DestinationId supplied in MaxSessionTime()");
+            $log = sprintf("Error: no DestinationId supplied in MaxSessionTime()");
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -1385,33 +1466,33 @@ class Rate {
             return false;
         }
 
-        $this->startTimeBilling   = getLocalTime($this->billingTimezone,$this->timestamp);
-        list($dateText,$timeText) = explode(" ",trim($this->startTimeBilling));
+        $this->startTimeBilling   = getLocalTime($this->billingTimezone, $this->timestamp);
+        list($dateText,$timeText) = explode(" ", trim($this->startTimeBilling));
 
-        $Bdate = explode("-",$dateText);
-        $Btime = explode(":",$timeText);
+        $Bdate = explode("-", $dateText);
+        $Btime = explode(":", $timeText);
 
         $this->timestampBilling   = mktime($Btime[0], $Btime[1], $Btime[2], $Bdate[1], $Bdate[2], $Bdate[0]);
-        $this->startTimeBilling   = Date("Y-m-d H:i:s",$this->timestampBilling);
+        $this->startTimeBilling   = Date("Y-m-d H:i:s", $this->timestampBilling);
 
         $i=0;
         $durationRatedTotal=0;
 
-        while ($Balance > 0 ) {
+        while ($Balance > 0) {
             $span++;
             $this->MaxSessionTimeSpans++;
 
             if ($i == "0") {
-                $dayofweek       = date("w",$this->timestampBilling);
-                $hourofday       = date("G",$this->timestampBilling);
-                $dayofyear       = date("Y-m-d",$this->timestampBilling);
+                $dayofweek       = date("w", $this->timestampBilling);
+                $hourofday       = date("G", $this->timestampBilling);
+                $dayofyear       = date("Y-m-d", $this->timestampBilling);
             } else {
-                $dayofweek       = date("w",$this->timestampBilling+$durationRatedTotal);
+                $dayofweek       = date("w", $this->timestampBilling+$durationRatedTotal);
                 $hourofday       = $foundRate['nextHourOfDay'];
-                $dayofyear       = date("Y-m-d",$this->timestampBilling+$durationRatedTotal);
+                $dayofyear       = date("Y-m-d", $this->timestampBilling+$durationRatedTotal);
             }
 
-            $foundRate            = $this->lookupRateAudio($dayofyear,$dayofweek,$hourofday,$durationRatedTotal);
+            $foundRate            = $this->lookupRateAudio($dayofyear, $dayofweek, $hourofday, $durationRatedTotal);
 
             if ($this->rateNotFound) {
                 // break here to avoid loops
@@ -1438,25 +1519,24 @@ class Rate {
             $durationRate    = $thisRate['values']['durationRate'];
 
             if ($span=="1" && !$dictionary['skipConnectCost']) {
-                $this->connectCost=number_format($connectCost/$this->priceDenominator,$this->priceDecimalDigits);
+                $this->connectCost=number_format($connectCost/$this->priceDenominator, $this->priceDecimalDigits);
 
                 $connectCostSpan=$connectCost;
                 $setupBalanceRequired=$connectCost/$this->priceDenominator;
 
                 if ($connectCost && $Balance <= $setupBalanceRequired) {
-                    syslog(LOG_NOTICE,"Balance too small: $Balance <= $setupBalanceRequired");
+                    syslog(LOG_NOTICE, "Balance too small: $Balance <= $setupBalanceRequired");
                     return false;
                 }
 
                 $Balance = $Balance-$setupBalanceRequired;
-
             } else {
                 $connectCostSpan=0;
                 $setupBalanceRequired=0;
             }
 
-            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator,$this->priceDecimalDigits);
-            $durationRatePrint    = number_format($durationRate/$this->priceDenominator,$this->priceDecimalDigits);
+            $connectCostPrint     = number_format($connectCostSpan/$this->priceDenominator, $this->priceDecimalDigits);
+            $durationRatePrint    = number_format($durationRate/$this->priceDenominator, $this->priceDecimalDigits);
 
             $spanPrice            = $this->price+$setupBalanceRequired*$payConnect+
                                     $durationRate*$durationForRating/$this->durationPeriodRated/$this->priceDenominator;
@@ -1464,9 +1544,7 @@ class Rate {
             if ($Balance > $spanPrice) {
                 $Balance = $Balance-$spanPrice;
                 $durationRatedTotal   = $durationRatedTotal+ $foundRate['duration'];
-
             } else {
-
                 $durationAllowedinThisSpan = $Balance /
                                              $durationRate * $this->durationPeriodRated * $this->priceDenominator;
                 $rateOfThisSpan=$durationRate/$this->priceDenominator;
@@ -1478,13 +1556,13 @@ class Rate {
             }
 
             if ($durationRatedTotal >= $this->duration) {
-                return sprintf("%f",$durationRatedTotal);
+                return sprintf("%f", $durationRatedTotal);
             }
 
             $i++;
 
             if ($i>10) {
-                return sprintf("%f",$durationRatedTotal);
+                return sprintf("%f", $durationRatedTotal);
                 break;
             }
         }
@@ -1492,19 +1570,21 @@ class Rate {
         return false;
     }
 
-    function lookupRateValuesAudio($rateName,$DestinationId) {
+    private function lookupRateValuesAudio($rateName, $DestinationId)
+    {
 
         if (is_array($this->rateValuesCache[$rateName][$DestinationId][$this->application])) {
             return $this->rateValuesCache[$rateName][$DestinationId][$this->application];
         }
 
-        if ($this->mongo_db != NULL) {
+        if ($this->mongo_db != null) {
             // mongo backend
             $mongo_where['destination'] = $DestinationId;
             $mongo_where['application'] = $this->application;
-            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
-                                        array('reseller_id' => 0)
-                                        );
+            $mongo_where['$or'] = array(
+                array('reseller_id' => intval($this->ResellerId)),
+                array('reseller_id' => 0)
+            );
 
             try {
                 $table = $this->mongo_db->selectCollection('billing_rates');
@@ -1516,19 +1596,19 @@ class Rate {
                 return false;
             }
 
-            if(!$result) {
-                $log=sprintf ("Error: cannot find mongo rate values for dest id %s",$DestinationId);
+            if (!$result) {
+                $log = sprintf("Error: cannot find mongo rate values for dest id %s", $DestinationId);
                 syslog(LOG_NOTICE, $log);
                 //return false;
             }
 
-            if($result){
+            if ($result) {
                 $values=array(
-                            "connectCost"     => $result['connectCost'],
-                            "durationRate"    => $result['durationRate'],
-                            "connectCostIn"   => $result['connectCostIn'],
-                            "durationRateIn"  => $result['durationRateIn']
-                           );
+                    "connectCost"     => $result['connectCost'],
+                    "durationRate"    => $result['durationRate'],
+                    "connectCostIn"   => $result['connectCostIn'],
+                    "durationRateIn"  => $result['durationRateIn']
+                );
 
                 // cache values
                 $this->rateValuesCache[$rateName][$DestinationId][$this->application]=$values;
@@ -1542,38 +1622,50 @@ class Rate {
             } else {
                 $table="billing_rates_default";
             }
-            $query=sprintf("select * from %s where destination = '%s' and application = '%s'",
-            addslashes($table),
-            addslashes($DestinationId),
-            addslashes($this->application)
+            $query = sprintf(
+                "select * from %s where destination = '%s' and application = '%s'",
+                addslashes($table),
+                addslashes($DestinationId),
+                addslashes($this->application)
             );
-
         } else {
-            $table="billing_rates";
-            $query=sprintf("select * from %s where name = '%s' and destination = '%s' and application = '%s'",
-            addslashes($table),
-            addslashes($rateName),
-            addslashes($DestinationId),
-            addslashes($this->application)
+            $table = "billing_rates";
+            $query = sprintf(
+                "select * from %s where name = '%s' and destination = '%s' and application = '%s'",
+                addslashes($table),
+                addslashes($rateName),
+                addslashes($DestinationId),
+                addslashes($this->application)
             );
         }
 
         // mysql backend
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
             // try the main table
-            $query=sprintf("select * from billing_rates where name = '%s' and destination = '%s' and application = '%s'",
-            addslashes($rateName),
-            addslashes($DestinationId),
-            addslashes($this->application)
+            $query = sprintf(
+                "select * from billing_rates where name = '%s' and destination = '%s' and application = '%s'",
+                addslashes($rateName),
+                addslashes($DestinationId),
+                addslashes($this->application)
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -1581,36 +1673,38 @@ class Rate {
 
         if ($this->db->num_rows()) {
             $this->db->next_record();
-            $values=array(
-                        "connectCost"     => $this->db->Record['connectCost'],
-                        "durationRate"    => $this->db->Record['durationRate'],
-                        "connectCostIn"   => $this->db->Record['connectCostIn'],
-                        "durationRateIn"  => $this->db->Record['durationRateIn']
-                       );
+            $values = array(
+                "connectCost"     => $this->db->Record['connectCost'],
+                "durationRate"    => $this->db->Record['durationRate'],
+                "connectCostIn"   => $this->db->Record['connectCostIn'],
+                "durationRateIn"  => $this->db->Record['durationRateIn']
+            );
 
             // cache values
-            $this->rateValuesCache[$rateName][$DestinationId][$this->application]=$values;
+            $this->rateValuesCache[$rateName][$DestinationId][$this->application] = $values;
             return $values;
         } else {
             return false;
         }
     }
 
-    function lookupRateValuesMessage($rateName,$DestinationId) {
-
+    private function lookupRateValuesMessage($rateName, $DestinationId)
+    {
         if (is_array($this->rateValuesCache[$rateName][$DestinationId]['sms'])) {
             return $this->rateValuesCache[$rateName][$DestinationId]['sms'];
         }
 
-        if ($this->mongo_db != NULL) {
+        if ($this->mongo_db != null) {
             // mongo backend
             $mongo_where['application'] = 'sms';
-            $mongo_where['$or'] = array(array('reseller_id' => intval($this->ResellerId)),
-                                        array('reseller_id' => 0)
-                                        );
-            $mongo_where['$or'] = array(array('destination' => $DestinationId),
-                                        array('destination' => '')
-                                        );
+            $mongo_where['$or'] = array(
+                array('reseller_id' => intval($this->ResellerId)),
+                array('reseller_id' => 0)
+            );
+            $mongo_where['$or'] = array(
+                array('destination' => $DestinationId),
+                array('destination' => '')
+            );
 
             try {
                 $table = $this->mongo_db->selectCollection('billing_rates');
@@ -1622,58 +1716,74 @@ class Rate {
                 return false;
             }
 
-            if(!$result) {
-                $log=sprintf ("Error: cannot find mongo rate sms values for dest id %s",$DestinationId);
+            if (!$result) {
+                $log = sprintf(
+                    "Error: cannot find mongo rate sms values for dest id %s",
+                    $DestinationId
+                );
                 syslog(LOG_NOTICE, $log);
                 //return false;
             }
 
-            if($result){
-                $values=array(
-                            "connectCost"     => $result['connectCost']
-                           );
+            if ($result) {
+                $values = array(
+                    "connectCost"     => $result['connectCost']
+                );
 
                 // cache values
-                $this->rateValuesCache[$rateName][$DestinationId]['sms']=$values;
+                $this->rateValuesCache[$rateName][$DestinationId]['sms'] = $values;
                 return $values;
             }
         }
 
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
-                $table="billing_rates_".$rateName;
+                $table = "billing_rates_".$rateName;
             } else {
-                $table="billing_rates_default";
+                $table = "billing_rates_default";
             }
-            $query=sprintf("select * from %s where (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            addslashes($table),
-            addslashes($DestinationId)
+            $query = sprintf(
+                "select * from %s where (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+                addslashes($table),
+                addslashes($DestinationId)
             );
         } else {
-            $table="billing_rates";
-            $query=sprintf("select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            addslashes($table),
-            addslashes($rateName),
-            addslashes($DestinationId)
+            $table = "billing_rates";
+            $query = sprintf(
+                "select * from %s where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+                addslashes($table),
+                addslashes($rateName),
+                addslashes($DestinationId)
             );
         }
 
         // mysql backend
         if (!$this->db->query($query)) {
             if ($this->db->Errno != 1146) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
             // try the main table
             // lookup rate from MySQL
-            $query=sprintf("select * from billing_rates where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
-            addslashes($rateName),
-            addslashes($DestinationId)
+            $query = sprintf(
+                "select * from billing_rates where name = '%s' and (destination = '%s' or destination = '') and application = 'sms' order by destination desc limit 1",
+                addslashes($rateName),
+                addslashes($DestinationId)
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
@@ -1681,9 +1791,9 @@ class Rate {
 
         if ($this->db->num_rows()) {
             $this->db->next_record();
-            $values=array(
-                        "connectCost"     => $this->db->Record['connectCost']
-                       );
+            $values = array(
+                "connectCost"     => $this->db->Record['connectCost']
+            );
 
             // cache values
             $this->rateValuesCache[$rateName][$DestinationId]['sms']=$values;
@@ -1694,552 +1804,671 @@ class Rate {
     }
 }
 
-class RatingTables {
+class RatingTables
+{
     var $database_backend = 'mysql';   // mongo or mysql
     var $csv_export=array(
-                           "destinations"          => "destinations.csv",
-                           "billing_customers"     => "customers.csv",
-                           "billing_profiles"      => "profiles.csv",
-                           "billing_rates"         => "rates.csv",
-                           "billing_rates_history" => "ratesHistory.csv",
-                           "billing_discounts"     => "discounts.csv",
-                           "billing_enum_tlds"     => "enumtld.csv",
-                           "prepaid"               => "prepaid.csv",
-                           "quota_usage"           => "quotausage.csv"
-                           );
-    var $csv_import=array(
-                           "destinations"          => "destinations.csv",
-                           "billing_customers"     => "customers.csv",
-                           "billing_profiles"      => "profiles.csv",
-                           "billing_rates"         => "rates.csv",
-                           "billing_rates_history" => "ratesHistory.csv",
-                           "billing_discounts"     => "discounts.csv"
-                           );
+        "destinations"          => "destinations.csv",
+        "billing_customers"     => "customers.csv",
+        "billing_profiles"      => "profiles.csv",
+        "billing_rates"         => "rates.csv",
+        "billing_rates_history" => "ratesHistory.csv",
+        "billing_discounts"     => "discounts.csv",
+        "billing_enum_tlds"     => "enumtld.csv",
+        "prepaid"               => "prepaid.csv",
+        "quota_usage"           => "quotausage.csv"
+    );
+    var $csv_import = array(
+        "destinations"          => "destinations.csv",
+        "billing_customers"     => "customers.csv",
+        "billing_profiles"      => "profiles.csv",
+        "billing_rates"         => "rates.csv",
+        "billing_rates_history" => "ratesHistory.csv",
+        "billing_discounts"     => "discounts.csv"
+    );
 
-    var $previously_imported_files=0;
-    var $maxrowsperpage=15;
-    var $insertDomainOption=array();
-    var $delimiter=",";
-    var $filesToImport=array();
-    var $importFilesPatterns=array('ratesHistory',
-                                   'rates',
-                                   'profiles',
-                                   'destinations',
-                                   'discounts',
-                                   'customers'
-                                   );
+    var $previously_imported_files = 0;
+    var $maxrowsperpage = 15;
+    var $insertDomainOption = array();
+    var $delimiter = ",";
+    var $filesToImport = array();
+    var $importFilesPatterns = array(
+        'ratesHistory',
+        'rates',
+        'profiles',
+        'destinations',
+        'discounts',
+        'customers'
+    );
 
     var $mustReload = false;
-    var $web_elements=array('table',
-                            'export',
-                            'web_task',
-                            'subweb_task',
-                            'confirmDelete',
-                            'confirmCopy',
-                            'next',
-                            'id',
-                            'search_text',
-                            'ReloadRatingTables',
-                            'account',
-                            'balance',
-                            'fromRate',
-                            'toRate',
-                            'sessionId'
-                            );
+    var $web_elements = array(
+        'table',
+        'export',
+        'web_task',
+        'subweb_task',
+        'confirmDelete',
+        'confirmCopy',
+        'next',
+        'id',
+        'search_text',
+        'ReloadRatingTables',
+        'account',
+        'balance',
+        'fromRate',
+        'toRate',
+        'sessionId'
+    );
 
     var $requireReload       = array('destinations');
     var $whereResellerFilter = " (1=1) ";
 
     var $cvs_import_dir      = "/var/spool/cdrtool";
 
-    var $tables=array(
-                           "destinations"=>array("name"=>"Destinations",
-                                                 "skip_math"=> true,
-                                                 "keys"=>array("id"),
-                                                 "exceptions" =>array(),
-                                                 "order"=>"dest_id ASC",
-                                                 "domainFilterColumn"=>"domain",
-                                                 "fields"=>array(
-                                                                  "gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted peer"
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "name"=>"Domain",
-                                                                                  "checkType"=>'domain',
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>15,
-                                                                                  "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "dest_id"=>array("size"=>12,
-                                                                                  "name"=>"Destination",
-                                                                                 ),
-                                                                 "region"=>array("size"=>10,
-                                                                                  "name"=>"Region"
-                                                                                 ),
-                                                                 "dest_name"=>array("size"=>20,
-                                                                                  "name"=>"Description",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "increment"     =>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Incr"
-                                                                                 ),
-                                                                 "min_duration"  =>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Min Dur"
-                                                                                 ),
-                                                                 "max_duration"  =>array("size"=>5,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Max Dur"
-                                                                                 ),
-                                                                 "max_price"  =>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Max Price"
-                                                                                 )
+    var $tables = array(
+        "destinations" => array(
+            "name"               => "Destinations",
+            "skip_math"          => true,
+            "keys"               => array(
+                "id"
+            ),
+            "exceptions"         => array(),
+            "order"              => "dest_id ASC",
+            "domainFilterColumn" => "domain",
+            "fields"             => array(
+                "gateway" => array(
+                    "size"      => 15,
+                    "checkType" => 'ip',
+                    "name"      => "Trusted peer"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "domain" => array(
+                    "size"      => 15,
+                    "name"      => "Domain",
+                    "checkType" => 'domain',
+                    "class"     => "span2"
+                ),
+                "subscriber" => array(
+                    "size"      => 15,
+                    "checkType" => 'sip_account',
+                    "name"      => "Subscriber",
+                    "class"     => "span2"
+                ),
+                "dest_id" => array(
+                    "size"      => 12,
+                    "name"      => "Destination",
+                ),
+                "region" => array(
+                    "size"      => 10,
+                    "name"      => "Region"
+                ),
+                "dest_name" => array(
+                    "size"      => 20,
+                    "name"      => "Description",
+                    "class"     => "span2"
+                ),
+                "increment" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "Incr"
+                ),
+                "min_duration" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "Min Dur"
+                ),
+                "max_duration" => array(
+                    "size"      => 5,
+                    "checkType" => 'numeric',
+                    "name"      => "Max Dur"
+                ),
+                "max_price" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Max Price"
+                )
+            )
+        ),
+        "billing_customers" => array(
+            "name"               => "Customers",
+            "skip_math"          => true,
+            "keys"               => array("id"),
+            "domainFilterColumn" => "domain",
+            "fields"             => array(
+                "gateway" => array(
+                    "size"      => 15,
+                    "checkType" => 'ip',
+                    "name"      => "Trusted Peer"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "domain" => array(
+                    "size"      => 15,
+                    "checkType" => 'domain',
+                    "name"      => "Domain",
+                    "class"     => "span2"
+                ),
+                "subscriber" => array(
+                    "size"      => 25,
+                    "checkType" => 'sip_account',
+                    "name"      => "Subscriber",
+                    "class"     => "span2"
+                ),
+                "profile_name1" => array(
+                    "size" => 10,
+                    "name" => "Profile WD"
+                ),
+                "profile_name1_alt" => array(
+                    "size" => 8,
+                    "name" => "Fallback"
+                ),
+                "profile_name2" => array(
+                    "size" => 10,
+                    "name" => "Profile WE"
+                ),
+                "profile_name2_alt" => array(
+                    "size" => 8,
+                    "name" => "Fallback"
+                ),
+                "timezone" => array(
+                    "size"  => 16,
+                    "name"  => "Timezone",
+                    "class" => "span2"
+                ),
+                "increment" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "Incr"
+                ),
+                "min_duration" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "Min Dur"
+                )
+            )
+        ),
+        "billing_discounts" => array(
+            "name"               => "Discounts",
+            "keys"               => array("id"),
+            "domainFilterColumn" => "domain",
+            "fields"             => array(
+                "gateway" => array(
+                    "size"      => 15,
+                    "checkType" => 'ip',
+                    "name"      => "Trusted Peer"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "domain" => array(
+                    "size"      => 15,
+                    "checkType" => 'domain',
+                    "name"      => "Domain",
+                    "class"     => "span2"
+                ),
+                "subscriber" => array(
+                    "size"      => 25,
+                    "checkType" => 'sip_account',
+                    "name"      => "Subscriber",
+                    "class"     => "span2"
+                ),
+                "application" => array(
+                    "size"      => 6,
+                    "name"      => "App"
+                ),
+                "destination" => array(
+                    "size"     => 10,
+                    "name"     => "Destination"
+                ),
+                "region" => array(
+                    "size"     => 8,
+                    "name"     => "Region"
+                ),
+                "connect" => array(
+                    "size"     => 5,
+                    "name"     => "Connect"
+                ),
+                "duration" => array(
+                    "size"     => 5,
+                    "name"     => "Duration"
+                )
+            )
 
-                                                                 )
-                                                 ),
-                           "billing_customers"=>array("name"=>"Customers",
-                                                 "skip_math"=> true,
-                                                 "keys"=>array("id"),
-                                                 "domainFilterColumn"=>"domain",
-                                                 "fields"=>array("gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted Peer"
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>25,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "profile_name1"=>array("size"=>10,
-                                                                                  "name"=>"Profile WD"
-                                                                                 ),
-                                                                 "profile_name1_alt"=>array("size"=>8,
-                                                                                  "name"=>"Fallback"
-                                                                                 ),
-                                                                 "profile_name2"=>array("size"=>10,
-                                                                                  "name"=>"Profile WE"
-                                                                                 ),
-                                                                 "profile_name2_alt"=>array("size"=>8,
-                                                                                  "name"=>"Fallback"
-                                                                                 ),
-                                                                 "timezone"     =>array("size"=>16,
-                                                                                  "name"=>"Timezone",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "increment"     =>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Incr"
-                                                                                 ),
-                                                                 "min_duration"  =>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Min Dur"
-                                                                                 )
+        ),
 
-                                                                 )
+        "billing_profiles" => array(
+            "name"       => "Profiles",
+            "skip_math"  => true,
+            "keys"       => array("id"),
+            "exceptions" => array(),
+            "size"       => 6,
+            "fields"     => array(
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "name" => array(
+                    "size"      => 12,
+                    "name"      => "Profile",
+                    "class"     => "span2"
+                ),
+                "rate_name1" => array(
+                    "size"      => 12,
+                    "name"      => "Rate 1"
+                ),
+                "hour1" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "00-H1"
+                ),
+                "rate_name2" => array(
+                    "size"      => 12,
+                    "name"      => "Rate 2"
+                ),
+                "hour2" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "H1-H2"
+                ),
+                "rate_name3" => array(
+                    "size"      => 12,
+                    "name"      => "Rate 3"
+                ),
+                "hour3" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "H2-H3"
+                ),
+                "rate_name4" => array(
+                    "size"      => 12,
+                    "name"      => "Rate 4"
+                ),
+                "hour4" => array(
+                    "size"      => 3,
+                    "checkType" => 'numeric',
+                    "name"      => "H3-24"
+                ),
+            )
+        ),
+        "billing_rates" => array(
+            "name"       => "Rates",
+            "keys"       => array("id"),
+            "size"       => 10,
+            "exceptions" => array('maxPrice'),
+            "order"      => "durationRate desc",
+            "fields"     => array(
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "name" => array(
+                    "size"      => 12,
+                    "name"      => "Rate",
+                    "class"     => "span2"
+                ),
+                "destination" => array(
+                    "size"      => 12,
+                    "name"      => "Destination"
+                ),
+                "application" => array(
+                    "size"      => 6,
+                    "name"      => "App"
+                ),
+                "connectCost" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"=>"Connect"
+                ),
+                "durationRate" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Duration"
+                ),
+                "connectCostIn" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Conn In"
+                ),
+                "durationRateIn" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Duration In"
+                )
+            )
+        ),
+        "billing_rates_history" => array(
+            "name"   => "Rates history",
+            "keys"   => array("id"),
+            "size"   => 10,
+            "order"  => "destination ASC, name ASC",
+            "fields" => array(
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "name" => array(
+                    "size"      => 10,
+                    "name"      => "Rate",
+                    "class"     => "span2"
+                ),
+                "destination" => array(
+                    "size"      => 12,
+                    "name"      => "Destination"
+                ),
+                "application" => array(
+                    "size"      => 6,
+                    "name"      => "App"
+                ),
+                "connectCost" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Conn"
+                ),
+                "durationRate" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Price"
+                ),
+                "connectCostIn" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Conn In"
+                ),
+                "durationRateIn" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Price In"
+                ),
+                "startDate" => array(
+                    "size"      => 11,
+                    "name"      => "Start Date",
+                    "class"     => "span2"
+                ),
+                "endDate" => array(
+                    "size"      => 11,
+                    "name"      => "End Date",
+                    "class"     => "span2"
+                )
+            )
+        ),
+        "billing_enum_tlds" => array(
+            "name"       => "ENUM discounts",
+            "skip_math"  => true,
+            "keys"       => array("id"),
+            "exceptions" => array(),
+            "size"       => 6,
+            "fields"     => array(
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "enum_tld" => array(
+                    "size"      => 35,
+                    "mustExist" => true,
+                    "checkType" => 'domain',
+                    "name"      => "ENUM TLD",
+                    "class"     => "span2"
+                ),
+                "e164_regexp" => array(
+                    "size"      => 35,
+                    "mustExist" => true,
+                    "name"      => "E164 Regexp",
+                    "class"     => "span2"
+                ),
+                "discount" => array(
+                    "size"      => 10,
+                    "mustExist" => true,
+                    "checkType" => 'numeric',
+                    "name"      => "Discount"
+                )
+            )
+        ),
+        "prepaid" => array(
+            "name"       => "Prepaid accounts",
+            "keys"       => array("id"),
+            "size"       => 15,
+            "exceptions" => array('change_date','active_sessions','domain'),
+            "order"      => "change_date DESC",
+            "fields"     => array(
+                "account" => array(
+                    "size"      => 35,
+                    "name"      => "Subscriber",
+                    "checkType" => 'sip_account',
+                    "mustExist" => true,
+                    "class"     => "span2"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "balance" => array(
+                    "size"      => 10,
+                    "name"      => "Balance"
+                ),
+                "change_date" => array(
+                    "size"      => 19,
+                    "name"      => "Last Change",
+                    "readonly"  => 1
+                ),
+                "session_counter" => array(
+                    "size"      => 3,
+                    "name"      => "Active Sessions",
+                    "readonly"  => 1
+                ),
+                "max_sessions" => array(
+                    "size"      => 3,
+                    "name"      => "Max Sessions"
+                )
+            )
+        ),
+        "prepaid_cards" => array(
+            "name"       => "Prepaid cards",
+            "keys"       => array("id"),
+            "size"       => 15,
+            "exceptions" => array('service'),
+            "fields"     => array(
+                "batch" => array(
+                    "size"      => 40,
+                    "name"      => "Batch name",
+                    "readonly"  => 1,
+                    "class"     => "span3"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller"
+                ),
+                "date_batch" => array(
+                    "size"      => 11,
+                    "name"      => "Batch Date",
+                    "class"     => "span2"
+                ),
+                "number" => array(
+                    "size"      => 20,
+                    "checkType" => 'numeric',
+                    "mustExist" => true,
+                    "name"      => "Card Number",
+                    "class"     => "span2"
+                ),
+                "id" => array(
+                    "size"      => 20,
+                    "checkType" => 'numeric',
+                    "mustExist" => true,
+                    "name"      => "Card Id",
+                ),
+                "value" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "mustExist" => true,
+                    "name"      => "Card Value"
+                ),
+                "blocked" => array(
+                    "size"      => 1,
+                    "name"      => "Lock"
+                ),
+                "date_active" => array(
+                    "size"      => 18,
+                    "name"      => "Activation Date",
+                    "class"     => "span2"
+                )
+            )
+        ),
+        "prepaid_history" => array(
+            "name"       => "Prepaid history",
+            "order"      => "id DESC",
+            "skip_math"  => true,
+            "keys"       => array("id"),
+            "size"       => 15,
+            "exceptions" => array('session','destination'),
+            "fields"     => array(
+                "username" => array(
+                    "size"      => 15,
+                    "readonly"  => 1,
+                    "class"     => "span2"
+                ),
+                "domain" => array(
+                    "size"      => 15,
+                    "readonly"  => 1,
+                    "class"     => "span2"
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller",
+                    "readonly"  => 1
+                ),
+                "action" => array(
+                    "size"      => 15,
+                    "readonly"  => 1,
+                    "class"     => "span2"
+                ),
+                "duration" => array(
+                    "size"      => 5
+                ),
+                "destination" => array(
+                    "size"      => 15
+                ),
+                "session" => array(
+                    "size"      => 30,
+                    "readonly"  => 1
+                ),
+                "description" => array(
+                    "size"      => 30,
+                    "class"     => "span3"
+                ),
+                "value" => array(
+                    "size"      => 10
+                ),
+                "balance" => array(
+                    "size"      => 10
+                ),
+                "date" => array(
+                    "size"      => 18,
+                    "class"     => "span2"
+                )
+            )
+        ),
+        "quota_usage" => array(
+            "name"               => "Quota usage",
+            "keys"               => array("id"),
+            "size"               => 15,
+            "readonly"           => 1,
+            "exceptions"         => array(
+                "change_date",
+                "traffic",
+                "duration",
+                "calls"
+            ),
+            "domainFilterColumn" => "domain",
+            "fields"             => array(
+                "datasource" => array(
+                    "size"      => 15,
+                    "readonly"  => 1
+                ),
+                "reseller_id" => array(
+                    "size"      => 8,
+                    "checkType" => 'numeric',
+                    "name"      => "Reseller",
+                    "readonly"  => true
+                ),
+                "account" => array(
+                    "size"      => 30,
+                    "readonly"  => 1,
+                    "name"      => "Subscriber",
+                    "class"     => "span2"
+                ),
+                "domain" => array(
+                    "size"      => 15,
+                    "readonly"  => 1,
+                    "class"     => "span2"
+                ),
+                "blocked" => array(
+                    "size"      => 2,
+                    "readonly"  => 1
+                ),
+                "notified" => array(
+                    "size"      => 20,
+                    "readonly"  => 1
+                ),
+                "quota" => array(
+                    "size"      => 5,
+                    "readonly"  => 1
+                ),
+                "cost" => array(
+                    "size"      => 10,
+                    "readonly"  => 1,
+                    "name"      => "This Month"
+                ),
+                "cost_today" => array(
+                    "size"      => 10,
+                    "readonly"  => 1,
+                    "name"      => "Today"
+                ),
+                "duration" => array(
+                    "size"      => 10,
+                    "readonly"  => 1
+                ),
+                "calls" => array(
+                    "size"      => 10,
+                    "readonly"  => 1
+                ),
+                "traffic" => array(
+                    "size"      => 20,
+                    "readonly"  => 1
+                )
+            )
+        )
+    );
 
-                                                 ),
-                           "billing_discounts"=>array("name"=>"Discounts",
-                                                 "keys"=>array("id"),
-                                                 "domainFilterColumn"=>"domain",
-                                                 "fields"=>array("gateway"=>array("size"=>15,
-                                                                                  "checkType"=>'ip',
-                                                                                  "name"=>"Trusted Peer"
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"Domain",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "subscriber"=>array("size"=>25,
-                                                                               "checkType"=>'sip_account',
-                                                                                  "name"=>"Subscriber",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "application"=>array("size"=>6,
-                                                                                  "name"=>"App"
-                                                                                 ),
-                                                                 "destination"=>array("size"=>10,
-                                                                                  "name"=>"Destination"
-                                                                                 ),
-                                                                 "region"=>array("size"=>8,
-                                                                                  "name"=>"Region"
-                                                                                 ),
-                                                                 "connect"=>array("size"=>5,
-                                                                                  "name"=>"Connect"
-                                                                                 ),
-                                                                 "duration"=>array("size"=>5,
-                                                                                  "name"=>"Duration"
-                                                                                 )
-                                                                 )
-
-                                                 ),
-
-                           "billing_profiles"=>array("name"=>"Profiles",
-                                                 "skip_math"=> true,
-                                                 "keys"=>array("id"),
-                                                 "exceptions" =>array(),
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                  "name"=>array("size"=>12,
-                                                                                  "name"=>"Profile",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "rate_name1"=>array("size"=>12,
-                                                                                  "name"=>"Rate 1"
-                                                                                 ),
-                                                                 "hour1"=>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"00-H1"
-                                                                                 ),
-                                                                 "rate_name2"=>array("size"=>12,
-                                                                                  "name"=>"Rate 2"
-                                                                                 ),
-                                                                 "hour2"=>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"H1-H2"
-                                                                                 ),
-                                                                 "rate_name3"=>array("size"=>12,
-                                                                                  "name"=>"Rate 3"
-                                                                                 ),
-                                                                 "hour3"=>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"H2-H3"
-                                                                                 ),
-                                                                 "rate_name4"=>array("size"=>12,
-                                                                                  "name"=>"Rate 4"
-                                                                                 ),
-                                                                 "hour4"=>array("size"=>3,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"H3-24"
-                                                                                 ),
-
-                                                                 )
-
-                                                 ),
-                           "billing_rates"=>array("name"=>"Rates",
-                                                 "keys"=>array("id"),
-                                                 "size"=>10,
-                                                 "exceptions"=>array('maxPrice'),
-                                                 "order"=>"durationRate desc",
-                                                 "fields"=>array(
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "name"=>array("size"=>12,
-                                                                               "name"=>"Rate",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "destination"=>array("size"=>12,
-                                                                                  "name"=>"Destination"
-                                                                                 ),
-                                                                 "application"=>array("size"=>6,
-                                                                                  "name"=>"App"
-                                                                                 ),
-                                                                 "connectCost"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Connect"
-                                                                                 ),
-                                                                 "durationRate"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Duration"
-                                                                                 ),
-                                                                 "connectCostIn"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Conn In"
-                                                                                 ),
-                                                                 "durationRateIn"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Duration In"
-                                                                                 )
-                                                                  )
-                                                   ),
-                           "billing_rates_history"=>array("name"=>"Rates history",
-                                                 "keys"=>array("id"),
-                                                 "size"=>10,
-                                                 "order"=>"destination ASC, name ASC",
-                                                 "fields"=>array(
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "name"=>array("size"=>10,
-                                                                               "name"=>"Rate",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "destination"=>array("size"=>12,
-                                                                                  "name"=>"Destination"
-                                                                                 ),
-                                                                 "application"=>array("size"=>6,
-                                                                                  "name"=>"App"
-                                                                                 ),
-                                                                 "connectCost"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Conn"
-                                                                                 ),
-                                                                 "durationRate"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Price"
-                                                                                 ),
-                                                                 "connectCostIn"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Conn In"
-                                                                                 ),
-                                                                 "durationRateIn"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Price In"
-                                                                                 ),
-                                                                 "startDate"=>array("size"=>11,
-                                                                                  "name"=>"Start Date",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "endDate"=>array("size"=>11,
-                                                                                  "name"=>"End Date",
-                                                                                "class"=>"span2"
-                                                                                 )
-
-                                                                  )
-                                                   ),
-                           "billing_enum_tlds"=>array("name"=>"ENUM discounts",
-                                                 "skip_math"=> true,
-                                                 "keys"=>array("id"),
-                                                 "exceptions" =>array(),
-                                                 "size"=>6,
-                                                 "fields"=>array(
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                  "enum_tld"=>array("size"=>35,
-                                                                               "mustExist"=>true,
-                                                                                  "checkType"=>'domain',
-                                                                                  "name"=>"ENUM TLD",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                  "e164_regexp"=>array("size"=>35,
-                                                                               "mustExist"=>true,
-                                                                                  "name"=>"E164 Regexp",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "discount"=>array("size"=>10,
-                                                                               "mustExist"=>true,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Discount"
-                                                                                 )
-
-                                                                 )
-
-                                                 ),
-                           "prepaid"=>array("name"=>"Prepaid accounts",
-                                                 "keys"=>array("id"),
-                                                 "size"=>15,
-                                                 "exceptions" =>array('change_date','active_sessions','domain'),
-                                                 "order"=>"change_date DESC",
-                                                 "fields"=>array("account"=>array("size"=>35,
-                                                                               "name"=>"Subscriber",
-                                                                               "checkType"=>'sip_account',
-                                                                               "mustExist"=>true,
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller"
-                                                                                 ),
-                                                                 "balance"=>array("size"=>10,
-                                                                                  "name"=>"Balance"
-                                                                                 ),
-                                                                 "change_date"=>array("size"=>19,
-                                                                                  "name"=>"Last Change",
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "session_counter"=>array("size"=>3,
-                                                                                  "name"=>"Active Sessions",
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "max_sessions"=>array("size"=>3,
-                                                                                  "name"=>"Max Sessions"
-                                                                                 )
-                                                                  )
-                                                   ),
-                           "prepaid_cards"=>array("name"=>"Prepaid cards",
-                                                 "keys"=>array("id"),
-                                                 "size"=>15,
-                                                 "exceptions" =>array('service'),
-                                                 "fields"=>array("batch"=>array("size"=>40,
-                                                                               "name"=>"Batch name",
-                                                                               "readonly"=>1,
-                                                                               "class"=>"span3"
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                                "checkType"=>'numeric',
-                                                                                 "name"=>"Reseller"
-                                                                                 ),
-                                                                 "date_batch"=>array("size"=>11,
-                                                                                "name"=>"Batch Date",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "number"=>array("size"=>20,
-                                                                                "checkType"=>'numeric',
-                                                                                "mustExist"=>true,
-                                                                                "name"=>"Card Number",
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "id"=>array("size"=>20,
-                                                                               "checkType"=>'numeric',
-                                                                               "mustExist"=>true,
-                                                                                  "name"=>"Card Id",
-                                                                                 ),
-                                                                 "value"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                               "mustExist"=>true,
-                                                                                  "name"=>"Card Value"
-                                                                                 ),
-                                                                 "blocked"=>array("size"=>1,
-                                                                                  "name"=>"Lock"
-                                                                                 ),
-                                                                 "date_active"=>array("size"=>18,
-                                                                                  "name"=>"Activation Date",
-                                                                                "class"=>"span2"
-                                                                                 )
-
-                                                                  )
-                                                   ),
-                           "prepaid_history"=>array("name"=>"Prepaid history",
-                                                 "order"=>"id DESC",
-                                                 "skip_math"=> true,
-                                                 "keys"=>array("id"),
-                                                 "size"=>15,
-                                                 "exceptions" =>array('session','destination'),
-                                                 "fields"=>array("username"=>array( "size"=>15,
-                                                                                    "readonly"=>1,
-                                                                                "class"=>"span2"
-                                                                                ),
-                                                                 "domain"=>array("size"=>15,
-                                                                                    "readonly"=>1,
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller",
-                                                                                    "readonly"=>1
-                                                                                 ),
-                                                                 "action"=>array("size"=>15,
-                                                                                 "readonly"=>1,
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "duration"=>array("size"=>5
-                                                                                 ),
-                                                                 "destination"=>array("size"=>15
-                                                                                 ),
-                                                                 "session"=>array("size"=>30,
-                                                                                 "readonly"=>1
-                                                                                 ),
-                                                                 "description"=>array("size"=>30,
-                                                                                "class"=>"span3"
-                                                                                 ),
-                                                                 "value"=>array("size"=>10
-                                                                                 ),
-                                                                 "balance"=>array("size"=>10
-                                                                                 ),
-                                                                 "date"=>array("size"=>18,
-                                                                                "class"=>"span2"
-                                                                                 ))
-
-
-                                                   ),
-                           "quota_usage"=>array("name"=>"Quota usage",
-                                                 "keys"=>array("id"),
-                                                 "size"=>15,
-                                                 "readonly"=>1,
-                                                 "exceptions" =>array("change_date","traffic","duration","calls"),
-                                                 "domainFilterColumn"=>"domain",
-                                                 "fields"=>array("datasource"=>array("size"=>15,
-                                                                               "readonly"=>1
-                                                                                ),
-                                                                 "reseller_id"=>array("size"=>8,
-                                                                               "checkType"=>'numeric',
-                                                                                  "name"=>"Reseller",
-                                                                                  "readonly" => true
-                                                                                 ),
-                                                                 "account"=>array("size"=>30,
-                                                                               "readonly"=>1,
-                                                                               "name" => "Subscriber",
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "domain"=>array("size"=>15,
-                                                                               "readonly"=>1,
-                                                                                "class"=>"span2"
-                                                                                 ),
-                                                                 "blocked"=>array("size"=>2,
-                                                                               "readonly"=>1
-                                                                                 ),
-                                                                 "notified"=>array("size"=>20,
-                                                                               "readonly"=>1
-                                                                                 ),
-                                                                 "quota"=>array("size"=>5,
-                                                                               "readonly"=>1
-                                                                                 ),
-                                                                 "cost"=>array("size"=>10,
-                                                                               "readonly"=>1,
-                                                                               "name"=>"This Month"
-                                                                                 ),
-                                                                 "cost_today"=>array("size"=>10,
-                                                                               "readonly"=>1,
-                                                                               "name"=>"Today"
-                                                                                 ),
-                                                                 "duration"=>array("size"=>10,
-                                                                               "readonly"=>1
-                                                                                 ),
-                                                                 "calls"=>array("size"=>10,
-                                                                               "readonly"=>1
-                                                                                 ),
-                                                                 "traffic"=>array("size"=>20,
-                                                                               "readonly"=>1
-                                                                                 )
-
-                                                                  )
-                                                   )
-                           );
-
-    function RatingTables($readonly=false) {
+    public function RatingTables($readonly = false)
+    {
         global $CDRTool;
         global $RatingEngine;
 
-        $this->mongo_db_ro = NULL;
-        $this->mongo_db_rw = NULL;
+        $this->mongo_db_ro = null;
+        $this->mongo_db_rw = null;
 
         $this->settings = $RatingEngine;
         $this->CDRTool  = $CDRTool;
 
         $this->table = $_REQUEST['table'];
-        if (!$this->table || !in_array($this->table,array_keys($this->tables))) $this->table="destinations";
+        if (!$this->table || !in_array($this->table, array_keys($this->tables))) {
+            $this->table="destinations";
+        }
 
         $this->readonly=$readonly;
 
@@ -2248,23 +2477,23 @@ class RatingTables {
         }
 
         if (!strlen($this->CDRTool['filter']['customer'])) {
-            $this->whereResellerFilter = sprintf ("reseller_id = %d",'99999999');
+            $this->whereResellerFilter = sprintf("reseller_id = %d", '99999999');
         } else {
             if ($this->CDRTool['filter']['customer'] && $this->tables[$this->table]['fields']['reseller_id']) {
-                $this->whereResellerFilter = sprintf ("reseller_id = %d",addslashes($this->CDRTool['filter']['customer']));
+                $this->whereResellerFilter = sprintf("reseller_id = %d", addslashes($this->CDRTool['filter']['customer']));
                 $this->tables[$this->table]['fields']['reseller_id']['readonly']=true;
             }
         }
 
         if ($this->settings['split_rating_table']) {
-            $this->tables['billing_rates']['fields']['name']['readonly']=1;
+            $this->tables['billing_rates']['fields']['name']['readonly'] = 1;
         }
 
         if (strlen($this->settings['socketIP'])) {
             if ($this->settings['socketIP'] == '0.0.0.0' || $this->settings['socketIP'] == '0') {
-                $this->settings['socketIPforClients']='127.0.0.1';
+                $this->settings['socketIPforClients'] = '127.0.0.1';
             } else {
-                $this->settings['socketIPforClients']=$this->settings['socketIP'];
+                $this->settings['socketIPforClients'] = $this->settings['socketIP'];
             }
         }
 
@@ -2280,7 +2509,7 @@ class RatingTables {
 
         if ($this->database_backend == "mysql") {
             # TODO
-        } else if ($this->database_backend == "mongo") {
+        } elseif ($this->database_backend == "mongo") {
             $this->mongo_safe = 1;
             if (is_array($this->settings['mongo_db'])) {
                 $mongo_uri        = $this->settings['mongo_db']['uri'];
@@ -2290,8 +2519,18 @@ class RatingTables {
                     $this->mongo_safe = $this->settings['mongo_db']['safe'];
                 }
                 try {
-                    $mongo_connection_rw = new Mongo("mongodb://$mongo_uri?readPreference=primaryPreferred",   array("replicaSet" => $mongo_replicaSet));
-                    $mongo_connection_ro = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
+                    $mongo_connection_rw = new Mongo(
+                        "mongodb://$mongo_uri?readPreference=primaryPreferred",
+                        array(
+                            "replicaSet" => $mongo_replicaSet
+                        )
+                    );
+                    $mongo_connection_ro = new Mongo(
+                        "mongodb://$mongo_uri?readPreference=secondaryPreferred",
+                        array(
+                            "replicaSet" => $mongo_replicaSet
+                        )
+                    );
                     $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
                     $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
                 } catch (Exception $e) {
@@ -2301,9 +2540,9 @@ class RatingTables {
 
                 $existing_rating_tables=array();
                 try {
-                    $_tables=$this->mongo_db_ro->listCollections();;
+                    $_tables=$this->mongo_db_ro->listCollections();
                     foreach ($_tables as $_table) {
-                        list($collection, $table) = explode(".",strval($_table));
+                        list($collection, $table) = explode(".", strval($_table));
                         $existing_rating_tables[]=$table;
                     }
                 } catch (Exception $e) {
@@ -2327,32 +2566,39 @@ class RatingTables {
         }
     }
 
-    function ImportCSVFiles($dir=false) {
-        $results=0;
-        if (!$dir) $dir="/var/spool/cdrtool";
+    public function ImportCSVFiles($dir = false)
+    {
+        $results = 0;
+        if (!$dir) $dir = "/var/spool/cdrtool";
 
         $this->scanFilesForImport($dir);
 
         if ($this->previously_imported_files) {
-            printf("Skipping %d previously imported files\n",$this->previously_imported_files);
+            printf("Skipping %d previously imported files\n", $this->previously_imported_files);
         }
 
         $results=0;
         foreach (array_keys($this->filesToImport) as $file) {
-            $importFunction="Import".ucfirst($this->filesToImport[$file]['type']);
+            $importFunction = "Import".ucfirst($this->filesToImport[$file]['type']);
 
-            printf("Reading file %s\n",$this->filesToImport[$file]['path']);
+            printf("Reading file %s\n", $this->filesToImport[$file]['path']);
 
             $results = $this->$importFunction($this->filesToImport[$file]['path'],$this->filesToImport[$file]['reseller']);
 
-            $this->logImport($dir,$this->filesToImport[$file]['path'],$this->filesToImport[$file]['watermark'],$results,$this->filesToImport[$file]['reseller']);
-
+            $this->logImport(
+                $dir,
+                $this->filesToImport[$file]['path'],
+                $this->filesToImport[$file]['watermark'],
+                $results,
+                $this->filesToImport[$file]['reseller']
+            );
         }
 
         return $results;
     }
 
-    function ImportRates($file,$reseller=0) {
+    private function ImportRates($file, $reseller = 0)
+    {
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $i=0;
@@ -2360,10 +2606,10 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        printf ("Importing rates from %s for reseller %s:\n",$file,$reseller);
+        printf("Importing rates from %s for reseller %s:\n", $file, $reseller);
 
-        while ($buffer = fgets($fp,1024)) {
-            $buffer=trim($buffer);
+        while ($buffer = fgets($fp, 1024)) {
+            $buffer = trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
 
@@ -2382,7 +2628,7 @@ class RatingTables {
                 $reseller_id    = intval($p[1]);
             }
 
-            if (!is_numeric($destination) && !strstr($destination,'@')) {
+            if (!is_numeric($destination) && !strstr($destination, '@')) {
                 // skip invalid destinations
                 $skipped++;
                 continue;
@@ -2401,40 +2647,45 @@ class RatingTables {
             if (!$application) $application='audio';
 
             if ($ops=="1") {
-
-                $query=sprintf("insert into billing_rates
-                (
-                reseller_id,
-                name,
-                destination,
-                application,
-                connectCost,
-                durationRate,
-                connectCostIn,
-                durationRateIn
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($name),
-                addslashes($destination),
-                addslashes($application),
-                addslashes($connectCost),
-                addslashes($durationRate),
-                addslashes($connectCostIn),
-                addslashes($durationRateIn)
+                $query = sprintf(
+                    "insert into billing_rates
+                    (
+                        reseller_id,
+                        name,
+                        destination,
+                        application,
+                        connectCost,
+                        durationRate,
+                        connectCostIn,
+                        durationRateIn
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($application),
+                    addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn)
                 );
 
                 // mysql backend
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                 }
@@ -2442,49 +2693,54 @@ class RatingTables {
                 if ($this->db->affected_rows()) {
                     if ($this->settings['split_rating_table']) {
                         if ($name) {
-                            $_table='billing_rates_'.$name;
+                            $_table = 'billing_rates_'.$name;
                         } else {
-                            $_table='billing_rates_default';
+                            $_table = 'billing_rates_default';
                         }
 
                         if (!$this->createRatingTable($name)) {
-
-                            $query=sprintf("insert into %s
-                            (
-                            id,
-                            reseller_id,
-                            name,
-                            destination,
-                            application,
-                            connectCost,
-                            durationRate,
-                            connectCostIn,
-                            durationRateIn
-                            ) values (
-                            LAST_INSERT_ID(),
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s',
-                            '%s'
-                            )",
-                            addslashes($_table),
-                            addslashes($reseller_id),
-                            addslashes($name),
-                            addslashes($destination),
-                            addslashes($application),
-                            addslashes($connectCost),
-                            addslashes($durationRate),
-                            addslashes($connectCostIn),
-                            addslashes($durationRateIn)
+                            $query = sprintf(
+                                "insert into %s
+                                (
+                                    id,
+                                    reseller_id,
+                                    name,
+                                    destination,
+                                    application,
+                                    connectCost,
+                                    durationRate,
+                                    connectCostIn,
+                                    durationRateIn
+                                ) values (
+                                    LAST_INSERT_ID(),
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s',
+                                    '%s'
+                                )",
+                                addslashes($_table),
+                                addslashes($reseller_id),
+                                addslashes($name),
+                                addslashes($destination),
+                                addslashes($application),
+                                addslashes($connectCost),
+                                addslashes($durationRate),
+                                addslashes($connectCostIn),
+                                addslashes($durationRateIn)
                             );
 
                             if (!$this->db->query($query)) {
-                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                $log = sprintf(
+                                    "Database error for query %s: %s (%s)",
+                                    $query,
+                                    $this->db->Error,
+                                    $this->db->Errno
+                                );
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -2499,15 +2755,16 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                          'name'           => $name,
-                                          'destination'    => $destination,
-                                          'application'    => $application,
-                                          'connectCost'    => intval($connectCost),
-                                          'durationRate'   => intval($durationRate),
-                                          'connectCostIn'  => intval($connectCostIn),
-                                          'durationRateIn' => intval($durationRateIn)
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'    => intval(reseller_id),
+                            'name'           => $name,
+                            'destination'    => $destination,
+                            'application'    => $application,
+                            'connectCost'    => intval($connectCost),
+                            'durationRate'   => intval($durationRate),
+                            'connectCostIn'  => intval($connectCostIn),
+                            'durationRateIn' => intval($durationRateIn)
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -2519,23 +2776,28 @@ class RatingTables {
                         }
                     }
                 }
-
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_rates
-                where
-                reseller_id        = '%s'
-                and name           = '%s'
-                and destination    = '%s'
-                and application    = '%s'",
-                addslashes($reseller_id),
-                addslashes($name),
-                addslashes($destination),
-                addslashes($application)
+            } elseif ($ops == "3") {
+                $query = sprintf(
+                    "delete from billing_rates
+                    where
+                    reseller_id        = '%s'
+                    and name           = '%s'
+                    and destination    = '%s'
+                    and application    = '%s'",
+                    addslashes($reseller_id),
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($application)
                 );
 
                 // mysql backend
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -2544,25 +2806,31 @@ class RatingTables {
                 if ($this->db->affected_rows()) {
                     if ($this->settings['split_rating_table']) {
                         if ($name) {
-                            $_table='billing_rates_'.$name;
+                            $_table = 'billing_rates_'.$name;
                         } else {
-                            $_table='billing_rates_default';
+                            $_table = 'billing_rates_default';
                         }
 
-                        $query=sprintf("delete from %s
-                        where reseller_id  = '%s'
-                        and name           = '%s'
-                        and destination    = '%s'
-                        and application    = '%s'",
-                        addslashes($_table),
-                        addslashes($reseller_id),
-                        addslashes($name),
-                        addslashes($destination),
-                        addslashes($application)
+                        $query = sprintf(
+                            "delete from %s
+                            where reseller_id  = '%s'
+                            and name           = '%s'
+                            and destination    = '%s'
+                            and application    = '%s'",
+                            addslashes($_table),
+                            addslashes($reseller_id),
+                            addslashes($name),
+                            addslashes($destination),
+                            addslashes($application)
                         );
 
                         if (!$this->db->query($query)) {
-                            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                            $log = sprintf(
+                                "Database error for query %s: %s (%s)",
+                                $query,
+                                $this->db->Error,
+                                $this->db->Errno
+                            );
                             print $log;
                             syslog(LOG_NOTICE, $log);
                         }
@@ -2575,67 +2843,82 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name,
-                                                 'destination' => $destination,
-                                                 'application' => $application
-                                                 );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $name,
+                                'destination' => $destination,
+                                'application' => $application
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array(
+                                    "safe" => $self->mongo_safe
+                                )
+                            );
                         } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from billing_rates: %s", $e->getMessage());
+                            $log = sprintf("Error: Mongo exception when deleting from billing_rates: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
                         }
                     }
                 }
-
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_rates
-                where name       = '%s'
-                and destination  = '%s'
-                and reseller_id  = '%s'
-                and application  = '%s'
-                ",
-                addslashes($name),
-                addslashes($destination),
-                addslashes($reseller_id),
-                addslashes($application)
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from billing_rates
+                    where name       = '%s'
+                    and destination  = '%s'
+                    and reseller_id  = '%s'
+                    and application  = '%s'
+                    ",
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($reseller_id),
+                    addslashes($application)
                 );
 
                 // mysql backend
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if ($this->db->num_rows()) {
-                    $query=sprintf("update billing_rates set
-                    connectCost     = '%s',
-                    durationRate    = '%s',
-                    connectCostIn   = '%s',
-                    durationRateIn  = '%s'
-                    where name      = '%s'
-                    and destination = '%s'
-                    and reseller_id = '%s'
-                    and application = '%s'
-                    ",
-                    addslashes($connectCost),
-                    addslashes($durationRate),
-                    addslashes($connectCostIn),
-                    addslashes($durationRateIn),
-                    addslashes($name),
-                    addslashes($destination),
-                    addslashes($reseller_id),
-                    addslashes($application)
+                    $query = sprintf(
+                        "update billing_rates set
+                        connectCost     = '%s',
+                        durationRate    = '%s',
+                        connectCostIn   = '%s',
+                        durationRateIn  = '%s'
+                        where name      = '%s'
+                        and destination = '%s'
+                        and reseller_id = '%s'
+                        and application = '%s'
+                        ",
+                        addslashes($connectCost),
+                        addslashes($durationRate),
+                        addslashes($connectCostIn),
+                        addslashes($durationRateIn),
+                        addslashes($name),
+                        addslashes($destination),
+                        addslashes($reseller_id),
+                        addslashes($application)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -2648,29 +2931,35 @@ class RatingTables {
                             } else {
                                 $_table = 'billing_rates_default';
                             }
-                            $query=sprintf("update %s set
-                            connectCost     = '%s',
-                            durationRate    = '%s',
-                            connectCostIn   = '%s',
-                            durationRateIn  = '%s'
-                            where name      = '%s'
-                            and destination = '%s'
-                            and reseller_id = '%s'
-                            and application = '%s'
-                            ",
-                            addslashes($_table),
-                            addslashes($connectCost),
-                            addslashes($durationRate),
-                            addslashes($connectCostIn),
-                            addslashes($durationRateIn),
-                            addslashes($name),
-                            addslashes($destination),
-                            addslashes($reseller_id),
-                            addslashes($application)
+                            $query = sprintf(
+                                "update %s set
+                                connectCost     = '%s',
+                                durationRate    = '%s',
+                                connectCostIn   = '%s',
+                                durationRateIn  = '%s'
+                                where name      = '%s'
+                                and destination = '%s'
+                                and reseller_id = '%s'
+                                and application = '%s'
+                                ",
+                                addslashes($_table),
+                                addslashes($connectCost),
+                                addslashes($durationRate),
+                                addslashes($connectCostIn),
+                                addslashes($durationRateIn),
+                                addslashes($name),
+                                addslashes($destination),
+                                addslashes($reseller_id),
+                                addslashes($application)
                             );
 
                             if (!$this->db->query($query)) {
-                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                $log = sprintf(
+                                    "Database error for query %s: %s (%s)",
+                                    $query,
+                                    $this->db->Error,
+                                    $this->db->Errno
+                                );
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                             }
@@ -2680,23 +2969,26 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name,
-                                                 'destination' => $destination,
-                                                 'application' => $application
-                                                 );
-                            $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                              'name'           => $name,
-                                              'destination'    => $destination,
-                                              'application'    => $application,
-                                              'connectCost'    => intval($connectCost),
-                                              'durationRate'   => intval($durationRate),
-                                              'connectCostIn'  => intval($connectCostIn),
-                                              'durationRateIn' => intval($durationRateIn)
-                                              );
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $name,
+                                'destination' => $destination,
+                                'application' => $application
+                            );
+                            $mongo_data = array(
+                                'reseller_id'    => intval(reseller_id),
+                                'name'           => $name,
+                                'destination'    => $destination,
+                                'application'    => $application,
+                                'connectCost'    => intval($connectCost),
+                                'durationRate'   => intval($durationRate),
+                                'connectCostIn'  => intval($connectCostIn),
+                                'durationRateIn' => intval($durationRateIn)
+                            );
+                            $mongo_options = array(
+                                "upsert" => true,
+                                "safe" => $self->mongo_safe
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
@@ -2708,40 +3000,45 @@ class RatingTables {
                             }
                         }
                     }
-
                 } else {
-                    $query=sprintf("insert into billing_rates
-                    (
-                    reseller_id,
-                    name,
-                    destination,
-                    application,
-                    connectCost,
-                    durationRate,
-                    connectCostIn,
-                    durationRateIn
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($name),
-                    addslashes($destination),
-                    addslashes($application),
-                    addslashes($connectCost),
-                    addslashes($durationRate),
-                    addslashes($connectCostIn),
-                    addslashes($durationRateIn)
+                    $query = sprintf(
+                        "insert into billing_rates
+                        (
+                            reseller_id,
+                            name,
+                            destination,
+                            application,
+                            connectCost,
+                            durationRate,
+                            connectCostIn,
+                            durationRateIn
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($name),
+                        addslashes($destination),
+                        addslashes($application),
+                        addslashes($connectCost),
+                        addslashes($durationRate),
+                        addslashes($connectCostIn),
+                        addslashes($durationRateIn)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -2749,55 +3046,59 @@ class RatingTables {
                     if ($this->db->affected_rows()) {
                         if ($this->settings['split_rating_table']) {
                             if ($name) {
-                                $_table='billing_rates_'.$name;
+                                $_table = 'billing_rates_'.$name;
                             } else {
-                                $_table='billing_rates_default';
+                                $_table = 'billing_rates_default';
                             }
 
                             if (!$this->createRatingTable($name)) {
+                                $query = sprintf(
+                                    "insert into %s
+                                    (
+                                        id,
+                                        reseller_id,
+                                        name,
+                                        destination,
+                                        application
+                                        connectCost,
+                                        durationRate,
+                                        connectCostIn,
+                                        durationRateIn
+                                    ) values (
+                                        LAST_INSERT_ID(),
+                                        '%s',
+                                        '%s',
+                                        '%s',
+                                        '%s',
+                                        '%s',
+                                        '%s',
+                                        '%s',
+                                        '%s'
+                                    )",
+                                    addslashes($_table),
+                                    addslashes($reseller_id),
+                                    addslashes($name),
+                                    addslashes($destination),
+                                    addslashes($application),
+                                    addslashes($connectCost),
+                                    addslashes($durationRate),
+                                    addslashes($connectCostIn),
+                                    addslashes($durationRateIn)
+                                );
 
-                               $query=sprintf("insert into %s
-                               (
-                               id,
-                               reseller_id,
-                               name,
-                               destination,
-                               application
-                               connectCost,
-                               durationRate,
-                               connectCostIn,
-                               durationRateIn
-                               ) values (
-                               LAST_INSERT_ID(),
-                               '%s',
-                               '%s',
-                               '%s',
-                               '%s',
-                               '%s',
-                               '%s',
-                               '%s',
-                               '%s'
-                               )",
-                               addslashes($_table),
-                               addslashes($reseller_id),
-                               addslashes($name),
-                               addslashes($destination),
-                               addslashes($application),
-                               addslashes($connectCost),
-                               addslashes($durationRate),
-                               addslashes($connectCostIn),
-                               addslashes($durationRateIn)
-                               );
-
-                               if (!$this->db->query($query)) {
-                                   $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                                   print $log;
-                                   syslog(LOG_NOTICE, $log);
-                                   return false;
-                               }
+                                if (!$this->db->query($query)) {
+                                    $log = sprintf(
+                                        "Database error for query %s: %s (%s)",
+                                        $query,
+                                        $this->db->Error,
+                                        $this->db->Errno
+                                    );
+                                    print $log;
+                                    syslog(LOG_NOTICE, $log);
+                                    return false;
+                                }
                             }
                         }
-
                         $inserted++;
                     } else {
                         $failed++;
@@ -2805,27 +3106,27 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                              'name'           => $name,
-                                              'destination'    => $destination,
-                                              'application'    => $application,
-                                              'connectCost'    => intval($connectCost),
-                                              'durationRate'   => intval($durationRate),
-                                              'connectCostIn'  => intval($connectCostIn),
-                                              'durationRateIn' => intval($durationRateIn)
-                                              );
+                            $mongo_data = array(
+                                'reseller_id'    => intval(reseller_id),
+                                'name'           => $name,
+                                'destination'    => $destination,
+                                'application'    => $application,
+                                'connectCost'    => intval($connectCost),
+                                'durationRate'   => intval($durationRate),
+                                'connectCostIn'  => intval($connectCostIn),
+                                'durationRateIn' => intval($durationRateIn)
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
                             } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
+                                $log = sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                             }
                         }
                     }
                 }
-
             } else {
                 $skipped++;
             }
@@ -2841,13 +3142,13 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
-        $results=$inserted+$updated+$deleted;
+        $results = $inserted+$updated+$deleted;
 
         return $results;
-
     }
 
-    function ImportRatesHistory($file,$reseller=0) {
+    private function ImportRatesHistory($file, $reseller = 0)
+    {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -2858,9 +3159,9 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        printf ("Importing rates history from %s for reseller %s:\n",$file,$reseller);
+        printf("Importing rates history from %s for reseller %s:\n", $file, $reseller);
 
-        while ($buffer = fgets($fp,1024)) {
+        while ($buffer = fgets($fp, 1024)) {
             $buffer=trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
@@ -2882,7 +3183,7 @@ class RatingTables {
                 $reseller_id    = intval($p[1]);
             }
 
-            if (!is_numeric($destination) && !strstr($destination,'@')) {
+            if (!is_numeric($destination) && !strstr($destination, '@')) {
                 // skip invalid destinations
                 $skipped++;
                 continue;
@@ -2898,56 +3199,61 @@ class RatingTables {
                 continue;
             }
 
-            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$startDate)) {
+            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/", $startDate)) {
                 $skipped++;
                 continue;
             }
 
-            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/",$endDate)) {
+            if (preg_match("/^\d{4}\-{\d{2}\-\d{2}$/", $endDate)) {
                 $skipped++;
                 continue;
             }
 
             if ($ops=="1") {
-
-                $query=sprintf("insert into billing_rates_history
-                (
-                reseller_id,
-                name,
-                destination,
-                application,
-                connectCost,
-                durationRate,
-                connectCostIn,
-                durationRateIn,
-                startDate,
-                endDate
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($name),
-                addslashes($destination),
-                addslashes($application),
-                addslashes($connectCost),
-                addslashes($durationRate),
-                addslashes($connectCostIn),
-                addslashes($durationRateIn),
-                addslashes($startDate),
-                addslashes($endDate)
+                $query = sprintf(
+                    "insert into billing_rates_history
+                    (
+                        reseller_id,
+                        name,
+                        destination,
+                        application,
+                        connectCost,
+                        durationRate,
+                        connectCostIn,
+                        durationRateIn,
+                        startDate,
+                        endDate
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($application),
+                    addslashes($connectCost),
+                    addslashes($durationRate),
+                    addslashes($connectCostIn),
+                    addslashes($durationRateIn),
+                    addslashes($startDate),
+                    addslashes($endDate)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -2961,17 +3267,18 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                          'name'           => $name,
-                                          'destination'    => $destination,
-                                          'application'    => $application,
-                                          'connectCost'    => intval($connectCost),
-                                          'durationRate'   => intval($durationRate),
-                                          'connectCostIn'  => intval($connectCostIn),
-                                          'durationRateIn' => intval($durationRateIn),
-                                          'startDate'      => $startDate,
-                                          'endDate'        => $endDate
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'    => intval(reseller_id),
+                            'name'           => $name,
+                            'destination'    => $destination,
+                            'application'    => $application,
+                            'connectCost'    => intval($connectCost),
+                            'durationRate'   => intval($durationRate),
+                            'connectCostIn'  => intval($connectCostIn),
+                            'durationRateIn' => intval($durationRateIn),
+                            'startDate'      => $startDate,
+                            'endDate'        => $endDate
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -2982,23 +3289,28 @@ class RatingTables {
                         }
                     }
                 }
-
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_rates_history
-                where reseller_id  = '%s'
-                and name           = '%s'
-                and destination    = '%s'
-                and startDate      = '%s'
-                and endDate        = '%s'",
-                addslashes($reseller_id),
-                addslashes($name),
-                addslashes($destination),
-                addslashes($startDate),
-                addslashes($endDate)
+            } elseif ($ops=="3") {
+                $query = sprintf(
+                    "delete from billing_rates_history
+                    where reseller_id  = '%s'
+                    and name           = '%s'
+                    and destination    = '%s'
+                    and startDate      = '%s'
+                    and endDate        = '%s'",
+                    addslashes($reseller_id),
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($startDate),
+                    addslashes($endDate)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3012,73 +3324,87 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name,
-                                                 'destination' => $destination,
-                                                 'application' => $application,
-                                                 'startDate'   => $startDate,
-                                                 'endDate'     => $endDate
-                                                 );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $name,
+                                'destination' => $destination,
+                                'application' => $application,
+                                'startDate'   => $startDate,
+                                'endDate'     => $endDate
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array("safe" => $self->mongo_safe)
+                            );
                         } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
+                            $log = sprintf("Error: Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
                         }
                     }
                 }
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_rates_history
-                where name       = '%s'
-                and destination  = '%s'
-                and reseller_id  = '%s'
-                and startDate    = '%s'
-                and endDate      = '%s'
-                ",
-                addslashes($name),
-                addslashes($destination),
-                addslashes($reseller_id),
-                addslashes($startDate),
-                addslashes($endDate)
+            } elseif ($ops=="2") {
+                $query = sprintf(
+                    "select * from billing_rates_history
+                    where name       = '%s'
+                    and destination  = '%s'
+                    and reseller_id  = '%s'
+                    and startDate    = '%s'
+                    and endDate      = '%s'
+                    ",
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($reseller_id),
+                    addslashes($startDate),
+                    addslashes($endDate)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if ($this->db->num_rows()) {
-                    $query=sprintf("update billing_rates_history set
-                    application     = '%s',
-                    connectCost     = '%s',
-                    durationRate    = '%s',
-                    connectCostIn   = '%s',
-                    connectCostIn   = '%s'
-                    where name      = '%s'
-                    and destination = '%s'
-                    and reseller_id = '%s'
-                    and startDate   = '%s'
-                    and endDate     = '%s'
-                    ",
-                    addslashes($application),
-                    addslashes($connectCost),
-                    addslashes($durationRate),
-                    addslashes($connectCostIn),
-                    addslashes($durationRateIn),
-                    addslashes($name),
-                    addslashes($destination),
-                    addslashes($reseller_id),
-                    addslashes($startDate),
-                    addslashes($endDate)
+                    $query = sprintf(
+                        "update billing_rates_history set
+                        application     = '%s',
+                        connectCost     = '%s',
+                        durationRate    = '%s',
+                        connectCostIn   = '%s',
+                        connectCostIn   = '%s'
+                        where name      = '%s'
+                        and destination = '%s'
+                        and reseller_id = '%s'
+                        and startDate   = '%s'
+                        and endDate     = '%s'
+                        ",
+                        addslashes($application),
+                        addslashes($connectCost),
+                        addslashes($durationRate),
+                        addslashes($connectCostIn),
+                        addslashes($durationRateIn),
+                        addslashes($name),
+                        addslashes($destination),
+                        addslashes($reseller_id),
+                        addslashes($startDate),
+                        addslashes($endDate)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3090,27 +3416,30 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name,
-                                                 'destination' => $destination,
-                                                 'application' => $application,
-                                                 'startDate'   => $startDate,
-                                                 'endDate'     => $endDate
-                                                 );
-                            $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                              'name'           => $name,
-                                              'destination'    => $destination,
-                                              'application'    => $application,
-                                              'connectCost'    => intval($connectCost),
-                                              'durationRate'   => intval($durationRate),
-                                              'connectCostIn'  => intval($connectCostIn),
-                                              'durationRateIn' => intval($durationRateIn),
-                                              'startDate'      => $startDate,
-                                              'endDate'        => $endDate
-                                              );
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $name,
+                                'destination' => $destination,
+                                'application' => $application,
+                                'startDate'   => $startDate,
+                                'endDate'     => $endDate
+                            );
+                            $mongo_data = array(
+                                'reseller_id'    => intval(reseller_id),
+                                'name'           => $name,
+                                'destination'    => $destination,
+                                'application'    => $application,
+                                'connectCost'    => intval($connectCost),
+                                'durationRate'   => intval($durationRate),
+                                'connectCostIn'  => intval($connectCostIn),
+                                'durationRateIn' => intval($durationRateIn),
+                                'startDate'      => $startDate,
+                                'endDate'        => $endDate
+                            );
+                            $mongo_options = array(
+                                "upsert" => true,
+                                "safe" => $self->mongo_safe
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
@@ -3122,46 +3451,51 @@ class RatingTables {
                             }
                         }
                     }
-
                 } else {
-                    $query=sprintf("insert into billing_rates_history
-                    (
-                    reseller_id,
-                    name,
-                    destination,
-                    application,
-                    connectCost,
-                    durationRate,
-                    connectCostIn,
-                    durationRateIn,
-                    startDate,
-                    endDate
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($name),
-                    addslashes($destination),
-                    addslashes($application),
-                    addslashes($connectCost),
-                    addslashes($durationRate),
-                    addslashes($connectCostIn),
-                    addslashes($durationRateIn),
-                    addslashes($startDate),
-                    addslashes($endDate)
+                    $query = sprintf(
+                        "insert into billing_rates_history
+                        (
+                            reseller_id,
+                            name,
+                            destination,
+                            application,
+                            connectCost,
+                            durationRate,
+                            connectCostIn,
+                            durationRateIn,
+                            startDate,
+                            endDate
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($name),
+                        addslashes($destination),
+                        addslashes($application),
+                        addslashes($connectCost),
+                        addslashes($durationRate),
+                        addslashes($connectCostIn),
+                        addslashes($durationRateIn),
+                        addslashes($startDate),
+                        addslashes($endDate)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3175,22 +3509,23 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'    => intval(reseller_id),
-                                              'name'           => $name,
-                                              'destination'    => $destination,
-                                              'application'    => $application,
-                                              'connectCost'    => intval($connectCost),
-                                              'durationRate'   => intval($durationRate),
-                                              'connectCostIn'  => intval($connectCostIn),
-                                              'durationRateIn' => intval($durationRateIn),
-                                              'startDate'      => $startDate,
-                                              'endDate'        => $endDate
-                                              );
+                            $mongo_data=array(
+                                'reseller_id'    => intval(reseller_id),
+                                'name'           => $name,
+                                'destination'    => $destination,
+                                'application'    => $application,
+                                'connectCost'    => intval($connectCost),
+                                'durationRate'   => intval($durationRate),
+                                'connectCostIn'  => intval($connectCostIn),
+                                'durationRateIn' => intval($durationRateIn),
+                                'startDate'      => $startDate,
+                                'endDate'        => $endDate
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
                             } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
+                                $log = sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                             }
@@ -3219,26 +3554,26 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
-        $results=$inserted+$updated+$deleted;
+        $results = $inserted + $updated + $deleted;
 
         return $results;
-
     }
 
-    function ImportCustomers($file,$reseller=0) {
+    private function ImportCustomers($file, $reseller = 0)
+    {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
-        $this->mustReload=true;
+        $this->mustReload = true;
 
         $i=0;
         $inserted = 0;
         $updated  = 0;
         $deleted  = 0;
 
-        printf ("Importing customers from %s for reseller %s:\n",$file,$reseller);
+        printf("Importing customers from %s for reseller %s:\n", $file, $reseller);
 
-        while ($buffer = fgets($fp,1024)) {
+        while ($buffer = fgets($fp, 1024)) {
             $buffer=trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
@@ -3265,41 +3600,47 @@ class RatingTables {
             }
 
             if ($ops=="1") {
-                $query=sprintf("insert into billing_customers
-                (
-                reseller_id,
-                gateway,
-                domain,
-                subscriber,
-                profile_name1,
-                profile_name2,
-                timezone,
-                profile_name1_alt,
-                profile_name2_alt
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($profile_name1),
-                addslashes($profile_name2),
-                addslashes($timezone),
-                addslashes($profile_name1_alt),
-                addslashes($profile_name2_alt)
+                $query = sprintf(
+                    "insert into billing_customers
+                    (
+                        reseller_id,
+                        gateway,
+                        domain,
+                        subscriber,
+                        profile_name1,
+                        profile_name2,
+                        timezone,
+                        profile_name1_alt,
+                        profile_name2_alt
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($profile_name1),
+                    addslashes($profile_name2),
+                    addslashes($timezone),
+                    addslashes($profile_name1_alt),
+                    addslashes($profile_name2_alt)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3313,42 +3654,48 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'       => intval(reseller_id),
-                                          'gateway'           => $gateway,
-                                          'domain'            => $domain,
-                                          'subscriber'        => $subscriber,
-                                          'profile_name1'     => $profile_name1,
-                                          'profile_name2'     => $profile_name2,
-                                          'profile_name1_alt' => $profile_name1_alt,
-                                          'profile_name2_alt' => $profile_name2_alt,
-                                          'timezone'          => $timezone
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'       => intval(reseller_id),
+                            'gateway'           => $gateway,
+                            'domain'            => $domain,
+                            'subscriber'        => $subscriber,
+                            'profile_name1'     => $profile_name1,
+                            'profile_name2'     => $profile_name2,
+                            'profile_name1_alt' => $profile_name1_alt,
+                            'profile_name2_alt' => $profile_name2_alt,
+                            'timezone'          => $timezone
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
                         } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
+                            $log = sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
                         }
                     }
                 }
-
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_customers
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber)
+            } elseif ($ops == "3") {
+                $query = sprintf(
+                    "delete from billing_customers
+                    where gateway      = '%s'
+                    and reseller_id    = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    ",
+                    addslashes($gateway),
+                    addslashes($reseller_id),
+                    addslashes($domain),
+                    addslashes($subscriber)
                 );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3362,15 +3709,17 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
-                            $mongo_match = array('gateway'     => $gateway,
-                                                 'reseller_id' => intval(reseller_id),
-                                                 'domain'      => $domain,
-                                                 'subscriber'  => $subscriber,
-                                                 'dest_id'     => $dest_id
-                                                 );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'gateway'     => $gateway,
+                                'reseller_id' => intval(reseller_id),
+                                'domain'      => $domain,
+                                'subscriber'  => $subscriber,
+                                'dest_id'     => $dest_id
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array("safe" => $self->mongo_safe)
+                            );
                         } catch (Exception $e) {
                             $log=sprintf("Error: Mongo exception when deleting from billing_customers: %s", $e->getMessage());
                             print $log;
@@ -3379,51 +3728,62 @@ class RatingTables {
                         }
                     }
                 }
-
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_customers
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber)
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from billing_customers
+                    where gateway      = '%s'
+                    and reseller_id    = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    ",
+                    addslashes($gateway),
+                    addslashes($reseller_id),
+                    addslashes($domain),
+                    addslashes($subscriber)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if ($this->db->num_rows()) {
-                    $query=sprintf("update billing_customers set
-                    profile_name1     = '%s',
-                    profile_name2     = '%s',
-                    profile_name1_alt = '%s',
-                    profile_name2_alt = '%s',
-                    timezone          = '%s'
-                    where gateway     = '%s'
-                    and domain        = '%s'
-                    and reseller_id   = '%s'
-                    and subscriber    = '%s'\n",
-                    addslashes($profile_name1),
-                    addslashes($profile_name2),
-                    addslashes($profile_name1_alt),
-                    addslashes($profile_name2_alt),
-                    addslashes($timezone),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($reseller_id),
-                    addslashes($subscriber)
+                    $query = sprintf(
+                        "update billing_customers set
+                        profile_name1     = '%s',
+                        profile_name2     = '%s',
+                        profile_name1_alt = '%s',
+                        profile_name2_alt = '%s',
+                        timezone          = '%s'
+                        where gateway     = '%s'
+                        and domain        = '%s'
+                        and reseller_id   = '%s'
+                        and subscriber    = '%s'\n",
+                        addslashes($profile_name1),
+                        addslashes($profile_name2),
+                        addslashes($profile_name1_alt),
+                        addslashes($profile_name2_alt),
+                        addslashes($timezone),
+                        addslashes($gateway),
+                        addslashes($domain),
+                        addslashes($reseller_id),
+                        addslashes($subscriber)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3435,21 +3795,23 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match = array('gateway'     => $gateway,
-                                                 'reseller_id' => intval(reseller_id),
-                                                 'domain'      => $domain,
-                                                 'subscriber'  => $subscriber
-                                                 );
-                            $mongo_data=array('reseller_id'       => intval(reseller_id),
-                                              'gateway'           => $gateway,
-                                              'domain'            => $domain,
-                                              'subscriber'        => $subscriber,
-                                              'profile_name1'     => $profile_name1,
-                                              'profile_name2'     => $profile_name2,
-                                              'profile_name1_alt' => $profile_name1_alt,
-                                              'profile_name2_alt' => $profile_name2_alt,
-                                              'timezone'          => $timezone
-                                              );
+                            $mongo_match = array(
+                                'gateway'     => $gateway,
+                                'reseller_id' => intval(reseller_id),
+                                'domain'      => $domain,
+                                'subscriber'  => $subscriber
+                            );
+                            $mongo_data = array(
+                                'reseller_id'       => intval(reseller_id),
+                                'gateway'           => $gateway,
+                                'domain'            => $domain,
+                                'subscriber'        => $subscriber,
+                                'profile_name1'     => $profile_name1,
+                                'profile_name2'     => $profile_name2,
+                                'profile_name1_alt' => $profile_name1_alt,
+                                'profile_name2_alt' => $profile_name2_alt,
+                                'timezone'          => $timezone
+                            );
                             $mongo_options = array("upsert" => true,
                                                    "safe" => $self->mongo_safe
                                                    );
@@ -3466,41 +3828,47 @@ class RatingTables {
                         }
                     }
                 } else {
-                    $query=sprintf("insert into billing_customers
-                    (
-                    reseller_id,
-                    gateway,
-                    domain,
-                    subscriber,
-                    profile_name1,
-                    profile_name2,
-                    timezone,
-                    profile_name1_alt,
-                    profile_name2_alt
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
-                    addslashes($profile_name1),
-                    addslashes($profile_name2),
-                    addslashes($timezone),
-                    addslashes($profile_name1_alt),
-                    addslashes($profile_name2_alt)
+                    $query = sprintf(
+                        "insert into billing_customers
+                        (
+                            reseller_id,
+                            gateway,
+                            domain,
+                            subscriber,
+                            profile_name1,
+                            profile_name2,
+                            timezone,
+                            profile_name1_alt,
+                            profile_name2_alt
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($gateway),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($profile_name1),
+                        addslashes($profile_name2),
+                        addslashes($timezone),
+                        addslashes($profile_name1_alt),
+                        addslashes($profile_name2_alt)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3551,7 +3919,8 @@ class RatingTables {
         return $results;
     }
 
-    function ImportDestinations($file,$reseller=0) {
+    private function ImportDestinations($file, $reseller = 0)
+    {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -3562,9 +3931,9 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        printf ("Importing destinations from %s for reseller %s:\n",$file,$reseller);
+        printf("Importing destinations from %s for reseller %s:\n", $file, $reseller);
 
-        while ($buffer = fgets($fp,1024)) {
+        while ($buffer = fgets($fp, 1024)) {
             $buffer=trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
@@ -3587,54 +3956,60 @@ class RatingTables {
                 $reseller_id    = intval($p[1]);
             }
 
-            if (!is_numeric($dest_id) && !strstr($dest_id,'@')) {
+            if (!is_numeric($dest_id) && !strstr($dest_id, '@')) {
                 // skip invalid destinations
                 $skipped++;
                 continue;
             }
 
             if ($ops=="1") {
-                $query=sprintf("insert into destinations
-                (
-                reseller_id,
-                gateway,
-                domain,
-                subscriber,
-                dest_id,
-                region,
-                dest_name,
-                increment,
-                min_duration,
-                max_duration,
-                max_price
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($dest_id),
-                addslashes($region),
-                addslashes($dest_name),
-                addslashes($increment),
-                addslashes($min_duration),
-                addslashes($max_duration),
-                addslashes($max_price)
+                $query = sprintf(
+                    "insert into destinations
+                    (
+                        reseller_id,
+                        gateway,
+                        domain,
+                        subscriber,
+                        dest_id,
+                        region,
+                        dest_name,
+                        increment,
+                        min_duration,
+                        max_duration,
+                        max_price
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($dest_id),
+                    addslashes($region),
+                    addslashes($dest_name),
+                    addslashes($increment),
+                    addslashes($min_duration),
+                    addslashes($max_duration),
+                    addslashes($max_price)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3648,18 +4023,19 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'  => intval(reseller_id),
-                                          'gateway'      => $gateway,
-                                          'domain'       => $domain,
-                                          'subscriber'   => $subscriber,
-                                          'dest_id'      => $dest_id,
-                                          'region'       => $region,
-                                          'dest_name'    => $dest_name,
-                                          'increment'    => intval($increment),
-                                          'min_duration' => intval($min_duration),
-                                          'max_duration' => intval($max_duration),
-                                          'max_price'    => floatval($max_price)
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'  => intval(reseller_id),
+                            'gateway'      => $gateway,
+                            'domain'       => $domain,
+                            'subscriber'   => $subscriber,
+                            'dest_id'      => $dest_id,
+                            'region'       => $region,
+                            'dest_name'    => $dest_name,
+                            'increment'    => intval($increment),
+                            'min_duration' => intval($min_duration),
+                            'max_duration' => intval($max_duration),
+                            'max_price'    => floatval($max_price)
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -3671,23 +4047,28 @@ class RatingTables {
                         }
                     }
                 }
-
-            } elseif ($ops=="3") {
-                $query=sprintf("delete from destinations
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                and dest_id        = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($dest_id)
+            } elseif ($ops == "3") {
+                $query = sprintf(
+                    "delete from destinations
+                    where gateway      = '%s'
+                    and reseller_id    = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    and dest_id        = '%s'
+                    ",
+                    addslashes($gateway),
+                    addslashes($reseller_id),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($dest_id)
                 );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3701,74 +4082,87 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                            $mongo_match = array('gateway'     => $gateway,
-                                                 'reseller_id' => intval(reseller_id),
-                                                 'domain'      => $domain,
-                                                 'subscriber'  => $subscriber,
-                                                 'dest_id'     => $dest_id
-                                                 );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'gateway'     => $gateway,
+                                'reseller_id' => intval(reseller_id),
+                                'domain'      => $domain,
+                                'subscriber'  => $subscriber,
+                                'dest_id'     => $dest_id
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array("safe" => $self->mongo_safe)
+                            );
                         } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from destinations: %s", $e->getMessage());
+                            $log = sprintf("Error: Mongo exception when deleting from destinations: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
                         }
                     }
                 }
-
-            } elseif ($ops=="2") {
-                $query=sprintf("select * from destinations
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                and dest_id        = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($dest_id)
-                );
-
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                if ($this->db->num_rows()) {
-                    $query=sprintf("update destinations set
-                    region             = '%s',
-                    dest_name          = '%s',
-                    increment          = '%s',
-                    min_duration       = '%s',
-                    max_duration       = '%s',
-                    max_price          = '%s'
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from destinations
                     where gateway      = '%s'
                     and reseller_id    = '%s'
                     and domain         = '%s'
                     and subscriber     = '%s'
                     and dest_id        = '%s'
                     ",
-                    addslashes($region),
-                    addslashes($dest_name),
-                    addslashes($increment),
-                    addslashes($min_duration),
-                    addslashes($max_duration),
-                    addslashes($max_price),
                     addslashes($gateway),
                     addslashes($reseller_id),
                     addslashes($domain),
                     addslashes($subscriber),
                     addslashes($dest_id)
+                );
+
+                if (!$this->db->query($query)) {
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($this->db->num_rows()) {
+                    $query = sprintf(
+                        "update destinations set
+                        region             = '%s',
+                        dest_name          = '%s',
+                        increment          = '%s',
+                        min_duration       = '%s',
+                        max_duration       = '%s',
+                        max_price          = '%s'
+                        where gateway      = '%s'
+                        and reseller_id    = '%s'
+                        and domain         = '%s'
+                        and subscriber     = '%s'
+                        and dest_id        = '%s'
+                        ",
+                        addslashes($region),
+                        addslashes($dest_name),
+                        addslashes($increment),
+                        addslashes($min_duration),
+                        addslashes($max_duration),
+                        addslashes($max_price),
+                        addslashes($gateway),
+                        addslashes($reseller_id),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($dest_id)
                     );
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3781,33 +4175,36 @@ class RatingTables {
                     dprint($this->database_backend);
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match = array('gateway'     => $gateway,
-                                                 'reseller_id' => intval(reseller_id),
-                                                 'domain'      => $domain,
-                                                 'subscriber'  => $subscriber,
-                                                 'dest_id'     => $dest_id
-                                                 );
-                            $mongo_data = array('reseller_id'  => intval(reseller_id),
-                                                'gateway'      => $gateway,
-                                                'domain'       => $domain,
-                                                'subscriber'   => $subscriber,
-                                                'dest_id'      => $dest_id,
-                                                'region'       => $region,
-                                                'dest_name'    => $dest_name,
-                                                'increment'    => intval($increment),
-                                                'min_duration' => intval($min_duration),
-                                                'max_duration' => intval($max_duration),
-                                                'max_price'    => floatval($max_price)
-                                                );
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
+                            $mongo_match = array(
+                                'gateway'     => $gateway,
+                                'reseller_id' => intval(reseller_id),
+                                'domain'      => $domain,
+                                'subscriber'  => $subscriber,
+                                'dest_id'     => $dest_id
+                            );
+                            $mongo_data = array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'dest_id'      => $dest_id,
+                                'region'       => $region,
+                                'dest_name'    => $dest_name,
+                                'increment'    => intval($increment),
+                                'min_duration' => intval($min_duration),
+                                'max_duration' => intval($max_duration),
+                                'max_price'    => floatval($max_price)
+                            );
+                            $mongo_options = array(
+                                "upsert" => true,
+                                "safe" => $self->mongo_safe
+                            );
 
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
                             } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating destinations: %s", $e->getMessage());
+                                $log = sprintf("Error: Mongo exception when updating destinations: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                                 return false;
@@ -3815,46 +4212,52 @@ class RatingTables {
                         }
                     }
                 } else {
-                    $query=sprintf("insert into destinations
-                    (
-                    reseller_id,
-                    gateway,
-                    domain,
-                    subscriber,
-                    dest_id,
-                    region,
-                    dest_name,
-                    increment,
-                    min_duration,
-                    max_duration,
-                    max_price
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
-                    addslashes($dest_id),
-                    addslashes($region),
-                    addslashes($dest_name),
-                    addslashes($increment),
-                    addslashes($min_duration),
-                    addslashes($max_duration),
-                    addslashes($max_price)
+                    $query = sprintf(
+                        "insert into destinations
+                        (
+                            reseller_id,
+                            gateway,
+                            domain,
+                            subscriber,
+                            dest_id,
+                            region,
+                            dest_name,
+                            increment,
+                            min_duration,
+                            max_duration,
+                            max_price
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($gateway),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($dest_id),
+                        addslashes($region),
+                        addslashes($dest_name),
+                        addslashes($increment),
+                        addslashes($min_duration),
+                        addslashes($max_duration),
+                        addslashes($max_price)
                     );
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -3868,18 +4271,19 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'  => intval(reseller_id),
-                                              'gateway'      => $gateway,
-                                              'domain'       => $domain,
-                                              'subscriber'   => $subscriber,
-                                              'dest_id'      => $dest_id,
-                                              'region'       => $region,
-                                              'dest_name'    => $dest_name,
-                                              'increment'    => intval($increment),
-                                              'min_duration' => intval($min_duration),
-                                              'max_duration' => intval($max_duration),
-                                              'max_price'    => floatval($max_price)
-                                              );
+                            $mongo_data = array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'dest_id'      => $dest_id,
+                                'region'       => $region,
+                                'dest_name'    => $dest_name,
+                                'increment'    => intval($increment),
+                                'min_duration' => intval($min_duration),
+                                'max_duration' => intval($max_duration),
+                                'max_price'    => floatval($max_price)
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -3906,11 +4310,12 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
-        $results=$inserted+$updated+$deleted;
+        $results = $inserted + $updated + $deleted;
         return $results;
     }
 
-    function ImportDiscounts($file,$reseller=0) {
+    private function ImportDiscounts($file, $reseller = 0)
+    {
 
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
@@ -3921,9 +4326,9 @@ class RatingTables {
         $updated  = 0;
         $deleted  = 0;
 
-        printf ("Importing discounts from %s for reseller %s:\n",$file,$reseller);
+        printf("Importing discounts from %s for reseller %s:\n", $file, $reseller);
 
-        while ($buffer = fgets($fp,1024)) {
+        while ($buffer = fgets($fp, 1024)) {
             $buffer=trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
@@ -3944,48 +4349,54 @@ class RatingTables {
                 $reseller_id    = intval($p[1]);
             }
 
-            if (!is_numeric($destination) && !strstr($destination,'@')) {
+            if (!is_numeric($destination) && !strstr($destination, '@')) {
                 // skip invalid destinations
                 $skipped++;
                 continue;
             }
 
-            if ($ops=="1") {
-                $query=sprintf("insert into billing_discounts
-                (
-                reseller_id,
-                gateway,
-                domain,
-                subscriber,
-                application,
-                destination,
-                region,
-                connect,
-                duration
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($gateway),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($application),
-                addslashes($destination),
-                addslashes($region),
-                addslashes($connect),
-                addslashes($duration)
+            if ($ops == "1") {
+                $query = sprintf(
+                    "insert into billing_discounts
+                    (
+                        reseller_id,
+                        gateway,
+                        domain,
+                        subscriber,
+                        application,
+                        destination,
+                        region,
+                        connect,
+                        duration
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($gateway),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($application),
+                    addslashes($destination),
+                    addslashes($region),
+                    addslashes($connect),
+                    addslashes($duration)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -3999,49 +4410,55 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'  => intval(reseller_id),
-                                          'gateway'      => $gateway,
-                                          'domain'       => $domain,
-                                          'subscriber'   => $subscriber,
-                                          'application'  => $application,
-                                          'destination'  => $destination,
-                                          'region'       => $region,
-                                          'connect'      => intval($connect),
-                                          'duration'     => intval($min_duration)
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'  => intval(reseller_id),
+                            'gateway'      => $gateway,
+                            'domain'       => $domain,
+                            'subscriber'   => $subscriber,
+                            'application'  => $application,
+                            'destination'  => $destination,
+                            'region'       => $region,
+                            'connect'      => intval($connect),
+                            'duration'     => intval($min_duration)
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
                         } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
+                            $log = sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
                             print $log;
                             syslog(LOG_NOTICE, $log);
                             return false;
                         }
                     }
                 }
-
-            } elseif ($ops=="3") {
-                $query=sprintf("delete from billing_discounts
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                and application    = '%s'
-                and destination    = '%s'
-                and region         = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($application),
-                addslashes($destination),
-                addslashes($region)
+            } elseif ($ops == "3") {
+                $query=sprintf(
+                    "delete from billing_discounts
+                    where gateway      = '%s'
+                    and reseller_id    = '%s'
+                    and domain         = '%s'
+                    and subscriber     = '%s'
+                    and application    = '%s'
+                    and destination    = '%s'
+                    and region         = '%s'
+                    ",
+                    addslashes($gateway),
+                    addslashes($reseller_id),
+                    addslashes($domain),
+                    addslashes($subscriber),
+                    addslashes($application),
+                    addslashes($destination),
+                    addslashes($region)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -4055,17 +4472,19 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                            $mongo_match=array('reseller_id'  => intval(reseller_id),
-                                               'gateway'      => $gateway,
-                                               'domain'       => $domain,
-                                               'subscriber'   => $subscriber,
-                                               'application'  => $application,
-                                               'destination'  => $destination,
-                                               'region'       => $region
-                                               );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'application'  => $application,
+                                'destination'  => $destination,
+                                'region'       => $region
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array("safe" => $self->mongo_safe)
+                            );
                         } catch (Exception $e) {
                             $log=sprintf("Error: Mongo exception when deleting from billing_discounts: %s", $e->getMessage());
                             print $log;
@@ -4074,37 +4493,9 @@ class RatingTables {
                         }
                     }
                 }
-
-            } elseif ($ops=="2") {
-                $query=sprintf("select * from billing_discounts
-                where gateway      = '%s'
-                and reseller_id    = '%s'
-                and domain         = '%s'
-                and subscriber     = '%s'
-                and application    = '%s'
-                and destination    = '%s'
-                and region         = '%s'
-                ",
-                addslashes($gateway),
-                addslashes($reseller_id),
-                addslashes($domain),
-                addslashes($subscriber),
-                addslashes($application),
-                addslashes($destination),
-                addslashes($region)
-                );
-
-                if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                if ($this->db->num_rows()) {
-                    $query=sprintf("update billing_discounts set
-                    connect            = '%s',
-                    duration           = '%s',
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from billing_discounts
                     where gateway      = '%s'
                     and reseller_id    = '%s'
                     and domain         = '%s'
@@ -4113,8 +4504,6 @@ class RatingTables {
                     and destination    = '%s'
                     and region         = '%s'
                     ",
-                    addslashes($connect),
-                    addslashes($duration),
                     addslashes($gateway),
                     addslashes($reseller_id),
                     addslashes($domain),
@@ -4122,10 +4511,51 @@ class RatingTables {
                     addslashes($application),
                     addslashes($destination),
                     addslashes($region)
+                );
+
+                if (!$this->db->query($query)) {
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
+                    print $log;
+                    syslog(LOG_NOTICE, $log);
+                    return false;
+                }
+
+                if ($this->db->num_rows()) {
+                    $query = sprintf(
+                        "update billing_discounts set
+                        connect            = '%s',
+                        duration           = '%s',
+                        where gateway      = '%s'
+                        and reseller_id    = '%s'
+                        and domain         = '%s'
+                        and subscriber     = '%s'
+                        and application    = '%s'
+                        and destination    = '%s'
+                        and region         = '%s'
+                        ",
+                        addslashes($connect),
+                        addslashes($duration),
+                        addslashes($gateway),
+                        addslashes($reseller_id),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($application),
+                        addslashes($destination),
+                        addslashes($region)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -4137,27 +4567,30 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match=array('reseller_id'  => intval(reseller_id),
-                                               'gateway'      => $gateway,
-                                               'domain'       => $domain,
-                                               'subscriber'   => $subscriber,
-                                               'application'  => $application,
-                                               'destination'  => $destination,
-                                               'region'       => $region
-                                               );
-                            $mongo_data=array('reseller_id'  => intval(reseller_id),
-                                              'gateway'      => $gateway,
-                                              'domain'       => $domain,
-                                              'subscriber'   => $subscriber,
-                                              'application'  => $application,
-                                              'destination'  => $destination,
-                                              'region'       => $region,
-                                              'connect'      => intval($connect),
-                                              'duration'     => intval($min_duration)
-                                              );
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
+                            $mongo_match=array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'application'  => $application,
+                                'destination'  => $destination,
+                                'region'       => $region
+                            );
+                            $mongo_data=array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'application'  => $application,
+                                'destination'  => $destination,
+                                'region'       => $region,
+                                'connect'      => intval($connect),
+                                'duration'     => intval($min_duration)
+                            );
+                            $mongo_options = array(
+                                "upsert" => true,
+                                "safe" => $self->mongo_safe
+                            );
 
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
@@ -4170,42 +4603,48 @@ class RatingTables {
                             }
                         }
                     }
-                 } else {
-                    $query=sprintf("insert into billing_discounts
-                    (
-                    reseller_id,
-                    gateway,
-                    domain,
-                    subscriber,
-                    application,
-                    destination,
-                    region,
-                    connect,
-                    duration
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($gateway),
-                    addslashes($domain),
-                    addslashes($subscriber),
-                    addslashes($application),
-                    addslashes($destination),
-                    addslashes($region),
-                    addslashes($connect),
-                    addslashes($duration)
+                } else {
+                    $query = sprintf(
+                        "insert into billing_discounts
+                        (
+                            reseller_id,
+                            gateway,
+                            domain,
+                            subscriber,
+                            application,
+                            destination,
+                            region,
+                            connect,
+                            duration
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($gateway),
+                        addslashes($domain),
+                        addslashes($subscriber),
+                        addslashes($application),
+                        addslashes($destination),
+                        addslashes($region),
+                        addslashes($connect),
+                        addslashes($duration)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -4219,16 +4658,17 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_data=array('reseller_id'  => intval(reseller_id),
-                                              'gateway'      => $gateway,
-                                              'domain'       => $domain,
-                                              'subscriber'   => $subscriber,
-                                              'application'  => $application,
-                                              'destination'  => $destination,
-                                              'region'       => $region,
-                                              'connect'      => intval($connect),
-                                              'duration'     => intval($min_duration)
-                                              );
+                            $mongo_data=array(
+                                'reseller_id'  => intval(reseller_id),
+                                'gateway'      => $gateway,
+                                'domain'       => $domain,
+                                'subscriber'   => $subscriber,
+                                'application'  => $application,
+                                'destination'  => $destination,
+                                'region'       => $region,
+                                'connect'      => intval($connect),
+                                'duration'     => intval($min_duration)
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -4256,11 +4696,12 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
-        $results=$inserted+$updated+$deleted;
+        $results = $inserted + $updated + $deleted;
         return $results;
     }
 
-    function ImportProfiles($file,$reseller=0) {
+    private function ImportProfiles($file, $reseller = 0)
+    {
         if (!$file || !is_readable($file) || !$fp = fopen($file, "r")) return false;
 
         $this->mustReload=true;
@@ -4272,7 +4713,7 @@ class RatingTables {
 
         print "Importing Profiles:\n";
 
-        while ($buffer = fgets($fp,1024)) {
+        while ($buffer = fgets($fp, 1024)) {
             $buffer=trim($buffer);
 
             $p = explode($this->delimiter, $buffer);
@@ -4300,43 +4741,49 @@ class RatingTables {
             if (!$hour4) $hour4=0;
 
             if ($ops=="1") {
-                $query=sprintf("insert into billing_profiles
-                (
-                reseller_id,
-                name,
-                rate_name1,
-                hour1,
-                rate_name2,
-                hour2,
-                rate_name3,
-                hour3,
-                rate_name4,
-                hour4
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($reseller_id),
-                addslashes($profile),
-                addslashes($rate1),
-                addslashes($hour1),
-                addslashes($rate2),
-                addslashes($hour2),
-                addslashes($rate3),
-                addslashes($hour3),
-                addslashes($rate4),
-                addslashes($hour4)
+                $query = sprintf(
+                    "insert into billing_profiles
+                    (
+                        reseller_id,
+                        name,
+                        rate_name1,
+                        hour1,
+                        rate_name2,
+                        hour2,
+                        rate_name3,
+                        hour3,
+                        rate_name4,
+                        hour4
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($reseller_id),
+                    addslashes($profile),
+                    addslashes($rate1),
+                    addslashes($hour1),
+                    addslashes($rate2),
+                    addslashes($hour2),
+                    addslashes($rate3),
+                    addslashes($hour3),
+                    addslashes($rate4),
+                    addslashes($hour4)
                 );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -4350,17 +4797,18 @@ class RatingTables {
 
                 if ($this->database_backend == 'mongo') {
                     if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                          'name'          => $profile,
-                                          'rate_name1'    => $rate1,
-                                          'hour1'         => $hour1,
-                                          'rate_name2'    => $rate2,
-                                          'hour2'         => $hour2,
-                                          'rate_name3'    => $rate3,
-                                          'hour3'         => $hour3,
-                                          'rate_name4'    => $rate4,
-                                          'hour4'         => $hour4
-                                          );
+                        $mongo_data = array(
+                            'reseller_id'   => intval(reseller_id),
+                            'name'          => $profile,
+                            'rate_name1'    => $rate1,
+                            'hour1'         => $hour1,
+                            'rate_name2'    => $rate2,
+                            'hour2'         => $hour2,
+                            'rate_name3'    => $rate3,
+                            'hour3'         => $hour3,
+                            'rate_name4'    => $rate4,
+                            'hour4'         => $hour4
+                        );
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                             $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
@@ -4371,17 +4819,22 @@ class RatingTables {
                         }
                     }
                 }
-
-            } else if ($ops=="3") {
-                $query=sprintf("delete from billing_profiles
-                where name     = '%s'
-                and reseller_id= '%s'
-                ",
-                addslashes($profile),
-                addslashes($reseller_id)
+            } elseif ($ops == "3") {
+                $query = sprintf(
+                    "delete from billing_profiles
+                    where name     = '%s'
+                    and reseller_id= '%s'
+                    ",
+                    addslashes($profile),
+                    addslashes($reseller_id)
                 );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
@@ -4395,12 +4848,14 @@ class RatingTables {
                     if ($this->mongo_db_rw) {
                         try {
                             $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $name
-                                                 );
-                            $mongo_table_rw->remove($mongo_match,
-                                                    array("safe" => $self->mongo_safe)
-                                                    );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $name
+                            );
+                            $mongo_table_rw->remove(
+                                $mongo_match,
+                                array("safe" => $self->mongo_safe)
+                            );
                         } catch (Exception $e) {
                             $log=sprintf("Error: Mongo exception when deleting from billing_profiles: %s", $e->getMessage());
                             print $log;
@@ -4409,51 +4864,61 @@ class RatingTables {
                         }
                     }
                 }
-
-
-            } else if ($ops=="2") {
-                $query=sprintf("select * from billing_profiles
-                where name     = '%s'
-                and reseller_id= '%s'
-                ",
-                addslashes($profile),
-                addslashes($reseller_id)
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from billing_profiles
+                    where name     = '%s'
+                    and reseller_id= '%s'
+                    ",
+                    addslashes($profile),
+                    addslashes($reseller_id)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if ($this->db->num_rows()) {
-                    $query=sprintf("update billing_profiles set
-                    rate_name1     = '%s',
-                    rate_name2     = '%s',
-                    rate_name3     = '%s',
-                    rate_name4     = '%s',
-                    hour1          = '%s',
-                    hour2          = '%s',
-                    hour3          = '%s',
-                    hour4          = '%s'
-                    where name     = '%s'
-                    and reseller_id= '%s'
-                    \n",
-                    addslashes($rate1),
-                    addslashes($rate2),
-                    addslashes($rate3),
-                    addslashes($rate4),
-                    addslashes($hour1),
-                    addslashes($hour2),
-                    addslashes($hour3),
-                    addslashes($hour4),
-                    addslashes($profile),
-                    addslashes($reseller_id)
+                    $query = sprintf(
+                        "update billing_profiles set
+                        rate_name1     = '%s',
+                        rate_name2     = '%s',
+                        rate_name3     = '%s',
+                        rate_name4     = '%s',
+                        hour1          = '%s',
+                        hour2          = '%s',
+                        hour3          = '%s',
+                        hour4          = '%s'
+                        where name     = '%s'
+                        and reseller_id= '%s'
+                        \n",
+                        addslashes($rate1),
+                        addslashes($rate2),
+                        addslashes($rate3),
+                        addslashes($rate4),
+                        addslashes($hour1),
+                        addslashes($hour2),
+                        addslashes($hour3),
+                        addslashes($hour4),
+                        addslashes($profile),
+                        addslashes($reseller_id)
                     );
 
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -4465,24 +4930,27 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                            $mongo_match = array('reseller_id' => intval(reseller_id),
-                                                 'name'        => $profile
-                                                 );
-                            $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                              'name'          => $profile,
-                                              'rate_name1'    => $rate1,
-                                              'hour1'         => $hour1,
-                                              'rate_name2'    => $rate2,
-                                              'hour2'         => $hour2,
-                                              'rate_name3'    => $rate3,
-                                              'hour3'         => $hour3,
-                                              'rate_name4'    => $rate4,
-                                              'hour4'         => $hour4
-                                              );
+                            $mongo_match = array(
+                                'reseller_id' => intval(reseller_id),
+                                'name'        => $profile
+                            );
+                            $mongo_data = array(
+                                'reseller_id'   => intval(reseller_id),
+                                'name'          => $profile,
+                                'rate_name1'    => $rate1,
+                                'hour1'         => $hour1,
+                                'rate_name2'    => $rate2,
+                                'hour2'         => $hour2,
+                                'rate_name3'    => $rate3,
+                                'hour3'         => $hour3,
+                                'rate_name4'    => $rate4,
+                                'hour4'         => $hour4
+                            );
 
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
+                            $mongo_options = array(
+                                "upsert" => true,
+                                "safe" => $self->mongo_safe
+                            );
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                                 $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
@@ -4495,43 +4963,49 @@ class RatingTables {
                         }
                     }
                 } else {
-                    $query=sprintf("insert into billing_profiles
-                    (
-                    reseller_id,
-                    name,
-                    rate_name1,
-                    hour1,
-                    rate_name2,
-                    hour2,
-                    rate_name3,
-                    hour3,
-                    rate_name4,
-                    hour4
-                    ) values (
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s',
-                    '%s'
-                    )",
-                    addslashes($reseller_id),
-                    addslashes($profile),
-                    addslashes($rate1),
-                    addslashes($hour1),
-                    addslashes($rate2),
-                    addslashes($hour2),
-                    addslashes($rate3),
-                    addslashes($hour3),
-                    addslashes($rate4),
-                    addslashes($hour4)
+                    $query = sprintf(
+                        "insert into billing_profiles
+                        (
+                            reseller_id,
+                            name,
+                            rate_name1,
+                            hour1,
+                            rate_name2,
+                            hour2,
+                            rate_name3,
+                            hour3,
+                            rate_name4,
+                            hour4
+                        ) values (
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s',
+                            '%s'
+                        )",
+                        addslashes($reseller_id),
+                        addslashes($profile),
+                        addslashes($rate1),
+                        addslashes($hour1),
+                        addslashes($rate2),
+                        addslashes($hour2),
+                        addslashes($rate3),
+                        addslashes($hour3),
+                        addslashes($rate4),
+                        addslashes($hour4)
                     );
                     if (!$this->db->query($query)) {
-                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                        $log = sprintf(
+                            "Database error for query %s: %s (%s)",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                         print $log;
                         syslog(LOG_NOTICE, $log);
                         return false;
@@ -4545,29 +5019,29 @@ class RatingTables {
 
                     if ($this->database_backend == 'mongo') {
                         if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'   => intval(reseller_id),
-                                          'name'          => $profile,
-                                          'rate_name1'    => $rate1,
-                                          'hour1'         => $hour1,
-                                          'rate_name2'    => $rate2,
-                                          'hour2'         => $hour2,
-                                          'rate_name3'    => $rate3,
-                                          'hour3'         => $hour3,
-                                          'rate_name4'    => $rate4,
-                                          'hour4'         => $hour4
-                                          );
+                            $mongo_data = array(
+                                'reseller_id'   => intval(reseller_id),
+                                'name'          => $profile,
+                                'rate_name1'    => $rate1,
+                                'hour1'         => $hour1,
+                                'rate_name2'    => $rate2,
+                                'hour2'         => $hour2,
+                                'rate_name3'    => $rate3,
+                                'hour3'         => $hour3,
+                                'rate_name4'    => $rate4,
+                                'hour4'         => $hour4
+                            );
 
                             try {
                                 $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
                                 $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
                             } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
+                                $log = sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                             }
                         }
                     }
-
                 }
             }
 
@@ -4581,13 +5055,18 @@ class RatingTables {
         if ($updated)  print "Updated $updated records\n";
         if ($deleted)  print "Delete $deleted records\n";
 
-        $results=$inserted+$updated+$deleted;
+        $results = $inserted + $updated + $deleted;
         return $results;
     }
 
-    function LoadRatingTables () {
+    public function LoadRatingTables()
+    {
 
-        $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
+        $log = sprintf(
+            "Memory usage: %0.2fMB, memory limit: %sB",
+            memory_get_usage() / 1024 / 1024,
+            ini_get('memory_limit')
+        );
         syslog(LOG_NOTICE, $log);
 
         $loaded['profiles']     = $this->LoadProfilesTable();
@@ -4595,17 +5074,22 @@ class RatingTables {
         $loaded['holidays']     = $this->LoadHolidaysTable();
         $loaded['enumTlds']     = $this->LoadENUMtldsTable();
 
-        foreach(array_keys($loaded) as $_load) {
+        foreach (array_keys($loaded) as $_load) {
             syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load into memory");
         }
 
-        $log=sprintf("Memory usage: %0.2fMB, memory limit: %sB",memory_get_usage()/1024/1024,ini_get('memory_limit'));
+        $log = sprintf(
+            "Memory usage: %0.2fMB, memory limit: %sB",
+            memory_get_usage() / 1024 / 1024,
+            ini_get('memory_limit')
+        );
         syslog(LOG_NOTICE, $log);
 
         return $loaded;
     }
 
-    function LoadENUMtldsTable() {
+    private function LoadENUMtldsTable()
+    {
         if ($this->database_backend == 'mongo') {
             if ($this->mongo_db_ro) {
                 // mongo backend
@@ -4625,10 +5109,9 @@ class RatingTables {
                         $_app=$result['application'];
                         if (!$_app) $_app='audio';
 
-                        $_ENUMtlds[$result['enum_tld']]=
-                        array(
-                             "discount"    => $result['discount'],
-                             "e164_regexp" => $result['e164_regexp']
+                        $_ENUMtlds[$result['enum_tld']] = array(
+                            "discount"    => $result['discount'],
+                            "e164_regexp" => $result['e164_regexp']
                         );
                     }
                 }
@@ -4642,9 +5125,14 @@ class RatingTables {
             }
         }
 
-        $query="select * from billing_enum_tlds";
+        $query = "select * from billing_enum_tlds";
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -4652,16 +5140,15 @@ class RatingTables {
 
         $i=0;
         $rows=$this->db->num_rows();
-        while($this->db->next_record()) {
+        while ($this->db->next_record()) {
             if ($this->db->Record['enum_tld']) {
                 $i++;
                 $_app=$this->db->Record['application'];
                 if (!$_app) $_app='audio';
 
-                $_ENUMtlds[$this->db->Record['enum_tld']]=
-                array(
-                     "discount"    => $this->db->Record['discount'],
-                     "e164_regexp" => $this->db->Record['e164_regexp']
+                $_ENUMtlds[$this->db->Record['enum_tld']] = array(
+                    "discount"    => $this->db->Record['discount'],
+                    "e164_regexp" => $this->db->Record['e164_regexp']
                 );
             }
         }
@@ -4671,7 +5158,8 @@ class RatingTables {
         return $i;
     }
 
-    function LoadRatesHistoryTable() {
+    private function LoadRatesHistoryTable()
+    {
         if ($this->database_backend == 'mongo') {
             if ($this->mongo_db_ro) {
                 // mongo backend
@@ -4692,21 +5180,20 @@ class RatingTables {
                         $_app=$result['application'];
                         if (!$_app) $_app='audio';
 
-                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$result['startDateTimestamp'],$m);
-                        $startDate = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
-                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/",$result['endDateTimestamp'],$m);
-                        $endDate = mktime($m[4],$m[5],$m[6],$m[2],$m[3],$m[1]);
+                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/", $result['startDateTimestamp'], $m);
+                        $startDate = mktime($m[4], $m[5], $m[6], $m[2], $m[3], $m[1]);
+                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/", $result['endDateTimestamp'], $m);
+                        $endDate = mktime($m[4], $m[5], $m[6], $m[2], $m[3], $m[1]);
 
-                        $_rates[$result['name']][$result['destination']][$_app][$result['id']]=
-                        array(
-                             "connectCost"    => $result['connectCost'],
-                             "durationRate"   => $result['durationRate'],
-                             "connectCostIn"  => $result['connectCostIn'],
-                             "durationRateIn" => $result['durationRateIn'],
-                             "increment"      => $result['increment'],
-                             "min_duration"   => $result['min_duration'],
-                             "startDate"      => $startDate,
-                             "endDate"        => $endDate
+                        $_rates[$result['name']][$result['destination']][$_app][$result['id']] = array(
+                            "connectCost"    => $result['connectCost'],
+                            "durationRate"   => $result['durationRate'],
+                            "connectCostIn"  => $result['connectCostIn'],
+                            "durationRateIn" => $result['durationRateIn'],
+                            "increment"      => $result['increment'],
+                            "min_duration"   => $result['min_duration'],
+                            "startDate"      => $startDate,
+                            "endDate"        => $endDate
                         );
                     }
                 }
@@ -4720,14 +5207,19 @@ class RatingTables {
             }
         }
 
-        $query="select *,
+        $query = "select *,
         UNIX_TIMESTAMP(startDate) as startDateTimestamp,
         UNIX_TIMESTAMP(endDate) as endDateTimestamp
         from billing_rates_history
         order by name ASC,destination ASC,startDate DESC";
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -4735,10 +5227,10 @@ class RatingTables {
 
         $i=0;
         $rows=$this->db->num_rows();
-        while($this->db->next_record()) {
+        while ($this->db->next_record()) {
             if ($this->db->Record['name'] && $this->db->Record['destination']) {
                 $i++;
-                $_app=$this->db->Record['application'];
+                $_app = $this->db->Record['application'];
                 if (!$_app) $_app='audio';
 
                 $_rates[$this->db->Record['name']][$this->db->Record['destination']][$_app][$this->db->Record['id']]=
@@ -4755,14 +5247,14 @@ class RatingTables {
             }
         }
 
-        $this->ratesHistory=$_rates;
-        $this->ratesHistoryCount=$i;
+        $this->ratesHistory = $_rates;
+        $this->ratesHistoryCount = $i;
 
         return $i;
-
     }
 
-    function LoadProfilesTable() {
+    private function LoadProfilesTable()
+    {
         if ($this->database_backend == 'mongo') {
             if ($this->mongo_db_ro) {
                 // mongo backend
@@ -4778,17 +5270,16 @@ class RatingTables {
                 $i=0;
                 foreach ($cursor as $result) {
                     $i++;
-                    if ($result['name'] && $result['hour1'] > 0 ) {
-                        $_profiles[$result['name']]=
-                        array(
-                             "rate_name1"  => $result['rate_name1'],
-                             "hour1"       => $result['hour1'],
-                             "rate_name2"  => $result['rate_name2'],
-                             "hour2"       => $result['hour2'],
-                             "rate_name3"  => $result['rate_name3'],
-                             "hour3"       => $result['hour3'],
-                             "rate_name4"  => $result['rate_name4'],
-                             "hour4"       => $result['hour4'],
+                    if ($result['name'] && $result['hour1'] > 0) {
+                        $_profiles[$result['name']] = array(
+                            "rate_name1"  => $result['rate_name1'],
+                            "hour1"       => $result['hour1'],
+                            "rate_name2"  => $result['rate_name2'],
+                            "hour2"       => $result['hour2'],
+                            "rate_name3"  => $result['rate_name3'],
+                            "hour3"       => $result['hour3'],
+                            "rate_name4"  => $result['rate_name4'],
+                            "hour4"       => $result['hour4'],
                         );
                     }
                 }
@@ -4801,18 +5292,23 @@ class RatingTables {
             }
         }
 
-        $query="select * from billing_profiles order by name";
+        $query = "select * from billing_profiles order by name";
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         $i=0;
-        while($this->db->next_record()) {
+        while ($this->db->next_record()) {
             $i++;
-            if ($this->db->Record['name'] && $this->db->Record['hour1'] > 0 ) {
+            if ($this->db->Record['name'] && $this->db->Record['hour1'] > 0) {
                 $_profiles[$this->db->Record['name']]=
                 array(
                      "rate_name1"  => $this->db->Record['rate_name1'],
@@ -4831,7 +5327,8 @@ class RatingTables {
         return $i;
     }
 
-    function LoadHolidaysTable() {
+    private function LoadHolidaysTable()
+    {
         if ($this->database_backend == 'mongo') {
             if ($this->mongo_db_ro) {
                 // mongo backend
@@ -4863,14 +5360,19 @@ class RatingTables {
 
         $query="select * from billing_holidays order by day";
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         $i=0;
-        while($this->db->next_record()) {
+        while ($this->db->next_record()) {
             if ($this->db->Record['day']) {
                 $i++;
                 $_holidays[$this->db->Record['day']]++;
@@ -4881,61 +5383,68 @@ class RatingTables {
         return $i;
     }
 
-    function checkRatingEngineConnection () {
-        if ($this->settings['socketIPforClients'] && $this->settings['socketPort'] &&
-            $fp = fsockopen ($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)) {
+    public function checkRatingEngineConnection()
+    {
+        if ($this->settings['socketIPforClients'] && $this->settings['socketPort']
+            && $fp = fsockopen($this->settings['socketIPforClients'], $this->settings['socketPort'], $errno, $errstr, 2)
+        ) {
             fclose($fp);
             return true;
         }
         return false;
     }
 
-    function showCustomers($filter) {
+    function showCustomers($filter)
+    {
         return true;
         foreach (array_keys($this->customers) as $key) {
             if (strlen($filter)) {
-                if (preg_match("/$filter/",$key)) {
-                    $customers=$customers.$key."\n";
+                if (preg_match("/$filter/", $key)) {
+                    $customers = $customers.$key."\n";
                 }
             } else {
-                $customers=$customers.$key."\n";
+                $customers = $customers.$key."\n";
             }
         }
         return $customers;
     }
 
-    function showProfiles() {
+    public function showProfiles()
+    {
         foreach (array_keys($this->profiles) as $key) {
             $profiles=$profiles.$key."\n";
         }
         return $profiles;
     }
 
-    function showENUMtlds() {
+    public function showENUMtlds()
+    {
         foreach (array_keys($this->ENUMtlds) as $key) {
             $ENUMtlds=$ENUMtlds.$key."\n";
         }
         return $ENUMtlds;
     }
 
-    function scanFilesForImport($dir) {
-        $import_dirs[$this->cvs_import_dir]=array('path'=>$this->cvs_import_dir,
-                                                  'reseller' => 0
-                                                 );
+    private function scanFilesForImport($dir)
+    {
+        $import_dirs[$this->cvs_import_dir] = array(
+            'path'     => $this->cvs_import_dir,
+            'reseller' => 0
+        );
 
         if ($handle = opendir($this->cvs_import_dir)) {
             while (false !== ($filename = readdir($handle))) {
                 $reseller=0;
                 if ($filename == "." || $filename == "..") continue;
-                $fullPath=$this->cvs_import_dir."/".$filename;
+                $fullPath = $this->cvs_import_dir."/".$filename;
                 if (is_dir($fullPath) && is_numeric($filename)) {
-                    $reseller=$filename;
-                    $import_dirs[$fullPath]=array('path'    => $fullPath,
-                                                  'reseller'=> $reseller
-                                                  );
+                    $reseller = $filename;
+                    $import_dirs[$fullPath]=array(
+                        'path'    => $fullPath,
+                        'reseller'=> $reseller
+                    );
                 }
             }
-
         }
 
         foreach (array_keys($import_dirs) as $_dir) {
@@ -4943,22 +5452,23 @@ class RatingTables {
                 while (false !== ($filename = readdir($handle))) {
                     if ($filename != "." && $filename != "..") {
                         foreach ($this->importFilesPatterns as $_pattern) {
-                            if (strstr($filename,$_pattern) && preg_match("/\.csv$/",$filename)) {
-                                $fullPath=$_dir."/".$filename;
-                                if ($content=file_get_contents($fullPath)) {
-                                    $watermark=$filename."-".md5($content);
-                                    if ($this->hasFileBeenImported($filename,$watermark)) {
+                            if (strstr($filename, $_pattern) && preg_match("/\.csv$/", $filename)) {
+                                $fullPath = $_dir."/".$filename;
+                                if ($content = file_get_contents($fullPath)) {
+                                    $watermark = $filename."-".md5($content);
+                                    if ($this->hasFileBeenImported($filename, $watermark)) {
                                         $this->previously_imported_files++;
 
                                         break;
                                     }
 
-                                    $this->filesToImport[$filename]=array( 'name'      => $filename,
-                                                                           'watermark' => $watermark,
-                                                                           'type'      => $_pattern,
-                                                                           'path'      => $fullPath,
-                                                                           'reseller'  => $import_dirs[$_dir]['reseller']
-                                                                         );
+                                    $this->filesToImport[$filename] = array(
+                                        'name'      => $filename,
+                                        'watermark' => $watermark,
+                                        'type'      => $_pattern,
+                                        'path'      => $fullPath,
+                                        'reseller'  => $import_dirs[$_dir]['reseller']
+                                    );
                                 }
 
                                 break;
@@ -4970,8 +5480,12 @@ class RatingTables {
         }
     }
 
-    function hasFileBeenImported($filename,$watermark) {
-        $query=sprintf("select * from log where url = '%s'\n",addslashes($watermark));
+    private function hasFileBeenImported($filename, $watermark)
+    {
+        $query = sprintf(
+            "select * from log where url = '%s'\n",
+            addslashes($watermark)
+        );
         if ($this->db->query($query)) {
             if ($this->db->num_rows()) {
                 $this->db->next_record();
@@ -4985,75 +5499,141 @@ class RatingTables {
                 return false;
             }
         } else {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
     }
 
-    function logImport($dir,$filename,$watermark,$results=0,$reseller=0) {
-        $query=sprintf("insert into log (date,login,ip,url,results,description,datasource,reseller_id)
-        values (NOW(),'ImportScript','localhost','%s','%s','Imported %s','%s',%d)",
-        addslashes($watermark),addslashes($results),addslashes($filename),addslashes($dir),addslashes($reseller));
+    private function logImport($dir, $filename, $watermark, $results = 0, $reseller = 0)
+    {
+        $query = sprintf(
+            "insert into log (
+                date,
+                login,
+                ip,
+                url,
+                results,
+                description,
+                datasource,
+                reseller_id
+            ) values (
+                NOW(),
+                'ImportScript',
+                'localhost',
+                '%s',
+                '%s',
+                'Imported %s',
+                '%s',
+                %d
+            )",
+            addslashes($watermark),
+            addslashes($results),
+            addslashes($filename),
+            addslashes($dir),
+            addslashes($reseller)
+        );
 
-        $log=sprintf ("Imported file %s, %d records have been affected\n",$filename,$results);
+        $log = sprintf(
+            "Imported file %s, %d records have been affected\n",
+            $filename,
+            $results
+        );
         syslog(LOG_NOTICE, $log);
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
     }
 
-    function showImportProgress ($filename='unspecified',$increment=5000) {
+    function showImportProgress($filename = 'unspecified', $increment = 5000)
+    {
         $this->importIndex++;
 
         if ($this->importIndex == $increment) {
-            printf ("Loaded %d records from %s\n",$this->importIndex,$filename);
+            printf("Loaded %d records from %s\n", $this->importIndex, $filename);
             flush();
             $this->importIndex=0;
         }
     }
 
-    function createRatingTable($name) {
+    function createRatingTable($name)
+    {
         if ($name) {
             $table='billing_rates_'.$name;
         } else {
             $table='billing_rates_default';
         }
 
-        $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",addslashes($table),addslashes($name));
+        $query = sprintf(
+            "create table %s select * from billing_rates where name = '%s'\n",
+            addslashes($table),
+            addslashes($name)
+        );
 
         if ($this->db->query($query)) {
-            $query=sprintf("alter table %s add index rate_idx (name)",addslashes($table));
+            $query = sprintf(
+                "alter table %s add index rate_idx (name)",
+                addslashes($table)
+            );
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
             }
 
-            $query=sprintf("alter table %s add index destination_idx (destination)",addslashes($table));
+            $query = sprintf(
+                "alter table %s add index destination_idx (destination)",
+                addslashes($table)
+            );
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
             }
 
-            printf ("Created table %s\n",$table);
+            printf("Created table %s\n", $table);
             return true;
         } else {
             return false;
         }
     }
 
-    function splitRatingTable() {
-        $query="select count(*) as c from billing_rates";
+    public function splitRatingTable()
+    {
+        $query = "select count(*) as c from billing_rates";
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -5064,7 +5644,12 @@ class RatingTables {
         $query="select distinct(name) from billing_rates order by name ASC";
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -5079,61 +5664,102 @@ class RatingTables {
 
             $table="billing_rates_".$name;
 
-            $query=sprintf("drop table if exists %s",addslashes($table));
+            $query = sprintf("drop table if exists %s", addslashes($table));
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
 
-            $query=sprintf("create table %s select * from billing_rates where name = '%s'\n",addslashes($table),addslashes($name));
+            $query = sprintf(
+                "create table %s select * from billing_rates where name = '%s'\n",
+                addslashes($table),
+                addslashes($name)
+            );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             } else {
-                $query=sprintf("alter table %s add index rate_idx (name)",addslashes($table));
+                $query = sprintf(
+                    "alter table %s add index rate_idx (name)",
+                    addslashes($table)
+                );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
-                $query=sprintf("alter table %s add index destination_idx (destination)",addslashes($table));
+                $query = sprintf(
+                    "alter table %s add index destination_idx (destination)",
+                    addslashes($table)
+                );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
-                $query=sprintf("select count(*) as c from %s",addslashes($table));
+                $query = sprintf("select count(*) as c from %s", addslashes($table));
                 $this->db->query($query);
                 $this->db->next_record();
                 $records=$this->db->f('c');
                 $created_records=$created_records+$records;
                 $progress=100*$created_records/$rows;
 
-                printf ("Created table %s with %s records (%.1f %s)\n",$table,$records,$progress,'%');
+                printf(
+                    "Created table %s with %s records (%.1f %s)\n",
+                    $table,
+                    $records,
+                    $progress,
+                    '%'
+                );
             }
-
         }
 
         return true;
     }
 
-    function updateTable() {
+    public function updateTable()
+    {
 
         global $auth;
 
@@ -5154,17 +5780,17 @@ class RatingTables {
         if (!is_array($this->tables[$table]['keys']))       $this->tables[$table]['keys']=array();
         if (!is_array($this->tables[$table]['fields']))     $this->tables[$table]['fields']=array();
 
-        $metadata  = $this->db->metadata($table="$table");
+        $metadata  = $this->db->metadata($table = "$table");
         $cc        = count($metadata);
         // end init table structure
 
         if ($web_task =="update") {
             $affected_rows=0;
             if ($subweb_task == "Update") {
-                if ($this->checkValues($table,$_REQUEST)) {
+                if ($this->checkValues($table, $_REQUEST)) {
                     $update_set='';
                     $k=0;
-                    while ($k < $cc ) {
+                    while ($k < $cc) {
                         $k++;
                         $Fname=$metadata[$k]['name'];
                         if (!$Fname) continue;
@@ -5175,11 +5801,11 @@ class RatingTables {
                             continue;
                         }
 
-                        if (in_array($Fname,$this->tables[$table]['exceptions'])) {
+                        if (in_array($Fname, $this->tables[$table]['exceptions'])) {
                             continue;
                         }
 
-                        if (in_array($Fname,$this->tables[$table]['keys'])) {
+                        if (in_array($Fname, $this->tables[$table]['keys'])) {
                             continue;
                         }
 
@@ -5189,7 +5815,7 @@ class RatingTables {
                             $comma = "";
                         }
 
-                        if (!$this->tables[$table]['skip_math'] && preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                        if (!$this->tables[$table]['skip_math'] && preg_match("/^([\+\-\*\/])(.*)$/", $value, $sign)) {
                             $update_set .= $comma.addslashes($Fname)."= ROUND(".addslashes($Fname). " ".$sign[1]. "'".$sign[2]."')";
                         } else {
                             $update_set .= $comma.addslashes($Fname)."='".addslashes($value)."'";
@@ -5198,9 +5824,9 @@ class RatingTables {
                     }
 
                     $k=0;
-                    while ($k < $cc ) {
+                    while ($k < $cc) {
                         if ($metadata[$k]['name'] == 'change_date') {
-                            $update_set .= sprintf("%s %s = NOW() ",$comma,addslashes($metadata[$k]['name']));
+                            $update_set .= sprintf("%s %s = NOW() ", $comma, addslashes($metadata[$k]['name']));
                             break;
                         }
                         $k++;
@@ -5212,24 +5838,31 @@ class RatingTables {
 
                     if ($table == "billing_rates") {
                         if ($this->settings['split_rating_table']) {
-
-                            $rate_table_affected=array();
-                            $query_r="select distinct (name) from billing_rates where". $where;
+                            $rate_table_affected = array();
+                            $query_r = "select distinct (name) from billing_rates where". $where;
                             if ($this->db->query($query_r)) {
-                                while($this->db->next_record()) {
+                                while ($this->db->next_record()) {
                                     $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
                                 }
                             } else {
-                                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                $log = sprintf(
+                                    "Database error for query %s: %s (%s)",
+                                    $query,
+                                    $this->db->Error,
+                                    $this->db->Errno
+                                );
                                 print $log;
                                 syslog(LOG_NOTICE, $log);
                             }
                         }
-                    } else if ($table=="prepaid") {
-                        register_shutdown_function("unLockTables",$this->db);
+                    } elseif ($table=="prepaid") {
+                        register_shutdown_function("unLockTables", $this->db);
 
                         if ($this->db->query("lock table prepaid write")) {
-                            $query_q=sprintf("select * from prepaid where account = '%s'",addslashes($account));
+                            $query_q = sprintf(
+                                "select * from prepaid where account = '%s'",
+                                addslashes($account)
+                            );
                             if ($this->db->query($query_q) && $this->db->num_rows()) {
                                 $this->db->next_record();
                                 $old_balance=$this->db->f('balance');
@@ -5239,49 +5872,61 @@ class RatingTables {
                         }
                     }
 
-                    $query = sprintf("update %s set %s where %s " ,
-                    addslashes($table),
-                    $update_set,
-                    $where
+                    $query = sprintf(
+                        "update %s set %s where %s ",
+                        addslashes($table),
+                        $update_set,
+                        $where
                     );
 
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
                         if ($affected_rows) {
                             if ($table=="prepaid") {
-                                list($username,$domain)=explode("@",$account);
+                                list($username, $domain) = explode("@", $account);
 
                                 $value=$balance-$old_balance;
 
-                                if (floatval($balance) != floatval($old_balance))  {
-                                    $query=sprintf("insert into prepaid_history
-                                    (username,domain,action,description,value,balance,date,reseller_id)
-                                    values
-                                    ('%s','%s','Set balance','Manual update','%s','%s',NOW(),%d)",
-                                    addslashes($username),
-                                    addslashes($domain),
-                                    addslashes($value),
-                                    addslashes($balance),
-                                    $this->CDRTool['filter']['reseller']
+                                if (floatval($balance) != floatval($old_balance)) {
+                                    $query = sprintf(
+                                        "insert into prepaid_history
+                                        (username,domain,action,description,value,balance,date,reseller_id)
+                                        values
+                                        ('%s','%s','Set balance','Manual update','%s','%s',NOW(),%d)",
+                                        addslashes($username),
+                                        addslashes($domain),
+                                        addslashes($value),
+                                        addslashes($balance),
+                                        $this->CDRTool['filter']['reseller']
                                     );
 
                                     if (!$this->db->query($query)) {
-                                        $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                                        $log = sprintf(
+                                            "Database error for query %s: %s (%s)",
+                                            $query,
+                                            $this->db->Error,
+                                            $this->db->Errno
+                                        );
                                         print $log;
                                         syslog(LOG_NOTICE, $log);
                                     }
                                 }
-
-                            } else if ($table=='billing_rates') {
+                            } elseif ($table=='billing_rates') {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
-                                        $query_u = sprintf("update %s set %s where %s ",
-                                        addslashes($extra_rate_table),
-                                        $update_set,
-                                        $where
+                                        $query_u = sprintf(
+                                            "update %s set %s where %s ",
+                                            addslashes($extra_rate_table),
+                                            $update_set,
+                                            $where
                                         );
                                         if (!$this->db->query($query_u)) {
-                                            $log=sprintf ("Database error for query %s: %s (%s)",$query_u,$this->db->Error,$this->db->Errno);
+                                            $log = sprintf(
+                                                "Database error for query %s: %s (%s)",
+                                                $query_u,
+                                                $this->db->Error,
+                                                $this->db->Errno
+                                            );
                                             print $log;
                                             syslog(LOG_NOTICE, $log);
                                         }
@@ -5289,15 +5934,23 @@ class RatingTables {
                                 }
                             }
 
-                            if (in_array($table,$this->requireReload)) {
-                                if (!$this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'")){
-                                    printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                            if (in_array($table, $this->requireReload)) {
+                                if (!$this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'")) {
+                                    printf(
+                                        "<font color=red>Database error: %s (%s)</font>",
+                                        $this->db->Error,
+                                        $this->db->Errno
+                                    );
                                 }
                             }
-
                         }
                     } else {
-                        printf ("<font color=red>Database error for query '%s': %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
+                        printf(
+                            "<font color=red>Database error for query '%s': %s (%s)</font>",
+                            $query,
+                            $this->db->Error,
+                            $this->db->Errno
+                        );
                     }
                 } else {
                     print "<p>Correct the values and try again.";
@@ -5306,7 +5959,7 @@ class RatingTables {
                 $k=0;
                 $kkk=0;
                 $update_set='';
-                while ($k < $cc ) {
+                while ($k < $cc) {
                     $k++;
                     $Fname=$metadata[$k]['name'];
                     $value=$_REQUEST[$Fname];
@@ -5316,11 +5969,11 @@ class RatingTables {
                         continue;
                     }
 
-                    if (in_array($Fname,$this->tables[$table]['exceptions'])) {
+                    if (in_array($Fname, $this->tables[$table]['exceptions'])) {
                         continue;
                     }
 
-                    if (in_array($Fname,$this->tables[$table]['keys'])) {
+                    if (in_array($Fname, $this->tables[$table]['keys'])) {
                         continue;
                     }
 
@@ -5332,7 +5985,7 @@ class RatingTables {
                     if ($value == "NULL") {
                         $value="";
                     }
-                    if (preg_match("/^([\+\-\*\/])(.*)$/",$value,$sign)) {
+                    if (preg_match("/^([\+\-\*\/])(.*)$/", $value, $sign)) {
                         $update_set .= $comma.$Fname." = ROUND(".$Fname. " ".$sign[1]. "'".$sign[2]."')";
                     } else {
                         $update_set .= $comma.$Fname." = '".$value."'";
@@ -5348,17 +6001,15 @@ class RatingTables {
                     // build where clause
                     // Search build for each field
                     $j=0;
-                    while ($j < $cc ) {
-
+                    while ($j < $cc) {
                         $Fname=$metadata[$j]['name'];
                         $size=$metadata[$j]['len'];
 
-                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
-
+                        if (!in_array($Fname, $this->tables[$table]['exceptions'])) {
                             $f_name="search_".$Fname;
                             $value=$_REQUEST[$f_name];
 
-                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                            if (preg_match("/^([<|>]+)(.*)$/", $value, $likes)) {
                                 $like=$likes[1];
                                 $likewhat=$likes[2];
                                 $quotes="";
@@ -5372,7 +6023,6 @@ class RatingTables {
                                 $where .= " and $Fname $like $quotes".$likewhat."$quotes";
                                 $t++;
                             }
-
                         }
 
                         $j++;
@@ -5380,23 +6030,27 @@ class RatingTables {
 
                     if ($table == 'billing_rates') {
                         if ($this->settings['split_rating_table']) {
-
-                            $rate_table_affected=array();
-                            $query_r="select distinct (name) from billing_rates where". $where;
+                            $rate_table_affected = array();
+                            $query_r = "select distinct (name) from billing_rates where". $where;
                             if ($this->db->query($query_r)) {
-                                while($this->db->next_record()) {
-                                    $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                                while ($this->db->next_record()) {
+                                    $rate_tables_affected[] = 'billing_rates_'.$this->db->f('name');
                                 }
                             } else {
-                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                                printf(
+                                    "<font color=red>Database error: %s (%s)</font>",
+                                    $this->db->Error,
+                                    $this->db->Errno
+                                );
                             }
                         }
                     }
 
-                    $query = sprintf("update %s set %s where %s " ,
-                    addslashes($table),
-                    $update_set,
-                    $where
+                    $query = sprintf(
+                        "update %s set %s where %s ",
+                        addslashes($table),
+                        $update_set,
+                        $where
                     );
 
                     if ($this->db->query($query)) {
@@ -5405,25 +6059,30 @@ class RatingTables {
                             if ($table == 'billing_rates') {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
-                                        $query_u = sprintf("update %s set %s where %s ",
-                                        addslashes($extra_rate_table),
-                                        $update_set,
-                                        $where
+                                        $query_u = sprintf(
+                                            "update %s set %s where %s ",
+                                            addslashes($extra_rate_table),
+                                            $update_set,
+                                            $where
                                         );
                                         if (!$this->db->query($query_u)) {
-                                            printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                            printf(
+                                                "<font color=red>Database error for %s: %s (%s)</font>",
+                                                $query_u,
+                                                $this->db->Error,
+                                                $this->db->Errno
+                                            );
                                         }
                                     }
                                 }
                             }
 
-                            if (in_array($table,$this->requireReload)) {
+                            if (in_array($table, $this->requireReload)) {
                                 $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
-
                     } else {
-                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                        printf("<font color=red>Database error: %s</font>", $this->db->Error);
                     }
                 }
             } elseif ($subweb_task == "Delete selection") {
@@ -5435,31 +6094,28 @@ class RatingTables {
                     $where = $this->whereResellerFilter;
 
                     $j=0;
-                    while ($j < $cc ) {
-
+                    while ($j < $cc) {
                         $Fname=$metadata[$j]['name'];
                         $size=$metadata[$j]['len'];
 
-                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
-
+                        if (!in_array($Fname, $this->tables[$table]['exceptions'])) {
                             $f_name="search_".$Fname;
                             $value=$_REQUEST[$f_name];
 
-                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
-                                $like=$likes[1];
-                                $likewhat=$likes[2];
-                                $quotes="";
+                            if (preg_match("/^([<|>]+)(.*)$/", $value, $likes)) {
+                                $like = $likes[1];
+                                $likewhat = $likes[2];
+                                $quotes = "";
                             } else {
-                                $like="like";
-                                $likewhat=$value;
-                                $quotes="'";
+                                $like = "like";
+                                $likewhat = $value;
+                                $quotes = "'";
                             }
 
                             if (strlen($value)) {
                                 $where .= " and $Fname $like $quotes".$likewhat."$quotes";
                                 $t++;
                             }
-
                         }
 
                         $j++;
@@ -5467,50 +6123,64 @@ class RatingTables {
 
                     if ($table == 'billing_rates') {
                         if ($this->settings['split_rating_table']) {
-
                             $rate_table_affected=array();
-                            $query_r="select distinct (name) from billing_rates where". $where;
+                            $query_r = "select distinct (name) from billing_rates where". $where;
                             if ($this->db->query($query_r)) {
-                                while($this->db->next_record()) {
-                                    $rate_tables_affected[]='billing_rates_'.$this->db->f('name');
+                                while ($this->db->next_record()) {
+                                    $rate_tables_affected[] = 'billing_rates_'.$this->db->f('name');
                                 }
                             } else {
-                                printf ("<font color=red>Database error: %s (%s)</font>",$this->db->Error,$this->db->Errno);
+                                printf(
+                                    "<font color=red>Database error: %s (%s)</font>",
+                                    $this->db->Error,
+                                    $this->db->Errno
+                                );
                             }
                         }
                     }
 
-                    $query=sprintf("delete from %s where %s", addslashes($table), $where);
+                    $query = sprintf(
+                        "delete from %s where %s",
+                        addslashes($table),
+                        $where
+                    );
 
                     if ($this->db->query($query)) {
-
-                        $affected_rows=$this->db->affected_rows();
+                        $affected_rows = $this->db->affected_rows();
 
                         if ($affected_rows) {
                             if ($table == 'billing_rates') {
                                 if ($this->settings['split_rating_table']) {
                                     foreach ($rate_tables_affected as $extra_rate_table) {
-                                        $query_u = sprintf("delete from %s where %s ",
-                                        addslashes($extra_rate_table),
-                                        $where
+                                        $query_u = sprintf(
+                                            "delete from %s where %s ",
+                                            addslashes($extra_rate_table),
+                                            $where
                                         );
                                         if (!$this->db->query($query_u)) {
-                                            printf ("<font color=red>Database error for %s: %s (%s)</font>",$query_u,$this->db->Error,$this->db->Errno);
+                                            printf(
+                                                "<font color=red>Database error for %s: %s (%s)</font>",
+                                                $query_u,
+                                                $this->db->Error,
+                                                $this->db->Errno
+                                            );
                                         }
                                     }
                                 }
                             }
 
-                            if (in_array($table,$this->requireReload)) {
+                            if (in_array($table, $this->requireReload)) {
                                 $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
                     } else {
-                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                        printf(
+                            "<font color=red>Database error: %s</font>",
+                            $this->db->Error
+                        );
                     }
 
                     unset($confirmDelete);
-
                 } else {
                     print "<p><font color=blue>";
                     print "Please confirm the deletion by pressing the Delete button again. ";
@@ -5518,58 +6188,54 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
             } elseif ($subweb_task == "Copy rate" && strlen($fromRate) && strlen($toRate)) {
-                $toRate=preg_replace("/%/","",$toRate);
+                $toRate=preg_replace("/%/", "", $toRate);
                 if ($confirmCopy) {
                     if ($toRate == 'history') {
-                        $values=sprintf("
-                        (reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn,startDate,endDate)
-                        select
-                        billing_rates.reseller_id,
-                        '%s',
-                        billing_rates.destination,
-                        billing_rates.application,
-                        billing_rates.connectCost,
-                        billing_rates.durationRate,
-                        billing_rates.connectCostIn,
-                        billing_rates.durationRateIn,
-                        NOW(),
-                        NOW()
-                        from billing_rates ",
-                        addslashes($fromRate)
+                        $values = sprintf(
+                            "(reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn,startDate,endDate)
+                            select
+                            billing_rates.reseller_id,
+                            '%s',
+                            billing_rates.destination,
+                            billing_rates.application,
+                            billing_rates.connectCost,
+                            billing_rates.durationRate,
+                            billing_rates.connectCostIn,
+                            billing_rates.durationRateIn,
+                            NOW(),
+                            NOW()
+                            from billing_rates ",
+                            addslashes($fromRate)
                         );
-
                     } else {
-
-                        $values=sprintf("
-                        (reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn)
-                        select
-                        billing_rates.reseller_id,
-                        '%s',
-                        billing_rates.destination,
-                        billing_rates.application,
-                        billing_rates.connectCost,
-                        billing_rates.durationRate,
-                        billing_rates.connectCostIn,
-                        billing_rates.durationRateIn
-                        from billing_rates ",
-                        addslashes($toRate)
+                        $values = sprintf(
+                            "(reseller_id,name,destination,application,connectCost,durationRate,connectCostIn,durationRateIn)
+                            select
+                            billing_rates.reseller_id,
+                            '%s',
+                            billing_rates.destination,
+                            billing_rates.application,
+                            billing_rates.connectCost,
+                            billing_rates.durationRate,
+                            billing_rates.connectCostIn,
+                            billing_rates.durationRateIn
+                            from billing_rates ",
+                            addslashes($toRate)
                         );
                     }
 
                     $where = $this->whereResellerFilter;
 
                     $j=0;
-                    while ($j < $cc ) {
-
+                    while ($j < $cc) {
                         $Fname=$metadata[$j]['name'];
                         $size=$metadata[$j]['len'];
 
-                        if (!in_array($Fname,$this->tables[$table]['exceptions'])) {
-
+                        if (!in_array($Fname, $this->tables[$table]['exceptions'])) {
                             $f_name="search_".$Fname;
                             $value=$_REQUEST[$f_name];
 
-                            if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                            if (preg_match("/^([<|>]+)(.*)$/", $value, $likes)) {
                                 $like=$likes[1];
                                 $likewhat=$likes[2];
                                 $quotes="";
@@ -5580,7 +6246,14 @@ class RatingTables {
                             }
 
                             if (strlen($value)) {
-                                $where.=sprintf(" and %s %s %s%s%s ", addslashes($Fname),$like, $quotes, addslashes($likewhat),$quotes);
+                                $where .= sprintf(
+                                    " and %s %s %s%s%s ",
+                                    addslashes($Fname),
+                                    $like,
+                                    $quotes,
+                                    addslashes($likewhat),
+                                    $quotes
+                                );
                                 $t++;
                             }
                         }
@@ -5595,24 +6268,29 @@ class RatingTables {
                     }
 
                     if ($this->db->query($query)) {
-
                         $affected_rows=$this->db->affected_rows();
 
                         if ($affected_rows) {
                             print "$affected_rows rates copied. ";
                             if ($table == 'billing_rates') {
                                 if ($this->settings['split_rating_table']) {
-                                    $query=sprintf("create table billing_rates_%s select * from billing_rates where %s ",
-                                    addslashes($toRate),
-                                    $where
+                                    $query = sprintf(
+                                        "create table billing_rates_%s select * from billing_rates where %s ",
+                                        addslashes($toRate),
+                                        $where
                                     );
                                     if (!$this->db->query($query)) {
-                                        printf ("<font color=red>Database error for %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
+                                        printf(
+                                            "<font color=red>Database error for %s: %s (%s)</font>",
+                                            $query,
+                                            $this->db->Error,
+                                            $this->db->Errno
+                                        );
                                     }
                                 }
                             }
 
-                            if (in_array($table,$this->requireReload)) {
+                            if (in_array($table, $this->requireReload)) {
                                 $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                             }
                         }
@@ -5625,34 +6303,32 @@ class RatingTables {
                             $this->tables[$table]['exceptions']= $this->tables[$table]['exceptions'];
                             $this->tables[$table]['keys']      = $this->tables[$table]['keys'];
                             $this->tables[$table]['fields']    = $this->tables[$table]['fields'];
-                            $metadata  = $this->db->metadata($table="$table");
+                            $metadata  = $this->db->metadata($table = "$table");
                             $cc        = count($metadata);
                             // end init table structure
                         }
 
                         unset($confirmCopy);
                     } else {
-                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                        printf("<font color=red>Database error: %s</font>", $this->db->Error);
                     }
 
                     $log_entity="rate=$toRate";
-
                 } else {
                     print "<p><font color=blue>";
                     print "Please confirm the copy of rate $fromRate to $toRate. ";
                     print "</font>";
                 }
-
             } elseif ($subweb_task == "Insert") {
                 //print "<h3>Insert</h3>";
-                if ($this->checkValues($table,$_REQUEST)) {
-                    $query=sprintf("insert into %s ( ",addslashes($table));
+                if ($this->checkValues($table, $_REQUEST)) {
+                    $query=sprintf("insert into %s ( ", addslashes($table));
 
                     $k=1;
                     $kkk=0;
-                    while ($k < $cc ) {
+                    while ($k < $cc) {
                         $Fname=$metadata[$k]['name'];
-                        if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
+                        if (!in_array($Fname, $this->tables[$table]['exceptions'])) {
                             if ($kkk > 0) {
                                 $comma = ",";
                             } else {
@@ -5667,11 +6343,11 @@ class RatingTables {
                     $query .= ") values ( ";
                     $k=1;
                     $kkk=0;
-                    while ($k < $cc ) {
+                    while ($k < $cc) {
                         $Fname=$metadata[$k]['name'];
                         $value=$_REQUEST[$Fname];
 
-                        if (!in_array($Fname,$this->tables[$table]['exceptions']) ) {
+                        if (!in_array($Fname, $this->tables[$table]['exceptions'])) {
                             if ($kkk > 0) {
                                 $comma = ",";
                             } else {
@@ -5685,20 +6361,19 @@ class RatingTables {
                             $kkk++;
                         }
                         $k++;
-
                     }
 
                     $query .= ") ";
 
                     $k=1;
-                    while ($k < $cc ) {
+                    while ($k < $cc) {
                         $Fname=$metadata[$k]['name'];
                         $value=$_REQUEST[$Fname];
-                        if (in_array($Fname,$this->tables[$table]['keys']) ) {
+                        if (in_array($Fname, $this->tables[$table]['keys'])) {
                             if ($value == "") {
-                                $Fname_print_insert=substr($Fname,4);
+                                $Fname_print_insert = substr($Fname, 4);
                                 print "$Fname_print_insert = ???? <br>";
-                                $empty_insert=1;
+                                $empty_insert = 1;
                             }
                         }
                         $k++;
@@ -5709,18 +6384,21 @@ class RatingTables {
                         if ($this->db->query($query)) {
                             $affected_rows=$this->db->affected_rows();
                             if ($affected_rows) {
-
                                 $this->db->query("select LAST_INSERT_ID() as lid");
                                 $this->db->next_record();
-                                $log_entity=sprintf("id=%s",$this->db->f('lid'));
+                                $log_entity = sprintf("id=%s", $this->db->f('lid'));
 
-                                if (in_array($table,$this->requireReload)) {
+                                if (in_array($table, $this->requireReload)) {
                                     $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                                 }
                             }
-
                         } else {
-                            printf ("<font color=red>Database error for query %s: %s (%s)</font>",$query,$this->db->Error,$this->db->Errno);
+                            printf(
+                                "<font color=red>Database error for query %s: %s (%s)</font>",
+                                $query,
+                                $this->db->Error,
+                                $this->db->Errno
+                            );
                         }
                     } else {
                         print "<font color=red>
@@ -5733,18 +6411,21 @@ class RatingTables {
                 }
             } elseif ($subweb_task == "Delete") {
                 if ($confirmDelete) {
-                    $query=sprintf("delete from %s where id = '%s' and %s ",addslashes($table), addslashes($id), addslashes($this->whereResellerFilter));
+                    $query = sprintf(
+                        "delete from %s where id = '%s' and %s ",
+                        addslashes($table),
+                        addslashes($id),
+                        addslashes($this->whereResellerFilter)
+                    );
                     if ($this->db->query($query)) {
                         $affected_rows=$this->db->affected_rows();
-                        if ($affected_rows && in_array($table,$this->requireReload)) {
-
+                        if ($affected_rows && in_array($table, $this->requireReload)) {
                             $this->db->query("update settings set var_value= '1' where var_name = 'reloadRating'");
                         }
 
-                        $log_entity=sprintf("id=%s",$id);
-
+                        $log_entity = sprintf("id=%s", $id);
                     } else {
-                        printf ("<font color=red>Database error: %s</font>",$this->db->Error);
+                        printf("<font color=red>Database error: %s</font>", $this->db->Error);
                     }
                     unset($confirmDelete);
                 } else {
@@ -5755,10 +6436,19 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                 }
             } elseif ($subweb_task == "Delete session" && $sessionId && $table=='prepaid') {
-
-                $query=sprintf("select active_sessions from %s where id  = %d and %s",addslashes($table),addslashes($id),$this->whereResellerFilter);
+                $query = sprintf(
+                    "select active_sessions from %s where id  = %d and %s",
+                    addslashes($table),
+                    addslashes($id),
+                    $this->whereResellerFilter
+                );
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     print $log;
                 }
 
@@ -5769,7 +6459,7 @@ class RatingTables {
                 if (strlen($this->db->f('active_sessions'))) {
                     // remove session
                     $active_sessions=array();
-                    $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
+                    $old_active_sessions = json_decode($this->db->f('active_sessions'), true);
 
                     if (!count($old_active_sessions)) return;
                     foreach (array_keys($old_active_sessions) as $_key) {
@@ -5780,38 +6470,44 @@ class RatingTables {
                     $active_sessions=array();
                 }
 
-                $query=sprintf("update %s
-                set active_sessions = '%s',
-                session_counter = %d
-                where id       = %d",
-                addslashes($table),
-                addslashes(json_encode($active_sessions)),
-                count($active_sessions),
-                addslashes($id)
+                $query = sprintf(
+                    "update %s
+                    set active_sessions = '%s',
+                    session_counter = %d
+                    where id       = %d",
+                    addslashes($table),
+                    addslashes(json_encode($active_sessions)),
+                    count($active_sessions),
+                    addslashes($id)
                 );
 
                 if ($this->db->query($query)) {
                     return 1;
                 } else {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     syslog(LOG_NOTICE, $log);
                     print $log;
                     return 0;
                 }
-
             }
 
             if ($affected_rows && $table!="prepaid") {
-                $log_query=sprintf("insert into log
-                (date,login,ip,datasource,results,description,reseller_id)
-                values (NOW(),'%s','%s','Rating','%d','%s in table %s %s',%d)",
-                addslashes($loginname),
-                addslashes($_SERVER['REMOTE_ADDR']),
-                addslashes($affected_rows),
-                addslashes($subweb_task),
-                addslashes($table),
-                addslashes($log_entity),
-                addslashes($this->CDRTool['filter']['reseller'])
+                $log_query = sprintf(
+                    "insert into log
+                    (date,login,ip,datasource,results,description,reseller_id)
+                    values (NOW(),'%s','%s','Rating','%d','%s in table %s %s',%d)",
+                    addslashes($loginname),
+                    addslashes($_SERVER['REMOTE_ADDR']),
+                    addslashes($affected_rows),
+                    addslashes($subweb_task),
+                    addslashes($table),
+                    addslashes($log_entity),
+                    addslashes($this->CDRTool['filter']['reseller'])
                 );
 
                 $this->db->query($log_query);
@@ -5819,7 +6515,8 @@ class RatingTables {
         }
     }
 
-    function showTable() {
+    public function showTable()
+    {
         $PHP_SELF=$_SERVER['PHP_SELF'];
 
         foreach ($this->web_elements as $_el) {
@@ -5856,21 +6553,23 @@ class RatingTables {
             $delimiter=",";
         }
 
-        $query=sprintf("select count(*) as c from %s where %s",
-        addslashes($this->table),
-        $this->whereResellerFilter);
+        $query = sprintf(
+            "select count(*) as c from %s where %s",
+            addslashes($this->table),
+            $this->whereResellerFilter
+        );
 
         $t=0;
         $j=0;
-        while ($j < $cc ) {
+        while ($j < $cc) {
             $Fname=$metadata[$j]['name'];
             $size=$metadata[$j]['len'];
             $class=$metadata[$j]['class'];
 
-            if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+            if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                 $f_name="search_".$Fname;
                 $value=$_REQUEST[$f_name];
-                if (preg_match("/^([<|>]+)(.*)$/",$value,$likes)) {
+                if (preg_match("/^([<|>]+)(.*)$/", $value, $likes)) {
                     $like=$likes[1];
                     $likewhat=$likes[2];
                     $quotes="";
@@ -5881,10 +6580,16 @@ class RatingTables {
                 }
 
                 if (strlen($value)) {
-                    $where.=sprintf(" and %s %s %s%s%s ", addslashes($Fname),$like, $quotes, addslashes($likewhat),$quotes);
+                    $where .= sprintf(
+                        " and %s %s %s%s%s ",
+                        addslashes($Fname),
+                        $like,
+                        $quotes,
+                        addslashes($likewhat),
+                        $quotes
+                    );
                     $t++;
                 }
-
             }
 
             $j++;
@@ -5908,8 +6613,7 @@ class RatingTables {
             }
 
             if ($this->settings['socketIPforClients'] && $this->settings['socketPort']) {
-
-                $engineAddress=$this->settings['socketIPforClients'].":".$this->settings['socketPort'];
+                $engineAddress = $this->settings['socketIPforClients'].":".$this->settings['socketPort'];
 
                 if ($this->checkRatingEngineConnection()) {
                     print " | <span class=\"label label-success\">Rating engine running at $engineAddress</span>";
@@ -5928,23 +6632,26 @@ class RatingTables {
                 <form class='form-inline' action=$PHP_SELF method='post' enctype='multipart/form-data'>
                 <input type=hidden name=import value=1>
                 ";
-                printf ("
-                <input type='hidden' name=table value=%s>
-                <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
-                <div class='fileupload fileupload-new' style='display: inline-block; margin-bottom:0px' data-provides='fileupload'>
-                    <div class='input-append'>
-                        <div class='uneditable-input input-small'>
-                            <span class='fileupload-preview'></span>
+                printf(
+                    "
+                    <input type='hidden' name=table value=%s>
+                    <input type='hidden' name='MAX_FILE_SIZE' value=1024000>
+                    <div class='fileupload fileupload-new' style='display: inline-block; margin-bottom:0px' data-provides='fileupload'>
+                        <div class='input-append'>
+                            <div class='uneditable-input input-small'>
+                                <span class='fileupload-preview'></span>
+                            </div>
+                            <span class='btn btn-file'>
+                            <span class='fileupload-new'>Select file</span>
+                            <span class='fileupload-exists'>Change</span>
+                            <input type='file' name='%s'/></span>
+                            <a href='#' class='btn fileupload-exists' data-dismiss='fileupload'>Remove</a>
+                            <button type='submit' class='btn fileupload-exists' value=\"Import\"><i class='icon-upload'></i> Import</button>
                         </div>
-                        <span class='btn btn-file'>
-                        <span class='fileupload-new'>Select file</span>
-                        <span class='fileupload-exists'>Change</span>
-                        <input type='file' name='%s'/></span>
-                        <a href='#' class='btn fileupload-exists' data-dismiss='fileupload'>Remove</a>
-                        <button type='submit' class='btn fileupload-exists' value=\"Import\"><i class='icon-upload'></i> Import</button>
                     </div>
-                </div>
-                ",$this->table,$this->table
+                    ",
+                    $this->table,
+                    $this->table
                 );
 
                 print "</form><td style='padding-top:5px'>
@@ -5957,10 +6664,10 @@ class RatingTables {
             ";
 
             $j=0;
-            while ($j < $cc ) {
+            while ($j < $cc) {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
-                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                     $SEARCH_NAME="search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
                     print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -5969,11 +6676,16 @@ class RatingTables {
                 $j++;
             }
 
-            if ($this->table!=='prepaid_cards' ) {
-                printf ("
-                <input type=hidden name=table value=%s>
-                <button class=btn type=submit value=\"Export %s\"><i class=icon-file></i> Export %s</button>
-                ",$this->table,$this->csv_export[$this->table],$this->csv_export[$this->table]);
+            if ($this->table!=='prepaid_cards') {
+                printf(
+                    "
+                    <input type=hidden name=table value=%s>
+                    <button class=btn type=submit value=\"Export %s\"><i class=icon-file></i> Export %s</button>
+                    ",
+                    $this->table,
+                    $this->csv_export[$this->table],
+                    $this->csv_export[$this->table]
+                );
             }
 
 
@@ -5992,7 +6704,7 @@ class RatingTables {
             </table>
             ";
         } else {
-            $this->maxrowsperpage=10000000;
+            $this->maxrowsperpage = 10000000;
         }
 
         if (!$next) {
@@ -6005,27 +6717,31 @@ class RatingTables {
         $j=0;
         $z=0;
 
-        if ($rows > $this->maxrowsperpage)  {
-            $maxrows=$this->maxrowsperpage+$next;
+        if ($rows > $this->maxrowsperpage) {
+            $maxrows = $this->maxrowsperpage + $next;
             if ($maxrows > $rows) {
                 $maxrows=$rows;
                 $prev_rows=$maxrows;
             }
-        } else  {
+        } else {
             $maxrows=$rows;
         }
 
         if (!$order && $this->tables[$this->table]['order']) {
-            $order=sprintf(" order by %s  ",addslashes($this->tables[$this->table]['order']));
+            $order = sprintf(
+                " order by %s  ",
+                addslashes($this->tables[$this->table]['order'])
+            );
         }
 
-        $query=sprintf("select * from %s where (1=1) %s and %s %s limit %d, %d",
-        addslashes($this->table),
-        $where,
-        $this->whereResellerFilter,
-        $order,
-        intval($i),
-        intval($this->maxrowsperpage)
+        $query = sprintf(
+            "select * from %s where (1=1) %s and %s %s limit %d, %d",
+            addslashes($this->table),
+            $where,
+            $this->whereResellerFilter,
+            $order,
+            intval($i),
+            intval($this->maxrowsperpage)
         );
 
         $this->db->query($query);
@@ -6049,8 +6765,8 @@ class RatingTables {
             }
         }
         while ($k < $cc) {
-            $th=$metadata[$k]['name'];
-            if (!in_array($th,$this->tables[$this->table]['exceptions']) ) {
+            $th = $metadata[$k]['name'];
+            if (!in_array($th, $this->tables[$this->table]['exceptions'])) {
                 if ($this->tables[$this->table]['fields'][$th]['name']) {
                     $th=$this->tables[$this->table]['fields'][$th]['name'];
                 } else {
@@ -6060,7 +6776,7 @@ class RatingTables {
                     print "<th>$th</th>";
                 } else {
                     if ($k) {
-                        printf ("%s%s",$delimiter,$th);
+                        printf("%s%s", $delimiter, $th);
                     } else {
                         print "Ops";
                     }
@@ -6075,7 +6791,6 @@ class RatingTables {
         }
 
         if (!$export) {
-
             print "
                 <th>Action</th>
             </tr>";
@@ -6098,52 +6813,52 @@ class RatingTables {
             <td>&nbsp;</td>";
             $j=0;
 
-            while ($j < $cc ) {
+            while ($j < $cc) {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
 
-                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                    $SEARCH_NAME="search_".$Fname;
-                    $value=$_REQUEST[$SEARCH_NAME];
+                if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
+                    $SEARCH_NAME = "search_".$Fname;
+                    $value = $_REQUEST[$SEARCH_NAME];
                     if ($value != "") {
                         $selection_made=1;
                     }
                     $maxlength=$size;
 
                     if ($this->tables[$this->table]['fields'][$Fname]['size']) {
-                        $field_size=$this->tables[$this->table]['fields'][$Fname]['size'];
+                        $field_size = $this->tables[$this->table]['fields'][$Fname]['size'];
                     } else {
-                        $field_size=$el_size;
+                        $field_size = $el_size;
                     }
 
                     $class=$this->tables[$this->table]['fields'][$Fname]['class'];
-                    if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
+                    if (!in_array($Fname, $this->tables[$this->table]['keys'])) {
                         if (!$class) {
-                            $class="span1";
+                            $class = "span1";
                         }
                         print "<td><input class=$class type=text size=$field_size maxlength=$maxlength name=search_$Fname value=\"$value\"></td>";
-
                     } else {
                         print "<td></td>";
                     }
-
                 }
 
                 $j++;
             }
 
-            printf("
-            <script type=\"text/JavaScript\">
-            function jumpMenu(){
-                location.href=\"%s?table=\" + document.rating.table.options[document.rating.table.selectedIndex].value;
-            }
-            </script>",
-            $PHP_SELF
+            printf(
+                "
+                <script type=\"text/JavaScript\">
+                function jumpMenu() {
+                    location.href=\"%s?table=\" + document.rating.table.options[document.rating.table.selectedIndex].value;
+                }
+                </script>
+                ",
+                $PHP_SELF
             );
             print "
             <td>
             ";
-            printf("<div class='input-append'><select class='span3' name='table' onChange=\"jumpMenu('this.form')\">\n");
+            print("<div class='input-append'><select class='span3' name='table' onChange=\"jumpMenu('this.form')\">\n");
 
             $selected_table[$this->table]="selected";
             foreach (array_keys($this->tables) as $tb) {
@@ -6183,7 +6898,7 @@ class RatingTables {
                 <tr>
                     <td>&nbsp;</td>";
 
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
 
@@ -6195,8 +6910,8 @@ class RatingTables {
 
 
                     $class=$this->tables[$this->table]['fields'][$Fname]['class'];
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                        if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
+                        if (!in_array($Fname, $this->tables[$this->table]['keys'])) {
                             if (!$class) {
                                 $class="span1";
                             }
@@ -6210,10 +6925,10 @@ class RatingTables {
                 }
 
                 $j=0;
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -6227,11 +6942,10 @@ class RatingTables {
                     print "<input type=hidden name=confirmDelete value=1>";
                     print "<input class='btn btn-danger' type=submit name=subweb_task value=\"Delete selection\">";
                     print " ($rows records)";
-                } else if (!$this->tables[$this->table]['readonly']){
-
+                } elseif (!$this->tables[$this->table]['readonly']) {
                     if ($this->table == "billing_rates" && strlen($_REQUEST['search_name'])) {
                         if ($subweb_task=="Copy rate" && !$confirmCopy) {
-                        print "<td>";
+                            print "<td>";
                             print "<input type=hidden name=confirmCopy value=1>";
                         } else {
                             print "<td>";
@@ -6243,45 +6957,50 @@ class RatingTables {
                         }
                         print "
                         <input type=submit name=subweb_task value=\"Copy rate\">";
-                        printf (" id %s to",$_REQUEST['search_name']);
+                        printf(" id %s to", $_REQUEST['search_name']);
 
-                        $query=sprintf("select distinct(name) as name
-                        from billing_rates where
-                        name like '%s'
-                        order by name DESC
-                        limit 1",addslashes($_REQUEST['search_name']));
+                        $query = sprintf(
+                            "select distinct(name) as name
+                            from billing_rates where
+                            name like '%s'
+                            order by name DESC
+                            limit 1",
+                            addslashes($_REQUEST['search_name'])
+                        );
 
                         $this->db1->query($query);
                         $this->db1->next_record();
-                        $_rateName=$this->db1->f('name');
+                        $_rateName = $this->db1->f('name');
 
-                        $_rateName=preg_replace("/%/","",$_rateName);
+                        $_rateName = preg_replace("/%/", "", $_rateName);
 
-                        if (preg_match("/^(.*)_(\d+)$/",$_rateName,$m)) {
-                            $_idx=$m[2]+1;
-                            $newRateName=$m[1]."_".$_idx;
+                        if (preg_match("/^(.*)_(\d+)$/", $_rateName, $m)) {
+                            $_idx = $m[2] + 1;
+                            $newRateName = $m[1]."_".$_idx;
                         } else {
-                            $newRateName=$_rateName."_1";
+                            $newRateName = $_rateName."_1";
                         }
-                        printf ("<input type=hidden name=fromRate value=\"%s\">",$_REQUEST['search_name']);
-                        $selected_newtable[$toRate]='selected';
-                        printf ("<select name=toRate>
-                        <option value=\"%s\" %s>Rate id %s
-                        <option value=history %s>Rate history table
-                        </select>",
-                        $newRateName,
-                        $selected_newtable[$newRateName],
-                        $newRateName,
-                        $selected_newtable['history']
+                        printf(
+                            "<input type=hidden name=fromRate value=\"%s\">",
+                            $_REQUEST['search_name']
                         );
-
+                        $selected_newtable[$toRate]='selected';
+                        printf(
+                            "<select name=toRate>
+                            <option value=\"%s\" %s>Rate id %s
+                            <option value=history %s>Rate history table
+                            </select>",
+                            $newRateName,
+                            $selected_newtable[$newRateName],
+                            $newRateName,
+                            $selected_newtable['history']
+                        );
                     } else {
                         print "<td>";
                         print "<div class=\"btn-group\">
                         <input class='btn' type=submit name=subweb_task value=\"Update selection\">
                         <input class='btn btn-danger' type=submit name=subweb_task value=\"Delete selection\">
                         </div>";
-
                     }
                 }
 
@@ -6293,8 +7012,7 @@ class RatingTables {
                 </tr></thead>
                 </form>
                 ";
-
-            } else if (!$this->tables[$this->table]['readonly']){
+            } elseif (!$this->tables[$this->table]['readonly']) {
                 // Insert form
                 $j=0;
                 print "
@@ -6305,7 +7023,7 @@ class RatingTables {
                 <td>&nbsp; </td>
                 ";
 
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
 
@@ -6316,27 +7034,26 @@ class RatingTables {
                     }
 
                     $class=$this->tables[$this->table]['fields'][$Fname]['class'];
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                        if (!in_array($Fname,$this->tables[$this->table]['keys']) ) {
-                            if (!$class){
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
+                        if (!in_array($Fname, $this->tables[$this->table]['keys'])) {
+                            if (!$class) {
                                 $class='span1';
                             }
                             print "<td><input class='$class' type=text size=$field_size maxlength=$size name=$Fname></td>";
                         } else {
                             print "<td></td>";
-
                         }
                     }
                     $j++;
                 }
 
                 $j=0;
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                        $SEARCH_NAME="search_".$Fname;
-                        $value=$_REQUEST[$SEARCH_NAME];
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
+                        $SEARCH_NAME = "search_".$Fname;
+                        $value = $_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
                     }
 
@@ -6357,12 +7074,10 @@ class RatingTables {
                 //<td colspan=$t_columns><hr noshade size=2></td>
                 //</tr>
                 //";
-
             }
-
         }
 
-        while  ($i<$maxrows)  {
+        while ($i < $maxrows) {
             $this->db->next_record();
             $id     = $this->db->f('id');
             $status = $this->db->f('status');
@@ -6378,7 +7093,7 @@ class RatingTables {
                 ";
 
                 if ($this->table == 'prepaid') {
-                    $active_sessions = json_decode($this->db->f('active_sessions'),true);
+                    $active_sessions = json_decode($this->db->f('active_sessions'), true);
                     if (!isset($active_sessions)) {
                         $active_sessions = array();
                     }
@@ -6400,42 +7115,61 @@ class RatingTables {
                         $t++;
                         $maxsessiontime=$active_sessions[$_session]['MaxSessionTime'];
 
-                        $extraInfo.=sprintf ("<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",$t,$_session);
-                        $duration=time()-$active_sessions[$_session]['timestamp'];
+                        $extraInfo .= sprintf(
+                            "<tr bgcolor=lightgrey><td class=border>%d. Session id</td><td>%s</td></tr>",
+                            $t,
+                            $_session
+                        );
+                        $duration = time() - $active_sessions[$_session]['timestamp'];
                         foreach (array_keys($active_sessions[$_session]) as $key) {
                             if ($key=='timestamp') {
-                                $extraInfo.= sprintf ("<tr><td class=border><b>StartTime</b></td><td>%s</td></tr>",Date("Y-m-d H:i",$active_sessions[$_session]['timestamp']));
-                                $extraInfo.= sprintf ("<tr><td class=border><b>Progress</b></td><td>%s (%s s)</td></tr>",sec2hms($duration),$duration);
+                                $extraInfo .= sprintf(
+                                    "<tr><td class=border><b>StartTime</b></td><td>%s</td></tr>",
+                                    Date("Y-m-d H:i", $active_sessions[$_session]['timestamp'])
+                                );
+                                $extraInfo .= sprintf(
+                                    "<tr><td class=border><b>Progress</b></td><td>%s (%s s)</td></tr>",
+                                    sec2hms($duration),
+                                    $duration
+                                );
                             } else {
-                                $extraInfo.= sprintf ("<tr><td class=border><b>%s</b></td><td>%s</td></tr>",ucfirst($key),$active_sessions[$_session][$key]);
+                                $extraInfo .= sprintf(
+                                    "<tr><td class=border><b>%s</b></td><td>%s</td></tr>",
+                                    ucfirst($key),
+                                    $active_sessions[$_session][$key]
+                                );
                             }
                         }
-                        if ($maxsessiontime < $duration ) {
-                            $extraInfo.= sprintf ("<tr><td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td></tr>",$duration-$maxsessiontime);
-                            $extraInfo.= sprintf("<tr><td colspan=2><input type=submit name=subweb_task value='Delete session'></td></tr>");
+                        if ($maxsessiontime < $duration) {
+                            $extraInfo .= sprintf(
+                                "<tr>
+                                <td class=border colspan=2><font color=red><b>Session expired since %d s</b></font></td>
+                                </tr>",
+                                $duration - $maxsessiontime
+                            );
+                            $extraInfo .= "<tr><td colspan=2><input type=submit name=subweb_task value='Delete session'></td></tr>";
                         }
                         //if (!$this->readonly) {
                         //}
                     }
 
-                    $extraInfo.=sprintf("
-                    <input type=hidden name=table value='%s'>
-                    <input type=hidden name=next value='%s'>
-                    <input type=hidden name=sessionId value='%s'>
-                    <input type=hidden name=search_text value='%s'>
-                    </form>
-                    </table>
-                    </td>
-                    </tr>
-                    </table>",
-                    $this->table,$next,$_session,$search_text
+                    $extraInfo.=sprintf(
+                        "<input type=hidden name=table value='%s'>
+                        <input type=hidden name=next value='%s'>
+                        <input type=hidden name=sessionId value='%s'>
+                        <input type=hidden name=search_text value='%s'>
+                        </form>
+                        </table>
+                        </td>
+                        </tr>
+                        </table>",
+                        $this->table,
+                        $next,
+                        $_session,
+                        $search_text
                     );
-
                 }
-                print "
-                <td>$found. </td>
-                ";
-
+                print "<td>$found. </td>";
             }
 
             $j=0;
@@ -6453,24 +7187,27 @@ class RatingTables {
 
                 $class=$this->tables[$this->table]['fields'][$Fname]['class'];
                 if ($this->tables[$this->table]['fields'][$Fname]['readonly']=="1") {
-                    $extra_form_els="disabled=true";
+                    $extra_form_els = "disabled=true";
                 } else {
-                    $extra_form_els="";
+                    $extra_form_els = "";
                 }
 
                 $class=$this->tables[$this->table]['fields'][$Fname]['class'];
-                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                     if (!$export) {
-                        if (!in_array($Fname,$this->tables[$this->table]['keys']) && !$this->readonly) {
+                        if (!in_array($Fname, $this->tables[$this->table]['keys']) && !$this->readonly) {
                             if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
                                 if (count($active_sessions) > 1) {
-                                    $session_counter_txt=sprintf("%d sessions",$value);
+                                    $session_counter_txt = sprintf("%d sessions", $value);
                                 } else {
-                                    $session_counter_txt=sprintf("%d session",$value);
+                                    $session_counter_txt = sprintf("%d session", $value);
                                 }
 
-                                printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
-
+                                printf(
+                                    "<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",
+                                    $found,
+                                    $session_counter_txt
+                                );
                             } else {
                                 if (!$class) {
                                     $class="span1";
@@ -6479,26 +7216,26 @@ class RatingTables {
                                 <input class='$class' type=text bgcolor=grey size=$field_size maxlength=$size name=$Fname value=\"$value\" $extra_form_els>
                                 </td>";
                             }
-
                         } else {
                             if ($this->table == 'prepaid' && $Fname == 'session_counter' && $value) {
                                 if (count($active_sessions) > 1) {
-                                    $session_counter_txt=sprintf("%d sessions",$value);
+                                    $session_counter_txt = sprintf("%d sessions", $value);
                                 } else {
-                                    $session_counter_txt=sprintf("%d session",$value);
+                                    $session_counter_txt = sprintf("%d session", $value);
                                 }
 
-                                printf("<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",$found,$session_counter_txt);
-
+                                printf(
+                                    "<td onClick=\"return toggleVisibility('row%s')\"><a href=#>%s</td>",
+                                    $found,
+                                    $session_counter_txt
+                                );
                             } else {
                                 print "<td>$value</td>";
                             }
-
                         }
-
                     } else {
                         if ($j) {
-                            printf ("%s%s",$delimiter,$value);
+                            printf("%s%s", $delimiter, $value);
                         } else {
                             print "2";
                         }
@@ -6509,12 +7246,12 @@ class RatingTables {
             }
 
             $j=0;
-            while ($j < $cc ) {
+            while ($j < $cc) {
                 $Fname=$metadata[$j]['name'];
                 $size=$metadata[$j]['len'];
 
-                if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
-                    $SEARCH_NAME="search_".$Fname;
+                if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
+                    $SEARCH_NAME = "search_".$Fname;
                     $value=$_REQUEST[$SEARCH_NAME];
                     if (!$export) {
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -6560,7 +7297,7 @@ class RatingTables {
                         ";
                     }
                 } else {
-                    if ($this->table=='prepaid') {
+                    if ($this->table == 'prepaid') {
                         print "
                         <tr style='display:none' id='row$found'>
                         <td></td>
@@ -6578,13 +7315,11 @@ class RatingTables {
             </table>
             ";
 
-            print "
-            <form class=form-inline id=prev method=post>
-            ";
-            if ($next!= 0 ) {
+            print "<form class=form-inline id=prev method=post>";
+            if ($next != 0) {
                 $show_next=$this->maxrowsperpage-$next;
 
-                if  ($show_next<0)  {
+                if ($show_next < 0) {
                     $mod_show_next  =  $show_next-2*$show_next;
                 }
 
@@ -6597,11 +7332,11 @@ class RatingTables {
                 ";
 
                 $j=0;
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
 
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">
@@ -6613,13 +7348,11 @@ class RatingTables {
             }
             print "
             </form>
-
             <form class=form-inline id=next method=post>
-
             ";
 
-            if  ($rows>$this->maxrowsperpage &&  $rows!=$maxrows)  {
-                $show_next=$this->maxrowsperpage+$next;
+            if ($rows>$this->maxrowsperpage &&  $rows!=$maxrows) {
+                $show_next = $this->maxrowsperpage + $next;
 
                 print "
                 <input type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
@@ -6628,11 +7361,11 @@ class RatingTables {
                 <input type=hidden name=web_task           value=Search>
                 ";
                 $j=0;
-                while ($j < $cc ) {
+                while ($j < $cc) {
                     $Fname=$metadata[$j]['name'];
                     $size=$metadata[$j]['len'];
 
-                    if (!in_array($Fname,$this->tables[$this->table]['exceptions'])) {
+                    if (!in_array($Fname, $this->tables[$this->table]['exceptions'])) {
                         $SEARCH_NAME="search_".$Fname;
                         $value=$_REQUEST[$SEARCH_NAME];
                         print "<input type=hidden name=search_$Fname value=\"$value\">";
@@ -6649,13 +7382,11 @@ class RatingTables {
             print "
             </form>
             <ul class=\"pager\">";
-            if ($next!= 0 ) {
-                print "
-                    <li><a href=\"javascript:document.forms['prev'].submit()\">&larr; Previous</a></li>";
+            if ($next!= 0) {
+                print "<li><a href=\"javascript:document.forms['prev'].submit()\">&larr; Previous</a></li>";
             }
-            if  ($rows>$this->maxrowsperpage &&  $rows!=$maxrows)  {
-                print "
-                    <li><a href=\"javascript:document.forms['next'].submit()\">Next &rarr;</a></li>";
+            if ($rows>$this->maxrowsperpage &&  $rows!=$maxrows) {
+                print "<li><a href=\"javascript:document.forms['next'].submit()\">Next &rarr;</a></li>";
             }
             print "</ul>";
 
@@ -6667,7 +7398,8 @@ class RatingTables {
         }
     }
 
-    function checkValues($table,$values=array()) {
+    private function checkValues($table, $values = array())
+    {
         if (!$table) return false;
 
         $metadata  = $this->db->metadata($table);
@@ -6692,7 +7424,7 @@ class RatingTables {
 
             if ($mustExist) {
                 if (!strlen($value)) {
-                    printf ("Error: field '%s' must be filled in\n",$name_print);
+                    printf("Error: field '%s' must be filled in\n", $name_print);
                     return false;
                 }
             }
@@ -6704,27 +7436,43 @@ class RatingTables {
 
                 if ($checkType == 'sip_account') {
                     if (!checkEmail($value)) {
-                        printf ("Error: value '%s' for field '%s' must be of format 'user@domain'\n",$value,$name_print);
+                        printf(
+                            "Error: value '%s' for field '%s' must be of format 'user@domain'\n",
+                            $value,
+                            $name_print
+                        );
                         return false;
                     }
                 }
 
                 if ($checkType == 'domain') {
-                    if (stristr($value,"-.") || !preg_match("/^([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i",$value)) {
-                        printf ("Error: value '%s' for field '%s' must be of format 'example.com'\n",$value,$name_print);
+                    if (stristr($value, "-.") || !preg_match("/^([a-zA-Z0-9][a-zA-Z0-9-]*\.)+[a-zA-Z]{2,}$/i", $value)) {
+                        printf(
+                            "Error: value '%s' for field '%s' must be of format 'example.com'\n",
+                            $value,
+                            $name_print
+                        );
                         return false;
                     }
                 }
 
                 if ($checkType == 'ip') {
-                    if (!preg_match("/^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i",$value,$m)) {
-                        printf ("Error: value '%s' for field '%s' must be of format 'X.X.X.X'\n",$value,$name_print);
+                    if (!preg_match("/^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$/i", $value, $m)) {
+                        printf(
+                            "Error: value '%s' for field '%s' must be of format 'X.X.X.X'\n",
+                            $value,
+                            $name_print
+                        );
                         return false;
                     } else {
                         $i=1;
                         while ($i<=4) {
                             if ($m[$i] < 0 || $m[$i] > 255) {
-                                printf ("Error: value '%s' for field '%s' must be of a valid IP address\n",$value,$name_print);
+                                printf(
+                                    "Error: value '%s' for field '%s' must be of a valid IP address\n",
+                                    $value,
+                                    $name_print
+                                );
                                 return false;
                             }
                             $i++;
@@ -6734,7 +7482,12 @@ class RatingTables {
 
                 if ($checkType == 'numeric') {
                     if (!is_numeric($value)) {
-                        printf ("Error: value '%s' for field '%s' must be of type '%s'\n",$value,$name_print,$checkType);
+                        printf(
+                            "Error: value '%s' for field '%s' must be of type '%s'\n",
+                            $value,
+                            $name_print,
+                            $checkType
+                        );
                         return false;
                     }
                 }
@@ -6744,18 +7497,18 @@ class RatingTables {
         return true;
     }
 
-    function importTable($table='') {
+    public function importTable($table = '')
+    {
         // import a table from web
         if (!is_array($_FILES[$table]) || $_FILES[$table]['size'] == 0) return false;
 
         foreach ($this->importFilesPatterns as $_pattern) {
-            if (strstr($_FILES[$table]['name'],$_pattern) && preg_match("/\.csv$/",$_FILES[$table]['name'])) {
-
+            if (strstr($_FILES[$table]['name'], $_pattern) && preg_match("/\.csv$/", $_FILES[$table]['name'])) {
                 if ($this->CDRTool['filters']['reseller']) {
                     $dir=$this->cvs_import_dir.'/'.$this->CDRTool['filters']['reseller'];
                     if (!is_dir($dir)) {
                         if (!mkdir($dir)) {
-                            printf ("<font color=red>Error: cannot create directory %s</font>",$dir);
+                            printf("<font color=red>Error: cannot create directory %s</font>", $dir);
                             return false;
                         }
                     }
@@ -6767,11 +7520,11 @@ class RatingTables {
                 if (!is_file($fullPath)) {
                     if ($fp = fopen($fullPath, "w")) {
                     } else {
-                        printf ("<font color=red>Error: cannot open file %s for writing</font>",$fullPath);
+                        printf("<font color=red>Error: cannot open file %s for writing</font>", $fullPath);
                         return false;
                     }
                 } else {
-                    list($basename,$extension)=explode('.',$_FILES[$table]['name']);
+                    list($basename, $extension) = explode('.', $_FILES[$table]['name']);
                     $j=0;
                     while (1) {
                         $j++;
@@ -6786,29 +7539,38 @@ class RatingTables {
                         if ($fp = fopen($fullPath, "w")) {
                             break;
                         } else {
-                            printf ("<font color=red>Error: cannot open file %s for writing</font>",$fullPath);
+                            printf("<font color=red>Error: cannot open file %s for writing</font>", $fullPath);
                             return false;
                         }
                     }
                 }
 
-                $content=fread(fopen($_FILES[$table]['tmp_name'], "r"), $_FILES[$table]['size']);
-                fwrite($fp,$content);
+                $content = fread(
+                    fopen($_FILES[$table]['tmp_name'], "r"),
+                    $_FILES[$table]['size']
+                );
+                fwrite($fp, $content);
                 fclose($fp);
-                printf ("<p><font color=green>Imported %s bytes into %s</font>",$_FILES[$table]['size'],$fullPath);
+                printf(
+                    "<p><font color=green>Imported %s bytes into %s</font>",
+                    $_FILES[$table]['size'],
+                    $fullPath
+                );
                 break;
             }
         }
     }
 }
 
-class OpenSIPSQuota {
+class OpenSIPSQuota
+{
     var $localDomains  = array();
     var $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
     var $timeout       = 5;       // soap connection timeout
     var $daily_quota   = 0;       // by default do not check daily quota
 
-    function OpenSIPSQuota($parent) {
+    public function OpenSIPSQuota($parent)
+    {
 
         global $DATASOURCES;
 
@@ -6855,14 +7617,13 @@ class OpenSIPSQuota {
         }
 
         // load e-mail addresses for quota notifications
-        $query="select * from settings where var_module = 'notifications'";
+        $query = "select * from settings where var_module = 'notifications'";
 
         if ($this->db->query($query) && $this->db->num_rows()) {
-
             while ($this->db->next_record()) {
-                $_bp    =$this->db->f('billing_party');
-                $_name  =$this->db->f('var_name');
-                $_value =$this->db->f('var_value');
+                $_bp    = $this->db->f('billing_party');
+                $_name  = $this->db->f('var_name');
+                $_value = $this->db->f('var_value');
                 if ($_bp && $_name && $_value) {
                     $this->notificationAddresses[$_bp][$_name]=$_value;
                 }
@@ -6873,17 +7634,20 @@ class OpenSIPSQuota {
             require("/etc/cdrtool/ngnpro_engines.inc");
             require_once("ngnpro_soap_library.php");
 
-            if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'],array_keys($soapEngines))) {
-
+            if (in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
                 $this->SOAPurl  = $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['url'];
-                $log=sprintf("Using SOAP engine %s to block accounts at %s\n",$DATASOURCES[$this->cdr_source]['soapEngineId'],$this->SOAPurl);
+                $log = sprintf(
+                    "Using SOAP engine %s to block accounts at %s\n",
+                    $DATASOURCES[$this->cdr_source]['soapEngineId'],
+                    $this->SOAPurl
+                );
                 syslog(LOG_NOTICE, $log);
 
                 $this->SOAPlogin = array(
-                                           "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
-                                           "password"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['password'],
-                                           "admin"       => true
-                                           );
+                    "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
+                    "password"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['password'],
+                    "admin"       => true
+                );
 
                 $this->SoapAuth=array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -6892,26 +7656,34 @@ class OpenSIPSQuota {
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
                 $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
                 $this->soapclient->_options['timeout'] = $this->timeout;
-
             } else {
-                $e=$DATASOURCES[$this->cdr_source]['soapEngineId'];
-                $log=sprintf("Error: soap engine id $e not found in /etc/cdrtool/ngnpro_engines.inc\n");
+                $e = $DATASOURCES[$this->cdr_source]['soapEngineId'];
+                $log = "Error: soap engine id $e not found in /etc/cdrtool/ngnpro_engines.inc\n";
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
         } else {
-            $log=sprintf("Using database queries to block accounts\n");
+            $log = "Using database queries to block accounts\n";
             syslog(LOG_NOTICE, $log);
         }
     }
 
-    function ShowAccountsWithQuota($treshhold='') {
+    function ShowAccountsWithQuota($treshhold = '')
+    {
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",addslashes($this->CDRS->cdr_source));
+        $query = sprintf(
+            "select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",
+            addslashes($this->CDRS->cdr_source)
+        );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -6921,27 +7693,29 @@ class OpenSIPSQuota {
             if ($this->db->f('blocked')) {
                 $blockedStatus="blocked";
             } else {
-                $blockedStatus='';;
+                $blockedStatus='';
             }
 
-            $usageRatio=$this->db->f('cost')*100/$this->db->f('quota');
+            $usageRatio = $this->db->f('cost') * 100 / $this->db->f('quota');
 
             if ($treshhold && $treshhold > $usageRatio) continue;
 
-            $usageStatus=sprintf("usage=%-10s",$this->db->f('cost'));
+            $usageStatus = sprintf("usage=%-10s", $this->db->f('cost'));
 
-            printf ("%-35s quota=%-6s %s %.2f%s %s\n",
-            $this->db->f('account'),
-            $this->db->f('quota'),
-            $usageStatus,
-            $usageRatio,
-            '%',
-            $blockedStatus
+            printf(
+                "%-35s quota=%-6s %s %.2f%s %s\n",
+                $this->db->f('account'),
+                $this->db->f('quota'),
+                $usageStatus,
+                $usageRatio,
+                '%',
+                $blockedStatus
             );
         }
     }
 
-    function deblockAccounts($reset_quota_for=array()) {
+    public function deblockAccounts($reset_quota_for = array())
+    {
         // deblock users blocked by quota
 
         if (!$this->db_subscribers) {
@@ -6952,11 +7726,11 @@ class OpenSIPSQuota {
         if (!count($reset_quota_for)) {
             printf("Deblocking all SIP accounts blocked by quota\n");
         } else {
-            printf("Deblocking %d SIP accounts blocked by quota\n",count($reset_quota_for));
+            printf("Deblocking %d SIP accounts blocked by quota\n", count($reset_quota_for));
         }
 
         if ($this->enableThor) {
-            $query=sprintf("select username, domain, profile from sip_accounts where (1=1) ");
+            $query = sprintf("select username, domain, profile from sip_accounts where (1=1) ");
 
             if (count($reset_quota_for)) {
                 $k=0;
@@ -6969,8 +7743,8 @@ class OpenSIPSQuota {
             }
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf("Error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf("Error: %s (%s)", $this->AccountsDB->Error, $this->AccountsDB->Errno);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
 
@@ -6980,7 +7754,7 @@ class OpenSIPSQuota {
                 $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
                 $_profile=json_decode(trim($this->AccountsDB->f('profile')));
 
-                if (in_array('quota',$_profile->groups)) {
+                if (in_array('quota', $_profile->groups)) {
                     $blockedAccounts[]=$_account;
                 }
 
@@ -6994,30 +7768,35 @@ class OpenSIPSQuota {
                 print "$i accounts checked for deblocking\n";
                 flush();
             }
-
         } else {
-             $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = '%s'",addslashes($this->quotaGroup));
+            $query = sprintf(
+                "select CONCAT(username,'@',domain) as account from grp where grp = '%s'",
+                addslashes($this->quotaGroup)
+            );
 
-             if (count($reset_quota_for)) {
-                 $k=0;
-                 foreach ($reset_quota_for as $_account) {
-                     if ($k) $usage_keys.= ", ";
-                     $usage_keys.="'".addslashes($_account)."'";
-                     $k++;
-                 }
-                 $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
-             }
+            if (count($reset_quota_for)) {
+                $k=0;
+                foreach ($reset_quota_for as $_account) {
+                    if ($k) $usage_keys.= ", ";
+                    $usage_keys .= "'".addslashes($_account)."'";
+                    $k++;
+                }
+                $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
+            }
 
-             if (!$this->AccountsDB->query($query)) {
-                 $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                 print $log;
-                 syslog(LOG_NOTICE,$log);
-                 return false;
-             }
+            if (!$this->AccountsDB->query($query)) {
+                $log = sprintf(
+                    "Database error: %s (%s)",
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
+                print $log;
+                syslog(LOG_NOTICE, $log);
+                return false;
+            }
 
-             $blockedAccounts=array();
-             while ($this->AccountsDB->next_record()) {
-
+            $blockedAccounts=array();
+            while ($this->AccountsDB->next_record()) {
                 $i++;
                 $blockedAccounts[]=$this->AccountsDB->f('account');
 
@@ -7025,19 +7804,18 @@ class OpenSIPSQuota {
                     print "$i accounts checked for deblocking\n";
                     flush();
                 }
-
-             }
+            }
         }
 
         if (count($reset_quota_for)) {
-            $blockedAccounts=array_intersect($blockedAccounts,$reset_quota_for);
+            $blockedAccounts = array_intersect($blockedAccounts, $reset_quota_for);
         }
 
-        if (count($blockedAccounts) >0 ) {
+        if (count($blockedAccounts) >0) {
             $this->unBlockRemoteAccounts($blockedAccounts);
 
             if (!$this->enableThor) {
-                $query=sprintf("delete from grp where grp = '%s'",$this->quotaGroup);
+                $query = sprintf("delete from grp where grp = '%s'", $this->quotaGroup);
                 if (count($reset_quota_for)) {
                     $k=0;
                     foreach ($reset_quota_for as $_account) {
@@ -7050,25 +7828,33 @@ class OpenSIPSQuota {
 
 
                 if (!$this->AccountsDB->query($query)) {
-                    $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                    $log = sprintf(
+                        "Database error: %s (%s)",
+                        $this->AccountsDB->Error,
+                        $this->AccountsDB->Errno
+                    );
                     print $log;
-                    syslog(LOG_NOTICE,$log);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 }
             }
         }
 
-        if  (count($blockedAccounts)) {
-            $log=sprintf ("Reset %d users blocked by quota\n",count($blockedAccounts));
+        if (count($blockedAccounts)) {
+            $log = sprintf(
+                "Reset %d users blocked by quota\n",
+                count($blockedAccounts)
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
         }
     }
 
-    function initQuotaUsageFromDatabase($month="",$reset_quota_for=array()) {
+    private function initQuotaUsageFromDatabase($month = "", $reset_quota_for = array())
+    {
 
         if (!$month) {
-            $this->startTime=Date("Y-m-01 00:00",time());
+            $this->startTime=Date("Y-m-01 00:00", time());
         } else {
             $this->startTime=$month."-01 00:00";
         }
@@ -7077,7 +7863,11 @@ class OpenSIPSQuota {
 
         $usage_keys='';
         if (count($reset_quota_for)) {
-            $log=sprintf ("Init quota of data source %s for %d accounts\n",addslashes($this->CDRS->cdr_source),count($reset_quota_for));
+            $log = sprintf(
+                "Init quota of data source %s for %d accounts\n",
+                addslashes($this->CDRS->cdr_source),
+                count($reset_quota_for)
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
 
@@ -7095,47 +7885,60 @@ class OpenSIPSQuota {
                 foreach (array_keys($this->localDomains) as $_domain) {
                     if (!$_domain) continue;
                     if ($t) $domain_filter .= ",";
-                    $domain_filter .= sprintf("'%s'",addslashes($_domain));
+                    $domain_filter .= sprintf("'%s'", addslashes($_domain));
                     $t++;
                 }
                 $domain_filter .= ") ";
             }
 
-            $log=sprintf ("Init quota of data source %s for all accounts\n",$this->CDRS->cdr_source);
+            $log = sprintf(
+                "Init quota of data source %s for all accounts\n",
+                $this->CDRS->cdr_source
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
         }
 
-        $query=sprintf("select %s,
-        count(*) as calls,
-        sum(AcctSessionTime) as duration,
-        sum(Price) as cost,
-        sum(AcctInputOctets + AcctOutputOctets)/2 as traffic
-        from %s
-        where AcctStartTime >= '%s'
-        and Normalized = '1'
-        %s
-        %s
-        group by %s\n",
-        addslashes($this->BillingPartyIdField),
-        addslashes($this->table),
-        addslashes($this->startTime),
-        $domain_filter,
-        $usage_keys,
-        addslashes($this->BillingPartyIdField)
+        $query = sprintf(
+            "select %s,
+            count(*) as calls,
+            sum(AcctSessionTime) as duration,
+            sum(Price) as cost,
+            sum(AcctInputOctets + AcctOutputOctets)/2 as traffic
+            from %s
+            where AcctStartTime >= '%s'
+            and Normalized = '1'
+            %s
+            %s
+            group by %s\n",
+            addslashes($this->BillingPartyIdField),
+            addslashes($this->table),
+            addslashes($this->startTime),
+            $domain_filter,
+            $usage_keys,
+            addslashes($this->BillingPartyIdField)
         );
 
         if (!$this->CDRdb->query($query)) {
             if ($this->CDRdb->Errno != 1146) {
-                $log=sprintf ("Database error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
+                $log = sprintf(
+                    "Database error: %s (%s)",
+                    $this->CDRdb->Error,
+                    $this->CDRdb->Errno
+                );
                 print $log;
-                syslog(LOG_NOTICE,$log);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
         }
 
-        $rows=$this->CDRdb->num_rows();
-        $log=sprintf ("%d callers generated traffic in %s for data source %s\n",$rows,Date("Y-m",time()),$this->CDRS->cdr_source);
+        $rows = $this->CDRdb->num_rows();
+        $log = sprintf(
+            "%d callers generated traffic in %s for data source %s\n",
+            $rows,
+            Date("Y-m", time()),
+            $this->CDRS->cdr_source
+        );
         print $log;
         flush();
         syslog(LOG_NOTICE, $log);
@@ -7143,12 +7946,11 @@ class OpenSIPSQuota {
         $j=0;
         $progress=0;
 
-        while($this->CDRdb->next_record()) {
-
+        while ($this->CDRdb->next_record()) {
             if ($rows > 1000) {
-                if ($j > $progress*$rows/100) {
+                if ($j > $progress * $rows/100) {
                     $progress++;
-                    if ($progress%10 == 0) {
+                    if ($progress % 10 == 0) {
                         print "$progress% ";
                         flush();
                     }
@@ -7167,14 +7969,23 @@ class OpenSIPSQuota {
         }
     }
 
-    function checkQuota($notify) {
+    public function checkQuota($notify)
+    {
         global $UserQuota;
         $this->initQuotaUsage();
 
-        $query=sprintf("select * from quota_usage where datasource = '%s' and quota > 0 and (cost > quota or cost_today >= quota * $this->daily_quota/100)",addslashes($this->CDRS->cdr_source));
+        $query = sprintf(
+            "select * from quota_usage where datasource = '%s' and quota > 0 and (cost > quota or cost_today >= quota * $this->daily_quota/100)",
+            addslashes($this->CDRS->cdr_source)
+        );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7185,18 +7996,17 @@ class OpenSIPSQuota {
         $_checks=0;
 
         while ($this->db->next_record()) {
-
             $account=$this->db->f('account');
-            list($username,$domain)=explode("@",$account);
+            list($username, $domain)=explode("@", $account);
 
             if ($this->db->f('cost') >= $this->db->f('quota')) {
-                $quota_exceeded=true;
-                $exceeded_period='monthly';
-            } else if ($this->daily_quota && ($this->db->f('cost_today') >= $this->db->f('quota') * $this->daily_quota/100)) {
-                $quota_exceeded=true;
-                $exceeded_period='daily';
+                $quota_exceeded = true;
+                $exceeded_period = 'monthly';
+            } elseif ($this->daily_quota && ($this->db->f('cost_today') >= $this->db->f('quota') * $this->daily_quota/100)) {
+                $quota_exceeded = true;
+                $exceeded_period = 'daily';
             } else {
-                $quota_exceeded= false;
+                $quota_exceeded = false;
             }
 
             if ($quota_exceeded) {
@@ -7206,19 +8016,28 @@ class OpenSIPSQuota {
                     $reason='Cost exceeded';
 
                     if (!$seen_title) {
-                        $line=sprintf ("%40s %6s %8s %8s %13s %s\n","User","Calls","Price","Minutes","Traffic","Reason");
+                        $line = sprintf(
+                            "%40s %6s %8s %8s %13s %s\n",
+                            "User",
+                            "Calls",
+                            "Price",
+                            "Minutes",
+                            "Traffic",
+                            "Reason"
+                        );
                         print $line;
                         $email_body=$line;
                         $seen_title++;
                     }
 
-                    $line          = sprintf ("%40s %6s %8s %8s %10s MB %s\n",
-                    $account,
-                    $this->db->f('calls'),
-                    $this->db->f('cost'),
-                    number_format($this->db->f('duration')/60,0,"",""),
-                    number_format($this->db->f('traffic')/1024/1024,2),
-                    $reason
+                    $line          = sprintf(
+                        "%40s %6s %8s %8s %10s MB %s\n",
+                        $account,
+                        $this->db->f('calls'),
+                        $this->db->f('cost'),
+                        number_format($this->db->f('duration') / 60, 0, "", ""),
+                        number_format($this->db->f('traffic') / 1024 / 1024, 2),
+                        $reason
                     );
 
                     $email_body = $email_body.$line;
@@ -7230,34 +8049,54 @@ class OpenSIPSQuota {
                         $this->domain_table          = "domain";
                     }
 
-                    $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($domain));
+                    $query = sprintf(
+                        "select * from %s where domain = '%s'",
+                        addslashes($this->domain_table),
+                        addslashes($domain)
+                    );
 
                     if (!$this->AccountsDB->query($query)) {
-                        $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
-                        syslog(LOG_NOTICE,$log);
+                        $log = sprintf(
+                            "Database error: %s (%d) %s\n",
+                            $this->AccountsDB->Error,
+                            $this->AccountsDB->Errno,
+                            $query
+                        );
+                        syslog(LOG_NOTICE, $log);
                     }
 
-                    if ($this->AccountsDB->num_rows()){
+                    if ($this->AccountsDB->num_rows()) {
                         $this->AccountsDB->next_record();
-                        $_reseller=$this->AccountsDB->f('reseller_id');
+                        $_reseller = $this->AccountsDB->f('reseller_id');
                     } else {
-                        $_reseller=0;
+                        $_reseller = 0;
                     }
 
-                    $log=sprintf("%s quota exceeded for %s (%s > %s)",ucfirst($exceeded_period),$account,$this->db->f('cost'), $this->db->f('quota'));
+                    $log = sprintf(
+                        "%s quota exceeded for %s (%s > %s)",
+                        ucfirst($exceeded_period),
+                        $account,
+                        $this->db->f('cost'),
+                        $this->db->f('quota')
+                    );
                     syslog(LOG_NOTICE, $log);
 
-                    $log_query=sprintf("insert into log
-                    (date,login,ip,datasource,results,description,reseller_id)
-                    values (NOW(),'quotacheck','localhost','QuotaCheck','1','%s',%d)",
-                    addslashes($log),
-                    $_reseller
+                    $log_query = sprintf(
+                        "insert into log
+                        (date,login,ip,datasource,results,description,reseller_id)
+                        values (NOW(),'quotacheck','localhost','QuotaCheck','1','%s',%d)",
+                        addslashes($log),
+                        $_reseller
                     );
 
                     if (!$this->db1->query($log_query)) {
-                        $log=sprintf ("Database error: %s (%s)",$this->db1->Error,$this->db1->Errno);
+                        $log = sprintf(
+                            "Database error: %s (%s)",
+                            $this->db1->Error,
+                            $this->db1->Errno
+                        );
                         print $log;
-                        syslog(LOG_NOTICE,$log);
+                        syslog(LOG_NOTICE, $log);
                     }
 
                     if ($this->blockAccount($account)) {
@@ -7276,7 +8115,7 @@ class OpenSIPSQuota {
         }
 
         if ($exceeding_accounts) {
-            $line=sprintf("%6d accounts have exceeded their traffic limits\n",$exceeding_accounts);
+            $line = sprintf("%6d accounts have exceeded their traffic limits\n", $exceeding_accounts);
             print $line;
             $email_body=$email_body.$line;
         } else {
@@ -7285,25 +8124,24 @@ class OpenSIPSQuota {
         }
 
         if ($blocked_now) {
-            $line=sprintf("%6d accounts have been blocked now\n",$blocked_now);
+            $line = sprintf("%6d accounts have been blocked now\n", $blocked_now);
             $email_body=$email_body.$line;
         }
 
         if ($blockedAccountsNow) {
-            $line="Blocked accounts now:\n".$blockedAccountsNow;
+            $line = "Blocked accounts now:\n".$blockedAccountsNow;
             print $line;
             $email_body=$email_body.$line.$batch_block;
         }
 
         if ($blockedAccountsPrevious) {
-            $line="Blocked acccounts previously:\n".$blockedAccountsPrevious;
+            $line = "Blocked acccounts previously:\n".$blockedAccountsPrevious;
             print $line;
             $email_body=$email_body.$line.$batch_unblock;
         }
 
         // send notification to the provider
         if ($this->CDRTool['provider']['toEmail'] && $blockedAccountsNow) {
-
             $from = $this->CDRTool['provider']['fromEmail'];
             $to   = $this->CDRTool['provider']['toEmail'];
             $bcc  = $this->CDRTool['provider']['bccEmail'];
@@ -7316,21 +8154,21 @@ class OpenSIPSQuota {
 
             print("Notify CDRTool provider at $to\n");
             mail($to, "$service platform - CDRTool quota check", $email_body, $extraHeaders);
-
         }
 
         if ($notify && is_array($toNotify) && count($toNotify) >0) {
             // send notification to accounts
-            foreach($toNotify as $rcpt) {
+            foreach ($toNotify as $rcpt) {
                 $this->notify($rcpt);
             }
         }
     }
 
-    function notify($account) {
+    function notify($account)
+    {
         global $DATASOURCES;
 
-        list($username,$domain)=explode("@",$account);
+        list($username, $domain) = explode("@", $account);
 
         if (!$DATASOURCES[$this->cdr_source]['UserQuotaNotify']) {
             return false;
@@ -7338,14 +8176,26 @@ class OpenSIPSQuota {
 
         // get account information
         if ($this->enableThor) {
-            $query=sprintf("select first_name,last_name,email,profile from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select first_name,last_name,email,profile from sip_accounts where username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
         } else {
-            $query=sprintf("select first_name,last_name,email_address as email,profile from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select first_name,last_name,email_address as email,profile from subscriber where username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
         }
 
         if (!$this->AccountsDB->query($query)) {
-            $log=sprintf("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Database error: %s (%s)",
+                $this->AccountsDB->Error,
+                $this->AccountsDB->Errno
+            );
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -7354,19 +8204,21 @@ class OpenSIPSQuota {
 
         $fullname = $this->AccountsDB->f('first_name')." ".$this->AccountsDB->f('last_name');
         $toEmail  = $this->AccountsDB->f('email');
-        $profile  = json_decode($this->AccountsDB->f('profile'),true);
+        $profile  = json_decode($this->AccountsDB->f('profile'), true);
 
         $providerName=$this->notificationAddresses[$domain]['providerName'];
 
         if (!$providerName)  $providerName="your SIP service provider";
 
-        $body=sprintf("Dear __NAME__,\n\n".
-        "Your SIP account %s has been temporarily blocked\n".
-        "because your monthly quota has been exceeded.\n\n".
-        "To unblock your account you may contact %s.\n\n".
-        "N.B. This is an automatically generated message. Do not reply to it.\n",
-        $account,
-        $providerName);
+        $body = sprintf(
+            "Dear __NAME__,\n\n".
+            "Your SIP account %s has been temporarily blocked\n".
+            "because your monthly quota has been exceeded.\n\n".
+            "To unblock your account you may contact %s.\n\n".
+            "N.B. This is an automatically generated message. Do not reply to it.\n",
+            $account,
+            $providerName
+        );
 
         $fromEmail = $this->CDRTool['provider']['fromEmail'];
         $bccEmail  = $this->CDRTool['provider']['bccEmail'];
@@ -7384,15 +8236,15 @@ class OpenSIPSQuota {
             $subject=$this->notificationAddresses[$domain]['quotaSubject'];
         }
 
-        $body=preg_replace("/__NAME__/",$fullname,$body);
-        $body=preg_replace("/__ACCOUNT__/",$account,$body);
-        $body=preg_replace("/__CALLERID__/","$profile[rpid]",$body);
+        $body = preg_replace("/__NAME__/", $fullname, $body);
+        $body = preg_replace("/__ACCOUNT__/", $account, $body);
+        $body = preg_replace("/__CALLERID__/", "$profile[rpid]", $body);
 
         if (!$subject) {
-            $subject=sprintf("Monthly quota exceeded for account %s",$account);
+            $subject=sprintf("Monthly quota exceeded for account %s", $account);
         } else {
-            $subject=preg_replace("/__ACCOUNT__/",$account,$subject);
-            $subject=preg_replace("/__CALLERID__/","$profile[rpid]",$subject);
+            $subject=preg_replace("/__ACCOUNT__/", $account, $subject);
+            $subject=preg_replace("/__CALLERID__/", "$profile[rpid]", $subject);
         }
 
         if (!$toEmail || !$fromEmail) {
@@ -7410,35 +8262,44 @@ class OpenSIPSQuota {
 
         if ($bccEmail) $extraHeaders = $extraHeaders."\r\nBCC: ".$bccEmail;
 
-        mail($toEmail,$subject,$body, $extraHeaders);
+        mail($toEmail, $subject, $body, $extraHeaders);
 
-          $log_msg=sprintf("Monthly quota exceeded for %s. Notified To:%s From:%s\n",$account, $toEmail,$fromEmail);
-          syslog(LOG_NOTICE, $log_msg);
+        $log_msg = sprintf(
+            "Monthly quota exceeded for %s. Notified To:%s From:%s\n",
+            $account,
+            $toEmail,
+            $fromEmail
+        );
+        syslog(LOG_NOTICE, $log_msg);
         print $log_msg;
-
     }
 
-    function blockAccount($account) {
-        list($username,$domain)=explode("@",$account);
+    function blockAccount($account)
+    {
+        list($username, $domain) = explode("@", $account);
 
         if (is_object($this->soapclient)) {
               return  $this->blockAccountRemote($account);
         } else {
-
-            $query=sprintf("insert into grp
-            (username,domain,grp,last_modified)
-            values
-            ('%s','%s','%s',NOW())",
-            addslashes($username),
-            addslashes($domain),
-            addslashes($this->quotaGroup)
+            $query = sprintf(
+                "insert into grp
+                (username,domain,grp,last_modified)
+                values
+                ('%s','%s','%s',NOW())",
+                addslashes($username),
+                addslashes($domain),
+                addslashes($this->quotaGroup)
             );
 
             if (!$this->AccountsDB->query($query)) {
                 if ($this->AccountsDB->Errno != 1062) {
-                    $log=sprintf ("Database error: %s (%s)",$this->AccountsDB->Error,$this->AccountsDB->Errno);
+                    $log = sprintf(
+                        "Database error: %s (%s)",
+                        $this->AccountsDB->Error,
+                        $this->AccountsDB->Errno
+                    );
                     print $log;
-                    syslog(LOG_NOTICE,$log);
+                    syslog(LOG_NOTICE, $log);
                     return false;
                 } else {
                     return true;
@@ -7450,11 +8311,12 @@ class OpenSIPSQuota {
         }
     }
 
-    function blockAccountRemote($account) {
-        list($username,$domain)=explode("@",$account);
+    function blockAccountRemote($account)
+    {
+        list($username, $domain) = explode("@", $account);
 
         if (!$username || !$domain) {
-            $log=sprintf("Error: misssing username/domain in blockAccountRemote()");
+            $log = sprintf("Error: misssing username/domain in blockAccountRemote()");
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -7467,12 +8329,16 @@ class OpenSIPSQuota {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            $log=sprintf("Error from %s: %s (%s)",$this->SOAPurl,$error_fault->faultstring,$error_fault->faultcode);
+            $log = sprintf(
+                "Error from %s: %s (%s)",
+                $this->SOAPurl,
+                $error_fault->faultstring,
+                $error_fault->faultcode
+            );
             syslog(LOG_NOTICE, $log);
             print $log;
 
             if ($error_fault->detail->exception->errorcode != "1030") {
-
                 $from         = $this->CDRTool['provider']['fromEmail'];
                 $to           = $this->CDRTool['provider']['toEmail'];
                 $extraHeaders = "From: $from";
@@ -7484,22 +8350,22 @@ class OpenSIPSQuota {
 
             return false;
         } else {
-            $log=sprintf ("Block account %s at %s",$account,$this->SOAPurl );
+            $log = sprintf("Block account %s at %s", $account, $this->SOAPurl);
             syslog(LOG_NOTICE, $log);
 
             $this->markBlocked($account);
             return true;
         }
-
     }
 
-    function unBlockRemoteAccounts($accounts) {
+    function unBlockRemoteAccounts($accounts)
+    {
         if (!is_object($this->soapclient)) {
             return;
         }
 
         foreach ($accounts as $account) {
-            list($username,$domain)=explode("@",$account);
+            list($username, $domain)=explode("@", $account);
 
             if (!$username || !$domain) return true;
 
@@ -7510,33 +8376,43 @@ class OpenSIPSQuota {
                 $error_msg   = $result->getMessage();
                 $error_fault = $result->getFault();
                 $error_code  = $result->getCode();
-                if ($error_fault->detail->exception->errorcode &&
-                    $error_fault->detail->exception->errorcode != "1030" &&
-                    $error_fault->detail->exception->errorcode != "1031"
-                    ) {
+                if ($error_fault->detail->exception->errorcode
+                    && $error_fault->detail->exception->errorcode != "1030"
+                    && $error_fault->detail->exception->errorcode != "1031"
+                ) {
                     $from = $this->CDRTool[provider][fromEmail];
                     $to   = $this->CDRTool[provider][toEmail];
 
                     $extraHeaders="From: $from";
                     $email_body="SOAP request failure: \n\n".
 
-                    $log=sprintf ("SOAP client error: %s %s\n",$error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        $log = sprintf(
+                            "SOAP client error: %s %s\n",
+                            $error_fault->detail->exception->errorcode,
+                            $error_fault->detail->exception->errorstring
+                        );
                     syslog(LOG_NOTICE, $log);
 
                     mail($to, "CDRTool SOAP failure", $email_body, $extraHeaders);
                 }
             } else {
-                $log=sprintf ("Unblock remote account %s at %s",$account,$this->SOAPurl);
+                $log = sprintf("Unblock remote account %s at %s", $account, $this->SOAPurl);
                 syslog(LOG_NOTICE, $log);
             }
         }
     }
 
-    function saveQuotaInitFlag() {
-        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','1')",addslashes($this->quota_init_flag));
+    function saveQuotaInitFlag()
+    {
+        $query = sprintf("insert into memcache (`key`,`value`) values ('%s','1')", addslashes($this->quota_init_flag));
         if (!$this->db->query($query)) {
             if ($this->db->Errno != '1062') {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -7545,10 +8421,20 @@ class OpenSIPSQuota {
         return true;
     }
 
-    function deleteQuotaInitFlag() {
-        $query=sprintf("delete from memcache where `key` in ('%s','%s')",addslashes($this->quota_init_flag),addslashes($this->quota_reset_flag));
+    function deleteQuotaInitFlag()
+    {
+        $query = sprintf(
+            "delete from memcache where `key` in ('%s','%s')",
+            addslashes($this->quota_init_flag),
+            addslashes($this->quota_reset_flag)
+        );
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7557,16 +8443,20 @@ class OpenSIPSQuota {
         return true;
     }
 
-    function deleteQuotaUsageFromCache ($reset_quota_for=array()) {
+    function deleteQuotaUsageFromCache ($reset_quota_for=array())
+    {
 
-        $query=sprintf("delete from quota_usage where datasource = '%s' ",addslashes($this->CDRS->cdr_source));
+        $query = sprintf(
+            "delete from quota_usage where datasource = '%s' ",
+            addslashes($this->CDRS->cdr_source)
+        );
 
         if (count($reset_quota_for)) {
             $query.= " and account in (";
             $t=0;
-            foreach($reset_quota_for as $_account) {
+            foreach ($reset_quota_for as $_account) {
                 if ($t) $query.=",";
-                $query.= sprintf("'%s'",$_account);
+                $query.= sprintf("'%s'", $_account);
 
                 $t++;
             }
@@ -7574,7 +8464,12 @@ class OpenSIPSQuota {
         }
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7582,7 +8477,7 @@ class OpenSIPSQuota {
 
 
         if ($this->db->affected_rows()) {
-            $log=sprintf("Deleted %d keys from cache\n",$this->db->affected_rows());
+            $log = sprintf("Deleted %d keys from cache\n", $this->db->affected_rows());
             print $log;
             syslog(LOG_NOTICE, $log);
         }
@@ -7590,12 +8485,21 @@ class OpenSIPSQuota {
         return true;
     }
 
-    function initQuotaUsage() {
+    private function initQuotaUsage()
+    {
 
-        $query=sprintf("select value from memcache where `key` = '%s'",addslashes($this->quota_init_flag));
+        $query = sprintf(
+            "select value from memcache where `key` = '%s'",
+            addslashes($this->quota_init_flag)
+        );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7603,18 +8507,26 @@ class OpenSIPSQuota {
 
         if ($this->db->num_rows()) return true;
 
-        $lockName=sprintf("%s:%s",$this->CDRS->cdr_source,$this->CDRS->table);
+        $lockName = sprintf("%s:%s", $this->CDRS->cdr_source, $this->CDRS->table);
 
         if (!$this->CDRS->getNormalizeLock($lockName)) {
-            $log=sprintf("Error: cannot initialize now the quota because a normalization process in progress\n");
+            $log = "Error: cannot initialize now the quota because a normalization process in progress\n";
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $query=sprintf("select value from memcache where `key` = '%s'",addslashes($this->quota_reset_flag));
+        $query = sprintf(
+            "select value from memcache where `key` = '%s'",
+            addslashes($this->quota_reset_flag)
+        );
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7631,50 +8543,83 @@ class OpenSIPSQuota {
 
         $this->deleteQuotaUsageFromCache($reset_quota_for);
 
-        $this->initQuotaUsageFromDatabase('',$reset_quota_for);
+        $this->initQuotaUsageFromDatabase('', $reset_quota_for);
 
         if ($this->CDRS->status['cached_keys']['saved_keys']) {
-            $log=sprintf("Saved %d accounts in quota cache\n",$this->CDRS->status['cached_keys']['saved_keys']);
+            $log = sprintf(
+                "Saved %d accounts in quota cache\n",
+                $this->CDRS->status['cached_keys']['saved_keys']
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
         }
 
         if ($this->CDRS->status['cached_keys']['failed_keys']) {
-            $log=sprintf("Error: failed to save %d account\n",$this->CDRS->status['cached_keys']['failed_keys']);
+            $log = sprintf(
+                "Error: failed to save %d account\n",
+                $this->CDRS->status['cached_keys']['failed_keys']
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
         }
 
         if ($this->saveQuotaInitFlag()) {
-            $query=sprintf("delete from memcache where `key` = '%s'",addslashes($this->quota_reset_flag));
+            $query = sprintf(
+                "delete from memcache where `key` = '%s'",
+                addslashes($this->quota_reset_flag)
+            );
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 print $log;
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
             return true;
         } else {
-            $log=sprintf ("Error: failed to save key quotaCheckInit");
+            $log = "Error: failed to save key quotaCheckInit";
             syslog(LOG_NOTICE, $log);
             return false;
         }
     }
 
-    function markBlocked($account) {
-        $query=sprintf("update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",addslashes($account),addslashes($this->CDRS->cdr_source));
+    function markBlocked($account)
+    {
+        $query = sprintf(
+            "update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",
+            addslashes($account),
+            addslashes($this->CDRS->cdr_source)
+        );
         if (!$this->db1->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db1->Error,
+                $this->db1->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
         }
     }
 
-    function resetDailyQuota () {
-        $query=sprintf("update quota_usage set cost_today = 0 where datasource = '%s'",addslashes($this->CDRS->cdr_source));
+    function resetDailyQuota()
+    {
+        $query = sprintf(
+            "update quota_usage set cost_today = 0 where datasource = '%s'",
+            addslashes($this->CDRS->cdr_source)
+        );
         if (!$this->db1->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->db1->Error,$this->db1->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->db1->Error,
+                $this->db1->Errno
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -7683,39 +8628,40 @@ class OpenSIPSQuota {
     }
 }
 
-class RatingEngine {
-
+class RatingEngine
+{
     var $method        = '';
     var $log_runtime   = false;
     var $prepaid_table = "prepaid";
     var $init_ok       = false;
 
-    function RatingEngine () {
+    public function RatingEngine()
+    {
 
         global $RatingEngine;   // set in global.inc
         global $DATASOURCES;    // set in global.inc
 
         if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
-            $log=sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        if (preg_match("/^\d{1-3}\.\d{1-3}\.\d{1-3}\.\d{1-3}$/",$RatingEngine['socketIP'])) {
-            $log=sprintf("Invalid \$RatingEngine['socketIP'] in /etc/cdrtool/global.inc\n");
-            syslog(LOG_NOTICE,$log);
+        if (preg_match("/^\d{1-3}\.\d{1-3}\.\d{1-3}\.\d{1-3}$/", $RatingEngine['socketIP'])) {
+            $log = sprintf("Invalid \$RatingEngine['socketIP'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
         if (intval($RatingEngine['socketPort']) < 1 || intval($RatingEngine['socketPort']) > 65535) {
-            $log=sprintf("Invalid \$RatingEngine['socketPort'] in /etc/cdrtool/global.inc\n");
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Invalid \$RatingEngine['socketPort'] in /etc/cdrtool/global.inc\n");
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
         if (!is_array($DATASOURCES[$RatingEngine['cdr_source']])) {
-            $log=sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n",$RatingEngine['cdr_source']);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf("Datasource '%s' does not exist in /etc/cdrtool/global.inc\n", $RatingEngine['cdr_source']);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -7730,8 +8676,13 @@ class RatingEngine {
         $query=sprintf("delete from memcache where `key` = 'destinations_sip' or `key` = 'destinations'");
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error: %s (%s) for query %s",$db->Error,$db->Errno,$query);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Database error: %s (%s) for query %s",
+                $db->Error,
+                $db->Errno,
+                $query
+            );
+            syslog(LOG_NOTICE, $log);
         }
 
         // init CDR datasource
@@ -7746,7 +8697,7 @@ class RatingEngine {
         $this->db_subscribers_class = $this->CDRS->db_subscribers;
 
         if (!class_exists($this->db_subscribers_class)) {
-            syslog(LOG_NOTICE,"Error: No database defined for SIP accounts");
+            syslog(LOG_NOTICE, "Error: No database defined for SIP accounts");
             return false;
         }
 
@@ -7757,15 +8708,20 @@ class RatingEngine {
         $this->init_ok = true;
     }
 
-    function reloadRatingTables () {
+    function reloadRatingTables()
+    {
 
         $b=time();
 
         //$query="delete from memcache where `key` in ('destinations','destinations_sip','ENUMtlds')";
-        $query="delete from memcache where `key` in ('ENUMtlds')";
+        $query = "delete from memcache where `key` in ('ENUMtlds')";
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error: %s (%s)",
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE,$log);
         }
 
@@ -7787,29 +8743,38 @@ class RatingEngine {
         return 1;
     }
 
-    function reloadCustomers ($customerFilter) {
+    function reloadCustomers($customerFilter)
+    {
         return 1;
     }
 
-    function reloadDomains () {
+    function reloadDomains()
+    {
         return 1;
     }
 
-    function reloadQuota($account) {
+    function reloadQuota($account)
+    {
         if (!$account) return false;
 
         $quota   = $this->getQuota($account);
         $blocked = $this->getBlockedByQuotaStatus($account);
 
-        $query=sprintf("update quota_usage set quota = '%s', blocked = '%s' where datasource = '%s' and account = '%s'",
-        $quota,
-        intval($blocked),
-        $this->CDRS->cdr_source,
-        addslashes($account)
+        $query = sprintf(
+            "update quota_usage set quota = '%s', blocked = '%s' where datasource = '%s' and account = '%s'",
+            $quota,
+            intval($blocked),
+            $this->CDRS->cdr_source,
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query '%s': %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
@@ -7817,42 +8782,50 @@ class RatingEngine {
         return 1;
     }
 
-    function getBalanceHistory($account,$limit=50) {
+    function getBalanceHistory($account, $limit = 50)
+    {
 
-        list($username,$domain)=explode("@",$account);
+        list($username, $domain)=explode("@", $account);
         if (!$username || !$domain) return 0;
-        $query=sprintf("select * from prepaid_history where username = '%s' and domain = '%s' order by id desc",
-        addslashes($username),
-        addslashes($domain)
+        $query = sprintf(
+            "select * from prepaid_history where username = '%s' and domain = '%s' order by id desc",
+            addslashes($username),
+            addslashes($domain)
         );
 
-        if ($limit) $query.= sprintf (" limit %d",$limit);
+        if ($limit) $query.= sprintf(" limit %d", $limit);
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("getBalanceHistory error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "getBalanceHistory error: %s (%s)",
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
         while ($this->db->next_record()) {
-            $history[]=array('account'     => $account,
-                             'action'      => $this->db->f('action'),
-                             'description' => $this->db->f('description'),
-                             'value'       => $this->db->f('value'),
-                             'balance'     => $this->db->f('balance')
-                            );
+            $history[] = array(
+                'account'     => $account,
+                'action'      => $this->db->f('action'),
+                'description' => $this->db->f('description'),
+                'value'       => $this->db->f('value'),
+                'balance'     => $this->db->f('balance')
+            );
         }
 
-        $line=json_encode($history);
+        $line = json_encode($history);
         return $line;
     }
 
-    function DebitBalanceAudio($account,$balance,$session_id,$duration,$force=false) {
+    function DebitBalanceAudio($account, $balance, $session_id, $duration, $force = false)
+    {
 
         $this->old_session_count = 0;
         $this->new_session_count = 0;
 
-        $els=explode(":",$account);
+        $els = explode(":", $account);
 
         if (count($els) == 2) {
             $account=$els[1];
@@ -7873,20 +8846,26 @@ class RatingEngine {
             return 0;
         }
 
-        $query=sprintf("select * from %s where account = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($account)
+        $query = sprintf(
+            "select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Database error for %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
+            syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
         }
 
         if (!$this->db->num_rows()) {
-            $log=sprintf ("DebitBalanceAudio() error: account $account does not exist");
+            $log = sprintf("DebitBalanceAudio() error: account %s does not exist", $account);
             syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
@@ -7896,65 +8875,82 @@ class RatingEngine {
 
         if (strlen($this->db->f('active_sessions'))) {
             // remove active session
-            $active_sessions=array();
-            $old_active_sessions = json_decode($this->db->f('active_sessions'),true);
+            $active_sessions = array();
+            $old_active_sessions = json_decode($this->db->f('active_sessions'), true);
             $destination=$old_active_sessions[$session_id]['Destination'];
 
             if (!$force) {
-               if (!in_array($session_id,array_keys($old_active_sessions))) {
-                   $this->sessionDoesNotExist=true;
-                   $log=sprintf("Error: session %s of %s does not exist",$session_id,$account);
-                   syslog(LOG_NOTICE, $log);
-                   return 0;
-               }
+                if (!in_array($session_id, array_keys($old_active_sessions))) {
+                    $this->sessionDoesNotExist=true;
+                    $log = sprintf(
+                        "Error: session %s of %s does not exist",
+                        $session_id,
+                        $account
+                    );
+                    syslog(LOG_NOTICE, $log);
+                    return 0;
+                }
             }
 
             foreach (array_keys($old_active_sessions) as $_key) {
                 if ($_key==$session_id) continue;
                 $active_sessions[$_key]=$old_active_sessions[$_key];
             }
-
         } else {
             if (!$force) {
                 $this->sessionDoesNotExist=true;
-                $log=sprintf ("Error: session %s for %s does not exist",$session_id,$account);
+                $log = sprintf(
+                    "Error: session %s for %s does not exist",
+                    $session_id,
+                    $account
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
         }
 
-        $next_balance=$this->db->f('balance')-$balance;
+        $next_balance = $this->db->f('balance') - $balance;
 
         //get parallel calls and remaining_balance
         $this->getActivePrepaidSessions($active_sessions, $next_balance, $account);
 
         // calculate the updated maxsessiontime
-        $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
+        $maxsessiontime = $this->getAggregatedMaxSessiontime(
+            $this->parallel_calls,
+            $this->remaining_balance,
+            $account
+        );
 
         $this->old_session_count = count($old_active_sessions);
         $this->new_session_count = count($active_sessions);
 
-        $query=sprintf("update %s
-        set balance          = balance - '%s',
-        change_date          = NOW(),
-        active_sessions      = '%s',
-        session_counter      = '%s'
-        where account        = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($balance),
-        addslashes(json_encode($active_sessions)),
-        count($active_sessions),
-        addslashes($account)
+        $query = sprintf(
+            "update %s
+            set balance          = balance - '%s',
+            change_date          = NOW(),
+            active_sessions      = '%s',
+            session_counter      = '%s'
+            where account        = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($balance),
+            addslashes(json_encode($active_sessions)),
+            count($active_sessions),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
         if ($balance > 0) {
-            list($prepaidUser,$prepaidDomain)=explode("@",$account);
+            list($prepaidUser, $prepaidDomain)=explode("@", $account);
 
             if ($this->enableThor) {
                 $this->domain_table          = "sip_domains";
@@ -7962,38 +8958,53 @@ class RatingEngine {
                 $this->domain_table          = "domain";
             }
 
-            $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($prepaidDomain));
+            $query = sprintf(
+                "select * from %s where domain = '%s'",
+                addslashes($this->domain_table),
+                addslashes($prepaidDomain)
+            );
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error: %s (%d) %s\n",
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno,
+                    $query
+                );
+                syslog(LOG_NOTICE, $log);
             }
 
-            if ($this->AccountsDB->num_rows()){
+            if ($this->AccountsDB->num_rows()) {
                 $this->AccountsDB->next_record();
                 $_reseller=$this->AccountsDB->f('reseller_id');
             } else {
                 $_reseller=0;
             }
 
-            $query=sprintf("insert into prepaid_history
-            (username,domain,action,description,value,balance,date,session,duration,destination,reseller_id)
-            values
-            ('%s','%s','Debit balance','Session to %s for %ds','-%s','%s',NOW(),'%s','%d','%s',%d)",
-            addslashes($prepaidUser),
-            addslashes($prepaidDomain),
-            addslashes($destination),
-            addslashes($duration),
-            addslashes($balance),
-            addslashes($next_balance),
-            addslashes($session_id),
-            addslashes($duration),
-            addslashes($destination),
-            addslashes($_reseller)
+            $query = sprintf(
+                "insert into prepaid_history
+                (username,domain,action,description,value,balance,date,session,duration,destination,reseller_id)
+                values
+                ('%s','%s','Debit balance','Session to %s for %ds','-%s','%s',NOW(),'%s','%d','%s',%d)",
+                addslashes($prepaidUser),
+                addslashes($prepaidDomain),
+                addslashes($destination),
+                addslashes($duration),
+                addslashes($balance),
+                addslashes($next_balance),
+                addslashes($session_id),
+                addslashes($duration),
+                addslashes($destination),
+                addslashes($_reseller)
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
             }
         }
@@ -8001,9 +9012,10 @@ class RatingEngine {
         return $maxsessiontime;
     }
 
-    function DebitBalanceMessage($account,$destination,$balance,$session_id) {
+    function DebitBalanceMessage($account, $destination, $balance, $session_id)
+    {
 
-        $els=explode(":",$account);
+        $els = explode(":", $account);
 
         if (count($els) == 2) {
             $account=$els[1];
@@ -8024,20 +9036,26 @@ class RatingEngine {
             return 0;
         }
 
-        $query=sprintf("select * from %s where account = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($account)
+        $query = sprintf(
+            "select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Database error for %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
+            syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
         }
 
         if (!$this->db->num_rows()) {
-            $log=sprintf ("DebitBalanceMessage() error: account $account does not exist");
+            $log = sprintf("DebitBalanceMessage() error: account %s does not exist", $account);
             syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
@@ -8046,34 +9064,44 @@ class RatingEngine {
         $this->db->next_record();
 
         if (strlen($this->db->f('active_sessions'))) {
-            $active_sessions = json_decode($this->db->f('active_sessions'),true);
+            $active_sessions = json_decode($this->db->f('active_sessions'), true);
         }
 
         $next_balance=$this->db->f('balance')-$balance;
 
         //get parallel calls and remaining_balance
-        $this->getActivePrepaidSessions($active_sessions,$next_balance,$account);
+        $this->getActivePrepaidSessions($active_sessions, $next_balance, $account);
 
         // calculate the updated maxsessiontime
-        $maxsessiontime=$this->getAggregatedMaxSessiontime($this->parallel_calls,$this->remaining_balance,$account);
+        $maxsessiontime = $this->getAggregatedMaxSessiontime(
+            $this->parallel_calls,
+            $this->remaining_balance,
+            $account
+        );
 
-        $query=sprintf("update %s
-        set balance          = balance - '%s',
-        change_date          = NOW()
-        where account        = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($balance),
-        addslashes($account)
+        $query = sprintf(
+            "update %s
+            set balance          = balance - '%s',
+            change_date          = NOW()
+            where account        = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($balance),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
         if ($balance > 0) {
-            list($prepaidUser,$prepaidDomain)=explode("@",$account);
+            list($prepaidUser, $prepaidDomain) = explode("@", $account);
 
             if ($this->enableThor) {
                 $this->domain_table          = "sip_domains";
@@ -8081,36 +9109,51 @@ class RatingEngine {
                 $this->domain_table          = "domain";
             }
 
-            $query=sprintf("select * from %s where domain = '%s'",addslashes($this->domain_table),addslashes($prepaidDomain));
+            $query = sprintf(
+                "select * from %s where domain = '%s'",
+                addslashes($this->domain_table),
+                addslashes($prepaidDomain)
+            );
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error: %s (%d) %s\n",$this->AccountsDB->Error,$this->AccountsDB->Errno,$query);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error: %s (%d) %s\n",
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno,
+                    $query
+                );
+                syslog(LOG_NOTICE, $log);
             }
 
-            if ($this->AccountsDB->num_rows()){
+            if ($this->AccountsDB->num_rows()) {
                 $this->AccountsDB->next_record();
                 $_reseller=$this->AccountsDB->f('reseller_id');
             } else {
                 $_reseller=0;
             }
 
-            $query=sprintf("insert into prepaid_history
-            (username,domain,action,description,value,balance,date,session,destination,reseller_id)
-            values
-            ('%s','%s','Debit balance','Message to %s','-%s','%s',NOW(),'%s','%s',%d)",
-            addslashes($prepaidUser),
-            addslashes($prepaidDomain),
-            addslashes($destination),
-            addslashes($balance),
-            addslashes($next_balance),
-            addslashes($session_id),
-            addslashes($destination),
-            addslashes($_reseller)
+            $query = sprintf(
+                "insert into prepaid_history
+                (username,domain,action,description,value,balance,date,session,destination,reseller_id)
+                values
+                ('%s','%s','Debit balance','Message to %s','-%s','%s',NOW(),'%s','%s',%d)",
+                addslashes($prepaidUser),
+                addslashes($prepaidDomain),
+                addslashes($destination),
+                addslashes($balance),
+                addslashes($next_balance),
+                addslashes($session_id),
+                addslashes($destination),
+                addslashes($_reseller)
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "Database error for %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
             }
         }
@@ -8118,14 +9161,15 @@ class RatingEngine {
         return true;
     }
 
-    function CreditBalance($account,$balance) {
+    function CreditBalance($account, $balance)
+    {
 
         if (!is_numeric($balance)) {
             syslog(LOG_NOTICE, "CreditBalance() error: balance \"$balance\"is invalid");
             return 0;
         }
 
-        $els=explode(":",$account);
+        $els = explode(":", $account);
 
         if (count($els) == 2) {
             $account=$els[1];
@@ -8136,16 +9180,22 @@ class RatingEngine {
             return 0;
         }
 
-        list($prepaidUser,$prepaidDomain)=explode("@",$account);
+        list($prepaidUser, $prepaidDomain) = explode("@", $account);
 
-        $query=sprintf("select * from %s where account = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($account)
+        $query = sprintf(
+            "select * from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-            syslog(LOG_NOTICE,$log);
+            $log = sprintf(
+                "Database error for %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
+            syslog(LOG_NOTICE, $log);
             $this->logRuntime();
             return 0;
         }
@@ -8153,13 +9203,14 @@ class RatingEngine {
         if ($this->db->num_rows()) {
             $this->db->next_record();
             $current_balance = $this->db->f('balance');
-            $query=sprintf("update %s
-            set balance   = balance + '%s',
-            change_date   = NOW()
-            where account = '%s'",
-            addslashes($this->prepaid_table),
-            addslashes($balance),
-            addslashes($account)
+            $query = sprintf(
+                "update %s
+                set balance   = balance + '%s',
+                change_date   = NOW()
+                where account = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes($balance),
+                addslashes($account)
             );
 
             $this->db->query($query);
@@ -8167,78 +9218,87 @@ class RatingEngine {
             if ($this->db->affected_rows()) {
                 $new_balance = $current_balance + $balance;
 
-                $log=sprintf ("Prepaid account $account credited with $balance");
+                $log = sprintf("Prepaid account %s credited with %s", $account, $balance);
                 syslog(LOG_NOTICE, $log);
 
                 // log to prepaid_history
-                $query=sprintf("insert into prepaid_history
-                (username,domain,action,description,value,balance,date)
-                values
-                ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
-                addslashes($prepaidUser),
-                addslashes($prepaidDomain),
-                addslashes($balance),
-                addslashes($new_balance)
+                $query = sprintf(
+                    "insert into prepaid_history
+                    (username,domain,action,description,value,balance,date)
+                    values
+                    ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
+                    addslashes($prepaidUser),
+                    addslashes($prepaidDomain),
+                    addslashes($balance),
+                    addslashes($new_balance)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log = sprintf("Error: %s (%s)", $this->db->Error, $this->db->Errno);
                     syslog(LOG_NOTICE, $log);
                 }
 
                 return 1;
             } else {
-                $log=sprintf ("CreditBalance() error: failed to credit balance: %s (%s)",$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "CreditBalance() error: failed to credit balance: %s (%s)",
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
-
         } else {
-            $query=sprintf("insert into %s (balance, account, change_date) values ('%s','%s',NOW())",
-            addslashes($this->prepaid_table),
-            addslashes($balance),
-            addslashes($account)
+            $query = sprintf(
+                "insert into %s (balance, account, change_date) values ('%s','%s',NOW())",
+                addslashes($this->prepaid_table),
+                addslashes($balance),
+                addslashes($account)
             );
 
             $this->db->query($query);
 
             if ($this->db->affected_rows()) {
-
-                $log=sprintf ("Added prepaid account $account with balance=$balance");
+                $log = sprintf("Added prepaid account %s with balance=%s", $account, $balance);
                 syslog(LOG_NOTICE, $log);
 
                 // log to prepaid_history
-                $query=sprintf("insert into prepaid_history
-                (username,domain,action,description,value,balance,date)
-                values
-                ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
-                addslashes($prepaidUser),
-                addslashes($prepaidDomain),
-                addslashes($balance),
-                addslashes($balance)
+                $query = sprintf(
+                    "insert into prepaid_history
+                    (username,domain,action,description,value,balance,date)
+                    values
+                    ('%s','%s','Set balance','Manual update','%s','%s',NOW())",
+                    addslashes($prepaidUser),
+                    addslashes($prepaidDomain),
+                    addslashes($balance),
+                    addslashes($balance)
                 );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf("Error: %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log = sprintf("Error: %s (%s)", $this->db->Error, $this->db->Errno);
                     syslog(LOG_NOTICE, $log);
                 }
 
                 return 1;
             } else {
-                $log=sprintf ("CreditBalance() error: failed to credit balance: %s (%s)",$this->db->Error,$this->db->Errno);
+                $log = sprintf(
+                    "CreditBalance() error: failed to credit balance: %s (%s)",
+                    $this->db->Error,
+                    $this->db->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
         }
-
     }
 
-    function DeleteBalance($account) {
+    function DeleteBalance($account)
+    {
 
-        $els=explode(":",$account);
+        $els = explode(":", $account);
 
         if (count($els) == 2) {
-            $account=$els[1];
+            $account = $els[1];
         }
 
         if (!$account) {
@@ -8246,28 +9306,35 @@ class RatingEngine {
             return 0;
         }
 
-        $query=sprintf("delete from %s where account = '%s'",
-        addslashes($this->prepaid_table),
-        addslashes($account)
+        $query = sprintf(
+            "delete from %s where account = '%s'",
+            addslashes($this->prepaid_table),
+            addslashes($account)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf("DeleteBalance error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "DeleteBalance error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
-        $log=sprintf ("Prepaid account %s has been deleted",$account);
+        $log = sprintf("Prepaid account %s has been deleted", $account);
         syslog(LOG_NOTICE, $log);
 
         return 1;
     }
 
-    function DeleteBalanceHistory($account) {
+    function DeleteBalanceHistory($account)
+    {
 
         $account=trim($account);
 
-        $els=explode(":",$account);
+        $els = explode(":", $account);
 
         if (count($els) == 2) {
             $account=$els[1];
@@ -8278,20 +9345,26 @@ class RatingEngine {
             return 0;
         }
 
-        list($username,$domain)=explode('@',$account);
+        list($username, $domain) = explode('@', $account);
 
-        $query=sprintf("delete from prepaid_history where username = '%s' and domain = '%s'",
-        addslashes($username),
-        addslashes($domain)
+        $query = sprintf(
+            "delete from prepaid_history where username = '%s' and domain = '%s'",
+            addslashes($username),
+            addslashes($domain)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf("DeleteBalanceHistory error for query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "DeleteBalanceHistory error for query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
-        $log=sprintf ("History of prepaid account %s has been deleted",$account);
+        $log = sprintf("History of prepaid account %s has been deleted", $account);
         syslog(LOG_NOTICE, $log);
 
         return 1;
@@ -8304,47 +9377,52 @@ class RatingEngine {
             return 0;
         }
 
-        $query=sprintf("select * from billing_customers where
-        subscriber = '%s' or domain = '%s' or gateway = '%s'",
-        addslashes($entity),
-        addslashes($entity),
-        addslashes($entity)
+        $query = sprintf(
+            "select * from billing_customers
+            where subscriber = '%s' or domain = '%s' or gateway = '%s'",
+            addslashes($entity),
+            addslashes($entity),
+            addslashes($entity)
         );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("GetEntityProfiles error: %s (%s)",$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "GetEntityProfiles error: %s (%s)",
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return 0;
         }
 
-        if ($this->db->num_rows() ==1 ) {
+        if ($this->db->num_rows() == 1) {
             $this->db->next_record();
-            $entity = array('entity'            => $entity,
-                            'profileWeekday'    => $this->db->f('profile_name1'),
-                            'profileWeekdayAlt' => $this->db->f('profile_name1_alt'),
-                            'profileWeekend'    => $this->db->f('profile_name2'),
-                            'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
-                            'timezone'          => $this->db->f('timezone'),
-                            'increment'         => $this->db->f('increment'),
-                            'min_duration'      => $this->db->f('min_duration')
-                            );
+            $entity = array(
+                'entity'            => $entity,
+                'profileWeekday'    => $this->db->f('profile_name1'),
+                'profileWeekdayAlt' => $this->db->f('profile_name1_alt'),
+                'profileWeekend'    => $this->db->f('profile_name2'),
+                'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
+                'timezone'          => $this->db->f('timezone'),
+                'increment'         => $this->db->f('increment'),
+                'min_duration'      => $this->db->f('min_duration')
+            );
         }
 
-        $line=json_encode($entity);
+        $line = json_encode($entity);
         return $line;
-
     }
 
-    function SetEntityProfiles($entity,$profiles) {
-
+    function SetEntityProfiles($entity, $profiles)
+    {
         if (!$entity) {
             syslog(LOG_NOTICE, "SetEntityProfiles");
             return 0;
         }
-
     }
 
-    function showHelp() {
+    function showHelp()
+    {
         $help=
         "Version\n".
         "Help\n".
@@ -8369,7 +9447,8 @@ class RatingEngine {
         return $help;
     }
 
-    function logRuntime() {
+    function logRuntime()
+    {
         if (!$this->log_runtime) return;
 
         $t=0;
@@ -8378,26 +9457,26 @@ class RatingEngine {
             $stamp=$this->runtime[$_key];
 
             if ($prev_stamp) {
-                $_exec_time=$stamp-$prev_stamp;
-                $log .= sprintf("%s=%1.7f ",$_key,$_exec_time);
+                $_exec_time = $stamp - $prev_stamp;
+                $log .= sprintf("%s=%1.7f ", $_key, $_exec_time);
             }
 
-            $prev_stamp=$stamp;
+            $prev_stamp = $stamp;
 
             $t++;
         }
 
         syslog(LOG_NOTICE, $log);
-
     }
 
-    function processNetworkInput($tinput) {
+    function processNetworkInput($tinput)
+    {
 
         // Read key=value pairs from input
         // Strip any unnecessary spaces
-        $this->runtime=array();
+        $this->runtime = array();
 
-        $tinput=preg_replace("/\s+/"," ",$tinput);
+        $tinput = preg_replace("/\s+/", " ", $tinput);
 
         if ($tinput == "/" and strlen($this->last_input)) {
             $tinput = $this->last_input;
@@ -8405,7 +9484,7 @@ class RatingEngine {
             $this->last_input = $tinput;
         }
 
-        $_els=explode(" ",trim($tinput));
+        $_els = explode(" ", trim($tinput));
 
         $this->runtime['start']=microtime_float();
 
@@ -8421,8 +9500,8 @@ class RatingEngine {
         while ($i < count($_els)) {
             $i++;
 
-            $_dict  = explode("=",$_els[$i]);
-            $_key   = strtolower(trim($_dict[0]));
+            $_dict = explode("=", $_els[$i]);
+            $_key  = strtolower(trim($_dict[0]));
             if ($_key == 'callid') {
                 $_value = trim($_dict[1]);
             } else {
@@ -8430,7 +9509,9 @@ class RatingEngine {
             }
 
             if ($_key && $seenField[$_key]) {
-                $log=sprintf ("Error: '$_key' attribute is present more than once in $tinput");
+                $log = sprintf(
+                    "Error: '$_key' attribute is present more than once in $tinput"
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             } else {
@@ -8441,33 +9522,32 @@ class RatingEngine {
             }
         }
 
-        $NetFields['action']=strtolower($_els[0]);
+        $NetFields['action'] = strtolower($_els[0]);
 
         $this->method = $NetFields['action'];
 
         // begin processing
         if ($NetFields['action']=="maxsessiontime") {
-
             if (!$NetFields['from']) {
-                $log = sprintf("error: missing From parameter");
+                $log = "Error: missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
-                $log = sprintf("error: missing To parameter");
+                $log = "Error: missing To parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['gateway']) {
-                $log = sprintf("error: missing gateway parameter");
+                $log = "Error: missing gateway parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
-                $log = sprintf("error: missing Call Id parameter");
+                $log = "Error: missing Call Id parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
@@ -8478,10 +9558,13 @@ class RatingEngine {
 
             $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
             if (strlen($app_prefix)) {
-                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
+                if ($app_prefix == 'audio' || $app_prefix == 'sms') {
                     $application=$NetFields['application'];
                 } else {
-                    $log=sprintf ("error: unsupported application %s",$NetFields['application']);
+                    $log = sprintf(
+                        "Error: unsupported application %s",
+                        $NetFields['application']
+                    );
                     syslog(LOG_NOTICE, $log);
                     return $log;
                 }
@@ -8489,37 +9572,57 @@ class RatingEngine {
                 $application='audio';
             }
 
-            list($username_t,$domain_t)=explode("@",$NetFields['from']);
+            list($username_t, $domain_t) = explode("@", $NetFields['from']);
 
-            $CDRStructure=array (
-                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
-                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
-                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
-                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time(),
-                              $this->CDRS->CDRFields['domain']         => $domain_t,
-                              $this->CDRS->CDRFields['application']    => $application,
-                              'skip_fix_prepaid_duration'              => true
-                              );
+            $CDRStructure = array(
+                $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
+                $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
+                $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
+                $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
+                $this->CDRS->CDRFields['timestamp']      => time(),
+                $this->CDRS->CDRFields['domain']         => $domain_t,
+                $this->CDRS->CDRFields['application']    => $application,
+                'skip_fix_prepaid_duration'              => true
+            );
 
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
 
-            $this->runtime['normalize_cdr']=microtime_float();
+            $this->runtime['normalize_cdr'] = microtime_float();
 
-            $query=sprintf("select * from %s where account = '%s'",addslashes($this->prepaid_table),addslashes($CDR->BillingPartyId));
+            $query = sprintf(
+                "select * from %s where account = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes($CDR->BillingPartyId)
+            );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for query '%s': %s (%s), link_id =%s, query_id =%s",$query,$this->db->Error,$this->db->Errno,$this->db->Link_ID,$this->db->Query_ID);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for query '%s': %s (%s), link_id =%s, query_id =%s",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno,
+                    $this->db->Link_ID,
+                    $this->db->Query_ID
+                );
+                syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
-                $ret=sprintf("error: database error for query '%s': %s (%s)",$query,$this->db->Error,$this->db->Errno)."\n"."type=prepaid";
+                $ret = sprintf(
+                    "Error: database error for query '%s': %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                )."\n"."type=prepaid";
                 return $ret;
             }
 
             if (!$this->db->num_rows()) {
-                $log=sprintf ("MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",$NetFields['callid'],$CDR->BillingPartyId);
+                $log = sprintf(
+                    "MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",
+                    $NetFields['callid'],
+                    $CDR->BillingPartyId
+                );
                 syslog(LOG_NOTICE, $log);
                 $ret="none"."\n"."type=postpaid";
                 return $ret;
@@ -8531,7 +9634,7 @@ class RatingEngine {
             $max_sessions        = $this->db->f('max_sessions');
             if (strlen($this->db->f('active_sessions'))) {
                 // load active sessions
-                $active_sessions = json_decode($this->db->f('active_sessions'),true);
+                $active_sessions = json_decode($this->db->f('active_sessions'), true);
 
                 if (count($active_sessions)) {
                     // purge stale sessions
@@ -8541,17 +9644,18 @@ class RatingEngine {
                     $expired=0;
 
                     foreach (array_keys($active_sessions) as $_session) {
-
-                        $expired_since=time() - $active_sessions[$_session]['timestamp'] - $active_sessions[$_session]['MaxSessionTime'];
+                        $expired_since = time() - $active_sessions[$_session]['timestamp'] - $active_sessions[$_session]['MaxSessionTime'];
                         if ($expired_since > 120) {
                             // this session has passed its maxsessiontime plus its reasonable setup time of 2 minutes,
                             // it could be stale
                             // because the call control module did not call debitbalance, so we purge it
 
-                            $log = sprintf ("Session %s for %s has expired since %d seconds",
-                            $_session,
-                            $active_sessions[$_session]['BillingPartyId'],
-                            $expired_since);
+                            $log = sprintf(
+                                "Session %s for %s has expired since %d seconds",
+                                $_session,
+                                $active_sessions[$_session]['BillingPartyId'],
+                                $expired_since
+                            );
                             syslog(LOG_NOTICE, $log);
                             $expired++;
                         } else {
@@ -8563,31 +9667,36 @@ class RatingEngine {
                         $active_sessions=$active_sessions_new;
                     }
                 }
-
             } else {
                 $active_sessions=array();
             }
 
 
             if (!$current_balance) {
-                $log=sprintf ("No balance found");
-                syslog(LOG_NOTICE,$log);
+                $log = "No balance found";
+                syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 $ret="0"."\n"."type=prepaid";
                 return $ret;
-
             }
 
-            if (preg_match("/^0[0-9]{1,}@/",$CDR->CanonicalURINormalized)) {
+            if (preg_match("/^0[0-9]{1,}@/", $CDR->CanonicalURINormalized)) {
                 if (!$CDR->DestinationId) {
-                    $log = sprintf ("error: cannot figure out the destination id for %s",$CDR->CanonicalURI);
+                    $log = sprintf(
+                        "Error: cannot figure out the destination id for %s",
+                        $CDR->CanonicalURI
+                    );
                     $this->logRuntime();
                     syslog(LOG_NOTICE, $log);
                     $ret=$log."\n"."type=prepaid";
                     return $ret;
                 }
             } else {
-                $log=sprintf ("MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",$NetFields['callid'],$CDR->BillingPartyId);
+                $log = sprintf(
+                    "MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",
+                    $NetFields['callid'],
+                    $CDR->BillingPartyId
+                );
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 $ret="none"."\n"."type=prepaid";
@@ -8597,7 +9706,11 @@ class RatingEngine {
             $session_counter=count($active_sessions);
 
             if ($max_sessions && $session_counter >= $max_sessions) {
-                $log = sprintf ("Locked: maximum number of concurrent calls %s reached, $max_sessions allowed");
+                $log = sprintf(
+                    "Locked: maximum number of concurrent calls %s reached, %s allowed",
+                    $session_counter,
+                    $max_sessions
+                );
                 syslog(LOG_NOTICE, $log);
                 $ret="Locked"."\n"."type=prepaid";
                 return $ret;
@@ -8616,37 +9729,45 @@ class RatingEngine {
                 $this->runtime['get_parallel_calls']=microtime_float();
 
                 // add this new call to the list of parallel calls
-                $RateDictionary=array(
-                                      'duration'        => $CDR->duration,
-                                      'callId'          => $CDR->callId,
-                                      'Balance'         => $this->remaining_balance,
-                                      'timestamp'       => $CDR->timestamp,
-                                      'DestinationId'   => $CDR->DestinationId,
-                                      'region'          => $CDR->region,
-                                      'domain'          => $CDR->domain,
-                                      'gateway'         => $CDR->gateway,
-                                      'BillingPartyId'  => $CDR->BillingPartyId,
-                                      'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => $this->CDRS->RatingTables,
-                                      'application'     => $application
-                                      );
+                $RateDictionary = array(
+                    'duration'        => $CDR->duration,
+                    'callId'          => $CDR->callId,
+                    'Balance'         => $this->remaining_balance,
+                    'timestamp'       => $CDR->timestamp,
+                    'DestinationId'   => $CDR->DestinationId,
+                    'region'          => $CDR->region,
+                    'domain'          => $CDR->domain,
+                    'gateway'         => $CDR->gateway,
+                    'BillingPartyId'  => $CDR->BillingPartyId,
+                    'ENUMtld'         => $CDR->ENUMtld,
+                    'RatingTables'    => $this->CDRS->RatingTables,
+                    'application'     => $application
+                );
 
                 $Rate = new Rate($this->settings, $this->db);
 
                 $_maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
-                $log = sprintf ("Maximum duration for new session %s of %s to destination %s having balance=%s is %s",
-                $CDR->callId,
-                $CDR->BillingPartyId,
-                $CDR->DestinationId,
-                $this->remaining_balance,
-                $_maxduration);
+                $log = sprintf(
+                    "Maximum duration for new session %s of %s to destination %s having balance=%s is %s",
+                    $CDR->callId,
+                    $CDR->BillingPartyId,
+                    $CDR->DestinationId,
+                    $this->remaining_balance,
+                    $_maxduration
+                );
                 syslog(LOG_NOTICE, $log);
 
                 if ($_maxduration > 0) {
-                    $this->parallel_calls[$CDR->callId]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
+                    $this->parallel_calls[$CDR->callId] = array(
+                        'remainingBalancePerSecond' => $this->remaining_balance / $_maxduration
+                    );
                 } else {
-                    $log = sprintf ("Maximum duration for new session %s of %s <=0",$CDR->callId,$CDR->BillingPartyId);
+                    $log = sprintf(
+                        "Maximum duration for new session %s of %s <=0",
+                        $CDR->callId,
+                        $CDR->BillingPartyId
+                    );
                     syslog(LOG_NOTICE, $log);
                     $ret="0"."\n"."type=prepaid";
                     return $ret;
@@ -8655,22 +9776,21 @@ class RatingEngine {
                 $this->parallel_calls[$CDR->callId]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
 
                 $maxduration=$this->getAggregatedMaxSessiontime($this->parallel_calls, $this->remaining_balance, $CDR->BillingPartyId);
-
             } else {
                 $RateDictionary=array(
-                                      'duration'        => $CDR->duration,
-                                      'callId'          => $CDR->callId,
-                                      'Balance'         => $current_balance,
-                                      'timestamp'       => $CDR->timestamp,
-                                      'DestinationId'   => $CDR->DestinationId,
-                                      'region'          => $CDR->region,
-                                      'domain'          => $CDR->domain,
-                                      'gateway'         => $CDR->gateway,
-                                      'BillingPartyId'  => $CDR->BillingPartyId,
-                                      'ENUMtld'         => $CDR->ENUMtld,
-                                      'RatingTables'    => $this->CDRS->RatingTables,
-                                      'application'     => $application
-                                      );
+                    'duration'        => $CDR->duration,
+                    'callId'          => $CDR->callId,
+                    'Balance'         => $current_balance,
+                    'timestamp'       => $CDR->timestamp,
+                    'DestinationId'   => $CDR->DestinationId,
+                    'region'          => $CDR->region,
+                    'domain'          => $CDR->domain,
+                    'gateway'         => $CDR->gateway,
+                    'BillingPartyId'  => $CDR->BillingPartyId,
+                    'ENUMtld'         => $CDR->ENUMtld,
+                    'RatingTables'    => $this->CDRS->RatingTables,
+                    'application'     => $application
+                );
 
                 $Rate = new Rate($this->settings, $this->db);
 
@@ -8679,17 +9799,18 @@ class RatingEngine {
             }
 
             // add new active session
-            $active_sessions[$CDR->callId]= array('timestamp'       => $CDR->timestamp,
-                                                  'duration'        => $CDR->duration,
-                                                  'BillingPartyId'  => $CDR->BillingPartyId,
-                                                  'MaxSessionTime'  => $maxduration,
-                                                  'domain'          => $CDR->domain,
-                                                  'gateway'         => $CDR->gateway,
-                                                  'Destination'     => $CDR->destinationPrint,
-                                                  'DestinationId'   => $CDR->DestinationId,
-                                                  'region'          => $CDR->region,
-                                                  'connectCost'     => $Rate->connectCost
-                                                  );
+            $active_sessions[$CDR->callId] = array(
+                'timestamp'       => $CDR->timestamp,
+                'duration'        => $CDR->duration,
+                'BillingPartyId'  => $CDR->BillingPartyId,
+                'MaxSessionTime'  => $maxduration,
+                'domain'          => $CDR->domain,
+                'gateway'         => $CDR->gateway,
+                'Destination'     => $CDR->destinationPrint,
+                'DestinationId'   => $CDR->DestinationId,
+                'region'          => $CDR->region,
+                'connectCost'     => $Rate->connectCost
+            );
 
             if ($CDR->ENUMtld) {
                 $active_sessions[$CDR->callId]['ENUMtld']=$CDR->ENUMtld;
@@ -8698,61 +9819,79 @@ class RatingEngine {
             $this->runtime['calculate_maxduration']=microtime_float();
 
             if ($maxduration < 0) {
-                $log = sprintf ("error: maxduration %s is negative",$maxduration);
+                $log = sprintf(
+                    "Error: maxduration %s is negative",
+                    $maxduration
+                );
                 syslog(LOG_NOTICE, $log);
-                $ret=$log."\n"."type=prepaid";
+                $ret = $log."\n"."type=prepaid";
                 return $ret;
             }
 
             if ($Rate->min_duration && $maxduration < $Rate->min_duration) {
-                $log = sprintf ("Notice: maxduration of %s is less then min_duration (%s)",$maxduration,$Rate->min_duration);
+                $log = sprintf(
+                    "Notice: maxduration of %s is less then min_duration (%s)",
+                    $maxduration,
+                    $Rate->min_duration
+                );
                 syslog(LOG_NOTICE, $log);
-                $ret="0"."\n"."type=prepaid";
+                $ret = "0"."\n"."type=prepaid";
                 return $ret;
             }
 
             if (!$Rate->billingTimezone) {
-                $log = sprintf ("error: cannot figure out the billing timezone")."\n"."type=prepaid";
+                $log = sprintf("Error: cannot figure out the billing timezone")."\n"."type=prepaid";
                 syslog(LOG_NOTICE, $log);
                 $ret=$log."\n"."type=prepaid";
                 return $ret;
             }
 
             if (!$Rate->startTimeBilling) {
-                $log = sprintf ("error: cannot figure out the billing start time")."\n"."type=prepaid";
+                $log = sprintf("Error: cannot figure out the billing start time")."\n"."type=prepaid";
                 syslog(LOG_NOTICE, $log);
-                $ret=$log."\n"."type=prepaid";
+                $ret = $log."\n"."type=prepaid";
                 return $ret;
             }
 
-            $log=sprintf("MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d Counter=%d->%d",
-            $maxduration,
-            $NetFields['callid'],
-            $CDR->BillingPartyId,
-            $CDR->DestinationId,
-            $RateDictionary['Balance'],
-            $Rate->MaxSessionTimeSpans,
-            $old_session_counter,
-            count($active_sessions)
+            $log = sprintf(
+                "MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d Counter=%d->%d",
+                $maxduration,
+                $NetFields['callid'],
+                $CDR->BillingPartyId,
+                $CDR->DestinationId,
+                $RateDictionary['Balance'],
+                $Rate->MaxSessionTimeSpans,
+                $old_session_counter,
+                count($active_sessions)
             );
-
             syslog(LOG_NOTICE, $log);
 
             if ($maxduration > 0) {
-                $query=sprintf("update %s
-                set
-                active_sessions = '%s',
-                session_counter  = '%s'
-                where account  = '%s'",
-                addslashes($this->prepaid_table),
-                addslashes(json_encode($active_sessions)),
-                count($active_sessions),
-                addslashes($CDR->BillingPartyId));
+                $query = sprintf(
+                    "update %s
+                    set
+                    active_sessions = '%s',
+                    session_counter  = '%s'
+                    where account  = '%s'",
+                    addslashes($this->prepaid_table),
+                    addslashes(json_encode($active_sessions)),
+                    count($active_sessions),
+                    addslashes($CDR->BillingPartyId)
+                );
 
                 if (!$this->db->query($query)) {
-                    $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                    syslog(LOG_NOTICE,$log);
-                    $log=sprintf ("error: database error %s (%s)",$this->db->Error,$this->db->Errno);
+                    $log = sprintf(
+                        "Database error for %s: %s (%s)",
+                        $query,
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
+                    syslog(LOG_NOTICE, $log);
+                    $log= sprintf(
+                        "Error: database error %s (%s)",
+                        $this->db->Error,
+                        $this->db->Errno
+                    );
                     return $log;
                 }
             }
@@ -8763,28 +9902,33 @@ class RatingEngine {
 
             $ret=$maxduration."\n"."type=prepaid";
             return $ret;
-
-        } else if ($NetFields['action'] == "dumpprepaidsessions") {
+        } elseif ($NetFields['action'] == "dumpprepaidsessions") {
             if (!$NetFields['account']) {
-                $log=sprintf ("error: missing account parameter");
+                $log = "Error: missing account parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
-            $query=sprintf("select * from %s where account = '%s'",
-            addslashes($this->prepaid_table),
-            addslashes($NetFields['account'])
+            $query = sprintf(
+                "select * from %s where account = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes($NetFields['account'])
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 return 0;
             }
 
             if (!$this->db->num_rows()) {
-                $log=sprintf ("DebitBalanceAudio() error: account $account does not exist");
+                $log = sprintf("DebitBalanceAudio() Error: account %s does not exist", $account);
                 syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 return 0;
@@ -8792,18 +9936,16 @@ class RatingEngine {
 
             $this->db->next_record();
 
-            return var_export(json_decode($this->db->f('active_sessions'),true), true);
-
-        } else if ($NetFields['action'] == "debitbalance") {
-
+            return var_export(json_decode($this->db->f('active_sessions'), true), true);
+        } elseif ($NetFields['action'] == "debitbalance") {
             if (!$NetFields['from']) {
-                $log=sprintf ("error: missing From parameter");
+                $log = "Error: missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
-                $log=sprintf ("error: missing To parameter");
+                $log = "Error: missing To parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
@@ -8811,59 +9953,59 @@ class RatingEngine {
             $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
             if (!strlen($app_prefix) || (strlen($app_prefix) && $app_prefix == 'audio')) {
                 if (!strlen($NetFields['duration'])) {
-                    $log=sprintf ("error: missing Duration parameter");
+                    $log= "Error: missing Duration parameter";
                     syslog(LOG_NOTICE, $log);
                     return $log;
                 }
             }
 
             if (strlen($app_prefix)) {
-                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
-                    $application=$NetFields['application'];
+                if ($app_prefix == 'audio' || $app_prefix == 'sms') {
+                    $application = $NetFields['application'];
                 } else {
-                    $log=sprintf ("error: unsupported application %s",$NetFields['application']);
+                    $log = sprintf("Error: unsupported application %s", $NetFields['application']);
                     syslog(LOG_NOTICE, $log);
                     return $log;
                 }
             } else {
-                $application='audio';
-                $app_prefix='audio';
+                $application = 'audio';
+                $app_prefix  = 'audio';
             }
 
             if (!$NetFields['gateway']) {
-                $log=sprintf ("error: missing gateway parameter");
+                $log = "Error: missing gateway parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
-                $log=sprintf ("error: missing Call Id parameter");
+                $log = "Error: missing Call Id parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             if ($NetFields['force']) {
-                $force=true;
+                $force = true;
             } else {
-                $force=false;
+                $force = false;
             }
 
-            $timestamp=time();
+            $timestamp = time();
 
-            list($username_t,$domain_t)=explode("@",$NetFields['from']);
+            list($username_t, $domain_t) = explode("@", $NetFields['from']);
 
-            $CDRStructure=array (
-                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
-                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
-                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
-                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
-                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time(),
-                              $this->CDRS->CDRFields['domain']         => $domain_t,
-                              $this->CDRS->CDRFields['application']    => $application,
-                              'skip_fix_prepaid_duration'              => true
-                              );
+            $CDRStructure = array(
+                $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
+                $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
+                $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
+                $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
+                $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
+                $this->CDRS->CDRFields['timestamp']      => time(),
+                $this->CDRS->CDRFields['domain']         => $domain_t,
+                $this->CDRS->CDRFields['application']    => $application,
+                'skip_fix_prepaid_duration'              => true
+            );
 
 
             // Init CDR
@@ -8873,19 +10015,19 @@ class RatingEngine {
             $this->runtime['normalize_cdr']=microtime_float();
 
             // Build Rate dictionary containing normalized CDR fields plus customer Balance
-            $RateDictionary=array(
-                                  'callId'          => $NetFields['callid'],
-                                  'timestamp'       => $CDR->timestamp,
-                                  'duration'        => $CDR->duration,
-                                  'DestinationId'   => $CDR->DestinationId,
-                                  'region'          => $CDR->region,
-                                  'domain'          => $CDR->domain,
-                                  'gateway'         => $CDR->gateway,
-                                  'BillingPartyId'  => $CDR->BillingPartyId,
-                                  'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => $this->CDRS->RatingTables,
-                                  'application'     => $application
-                                  );
+            $RateDictionary = array(
+                'callId'          => $NetFields['callid'],
+                'timestamp'       => $CDR->timestamp,
+                'duration'        => $CDR->duration,
+                'DestinationId'   => $CDR->DestinationId,
+                'region'          => $CDR->region,
+                'domain'          => $CDR->domain,
+                'gateway'         => $CDR->gateway,
+                'BillingPartyId'  => $CDR->BillingPartyId,
+                'ENUMtld'         => $CDR->ENUMtld,
+                'RatingTables'    => $this->CDRS->RatingTables,
+                'application'     => $application
+            );
 
 
             $Rate = new Rate($this->settings, $this->db);
@@ -8894,12 +10036,17 @@ class RatingEngine {
 
             if ($app_prefix == 'audio') {
                 if ($Rate->calculateAudio($RateDictionary)) {
+                    $this->runtime['calculate_rate'] = microtime_float();
 
-                    $this->runtime['calculate_rate']=microtime_float();
+                    $this->sessionDoesNotExist = false;
 
-                    $this->sessionDoesNotExist=false;
-
-                    $result = $this->DebitBalanceAudio($CDR->BillingPartyId,$Rate->price,$NetFields['callid'],$CDR->duration,$force);
+                    $result = $this->DebitBalanceAudio(
+                        $CDR->BillingPartyId,
+                        $Rate->price,
+                        $NetFields['callid'],
+                        $CDR->duration,
+                        $force
+                    );
 
                     if ($this->sessionDoesNotExist) {
                         return "Failed";
@@ -8907,21 +10054,21 @@ class RatingEngine {
 
                     $this->runtime['debit_balance']=microtime_float();
 
-                    $log = sprintf ("DebitBalance=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d Counter=%d->%d",
-                    $Rate->price,
-                    $CDR->duration,
-                    $NetFields['callid'],
-                    $CDR->BillingPartyId,
-                    $CDR->DestinationId,
-                    $result,
-                    $this->old_session_count,
-                    $this->new_session_count
+                    $log = sprintf(
+                        "DebitBalance=%s Duration=%s CallId=%s BillingParty=%s DestId=%s MaxSessionTime=%d Counter=%d->%d",
+                        $Rate->price,
+                        $CDR->duration,
+                        $NetFields['callid'],
+                        $CDR->BillingPartyId,
+                        $CDR->DestinationId,
+                        $result,
+                        $this->old_session_count,
+                        $this->new_session_count
                     );
-
                     syslog(LOG_NOTICE, $log);
 
                     $RateReturn = "Ok";
-                    $RateReturn.= sprintf("\nMaxSessionTime=%d",$result);
+                    $RateReturn.= sprintf("\nMaxSessionTime=%d", $result);
 
                     if (strlen($Rate->price)) {
                         $RateReturn.="\n".$Rate->price;
@@ -8935,18 +10082,17 @@ class RatingEngine {
                     syslog(LOG_NOTICE, 'Failed to calculate rate in DebitBalance()');
                     return "Failed\n";
                 }
-            } else if ($app_prefix == 'sms') {
+            } elseif ($app_prefix == 'sms') {
                 // return Ok, No credit, Error
                 if ($Rate->calculateMessage($RateDictionary)) {
-
-                    if ($this->DebitBalanceMessage($CDR->BillingPartyId,$CDR->destinationPrint,$Rate->price,$NetFields['callid'])) {
-
-                        $log = sprintf ("Price=%s CallId=%s BillingParty=%s DestId=%s Application=%s",
-                        $Rate->price,
-                        $NetFields['callid'],
-                        $CDR->BillingPartyId,
-                        $CDR->DestinationId,
-                        $application
+                    if ($this->DebitBalanceMessage($CDR->BillingPartyId, $CDR->destinationPrint, $Rate->price, $NetFields['callid'])) {
+                        $log = sprintf(
+                            "Price=%s CallId=%s BillingParty=%s DestId=%s Application=%s",
+                            $Rate->price,
+                            $NetFields['callid'],
+                            $CDR->BillingPartyId,
+                            $CDR->DestinationId,
+                            $application
                         );
 
                         syslog(LOG_NOTICE, $log);
@@ -8964,111 +10110,100 @@ class RatingEngine {
                     } else {
                         return "Failed";
                     }
-
                 } else {
                     return "Failed";
                 }
-
             } else {
                 return false;
             }
-
-
-        } else if ($NetFields['action'] == "addbalance") {
-
+        } elseif ($NetFields['action'] == "addbalance") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log = "Error: Missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!is_numeric($NetFields['value'])) {
-                $log=sprintf ("Error: Missing Value parameter, it must be numeric");
+                $log = "Error: Missing Value parameter, it must be numeric";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
-            return $this->CreditBalance($NetFields['from'],$NetFields['value']);
-
-        } else if ($NetFields['action'] == "deletebalance") {
-
+            return $this->CreditBalance($NetFields['from'], $NetFields['value']);
+        } elseif ($NetFields['action'] == "deletebalance") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log = "Error: Missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             return $this->DeleteBalance($NetFields['from']);
-
-        } else if ($NetFields['action'] == "deletebalancehistory") {
-
+        } elseif ($NetFields['action'] == "deletebalancehistory") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log = "Error: Missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             return $this->DeleteBalanceHistory($NetFields['from']);
-
-        } else if ($NetFields['action'] == "showprice") {
-
+        } elseif ($NetFields['action'] == "showprice") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
-                    syslog(LOG_NOTICE, $log);
+                $log = "Error: Missing From parameter";
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!$NetFields['to']) {
-                $log=sprintf ("Error: Missing To parameter");
+                $log = "Error: Missing To parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
-                $log=sprintf ("Error: Missing Duration parameter");
+                $log = "Error: Missing Duration parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if ($NetFields['timestamp']) {
-                $timestamp=$NetFields['timestamp'];
+                $timestamp = $NetFields['timestamp'];
             } else {
-                $timestamp=time();
+                $timestamp = time();
             }
 
             if (!$NetFields['gateway']) {
-                $log=sprintf ("error: missing gateway parameter");
+                $log = "Error: missing gateway parameter";
                 syslog(LOG_NOTICE, $log);
                 return $log;
             }
 
             $app_prefix = preg_replace('/[.].*$/', '', $NetFields['application']);
             if (strlen($app_prefix)) {
-                if ($app_prefix == 'audio' || $app_prefix == 'sms' ) {
-                    $application=$NetFields['application'];
+                if ($app_prefix == 'audio' || $app_prefix == 'sms') {
+                    $application = $NetFields['application'];
                 } else {
-                    $log=sprintf ("error: unsupported application %s",$NetFields['application']);
+                    $log = sprintf("Error: unsupported application %s", $NetFields['application']);
                     syslog(LOG_NOTICE, $log);
                     return $log;
                 }
             } else {
-                $application='audio';
+                $application = 'audio';
             }
 
-            list($username_t,$domain_t)=explode("@",$NetFields['from']);
+            list($username_t, $domain_t) = explode("@", $NetFields['from']);
 
             $CDRStructure=array (
-                              $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
-                              $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
-                              $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
-                              $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
-                              $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
-                              $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
-                              $this->CDRS->CDRFields['timestamp']      => time(),
-                              $this->CDRS->CDRFields['domain']         => $domain_t,
-                              $this->CDRS->CDRFields['application']    => $application,
-                              'skip_fix_prepaid_duration'              => true
-                              );
+                $this->CDRS->CDRFields['callId']         => $NetFields['callid'],
+                $this->CDRS->CDRFields['aNumber']        => $NetFields['from'],
+                $this->CDRS->CDRFields['CanonicalURI']   => $NetFields['to'],
+                $this->CDRS->CDRFields['gateway']        => $NetFields['gateway'],
+                $this->CDRS->CDRFields['ENUMtld']        => $NetFields['enumtld'],
+                $this->CDRS->CDRFields['duration']       => floor($NetFields['duration']),
+                $this->CDRS->CDRFields['timestamp']      => time(),
+                $this->CDRS->CDRFields['domain']         => $domain_t,
+                $this->CDRS->CDRFields['application']    => $application,
+                'skip_fix_prepaid_duration'              => true
+            );
 
             $CDR = new $this->CDRS->CDR_class($this->CDRS, $CDRStructure);
             $CDR->normalize();
@@ -9076,22 +10211,22 @@ class RatingEngine {
             $Rate    = new Rate($this->settings, $this->db);
 
             $RateDictionary=array(
-                                  'callId'          => $CDR->callId,
-                                  'timestamp'       => $CDR->timestamp,
-                                  'duration'        => $CDR->duration,
-                                  'DestinationId'   => $CDR->DestinationId,
-                                  'region'          => $CDR->region,
-                                  'domain'          => $CDR->domain,
-                                  'gateway'         => $CDR->gateway,
-                                  'BillingPartyId'  => $CDR->BillingPartyId,
-                                  'ENUMtld'         => $CDR->ENUMtld,
-                                  'RatingTables'    => $this->CDRS->RatingTables,
-                                  'application'     => $application
-                                  );
+                'callId'          => $CDR->callId,
+                'timestamp'       => $CDR->timestamp,
+                'duration'        => $CDR->duration,
+                'DestinationId'   => $CDR->DestinationId,
+                'region'          => $CDR->region,
+                'domain'          => $CDR->domain,
+                'gateway'         => $CDR->gateway,
+                'BillingPartyId'  => $CDR->BillingPartyId,
+                'ENUMtld'         => $CDR->ENUMtld,
+                'RatingTables'    => $this->CDRS->RatingTables,
+                'application'     => $application
+            );
 
             $Rate->calculateAudio($RateDictionary);
 
-            $this->runtime['calculate_rate']=microtime_float();
+            $this->runtime['calculate_rate'] = microtime_float();
 
             if (strlen($Rate->price)) {
                 $RateReturn=$Rate->price;
@@ -9103,101 +10238,114 @@ class RatingEngine {
             }
 
             return $RateReturn;
-
-        } else if ($NetFields['action'] == "getbalance") {
+        } elseif ($NetFields['action'] == "getbalance") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log = "Error: Missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
-            $query=sprintf("select * from %s where account = '%s'",
-            addslashes($this->prepaid_table),
-            addslashes($NetFields['from'])
+            $query = sprintf(
+                "select * from %s where account = '%s'",
+                addslashes($this->prepaid_table),
+                addslashes($NetFields['from'])
             );
 
             if (!$this->db->query($query)) {
-                $log=sprintf ("Database error for %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for %s: %s (%s)",
+                    $query,
+                    $this->db->Error,
+                    $this->db->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 $this->logRuntime();
                 return 0;
             }
 
             if ($this->db->num_rows()) {
                 $this->db->next_record();
-                return number_format($this->db->f('balance'),4,".","");
+                return number_format($this->db->f('balance'), 4, ".", "");
             } else {
-                return sprintf("%0.4f",0);
+                return sprintf("%0.4f", 0);
             }
-
-        } else if ($NetFields['action'] == "getbalancehistory") {
+        } elseif ($NetFields['action'] == "getbalancehistory") {
             if (!$NetFields['from']) {
-                $log=sprintf ("Error: Missing From parameter");
+                $log = "Error: Missing From parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             $history=$this->getBalanceHistory($NetFields['from']);
             return trim($history);
-        } else if ($NetFields['action'] == "getentityprofiles") {
+        } elseif ($NetFields['action'] == "getentityprofiles") {
             if (!$NetFields['entity']) {
-                $log=sprintf ("Error: Missing Entity parameter");
-                    syslog(LOG_NOTICE, $log);
+                $log = "Error: Missing Entity parameter";
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             $entity=$this->GetEntityProfiles($NetFields['entity']);
             return trim($entity);
-
-        } else if ($NetFields['action'] == "showprofiles") {
+        } elseif ($NetFields['action'] == "showprofiles") {
             return trim($this->CDRS->RatingTables->showProfiles());
-        } else if ($NetFields['action'] == "showenumtlds") {
+        } elseif ($NetFields['action'] == "showenumtlds") {
             return trim($this->CDRS->RatingTables->showENUMtlds());
-        } else if ($NetFields['action'] == "version") {
+        } elseif ($NetFields['action'] == "version") {
             $version_file=$this->CDRS->CDRTool['Path']."/version";
             $version="CDRTool version ".trim(file_get_contents($version_file));
             return $version;
-
-        } else if ($NetFields['action'] == "help") {
+        } elseif ($NetFields['action'] == "help") {
             return $this->showHelp();
-        } else if ($NetFields['action'] == "reloadratingtables") {
+        } elseif ($NetFields['action'] == "reloadratingtables") {
             return $this->reloadRatingTables();
-        } else if ($NetFields['action'] == "keepalive") {
+        } elseif ($NetFields['action'] == "keepalive") {
             return $this->keepAlive();
-        } else if ($NetFields['action'] == "reloadquota") {
+        } elseif ($NetFields['action'] == "reloadquota") {
             if (!$NetFields['account']) {
-                $log=sprintf ("Error: Missing Account parameter");
+                $log = "Error: Missing Account parameter";
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             return $this->reloadQuota($NetFields['account']);
-        } else if ($NetFields['action'] == "reloaddomains") {
+        } elseif ($NetFields['action'] == "reloaddomains") {
             return $this->CDRS->LoadDomains();
-        } else if ($NetFields['action'] == "reloadcustomers") {
+        } elseif ($NetFields['action'] == "reloadcustomers") {
             if ($NetFields['customer'] && $NetFields['type']) {
-                $_customerFilter=array('customer'=>$NetFields['customer'],
-                                      'type'=>$NetFields['type']);
+                $_customerFilter = array(
+                    'customer' => $NetFields['customer'],
+                    'type'     => $NetFields['type']
+                );
             }
             return $this->reloadCustomers($_customerFilter);
-
         } else {
-            $log=sprintf ("Error: Invalid request");
-                syslog(LOG_NOTICE, $log);
+            $log = "Error: Invalid request";
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
     }
 
-    function getQuota($account) {
+    function getQuota($account)
+    {
         if (!$account) return;
 
-        list($username,$domain) = explode("@",$account);
+        list($username, $domain) = explode("@", $account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select * from sip_accounts where username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -9205,16 +10353,24 @@ class RatingEngine {
                 $this->AccountsDB->next_record();
                 $_profile=json_decode(trim($this->AccountsDB->f('profile')));
                 return $_profile->quota;
-
             } else {
                 return 0;
             }
         } else {
-            $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select quota from subscriber where username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -9227,25 +10383,34 @@ class RatingEngine {
         }
     }
 
-    function getBlockedByQuotaStatus($account) {
+    function getBlockedByQuotaStatus($account)
+    {
 
         if (!$account) return 0;
-        list($username,$domain) = explode("@",$account);
+        list($username, $domain) = explode("@", $account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select * from sip_accounts where username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
             if (!$this->AccountsDB->query($query)) {
-
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
             if ($this->AccountsDB->num_rows()) {
                 $this->AccountsDB->next_record();
 
-                $_profile=json_decode(trim($this->AccountsDB->f('profile')));
-                if (in_array('quota',$_profile->groups)) {
+                $_profile = json_decode(trim($this->AccountsDB->f('profile')));
+                if (in_array('quota', $_profile->groups)) {
                     return 1;
                 } else {
                     return 0;
@@ -9254,11 +10419,20 @@ class RatingEngine {
                 return 0;
             }
         } else {
-            $query=sprintf("select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+            $query = sprintf(
+                "select CONCAT(username,'@',domain) as account from grp where grp = 'quota' and username = '%s' and domain = '%s'",
+                addslashes($username),
+                addslashes($domain)
+            );
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
+                syslog(LOG_NOTICE, $log);
                 return 0;
             }
 
@@ -9272,14 +10446,15 @@ class RatingEngine {
         return 0;
     }
 
-    function getActivePrepaidSessions($active_sessions, $current_balance, $BillingPartyId, $exceptSessions=array()) {
+    function getActivePrepaidSessions($active_sessions, $current_balance, $BillingPartyId, $exceptSessions = array())
+    {
         $this->parallel_calls=array();
         $this->remaining_balance=$current_balance;
 
         $ongoing_rates=array();
 
         foreach (array_keys($active_sessions) as $_session) {
-            if (in_array($_session,$exceptSessions)) {
+            if (in_array($_session, $exceptSessions)) {
                 /*
                 $log = sprintf ("Ongoing prepaid session %s for %s updated",
                 $_session,
@@ -9292,37 +10467,38 @@ class RatingEngine {
 
             $Rate_session = new Rate($this->settings, $this->db);
 
-            $passed_time=time()-$active_sessions[$_session]['timestamp'];
+            $passed_time = time() - $active_sessions[$_session]['timestamp'];
 
-            $active_sessions[$_session]['passed_time']=$passed_time;
+            $active_sessions[$_session]['passed_time'] = $passed_time;
 
-            $RateDictionary_session=array(
-                                  'duration'        => $passed_time,
-                                  'callId'          => $_session,
-                                  'timestamp'       => $active_sessions[$_session]['timestamp'],
-                                  'DestinationId'   => $active_sessions[$_session]['DestinationId'],
-                                  'region'          => $active_sessions[$_session]['region'],
-                                  'domain'          => $active_sessions[$_session]['domain'],
-                                  'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
-                                  'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
-                                  'RatingTables'    => $this->CDRS->RatingTables
-                                  );
+            $RateDictionary_session = array(
+                'duration'        => $passed_time,
+                'callId'          => $_session,
+                'timestamp'       => $active_sessions[$_session]['timestamp'],
+                'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                'region'          => $active_sessions[$_session]['region'],
+                'domain'          => $active_sessions[$_session]['domain'],
+                'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
+                'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
+                'RatingTables'    => $this->CDRS->RatingTables
+            );
 
             $Rate_session->calculateAudio($RateDictionary_session);
 
-            $log = sprintf ("Active sessions %s for %s to %s: duration=%s, price=%s ",
-            $_session,
-            $BillingPartyId,
-            $active_sessions[$_session]['Destination'],
-            $passed_time,
-            $Rate_session->price
+            $log = sprintf(
+                "Active sessions %s for %s to %s: duration=%s, price=%s ",
+                $_session,
+                $BillingPartyId,
+                $active_sessions[$_session]['Destination'],
+                $passed_time,
+                $Rate_session->price
             );
             syslog(LOG_NOTICE, $log);
 
             $ongoing_rates[$_session] = array(
-                                               'duration'    => $passed_time,
-                                               'price'       => $Rate_session->price
-                                              );
+                'duration'    => $passed_time,
+                'price'       => $Rate_session->price
+            );
         }
 
         if (count($ongoing_rates)) {
@@ -9334,27 +10510,34 @@ class RatingEngine {
 
             $this->remaining_balance = $this->remaining_balance-$due_balance;
 
-            $log = sprintf ("Balance for %s having %d active sessions: database=%s, due=%s, real=%s",$BillingPartyId,count($ongoing_rates),sprintf("%0.4f",$current_balance),sprintf("%0.4f",$due_balance),sprintf("%0.4f",$this->remaining_balance));
+            $log = sprintf(
+                "Balance for %s having %d active sessions: database=%s, due=%s, real=%s",
+                $BillingPartyId,
+                count($ongoing_rates),
+                sprintf("%0.4f", $current_balance),
+                sprintf("%0.4f", $due_balance),
+                sprintf("%0.4f", $this->remaining_balance)
+            );
             syslog(LOG_NOTICE, $log);
         }
 
         foreach (array_keys($active_sessions) as $_session) {
-            if (in_array($_session,$exceptSessions)) {
+            if (in_array($_session, $exceptSessions)) {
                 continue;
             }
 
-            $RateDictionary_session=array(
-                                  'callId'          => $_session,
-                                  'timestamp'       => time(),
-                                  'Balance'         => $this->remaining_balance,
-                                  'DestinationId'   => $active_sessions[$_session]['DestinationId'],
-                                  'region'          => $active_sessions[$_session]['region'],
-                                  'domain'          => $active_sessions[$_session]['domain'],
-                                  'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
-                                  'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
-                                  'RatingTables'    => $this->CDRS->RatingTables,
-                                  'skipConnectCost' => true
-                                  );
+            $RateDictionary_session = array(
+                'callId'          => $_session,
+                'timestamp'       => time(),
+                'Balance'         => $this->remaining_balance,
+                'DestinationId'   => $active_sessions[$_session]['DestinationId'],
+                'region'          => $active_sessions[$_session]['region'],
+                'domain'          => $active_sessions[$_session]['domain'],
+                'BillingPartyId'  => $active_sessions[$_session]['BillingPartyId'],
+                'ENUMtld'         => $active_sessions[$_session]['ENUMtld'],
+                'RatingTables'    => $this->CDRS->RatingTables,
+                'skipConnectCost' => true
+            );
 
             if ($active_sessions[$_session]['duration']) {
                 $RateDictionary_session['duration'] = $active_sessions[$_session]['duration']-$active_sessions[$_session]['passed_time'];
@@ -9363,16 +10546,20 @@ class RatingEngine {
             $Rate = new Rate($this->settings, $this->db);
             $_maxduration = round($Rate->MaxSessionTime($RateDictionary_session));
 
-            $log = sprintf("Remaining duration for active session %s of %s to destination %s having balance=%s is %s",
-            $_session,
-            $BillingPartyId,
-            $active_sessions[$_session]['DestinationId'],
-            $this->remaining_balance,
-            $_maxduration);
+            $log = sprintf(
+                "Remaining duration for active session %s of %s to destination %s having balance=%s is %s",
+                $_session,
+                $BillingPartyId,
+                $active_sessions[$_session]['DestinationId'],
+                $this->remaining_balance,
+                $_maxduration
+            );
             syslog(LOG_NOTICE, $log);
 
             if ($_maxduration > 0) {
-                $this->parallel_calls[$_session]=array('remainingBalancePerSecond' => $this->remaining_balance/$_maxduration);
+                $this->parallel_calls[$_session] = array(
+                    'remainingBalancePerSecond' => $this->remaining_balance / $_maxduration
+                );
             } else {
                 /*
                 $log = sprintf ("Maxduration for session %s of %s will be negative",$_session,$active_sessions[$_session]['BillingPartyId']);
@@ -9384,7 +10571,8 @@ class RatingEngine {
         return 1;
     }
 
-    function getAggregatedMaxSessiontime($parallel_calls=array(), $balance, $BillingPartyId) {
+    function getAggregatedMaxSessiontime($parallel_calls = array(), $balance, $BillingPartyId)
+    {
         $maxduration=0;
         $sum_remaining_balance_per_second=0;
 
@@ -9392,14 +10580,13 @@ class RatingEngine {
             $sum_remaining_balance_per_second = $sum_remaining_balance_per_second + $parallel_calls[$_call]['remainingBalancePerSecond'];
         }
 
-        if ($sum_remaining_balance_per_second > 0 ) {
-            $maxduration =intval($balance/$sum_remaining_balance_per_second);
+        if ($sum_remaining_balance_per_second > 0) {
+            $maxduration = intval($balance / $sum_remaining_balance_per_second);
 
             if (count($parallel_calls) > 1) {
-                $log = sprintf ("Maximum agregated duration for %s is %s", $BillingPartyId,$maxduration);
+                $log = sprintf("Maximum agregated duration for %s is %s", $BillingPartyId, $maxduration);
                 syslog(LOG_NOTICE, $log);
             }
-
         } else {
             /*
             $log = sprintf ("Error: sum_remaining_balance_per_second for %s is negative",$BillingPartyId);
@@ -9411,27 +10598,33 @@ class RatingEngine {
         return round($maxduration);
     }
 
-    function keepAlive() {
+    function keepAlive()
+    {
         $query = sprintf("select * from auth_user");
 
         if (!$this->db->query($query) || !$this->db->num_rows()) {
-            $log = sprintf("Database error for keepalive query %s: %s (%s)",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for keepalive query %s: %s (%s)",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
-        $log=sprintf("Keepalive successful");
+        $log = sprintf("Keepalive successful");
         syslog(LOG_NOTICE, $log);
         return true;
     }
 }
 
-function reloadRatingEngineTables () {
+function reloadRatingEngineTables()
+{
     global $RatingEngine;
     global $DATASOURCES;
 
     if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
-
         if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
             $RatingEngine['socketIPforClients']= '127.0.0.1';
         } else {
@@ -9443,7 +10636,7 @@ function reloadRatingEngineTables () {
         $CDRS = new $CDR_class($RatingEngine['cdr_source']);
         $CDRS->CacheDestinations();
 
-        if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+        if ($fp = fsockopen($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
             fputs($fp, "ReloadRatingTables\n");
             fclose($fp);
             return true;
@@ -9452,17 +10645,17 @@ function reloadRatingEngineTables () {
     return false;
 }
 
-function keepAliveRatingEngine() {
+function keepAliveRatingEngine()
+{
     global $RatingEngine;
     if (strlen($RatingEngine['socketIP']) && $RatingEngine['socketPort']) {
-
         if ($RatingEngine['socketIP']=='0.0.0.0' || $RatingEngine['socketIP'] == '0') {
             $RatingEngine['socketIPforClients']= '127.0.0.1';
         } else {
             $RatingEngine['socketIPforClients']=$RatingEngine['socketIP'];
         }
 
-        if ($fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+        if ($fp = fsockopen($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
             fputs($fp, "KeepAlive\n");
             fclose($fp);
             return true;
@@ -9471,7 +10664,8 @@ function keepAliveRatingEngine() {
     return false;
 }
 
-function testRatingTables () {
+function testRatingTables()
+{
     global $RatingEngine;
     if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort']) {
         return false;
@@ -9487,24 +10681,29 @@ function testRatingTables () {
     $b=time();
 
     while ($i < 1000) {
-        if (!$fp = fsockopen ($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
+        if (!$fp = fsockopen($RatingEngine['socketIPforClients'], $RatingEngine['socketPort'], $errno, $errstr, 2)) {
             print "Error connecting to rating engine\n";
             break;
         }
 
         $i++;
-        $number='00'.RandomNumber(1,true).RandomNumber(12).'@example.com';
-        $duration=RandomNumber(3,true);
-        $command=sprintf("ShowPrice From=sip:123@example.com To=sip:%s Gateway=10.0.0.1 Duration=%d\n",$number,$duration);
-        fputs($fp, $command,strlen($command));
+        $number='00'.RandomNumber(1, true).RandomNumber(12).'@example.com';
+        $duration=RandomNumber(3, true);
+        $command = sprintf(
+            "ShowPrice From=sip:123@example.com To=sip:%s Gateway=10.0.0.1 Duration=%d\n",
+            $number,
+            $duration
+        );
+        fputs($fp, $command, strlen($command));
         $response = fgets($fp, 8192);
         fclose($fp);
     }
 
-    $e=time();
-    $d=$e-$b;
-    if ($d) printf("Commands=%d, Time=%s seconds, Speed=%s cps\n",$i,$d,number_format($i/$d,1));
-
+    $e = time();
+    $d = $e - $b;
+    if ($d) {
+        printf("Commands=%d, Time=%s seconds, Speed=%s cps\n", $i, $d, number_format($i / $d, 1));
+    }
 }
 
 ?>
