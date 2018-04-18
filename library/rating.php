@@ -7317,15 +7317,15 @@ class RatingTables
 
             print "<form class=form-inline id=prev method=post>";
             if ($next != 0) {
-                $show_next=$this->maxrowsperpage-$next;
+                $show_next = $this->maxrowsperpage - $next;
 
                 if ($show_next < 0) {
-                    $mod_show_next  =  $show_next-2*$show_next;
+                    $mod_show_next  =  $show_next - 2 * $show_next;
+                    print "<input type=hidden name=next value=$mod_show_next>";
                 }
 
                 print "
                 <input style=\"display:none\" type=hidden name=maxrowsperpage value=$this->maxrowsperpage>
-                <input type=hidden name=next           value=$mod_show_next>
                 <input type=hidden name=web_task         value=Search>
                 <input type=hidden name=table          value=$this->table>
                 <input type=hidden name=search_text    value=\"$search_text\">
