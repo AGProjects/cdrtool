@@ -22,12 +22,13 @@ function log_accounts_action($action){
     if ($_loc['country_name']) {
        $location = $_loc['country_name'];
     }
-    $log = sprintf("CDRTool login username=%s, IP=%s, location=%s, action=%s, script=%s",
-    $auth->auth["uname"],
-    $_SERVER['REMOTE_ADDR'],
-    $location,
-    $action,
-    $_SERVER['PHP_SELF']
+    $log = sprintf(
+        "CDRTool login username=%s, IP=%s, location=%s, action=%s, script=%s",
+        $auth->auth["uname"],
+        $_SERVER['REMOTE_ADDR'],
+        $location,
+        $action,
+        $_SERVER['PHP_SELF']
     );
     syslog(LOG_NOTICE, $log);
 }
@@ -69,7 +70,9 @@ $mailsettings    = $_REQUEST['mailsettings'];
 $otp_yubikey     = $_REQUEST["yubikey"];
 $auth_method     = $_REQUEST["auth_method"];
 
-$db        		 = new DB_CDRTool;
+$PHP_SELF        = htmlentities($_SERVER['PHP_SELF']);
+
+$db              = new DB_CDRTool;
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);

@@ -622,10 +622,9 @@ function accountList()
             $bgcolor="error";
         }
 
-        $location = htmlentities($_SERVER['PHP_SELF']);
         print "
         <tr class=$bgcolor>
-        <td> <a href=\"$location?id=$id_db&action=edit\">$name</a>
+        <td> <a href=\"$PHP_SELF?id=$id_db&action=edit\">$name</a>
         <td> $organization
         <td> $username
         <td> <nobr><a href=mailto:$email>$email</a></nobr>
