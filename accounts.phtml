@@ -32,43 +32,42 @@ function log_accounts_action($action){
     );
     syslog(LOG_NOTICE, $log);
 }
-    
-$loginname=$auth->auth["uname"];
 
-$action          = $_REQUEST['action'];
-$next            = $_REQUEST['next'];
-$PHP_SELF        = $_SERVER['PHP_SELF'];
-$search_text     = $_REQUEST['search_text'];
+$loginname = $auth->auth["uname"];
 
-$username        = $_REQUEST['username'];
-$password        = $_REQUEST['password'];
-$name            = $_REQUEST['name'];
-$organization    = $_REQUEST['organization'];
-$tel             = $_REQUEST['tel'];
-$email           = $_REQUEST['email'];
-$expire          = $_REQUEST['expire'];
+$action          = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+$next            = isset($_REQUEST['next']) ? $_REQUEST['next'] : '';
+$search_text     = isset($_REQUEST['search_text']) ? $_REQUEST['search_text'] : '';
 
-$gatewayFilter   = $_REQUEST['gatewayFilter'];
-$domainFilter    = $_REQUEST['domainFilter'];
-$serviceFilter   = $_REQUEST['serviceFilter'];
-$compidFilter    = $_REQUEST['compidFilter'];
-$aNumberFilter   = $_REQUEST['aNumberFilter'];
-$cscodeFilter    = $_REQUEST['cscodeFilter'];
-$afterDateFilter = $_REQUEST['afterDateFilter'];
-$aclFilter       = $_REQUEST['aclFilter'];
-$impersonate     = $_REQUEST['impersonate'];
+$username        = isset($_REQUEST['username']) ? $_REQUEST['username'] : '';
+$password        = isset($_REQUEST['password']) ? $_REQUEST['password'] : '';
+$name            = isset($_REQUEST['name']) ? $_REQUEST['name'] : '';
+$organization    = isset($_REQUEST['organization']) ? $_REQUEST['organization'] : '';
+$tel             = isset($_REQUEST['tel']) ? $_REQUEST['tel'] : '';
+$email           = isset($_REQUEST['email']) ? $_REQUEST['email'] : '';
+$expire          = isset($_REQUEST['expire']) ? $_REQUEST['expire'] : '';
 
-$perms           = $_REQUEST['perms'];
-$sources         = $_REQUEST['sources'];
-$delete          = $_REQUEST['delete'];
+$gatewayFilter   = isset($_REQUEST['gatewayFilter']) ? $_REQUEST['gatewayFilter'] : '';
+$domainFilter    = isset($_REQUEST['domainFilter']) ? $_REQUEST['domainFilter'] : '';
+$serviceFilter   = isset($_REQUEST['serviceFilter']) ? $_REQUEST['serviceFilter'] : '';
+$compidFilter    = isset($_REQUEST['compidFilter']) ? $_REQUEST['compidFilter'] : '';
+$aNumberFilter   = isset($_REQUEST['aNumberFilter']) ? $_REQUEST['aNumberFilter'] : '';
+$cscodeFilter    = isset($_REQUEST['cscodeFilter']) ? $_REQUEST['cscodeFilter'] : '';
+$afterDateFilter = isset($_REQUEST['afterDateFilter']) ? $_REQUEST['afterDateFilter'] : '';
+$aclFilter       = isset($_REQUEST['aclFilter']) ? $_REQUEST['aclFilter'] : '';
+$impersonate     = isset($_REQUEST['impersonate']) ? $_REQUEST['impersonate'] : '';
 
-$id              = $_REQUEST['id'];
-$uid             = $_REQUEST['uid'];
-$check           = $_REQUEST['check'];
-$mailsettings    = $_REQUEST['mailsettings'];
+$perms           = isset($_REQUEST['perms']) ? $_REQUEST['perms'] : '';
+$sources         = isset($_REQUEST['sources']) ? $_REQUEST['sources'] : '';
+$delete          = isset($_REQUEST['delete']) ? $_REQUEST['delete'] : '';
 
-$otp_yubikey     = $_REQUEST["yubikey"];
-$auth_method     = $_REQUEST["auth_method"];
+$id              = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
+$uid             = isset($_REQUEST['uid']) ? $_REQUEST['uid'] : '';
+$check           = isset($_REQUEST['check']) ? $_REQUEST['check'] : '';
+$mailsettings    = isset($_REQUEST['mailsettings']) ? $_REQUEST['mailsettings'] : '';
+
+$otp_yubikey     = isset($_REQUEST["yubikey"]) ? $_REQUEST["yubikey"] : '';
+$auth_method     = isset($_REQUEST["auth_method"]) ? $_REQUEST["auth_method"] : '';
 
 $PHP_SELF        = htmlentities($_SERVER['PHP_SELF']);
 
