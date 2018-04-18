@@ -1,12 +1,15 @@
 <?php
 require("/etc/cdrtool/global.inc");
 
-page_open(array("sess" => "CDRTool_Session",
-                "auth" => "CDRTool_Auth",
-                "perm" => "CDRTool_Perm")
-          );
+page_open(
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
-$title           = "Login accounts";
+$title = "Login accounts";
 require("login_accounts.php");
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
@@ -15,12 +18,13 @@ if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("header.phtml");
 }
 
-function log_accounts_action($action){
+function log_accounts_action($action)
+{
     global $auth;
     $location = "Unknown";
-    $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+    $_loc = geoip_record_by_name($_SERVER['REMOTE_ADDR']);
     if ($_loc['country_name']) {
-       $location = $_loc['country_name'];
+        $location = $_loc['country_name'];
     }
     $log = sprintf(
         "CDRTool login username=%s, IP=%s, location=%s, action=%s, script=%s",
@@ -77,117 +81,121 @@ $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
 if ($action == "edit" && $id) {
+    print "
+        <ul class=\"breadcrumb\">
+            <li><a href=accounts.phtml>Accounts</a> <span class=\"divider\">/</span> </li>
+            <li class='active'>Edit account</li>
+        </ul>
+    ";
 
-    print "<ul class=\"breadcrumb\">
-        <li><a href=accounts.phtml>Accounts</a> <span class=\"divider\">/</span> </li>
-        <li class='active'>Edit account</li>
-        </ul>";
-
-
-    $uid=$auth->auth["uid"];
+    $uid = $auth->auth["uid"];
     if (!$perm->have_perm("admin")) {
-        $id=$uid;
+        $id = $uid;
     }
     if ($check || $delete) {
         if ($err = $f->validate()) {
             print "<div class=\"alert alert-error\">
             $err
             </div>";
-            $perms = implode($perms,",");
-            $sources = implode($sources,",");
+            $perms = implode($perms, ",");
+            $sources = implode($sources, ",");
 
             showForm($id);
         } else {
-            $perms_text      = implode($perms,",");
-            $sources_text    = implode($sources,",");
+            $perms_text      = implode($perms, ",");
+            $sources_text    = implode($sources, ",");
 
             if ($delete && $perm->have_perm("admin")) {
-                $query="delete from auth_user";
+                $query = "delete from auth_user";
             } else {
                 //print "<p>Updating user";
-                $query=sprintf("update auth_user set
-                username         = '%s',
-                name             = '%s',
-                organization     = '%s',
-                tel              = '%s',
-                email            = '%s',
-                yubikey          = '%s',
-                auth_method      = '%s'
-                ",
-                addslashes($username),
-                addslashes($name),
-                addslashes($organization),
-                addslashes($tel),
-                addslashes($email),
-                addslashes($otp_yubikey),
-                addslashes($auth_method)
+                $query = sprintf(
+                    "update auth_user set
+                    username         = '%s',
+                    name             = '%s',
+                    organization     = '%s',
+                    tel              = '%s',
+                    email            = '%s',
+                    yubikey          = '%s',
+                    auth_method      = '%s'
+                    ",
+                    addslashes($username),
+                    addslashes($name),
+                    addslashes($organization),
+                    addslashes($tel),
+                    addslashes($email),
+                    addslashes($otp_yubikey),
+                    addslashes($auth_method)
                 );
                 if (strlen($password)) {
-                    if ($CDRTool['provider']['clear_text_passwords'] != 1 ) {
-                        $query.=sprintf(",
-                    password = '',
-                    password_hashed  = '%s'",
-                        addslashes(md5($password))
+                    if ($CDRTool['provider']['clear_text_passwords'] != 1) {
+                        $query .= sprintf(
+                            ",
+                            password = '',
+                            password_hashed  = '%s'",
+                            addslashes(md5($password))
                         );
                     } else {
-                        $query.=sprintf(",
-                    password = '%s',
-                    password_hashed = ''",
-                        addslashes($password)
+                        $query .= sprintf(
+                            ",
+                            password = '%s',
+                            password_hashed = ''",
+                            addslashes($password)
                         );
                     }
                 }
 
                 if ($perm->have_perm("admin")) {
                     if (strlen($impersonate)) {
-                        if (!preg_match("/^[0-9]*\.[0-9]*$/",$impersonate)) {
-                            printf ("<div class=\"alert\"><strong>Warning!</strong> Impersonate must be formated as CustomerId.ResellerId</div>");
+                        if (!preg_match("/^[0-9]*\.[0-9]*$/", $impersonate)) {
+                            printf("<div class=\"alert\"><strong>Warning!</strong> Impersonate must be formated as CustomerId.ResellerId</div>");
                             unset($impersonate);
                         }
                     }
 
-                    $query.= sprintf(",
-                    perms           = '%s',
-                    sources         = '%s',
-                    expire          = '%s',
-                    gatewayFilter   = '%s',
-                    domainFilter    = '%s',
-                    serviceFilter   = '%s',
-                    compidFilter    = '%s',
-                    aNumberFilter   = '%s',
-                    cscodeFilter    = '%s',
-                    afterDateFilter = '%s',
-                    aclFilter       = '%s',
-                    impersonate     = '%s'
-                    ",
-                	addslashes($perms_text),
-	                addslashes($sources_text),
-    	            addslashes($expire),
-        	        addslashes($gatewayFilter),
-                    addslashes($domainFilter),
-                    addslashes($serviceFilter),
-                    addslashes($compidFilter),
-                    addslashes($aNumberFilter),
-                    addslashes($cscodeFilter),
-                    addslashes($afterDateFilter),
-                    addslashes($aclFilter),
-                    addslashes($impersonate)
+                    $query.= sprintf(
+                        ",
+                        perms           = '%s',
+                        sources         = '%s',
+                        expire          = '%s',
+                        gatewayFilter   = '%s',
+                        domainFilter    = '%s',
+                        serviceFilter   = '%s',
+                        compidFilter    = '%s',
+                        aNumberFilter   = '%s',
+                        cscodeFilter    = '%s',
+                        afterDateFilter = '%s',
+                        aclFilter       = '%s',
+                        impersonate     = '%s'
+                        ",
+                        addslashes($perms_text),
+                        addslashes($sources_text),
+                        addslashes($expire),
+                        addslashes($gatewayFilter),
+                        addslashes($domainFilter),
+                        addslashes($serviceFilter),
+                        addslashes($compidFilter),
+                        addslashes($aNumberFilter),
+                        addslashes($cscodeFilter),
+                        addslashes($afterDateFilter),
+                        addslashes($aclFilter),
+                        addslashes($impersonate)
                     );
                 }
             }
 
-            $query.=sprintf(" where user_id = '%s'", addslashes($id));
+            $query .= sprintf(" where user_id = '%s'", addslashes($id));
 
 //            print $query;
             if (!$db->query($query)) {
                 print "<p>Failed to update user $id";
                 print "The error is $db->Error";
-            }  else {
+            } else {
                 if ($delete) {
-                   log_accounts_action(sprintf("account %s deleted", $username));
+                    log_accounts_action(sprintf("account %s deleted", $username));
                     print "<p>User <b>$name</b> deleted";
                 } else {
-                   log_accounts_action(sprintf("account %s updated", $username));
+                    log_accounts_action(sprintf("account %s updated", $username));
                     print "<p>User <b>$name</b> updated";
                     if ($mailsettings) {
                         if ($_SERVER['HTTPS']=="on") {
@@ -196,44 +204,43 @@ if ($action == "edit" && $id) {
                             $protocolURL="http://";
                         }
 
-                        $body.=sprintf("The following login account for CDRTool has been created for you:\n\n");
-                        $body.=sprintf("Username: %s\n",$username);
-                        $body.=sprintf("Password: %s\n",$password);
-                        $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
-                        $body.=sprintf("You may use your CDRTool account to access call detail records and \n");
-                        $body.=sprintf("traces from OpenSIPs, MediaProxy and Asterisk servers.\n");
+                        $body .= sprintf("The following login account for CDRTool has been created for you:\n\n");
+                        $body .= sprintf("Username: %s\n", $username);
+                        $body .= sprintf("Password: %s\n", $password);
+                        $body .= sprintf("URL: %s%s%s\n\n", $protocolURL, $_SERVER['HTTP_HOST'], $CDRTool['tld']);
+                        $body .= sprintf("You may use your CDRTool account to access call detail records and \n");
+                        $body .= sprintf("traces from OpenSIPs, MediaProxy and Asterisk servers.\n");
 
-                    	$from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
-                    	mail($email,"CDRTool login account", $body, $from);
+                        $from = sprintf("From: %s", $CDRTool['provider']['fromEmail']);
+                        mail($email, "CDRTool login account", $body, $from);
                     }
                 }
 
                 accountList();
             }
         }
-
     } else {
-        $query="select * from auth_user";
+        $query = "select * from auth_user";
         if (!$perm->have_perm("admin")) {
-            $query.=sprintf(" where user_id = '%s'",addslashes($uid));
+            $query .= sprintf(" where user_id = '%s'", addslashes($uid));
             $id=$uid;
         } else {
-            $query.=sprintf(" where user_id = '%s'",addslashes($id));
+            $query .= sprintf(" where user_id = '%s'", addslashes($id));
         }
 
         dprint($query);
         $db->query($query);
         $db->next_record();
 
-        $username	      = $db->f('username');
-        $name		      = $db->f('name');
-        $email		      = $db->f('email');
-        $tel		      = $db->f('tel');
-        $password	      = $db->f('password');
-        $organization	  = $db->f('organization');
-        $perms		      = $db->f('perms');
-        $sources		  = $db->f('sources');
-        $expire		      = $db->f('expire');
+        $username         = $db->f('username');
+        $name             = $db->f('name');
+        $email            = $db->f('email');
+        $tel              = $db->f('tel');
+        $password         = $db->f('password');
+        $organization     = $db->f('organization');
+        $perms            = $db->f('perms');
+        $sources          = $db->f('sources');
+        $expire           = $db->f('expire');
         $aNumberFilter    = $db->f('aNumberFilter');
         $gatewayFilter    = $db->f('gatewayFilter');
         $domainFilter     = $db->f('domainFilter');
@@ -248,27 +255,24 @@ if ($action == "edit" && $id) {
 
         showForm($id);
     }
-
-
 } elseif ($action=="insert" && $perm->have_perm("admin")) {
-
     print "<ul class=\"breadcrumb\">
         <li><a href=accounts.phtml>Accounts</a> <span class=\"divider\">/</span> </li>
         <li class='active'>Add account</li>
         </ul>";
 
-    $uid=$auth->auth["uid"];
+    $uid = $auth->auth["uid"];
 
- 	if (!$password) $password=random_passwd_gen();
+    if (!$password) $password = random_passwd_gen();
 
     if ($check) {
-    	if ($perms) $perms   = implode($perms,",");
+        if ($perms) $perms   = implode($perms,",");
         if ($sources) $sources = implode($sources,",");
 
         if (strlen($impersonate)) {
-            if (!preg_match("/^[0-9]*\.[0-9]*$/",$impersonate)) {
-                printf ("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
-            	unset($impersonate);
+            if (!preg_match("/^[0-9]*\.[0-9]*$/", $impersonate)) {
+                printf("<p><font color=blue>Warning: Impersonate must be formated as CustomerId.ResellerId</font>");
+                unset($impersonate);
             }
         }
 
@@ -279,151 +283,154 @@ if ($action == "edit" && $id) {
         } else {
             //print "<p>Adding user";
             $hash_secret = "ffdsdsd__ky...";
-            $user_id=md5(uniqid($hash_secret));
+            $user_id = md5(uniqid($hash_secret));
             if ($CDRTool['provider']['clear_text_passwords']!=1) {
-                $query=sprintf("insert into auth_user
-                (user_id,
-                username,
-                password,
-                password_hashed,
-                name,
-                organization,
-                tel,
-                email,
-                perms,
-                sources,
-                expire,
-                domainFilter,
-                aNumberFilter,
-                serviceFilter,
-                compidFilter,
-                cscodeFilter,
-                gatewayFilter,
-                afterDateFilter,
-                aclFilter,
-                impersonate,
-                yubikey,
-                auth_method
-                ) values (
-                '%s',
-                '%s',
-                '',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($user_id),
-                addslashes($username),
-                addslashes(md5($password)),
-                addslashes($name),
-                addslashes($organization),
-                addslashes($tel),
-                addslashes($email),
-                addslashes($perms),
-                addslashes($sources),
-                addslashes($expire),
-                addslashes($domainFilter),
-                addslashes($aNumberFilter),
-                addslashes($serviceFilter),
-                addslashes($compidFilter),
-                addslashes($cscodeFilter),
-                addslashes($gatewayFilter),
-                addslashes($afterDateFilter),
-                addslashes($aclFilter),
-                addslashes($impersonate),
-                addslashes($yubikey),
-                addslashes($auth_method)
+                $query = sprintf(
+                    "insert into auth_user
+                    (
+                        user_id,
+                        username,
+                        password,
+                        password_hashed,
+                        name,
+                        organization,
+                        tel,
+                        email,
+                        perms,
+                        sources,
+                        expire,
+                        domainFilter,
+                        aNumberFilter,
+                        serviceFilter,
+                        compidFilter,
+                        cscodeFilter,
+                        gatewayFilter,
+                        afterDateFilter,
+                        aclFilter,
+                        impersonate,
+                        yubikey,
+                        auth_method
+                    ) values (
+                        '%s',
+                        '%s',
+                        '',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($user_id),
+                    addslashes($username),
+                    addslashes(md5($password)),
+                    addslashes($name),
+                    addslashes($organization),
+                    addslashes($tel),
+                    addslashes($email),
+                    addslashes($perms),
+                    addslashes($sources),
+                    addslashes($expire),
+                    addslashes($domainFilter),
+                    addslashes($aNumberFilter),
+                    addslashes($serviceFilter),
+                    addslashes($compidFilter),
+                    addslashes($cscodeFilter),
+                    addslashes($gatewayFilter),
+                    addslashes($afterDateFilter),
+                    addslashes($aclFilter),
+                    addslashes($impersonate),
+                    addslashes($yubikey),
+                    addslashes($auth_method)
                 );
             } else {
-                $query=sprintf("insert into auth_user
-                (user_id,
-                username,
-                password,
-                name,
-                organization,
-                tel,
-                email,
-                perms,
-                sources,
-                expire,
-                domainFilter,
-                aNumberFilter,
-                serviceFilter,
-                compidFilter,
-                cscodeFilter,
-                gatewayFilter,
-                afterDateFilter,
-                aclFilter,
-                impersonate,
-                yubikey,
-                auth_method
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                '%s'
-                )",
-                addslashes($user_id),
-                addslashes($username),
-                addslashes($password),
-                addslashes($name),
-                addslashes($organization),
-                addslashes($tel),
-                addslashes($email),
-                addslashes($perms),
-                addslashes($sources),
-                addslashes($expire),
-                addslashes($domainFilter),
-                addslashes($aNumberFilter),
-                addslashes($serviceFilter),
-                addslashes($compidFilter),
-                addslashes($cscodeFilter),
-                addslashes($gatewayFilter),
-                addslashes($afterDateFilter),
-                addslashes($aclFilter),
-                addslashes($impersonate),
-                addslashes($yubikey),
-                addslashes($auth_method)
+                $query = sprintf(
+                    "insert into auth_user
+                    (
+                        user_id,
+                        username,
+                        password,
+                        name,
+                        organization,
+                        tel,
+                        email,
+                        perms,
+                        sources,
+                        expire,
+                        domainFilter,
+                        aNumberFilter,
+                        serviceFilter,
+                        compidFilter,
+                        cscodeFilter,
+                        gatewayFilter,
+                        afterDateFilter,
+                        aclFilter,
+                        impersonate,
+                        yubikey,
+                        auth_method
+                    ) values (
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s',
+                        '%s'
+                    )",
+                    addslashes($user_id),
+                    addslashes($username),
+                    addslashes($password),
+                    addslashes($name),
+                    addslashes($organization),
+                    addslashes($tel),
+                    addslashes($email),
+                    addslashes($perms),
+                    addslashes($sources),
+                    addslashes($expire),
+                    addslashes($domainFilter),
+                    addslashes($aNumberFilter),
+                    addslashes($serviceFilter),
+                    addslashes($compidFilter),
+                    addslashes($cscodeFilter),
+                    addslashes($gatewayFilter),
+                    addslashes($afterDateFilter),
+                    addslashes($aclFilter),
+                    addslashes($impersonate),
+                    addslashes($yubikey),
+                    addslashes($auth_method)
                 );
             }
             dprint($query);
 
             if (!$db->query($query)) {
-                printf("<p>Failed to add user: %s(%s) %s",$db->Error,$db->Errno,$query);
-
+                printf("<p>Failed to add user: %s(%s) %s", $db->Error, $db->Errno, $query);
             } else {
                 log_accounts_action(sprintf("account %s added", $username));
                 print "<p>User <b>$name</b> created";
@@ -434,31 +441,28 @@ if ($action == "edit" && $id) {
                         $protocolURL="http://";
                     }
 
-                    $body.=sprintf("The following login account for CDRTool has been created for you:\n\n");
-                    $body.=sprintf("Username: %s\n",$username);
-                    $body.=sprintf("Password: %s\n",$password);
-                    $body.=sprintf("URL: %s%s%s\n\n",$protocolURL,$_SERVER['HTTP_HOST'],$CDRTool['tld']);
-                    $body.=sprintf("You may use your CDRTool account to access call detail records and \n");
-                    $body.=sprintf("traces from OpenSIPs, MediaProxy and Asterisk servers.\n");
+                    $body .= sprintf("The following login account for CDRTool has been created for you:\n\n");
+                    $body .= sprintf("Username: %s\n", $username);
+                    $body .= sprintf("Password: %s\n", $password);
+                    $body .= sprintf("URL: %s%s%s\n\n", $protocolURL, $_SERVER['HTTP_HOST'], $CDRTool['tld']);
+                    $body .= sprintf("You may use your CDRTool account to access call detail records and \n");
+                    $body .= sprintf("traces from OpenSIPs, MediaProxy and Asterisk servers.\n");
 
-                    $from=sprintf("From: %s",$CDRTool['provider']['fromEmail']);
-                    mail($email,"CDRTool login account", $body, $from);
+                    $from = sprintf("From: %s", $CDRTool['provider']['fromEmail']);
+                    mail($email, "CDRTool login account", $body, $from);
                 }
             }
         }
-
     } else {
         showForm();
     }
     print "</td></tr></table></center>";
-
-
 } else {
-        print "<h3>Account list</h3>";
-        if ($perm->have_perm("admin")) {
+    print "<h3>Account list</h3>";
+    if ($perm->have_perm("admin")) {
         print "<center><a class=btn href=$PHP_SELF?action=insert>Add account</a></center>";
-        }
-        accountList();
+    }
+    accountList();
 }
 
 $layout->showFooter();
