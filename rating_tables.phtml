@@ -3,17 +3,20 @@ require("/etc/cdrtool/global.inc");
 require('cdr_generic.php');
 
 page_open(
-            array("sess" => "CDRTool_Session",
-                  "auth" => "CDRTool_Auth",
-                  "perm" => "CDRTool_Perm"));
+    array(
+        "sess" => "CDRTool_Session",
+        "auth" => "CDRTool_Auth",
+        "perm" => "CDRTool_Perm"
+    )
+);
 
 $perm->check("rates");
 include("rating.php");
 
 if ($perm->have_perm("readonly")) {
-	$RatingTables=new RatingTables('readonly');
+    $RatingTables = new RatingTables('readonly');
 } else {
-	$RatingTables=new RatingTables();
+    $RatingTables = new RatingTables();
 }
 
 if (!$_REQUEST['export']) {
@@ -23,25 +26,24 @@ if (!$_REQUEST['export']) {
     } else {
         include("header.phtml");
     }
-	$layout = new pageLayoutLocal();
-	$layout->showTopMenu($title);
-
+    $layout = new pageLayoutLocal();
+    $layout->showTopMenu($title);
 } else {
     print $RatingTables->table_to_csv_name[$_REQUEST['table']];
     Header("Content-type: text/csv");
-    $h=sprintf("Content-Disposition: inline; filename=%s",$RatingTables->csv_export[$_REQUEST['table']]);
+    $h = sprintf("Content-Disposition: inline; filename=%s", $RatingTables->csv_export[$_REQUEST['table']]);
     Header($h);
 }
 
 if ($_REQUEST['import'] && $_REQUEST['table']) {
-	$RatingTables->importTable($_REQUEST['table']);
+    $RatingTables->importTable($_REQUEST['table']);
 }
 
 $RatingTables->updateTable();
 $RatingTables->showTable();
 
 if (!$_REQUEST['export']) {
-	$layout->showFooter();
+    $layout->showFooter();
     print "
     </body>
     </html>
