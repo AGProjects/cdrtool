@@ -634,8 +634,6 @@ function accountList()
         <td> $expire
         </tr>
         ";
-
-        $j++;
     }
 
     print "</table>
