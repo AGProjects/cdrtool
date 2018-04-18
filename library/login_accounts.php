@@ -565,14 +565,14 @@ function showForm($id = "")
 
 function accountList()
 {
-    global $auth, $perm, $verbose, $search_text;
+    global $auth, $perm, $verbose, $search_text, $PHP_SELF;
     $uid = $auth->auth["uid"];
 
-    $db        = new DB_CDRTool;
+    $db = new DB_CDRTool;
 
-    $query="select * from auth_user";
+    $query = "select * from auth_user";
     if (!$perm->have_perm("admin")) {
-        $query.= sprintf(" where user_id = '%s'", addslashes($uid));
+        $query .= sprintf(" where user_id = '%s'", addslashes($uid));
     }
     $query .= " order by name asc";
     $db->query($query);
@@ -586,7 +586,7 @@ function accountList()
         <table class='table table-hover table-condensed table-striped' width=100%>
         <thead>
         <tr>
-     ";
+    ";
     print "<th class=h>";
     print _("Name");
     print "</th><th class=h>";
@@ -623,15 +623,15 @@ function accountList()
         }
 
         print "
-        <tr class=$bgcolor>
-        <td> <a href=\"$PHP_SELF?id=$id_db&action=edit\">$name</a>
-        <td> $organization
-        <td> $username
-        <td> <nobr><a href=mailto:$email>$email</a></nobr>
-        <td> <nobr>$tel</nobr>
-        <td> $sources
-        <td> $expire
-        </tr>
+            <tr class=$bgcolor>
+                <td><a href=\"$PHP_SELF?id=$id_db&action=edit\">$name</a></td>
+                <td>$organization</td>
+                <td>$username</td>
+                <td><nobr><a href=mailto:$email>$email</a></nobr></td>
+                <td><nobr>$tel</nobr></td>
+                <td>$sources</td>
+                <td>$expire</td>
+            </tr>
         ";
     }
 
