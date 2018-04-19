@@ -41,11 +41,11 @@ class CDRTool_Auth extends Auth
         global $max_login_attempts;
         global $CDRTool;
 
-        $username    = $_POST["username"];
-        $sendotp     = $_POST["sendotp"];
-        $password    = $_POST["password"];
-        $challenge   = $_POST["challenge"];
-        $response    = $_POST["response"];
+        $username    = isset($_POST["username"]) ? $_POST["username"] : '';
+        $sendotp     = isset($_POST["sendotp"]) ? $_POST["sendotp"] : '';
+        $password    = isset($_POST["password"]) ? $_POST["password"] : '';
+        $challenge   = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
+        $response    = isset($_POST["response"]) ? $_POST["response"] : '';
 
         $max_login_attempts=5;
 
@@ -256,16 +256,15 @@ class CDRTool_Auth extends Auth
                             $acl_filter = false;
                             break;
                         }
-                  }
+                    }
                 }
-                if ($acl_filter){
+                if ($acl_filter) {
                     $log = sprintf("CDRTool login with username %s using method %s from IP %s denied by ACL", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
                     syslog(LOG_NOTICE, $log);
                     return false;
                 }
 
                 if ($CDRTool['provider']['clear_text_passwords'] != 1) {
-
                     // Update hashed pass if none set and we need hashed ones
                     if ($this->db->f("password_hashed") == '' && $this->db->f("password") != '') {
                         $newpassmd5=md5($this->db->f("password"));
@@ -427,7 +426,7 @@ class CDRTool_Auth extends Auth
                 //print_r($result);
                 ## True when JS is disabled
                 if ($response == "") {
-                    if ($CDRTool['provider']['clear_text_passwords']!= 1 ) {
+                    if ($CDRTool['provider']['clear_text_passwords']!= 1) {
                         $password=md5($password);
                     }
                     if ($password == $pass
@@ -724,7 +723,7 @@ class SIP_Subscriber_Auth extends Auth
     }
 }
 
-function otp_sms($tel,$message,$hideoutput)
+function otp_sms($tel, $message, $hideoutput)
 {
     $tel=preg_replace("/[^0-9]/", "", $tel);
     $tel="+".$tel;
@@ -761,9 +760,9 @@ function random_passwd_gen()
                "x","y","1","2","3","4",
                "5","6","7","8","9");
 
-    while($i < 5) {
-        srand((double)microtime()*1000000);
-        $randval = rand(0,28);
+    while ($i < 5) {
+        srand((double)microtime() * 1000000);
+        $randval = rand(0, 28);
         $random_otp="$random_otp"."$alf[$randval]";
         $i++;
     }
@@ -812,13 +811,13 @@ function checkEmail($email)
 class OpenSIPS_DomainAuth
 {
 
-    function OpenSIPS_DomainAuth ()
+    function OpenSIPS_DomainAuth()
     {
         $this->userDB   = new DB_opensips;
         $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
     }
 
-    function validate ($user, $domain, $password)
+    function validate($user, $domain, $password)
     {
         $ha1 = md5($user. ':' . $domain . ':' . $password);
 
@@ -843,13 +842,13 @@ class OpenSIPS_DomainAuth
 class SipThor_DomainAuth
 {
 
-    function SipThor_DomainAuth ()
+    function SipThor_DomainAuth()
     {
         $this->userDB   = new DB_sipthor;
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate ($user, $domain, $password,$response,$otp_yubikey)
+    function validate($user, $domain, $password, $response, $otp_yubikey)
     {
         $query = sprintf(
             "SELECT * FROM sip_accounts WHERE username = '%s' AND domain = '%s'",
@@ -876,8 +875,8 @@ class SipThor_DomainAuth
 
             if ($profile['properties']['web_password']) {
                 $web_pass=$profile['properties']['web_password'];
-                if (strstr($web_pass, ":")){
-                   $split = explode(":", $web_pass);
+                if (strstr($web_pass, ":")) {
+                    $split = explode(":", $web_pass);
                     //if (preg_match('/^[a-f0-9]{32}$/', split[0])) {
                         $check_web_password=$split[0];
                     //}
@@ -982,25 +981,25 @@ class pageLayout
             <div id=wrapper2>
             <br>
     	";
-        $this->hasAGProjectslogo=1;
+        $this->hasAGProjectslogo = 1;
         $logo = $CDRTool['tld']."/images/CDRTool.png";
         print "<center><a href=http://cdrtool.ag-projects.com target=agprojects><img src=$logo border=0 style='max-width:176px'></a></center><br>";
         print "
         <form class=form-horizontal style='margin-bottom:0' action=\"$url\" method=post name=login onsubmit='doChallengeResponse();'>
         <p>
         ";
-        if ($CDRTool[provider][sampleLoginSubscriber]) {
-            $sampleLoginSubscriber    = $CDRTool[provider][sampleLoginSubscriber];
+        if ($CDRTool['provider']['sampleLoginSubscriber']) {
+            $sampleLoginSubscriber = $CDRTool['provider']['sampleLoginSubscriber'];
         } else {
-            $sampleLoginSubscriber="account@sip2sip.info";
+            $sampleLoginSubscriber = "account@sip2sip.info";
         }
-        if ($CDRTool[provider][sampleLoginDomain]) {
-            $sampleLoginDomain    = $CDRTool[provider][sampleLoginDomain];
+        if ($CDRTool['provider']['sampleLoginDomain']) {
+            $sampleLoginDomain = $CDRTool['provider']['sampleLoginDomain'];
         } else {
-            $sampleLoginDomain="sip2sip.info";
+            $sampleLoginDomain = "sip2sip.info";
         }
 
-        $web_username=$auth->auth["uname"];
+        $web_username = $auth->auth["uname"];
         print "
         <div class=control-group>
             <label class=control-label>
@@ -1061,26 +1060,32 @@ class pageLayout
                   </p>
                 ";
 
-                $spam=new DB_CDRTool;
+                $spam = new DB_CDRTool;
 
-                $query=sprintf("select * from spam where ip = '%s'",addslashes($_SERVER[REMOTE_ADDR]));
+                $query = sprintf("select * from spam where ip = '%s'", addslashes($_SERVER['REMOTE_ADDR']));
                 $spam->query($query);
 
                 if (!$spam->num_rows()) {
-                    $query=sprintf("insert into spam (ip,tries,login,stamp)
-                    values ('%s','1','%s','%s')
-                    ",$_SERVER[REMOTE_ADDR],addslashes($username),time());
+                    $query = sprintf(
+                        "insert into spam (ip,tries,login,stamp)
+                        values ('%s','1','%s','%s')
+                        ",
+                        $_SERVER['REMOTE_ADDR'],
+                        addslashes($username),
+                        time()
+                    );
                 } else {
-                    $query=sprintf("update spam set
-                    tries = tries +1 where ip = '%s'", addslashes($_SERVER[REMOTE_ADDR]));
+                    $query = sprintf(
+                        "update spam set
+                        tries = tries +1 where ip = '%s'",
+                        addslashes($_SERVER['REMOTE_ADDR'])
+                    );
                 }
                 $spam->query($query);
-
             } else {
                 print "Please fill in your One Time Password!";
             }
         }
-
 
         print "
             <div class='p-footer'>
@@ -1139,11 +1144,20 @@ class pageLayout
         $tz = $CDRTool['provider']['timezone'];
 
         if (is_readable($CDRTool['Path']."/images/logo.gif")) {
-            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",$CDRTool['tld']);
+            printf(
+                "<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.gif\"></span>\n",
+                $CDRTool['tld']
+            );
         } else if (is_readable($CDRTool['Path']."/images/logo.jpg")) {
-            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height:35px\" src=\"%s/images/logo.jpg\"></span>\n",$CDRTool['tld']);
+            printf(
+                "<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height:35px\" src=\"%s/images/logo.jpg\"></span>\n",
+                $CDRTool['tld']
+            );
         } else if (is_readable($CDRTool['Path']."/images/logo.png")) {
-            printf("<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.png\"></span>\n",$CDRTool['tld']);
+            printf(
+                "<span style='margin-left: -20px; padding: 0px 20px 0px; float:left'><img style=\"height: 35px\" src=\"%s/images/logo.png\"></span>\n",
+                $CDRTool['tld']
+            );
         } else {
             $this->hasAGProjectslogo=1;
             print '<a class="brand" href=http://cdrtool.ag-projects.com target=agprojects>CDRTool</a>';
@@ -1371,10 +1385,11 @@ class pageLayout
         print "</h1></div>";
     }
 
-    function showLegalNotice () {
+    function showLegalNotice()
+    {
         global $loginname, $CDRTool;
 
-        $CDRTool_company=$CDRTool[provider][name];
+        $CDRTool_company = $CDRTool['provider']['name'];
 
         $legalNotice="Legal Notice".
         "\n\n".
@@ -1400,8 +1415,8 @@ class pageLayout
         "traffic data in conformity with the applicable legislation. ".
         "\n\n";
 
-        $loginName=$CDRTool[loginName];
-		$this->hasAGProjectslogo=1;
+        $loginName=$CDRTool['loginName'];
+        $this->hasAGProjectslogo=1;
 
         print "
             <div id=wrapper2>
@@ -1428,10 +1443,11 @@ class pageLayout
         ";
     }
 
-    function showFooter() {
+    function showFooter()
+    {
         global $CDRTool;
         if (!$CDRTool['filter']['aNumber'] && !$this->hasAGProjectslogo) {
-            $thisYear=date("Y",time());
+            $thisYear = date("Y", time());
             print "
             <p>
             <table width=100% border=0 align=center>
