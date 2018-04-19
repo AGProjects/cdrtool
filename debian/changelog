@@ -1,3 +1,18 @@
+cdrtool (9.6.0) unstable; urgency=medium
+
+  * Updated syntax and formatting
+  * Removed short opening tags
+  * Updated smarty dependency
+  * Fixed update query causing errors in mysql strict
+  * Fixed login when yubikey is not used
+
+  [ Web Interface ]
+
+  * Fixed conflicting 'arrow' classes
+  * Added support for GTID in replication overview
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Thu, 19 Apr 2018 11:18:28 +0200
+
 cdrtool (9.5.0) unstable; urgency=medium
 
   * Added mysqli database backend
