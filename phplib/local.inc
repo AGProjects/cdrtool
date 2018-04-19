@@ -430,9 +430,9 @@ class CDRTool_Auth extends Auth
                         $password=md5($password);
                     }
                     if ($password == $pass
-                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
-                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
-                        || (!(new PEAR)->isError($auth) && $auth_method =='4' )
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7' && $use_yubikey)
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5' && $use_yubikey)
+                        || (!(new PEAR)->isError($auth) && $auth_method =='4' && $use_yubikey)
                         || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)
                     ) {
                         $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
@@ -457,9 +457,9 @@ class CDRTool_Auth extends Auth
                     // we check if either otp or normal password match
                     //print "<p>$response == $expected_response <p>$response == $expect_otp";
                     if ($expected_response == $response
-                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7')
-                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5')
-                        || (!(new PEAR)->isError($auth) && $auth_method =='4' )
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $expected_response == $response && $auth_method=='7' && $use_yubikey)
+                        || (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $username == $user_db && $auth_method=='5' && $use_yubikey)
+                        || (!(new PEAR)->isError($auth) && $auth_method =='4' && $use_yubikey)
                         || ($response == $expect_otp && $timestamp_otp > $timestamp_now)
                     ) {
                         $log=sprintf("CDRTool login with username %s using method %s from IP %s", $username, $auth_method, $_SERVER['REMOTE_ADDR']);
@@ -920,7 +920,7 @@ class SipThor_DomainAuth
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
                 }
-            } else if (!(new PEAR)->isError($auth) && $yubikey == $yubi_id) {
+            } else if (!(new PEAR)->isError($auth) && $yubikey == $yubi_id && $use_yubikey) {
                 $uid = $this->userDB->f('username');
                 if ($uid) {
                     return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
