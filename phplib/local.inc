@@ -130,15 +130,15 @@ class CDRTool_Auth extends Auth
         global $verbose;
         global $DATASOURCES;
 
-        $username    = $_POST["username"];
-        $sendotp     = $_POST["sendotp"];
-        $password    = $_POST["password"];
-        $challenge   = $_POST["challenge"];
-        $response    = $_POST["response"];
-        $response_ha1    = $_POST["response_ha1"];
-        $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
+        $username     = isset($_POST["username"]) ? $_POST["username"] : '';
+        $sendotp      = isset($_POST["sendotp"]) ? $_POST["sendotp"] : '';
+        $password     = isset($_POST["password"]) ? $_POST["password"] : '';
+        $challenge    = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
+        $response     = isset($_POST["response"]) ? $_POST["response"] : '';
+        $response_ha1 = isset($_POST["response_ha1"]) ? $_POST["response_ha1"] : '';
+        $REMOTE_ADDR  = $_SERVER["REMOTE_ADDR"];
         //dprint_r("response: $response");
-        $otp_yubikey = $_POST["yubikey"];
+        $otp_yubikey = isset($_POST["yubikey"]) ? $_POST["yubikey"] : '';
 
         $yubi_id = substr($otp_yubikey, 0, 12);
 
@@ -150,16 +150,16 @@ class CDRTool_Auth extends Auth
             require_once 'PEAR.php';
         }
 
-        if(isset($username)) {
+        if ($username) {
             $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
         }
 
         $uid = false;
 
         if ($username || $use_yubikey ) {
-            $username=trim($username);
+            $username = trim($username);
             if (preg_match ("/\@/",$username)) {
-                $a=explode("@",$username);
+                $a = explode("@", $username);
                 $domainAuth = new DomainAuthLocal();
 
                 $ret=$domainAuth->validate($a[0], $a[1], $password, $response_ha1, $otp_yubikey);
@@ -586,14 +586,14 @@ class SIP_Subscriber_Auth extends Auth
     {
         global $SIP;
 
-        $username    = $_POST["username"];
-        $password    = $_POST["password"];
-        $challenge   = $_POST["challenge"];
-        $response    = $_POST["response"];
-        $response_ha1= $_POST["response_ha1"];
-        $yubikey_p   = $_POST['yubikey'];
+        $username    = isset($_POST["username"]) ? $_POST["username"] : '';
+        $password    = isset($_POST["password"]) ? $_POST["password"] : '';
+        $challenge   = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
+        $response    = isset($_POST["response"]) ? $_POST["response"] : '';
+        $response_ha1= isset($_POST["response_ha1"]) ? $_POST["response_ha1"] : '';
+        $yubikey_p   = isset($_POST['yubikey']) ? $_POST['yubikey'] : '';
 
-        $use_yubikey=0;
+        $use_yubikey = 0;
         if (stream_resolve_include_path('Auth/Yubico.php')) {
             require_once 'Auth/Yubico.php';
             $use_yubikey=1;
@@ -601,13 +601,13 @@ class SIP_Subscriber_Auth extends Auth
             require_once 'PEAR.php';
         }
 
-        if (isset($username)) {
+        if ($username) {
             $this->auth["uname"]=$username;
         }
 
-        $a=explode("@", $username);
-        $domain= $a[1];
-        if (count($a) !=2) {
+        $a = explode("@", $username);
+        $domain = $a[1];
+        if (count($a) != 2) {
             return false;
         }
 
