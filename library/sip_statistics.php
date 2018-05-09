@@ -1,9 +1,10 @@
 <?php
-/*
-    Copyright (c) 2008 AG Projects
-    http://ag-projects.com
-    Author Adrian Georgescu
-*/
+/**
+ * Copyright (c) 2018 AG Projects
+ * http://ag-projects.com
+ * Author Adrian Georgescu
+ *
+ */
 
 class NetworkStatistics {
     // obtain statistics from SIP Thor network
@@ -14,17 +15,19 @@ class NetworkStatistics {
     public $sip_proxies       = array();
     public $node_statistics   = array();
     public $domain_statistics = array();
-    public $allowedRoles      = array('sip_proxy',
-                                   'media_relay',
-                                   'provisioning_server',
-                                   'xcap_server',
-                                   'thor_dnsmanager',
-                                   'thor_database',
-                                   'voicemail_server',
-                                   );
-    public $allowedSummary    = array('online_accounts',
-                                   'total_accounts'
-                                   );
+    public $allowedRoles      = array(
+        'sip_proxy',
+        'media_relay',
+        'provisioning_server',
+        'xcap_server',
+        'thor_dnsmanager',
+        'thor_database',
+        'voicemail_server',
+    );
+    public $allowedSummary    = array(
+        'online_accounts',
+        'total_accounts'
+    );
 
     public function NetworkStatistics($engineId, $allowedDomains = array())
     {
