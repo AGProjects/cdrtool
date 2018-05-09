@@ -87,11 +87,11 @@ Then run the database setup script:
 
 /var/www/CDRtool/setup/mysql/setup_mysql.sh <password> <dbserver>
 
-The script performs the following: 
+The script performs the following:
 
 1. It adds to the MySQL server a user for cdrtool software
-2. It creates a new MySQL database "cdrtool" 
-3. It creates a default web user admin/admin, you may use 
+2. It creates a new MySQL database "cdrtool"
+3. It creates a default web user admin/admin, you may use
    this initial account to login in the web interface
 4. It populates the cdrtool database with initial values
 
@@ -110,12 +110,13 @@ Configure Apache2 server to support php scripting.
 Create a virtual host for cdrtool web pages:
 
 cp setup/apache2/sites-available/cdrtool.example.com /etc/apache2/sites-available
-cp setup/apache2/conf.d/cdrtool /etc/apache2/conf.d/
+cp setup/apache2/conf.d/cdrtool.conf /etc/apache2/conf-available/
 
-Edit /etc/apache2/sites-enabled/cdrtool.example.com to suit your
+Edit /etc/apache2/sites-available/cdrtool.example.com to suit your
 environment. Enable the virtual site using:
 
 a2ensite cdrtool.example.com
+a2enconf cdrtool.conf
 
 You may enable ssl using "a2enmod ssl" command. If you use ssl you must also
 generate a site certificate using the instructions provided by apache2
@@ -125,7 +126,7 @@ software.
 Create CDRTool configuration file
 ---------------------------------
 
-cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc 
+cp /var/www/CDRTool/setup/global.inc.simple.sample /etc/cdrtool/global.inc
 
 Edit global.inc and setup your variables to match your system. The file
 global.inc.complex.sample contains a more elaborate example for setting up
