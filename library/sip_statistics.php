@@ -1,5 +1,6 @@
 <?php
 /**
+ *
  * Copyright (c) 2018 AG Projects
  * http://ag-projects.com
  * Author Adrian Georgescu
@@ -29,7 +30,7 @@ class NetworkStatistics {
         'total_accounts'
     );
 
-    public function NetworkStatistics($engineId, $allowedDomains = array())
+    public function __construct($engineId, $allowedDomains = array())
     {
         if (!strlen($engineId)) {
             return false;
@@ -47,7 +48,7 @@ class NetworkStatistics {
             "admin"       => true
         );
 
-        $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+        $this->SOAPurl = $soapEngines[$this->soapEngineId]['url'];
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -58,9 +59,9 @@ class NetworkStatistics {
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
-            $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
+            $this->hostnames = $soapEngines[$this->soapEngineId]['hostnames'];
         } else {
-            $this->hostnames=array();
+            $this->hostnames = array();
         }
     }
 
@@ -271,7 +272,7 @@ class SipThorNetworkImage {
     public $display_options = array();
     public $accounts_item   = 'online_accounts';
 
-    public function SipThorNetworkImage($engineId, $allowedDomains = array(), $display_options = array())
+    public function __construct($engineId, $allowedDomains = array(), $display_options = array())
     {
         if (!strlen($engineId)) {
             return false;
@@ -380,17 +381,17 @@ class SipThorNetworkImage {
             $h1=0;
             $t=count($this->dns_managers);
             foreach (array_keys($this->dns_managers) as $_ip) {
-                imagecopy($img, $sip_thor_node_img, $this->imgsize-120-$h1, 0, 0, 0, $nw-20, $nh-20);
+                imagecopy($img, $sip_thor_node_img, $this->imgsize - 120 - $h1, 0, 0, 0, $nw - 20, $nh - 20);
 
                 $text = sprintf("DNS%s", $t--);
-                imagestring($img, 3, $this->imgsize-65-$h1, 80, $text, $black);
+                imagestring($img, 3, $this->imgsize - 65 - $h1, 80, $text, $black);
                 $v1 = $v1+10;
                 $h1 = $h1+50;
             }
 
             $v1=100;
             foreach (array_keys($this->dns_managers) as $_ip) {
-                imagestring($img, 3, $this->imgsize-125, $v1, $_ip, $black);
+                imagestring($img, 3, $this->imgsize - 125, $v1, $_ip, $black);
                 $v1=$v1+10;
             }
         }
@@ -444,7 +445,7 @@ class SipThorNetworkImage {
                     imagestring($img, 3, $cx+$px-110, $cy+$py-20, $extra_text1, $black);
                     imagestring($img, 3, $cx+$px-110, $cy+$py-10, $extra_text2, $black);
                 }
-                imagecopy($img, $sip_thor_node_img, $cx+$px-$nw/2+7, $cy+$py-$nh/2+5, 0, 0, $nw-20, $nh-20);
+                imagecopy($img, $sip_thor_node_img, $cx + $px - $nw / 2 + 7, $cy + $py - $nh / 2 + 5, 0, 0, $nw - 20, $nh - 20);
                 $j++;
             }
         }
@@ -458,7 +459,7 @@ class SIPstatistics {
 
     public $domains        = array('total'=>'total');
 
-    public function SIPstatistics()
+    public function __construct()
     {
         global $CDRTool;
 
