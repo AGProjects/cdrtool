@@ -1,3 +1,10 @@
+cdrtool (9.6.1) unstable; urgency=medium
+
+  * Changed setup to be compatible with Apache 2.4
+  * Updated syntax
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Fri, 11 May 2018 10:50:41 +0200
+
 cdrtool (9.6.0) unstable; urgency=medium
 
   * Updated syntax and formatting
