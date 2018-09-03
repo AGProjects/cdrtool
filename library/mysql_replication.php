@@ -65,7 +65,7 @@ class MySQLReplicationStatus {
         $this->slave_last_error     = $db->f('Last_Error');
         $this->slave_seconds_behind = $db->f('Seconds_Behind_Master');
         $this->using_gtid           = $db->f('Using_Gtid');
-        $this->gtid_io_pos          = $db->f('Gtid_IO_pos');
+        $this->gtid_io_pos          = $db->f('Gtid_IO_Pos');
 
         if (!$db->query($this->master_status_query)) {
             printf(
@@ -220,7 +220,7 @@ class ReplicationOverview {
             printf("<tr><td class=border>Master host</td><td>%s</td></tr>", $this->status[$key]->slave_master);
             printf("<tr><td class=border>Master port</td><td>%s</td></tr>", $this->status[$key]->slave_master_port);
             printf("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>", $this->status[$this->status[$key]->slave_of]->color, $this->status[$key]->slave_log_file);
-            if ($this->using_gtid != '') {
+            if ($this->status[$key]->using_gtid != '') {
                 printf("<tr><td class=border>Using GTID</td><td>%s</td></tr>", $this->status[$key]->using_gtid);
                 printf("<tr><td class=border>GTID IO Pos</td><td>%s</td></tr>", $this->status[$key]->gtid_io_pos);
             }
