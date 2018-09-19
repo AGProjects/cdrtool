@@ -878,14 +878,16 @@ function basicTimeGraph(container,legend, flotr_data, extra_options) {
       $('#begin_date').datepicker();
     }
 
-    if ( $('#thorMap').exists()) {
+    if ( $("[id^='thorMap']").exists()) {
+        $("[id^='thorMap']").each(function() {
+            var datasource = this.id.split('__')[1];
+            var thorData = eval("thorData__" + datasource);
+            var draw = SVG('thorMap__' + datasource);
 
-      var draw = SVG('thorMap');
+            draw.viewbox(0, 0, thorData.imgsize, thorData.imgsize);
 
-      draw.viewbox(0, 0, thorData.imgsize, thorData.imgsize);
-
-      // draw.line(0,315,630,315).stroke({ width: 1, color:'grey'});
-      // draw.line(315,0,315,630).stroke({ width: 1, color:'grey'});
+            // draw.line(0,315,630,315).stroke({ width: 1, color:'grey'});
+            // draw.line(315,0,315,630).stroke({ width: 1, color:'grey'});
 
       draw.circle()
         .radius(315*0.6)
@@ -1239,6 +1241,7 @@ if (typeof thorData.node_statistics != "undefined" && !$.isEmptyObject(thorData.
           }
         });
     }
+        });
     }
 
     if ( $('#end_date').exists()) {

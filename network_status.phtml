@@ -33,8 +33,8 @@ foreach (array_keys($DATASOURCES) as $datasource) {
             printf("<h2>%s</h2>", $DATASOURCES[$datasource]['name']);
             $SipThorNetworkImage = new SipThorNetworkImage($DATASOURCES[$datasource]['networkStatus'], $allowedDomains);
             //printf ("<img src=images/SipThorNetwork.php?engine=%s align=left>",$DATASOURCES[$datasource]['networkStatus']);
-            print "<div id='thorMap'><script>";
-            printf("var thorData = %s", json_encode($SipThorNetworkImage->returnImageData()));
+            print "<div id='thorMap__$datasource'><script>";
+            printf("var thorData__$datasource = %s", json_encode($SipThorNetworkImage->returnImageData()));
             print "</script></div>";
             print "</div>";
             print "<div class='span6'>";
