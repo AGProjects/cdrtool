@@ -4,7 +4,7 @@ cdrtool (9.6.2) unstable; urgency=medium
 
   [ Web Interface ]
 
-  * Fixed Network overview for multiple datasource
+  * Fixed Network overview for multiple datasources
   * Fixed GTID display in replication overview
 
  -- Tijmen de Mes <tijmen@ag-projects.com>  Fri, 21 Sep 2018 12:06:47 +0200
