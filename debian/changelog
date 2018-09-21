@@ -1,3 +1,14 @@
+cdrtool (9.6.2) unstable; urgency=medium
+
+  * Fixed sample vhost for Apache 2.4
+
+  [ Web Interface ]
+
+  * Fixed Network overview for multiple datasource
+  * Fixed GTID display in replication overview
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Fri, 21 Sep 2018 12:06:47 +0200
+
 cdrtool (9.6.1) unstable; urgency=medium
 
   * Changed setup to be compatible with Apache 2.4
