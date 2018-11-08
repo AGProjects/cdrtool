@@ -3119,9 +3119,9 @@ class CDR_opensips extends CDR
 
             $trace_query = array(
                 'cdr_source'    => $this->CDRS->sipTrace,
-                'callid'        => $this->callId,
-                'fromtag'       => $this->SipFromTag,
-                'totag'         => $this->SipToTag,
+                'callid'        => quoted_printable_decode($this->callId),
+                'fromtag'       => quoted_printable_decode($this->SipFromTag),
+                'totag'         => quoted_printable_decode($this->SipToTag),
                 'proxyIP'       => $this->SipProxyServer
             );
 
@@ -3287,9 +3287,9 @@ class CDR_opensips extends CDR
             if ($this->CDRS->mediaTrace) {
                 $media_query = array(
                     'cdr_source'    => $this->CDRS->mediaTrace,
-                    'callid'        => $this->callId,
-                    'fromtag'       => $this->SipFromTag,
-                    'totag'         => $this->SipToTag,
+                    'callid'        => quoted_printable_decode($this->callId),
+                    'fromtag'       => quoted_printable_decode($this->SipFromTag),
+                    'totag'         => quoted_printable_decode($this->SipToTag),
                     'proxyIP'       => $this->SipProxyServer
                 );
 
