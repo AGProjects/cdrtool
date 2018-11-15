@@ -503,8 +503,8 @@ class CDRS {
             $domain      = trim($this->cdrtool->Record['domain']);
             $subscriber  = trim($this->cdrtool->Record['subscriber']);
             $dest_id     = trim($this->cdrtool->Record['dest_id']);
-            $region      = $this->cdrtool->Record['region'];
-            $name        = $this->cdrtool->Record['dest_name'];
+            $region      = utf8_encode($this->cdrtool->Record['region']);
+            $name        = utf8_encode($this->cdrtool->Record['dest_name']);
 
             $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
 
@@ -512,16 +512,28 @@ class CDRS {
                 // SIP destination
 
                 if ($subscriber) {
-                    $this->_destinations_sip[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations_sip[$reseller_id][$subscriber][$dest_id] = array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_sip_count++;
                 } elseif ($domain) {
-                    $this->_destinations_sip[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations_sip[$reseller_id][$domain][$dest_id] = array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_sip_count++;
                 } elseif ($gateway) {
-                    $this->_destinations_sip[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations_sip[$reseller_id][$gateway][$dest_id] = array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_sip_count++;
                 } elseif ($dest_id) {
-                    $this->_destinations_sip[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations_sip[$reseller_id]["default"][$dest_id] = array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_sip_count++;
                 }
             } else {
@@ -538,19 +550,31 @@ class CDRS {
 
                 if ($subscriber) {
                     $this->destinations_subscriber_count++;
-                    $this->_destinations[$reseller_id][$subscriber][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations[$reseller_id][$subscriber][$dest_id]=array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_count++;
                 } elseif ($domain) {
                     $this->destinations_domain_count++;
-                    $this->_destinations[$reseller_id][$domain][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations[$reseller_id][$domain][$dest_id]=array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_count++;
                 } elseif ($gateway) {
                     $this->destinations_gateway_count++;
-                    $this->_destinations[$reseller_id][$gateway][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations[$reseller_id][$gateway][$dest_id]=array(
+                        'name'  => $name,
+                        'region'=> $region
+                    );
                     $this->destinations_count++;
                 } elseif ($dest_id) {
                     $this->destinations_default_count++;
-                    $this->_destinations[$reseller_id]["default"][$dest_id]=array('name'=>$name, 'region'=>$region);
+                    $this->_destinations[$reseller_id]["default"][$dest_id]=array(
+                        'name'   => $name,
+                        'region' => $region
+                    );
                     $this->destinations_count++;
                 }
             }
@@ -895,10 +919,10 @@ class CDRS {
                 </span></div> ";
 
             print "Time: ";
-	        print "<div class=\"input-append bootstrap-timepicker\">";
+            print "<div class=\"input-append bootstrap-timepicker\">";
             $f->show_element("begin_time","");
             print "<span class=\"add-on\"><i class=\"icon-time\"></i></span>
-        	</div>
+                </div>
             </td>
             </tr>
             <tr>
