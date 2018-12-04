@@ -113,7 +113,7 @@ class SOAP_Type_duration
     
     function duration_to_unix($duration) {
         global $ereg_duration;
-        if (ereg($ereg_duration,$duration,$regs)) {
+        if (preg_match("/$ereg_duration/", $duration, $regs)) {
             return SOAP_Type_duration::mkduration($regs[1], $regs[2], $regs[3], $regs[4], $regs[5], $regs[6], $regs[7]);
         }
         return FALSE;
@@ -121,7 +121,7 @@ class SOAP_Type_duration
     
     function is_duration($duration) {
         global $ereg_duration;
-        return ereg($ereg_duration,$duration,$regs);
+        return preg_match("/$ereg_duration/", $duration, $regs);
     }
     
     function _test($time) {

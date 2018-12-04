@@ -212,7 +212,7 @@ class SOAP_WSDL extends SOAP_Base
      */
     function parseURL($wsdl_uri)
     {
-        $parser =new $this->wsdlParserClass($wsdl_uri, $this, $this->docs);
+        $parser = new $this->wsdlParserClass($wsdl_uri, $this, $this->docs);
 
         if ($parser->fault) {
             $this->_raiseSoapFault($parser->fault);
@@ -233,7 +233,7 @@ class SOAP_WSDL extends SOAP_Base
     function parseObject(&$wsdl_obj, $targetNamespace, $service_name,
                          $service_desc = '')
     {
-        $parser =new SOAP_WSDL_ObjectParser($wsdl_obj, $this,
+        $parser = new SOAP_WSDL_ObjectParser($wsdl_obj, $this,
                                               $targetNamespace, $service_name,
                                               $service_desc);
 
@@ -785,7 +785,7 @@ class SOAP_WSDL extends SOAP_Base
             require_once 'SOAP/Client.php';
             eval($proxy);
         }
-        $proxy =new $classname;
+        $proxy = new $classname;
 
         return $proxy;
     }
@@ -928,7 +928,7 @@ class SOAP_WSDL extends SOAP_Base
     {
         static $trail = array();
 
-        $arrayType = ereg_replace('\[\]$', '', $arrayType);
+        $arrayType = preg_replace('/\[\]$/', '', $arrayType);
 
         // Protect against circular references XXX We really need to remove
         // trail from this altogether (it's very inefficient and in the wrong
@@ -1146,7 +1146,7 @@ class SOAP_WSDL_Parser extends SOAP_Base
     function SOAP_WSDL_Parser($uri, &$wsdl, $docs = false)
     {
         parent::SOAP_Base('WSDLPARSER');
-        $this->cache =new SOAP_WSDL_Cache($wsdl->cacheUse,
+        $this->cache = new SOAP_WSDL_Cache($wsdl->cacheUse,
                                             $wsdl->cacheMaxAge,
                                             $wsdl->cacheDir);
         $this->uri = $uri;

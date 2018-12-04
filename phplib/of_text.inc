@@ -88,7 +88,7 @@ class of_text extends of_element {
         $str .= "  }\n}\n";
       }
     }
-    
+
     return $str;
   }
 
@@ -102,22 +102,22 @@ class of_text extends of_element {
 	} else {
 	        return $this->valid_e;
 	}
-      if ($this->valid_e && (($this->icase && 
-            !eregi($this->valid_regex,$v)) ||
+      if ($this->valid_e && (($this->icase &&
+            !preg_match("/$this->valid_regex/i",$v)) ||
            (!$this->icase &&
-            !ereg($this->valid_regex,$v))))
+            !preg_match("/$this->valid_regex/",$v))))
         return $this->valid_e;
 	// new added by adigeo 2001-05-28
-      if ($this->valid_e2_error && (($this->icase && 
-            !eregi($this->valid_e2,$v)) ||
+      if ($this->valid_e2_error && (($this->icase &&
+            !preg_match("/$this->valid_e2/i",$v)) ||
            (!$this->icase &&
-            !ereg($this->valid_e2,$v))))
+            !preg_match("/$this->valid_e2/",$v))))
         return $this->valid_e2_error;
 
     }
 
     return false;
-  } 
+  }
 
 } // end TEXT
 

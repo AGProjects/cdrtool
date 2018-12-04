@@ -437,7 +437,7 @@ class Query extends DB_Sql {
 		}
 		$q=sprintf("UPDATE %s SET %s",$table,join($s,","));
 		if ($where) {
-			if (!eregi("^[[:space:]]*WHERE",$where)) {
+			if (!preg_match("/^[[:space:]]*WHERE/i",$where)) {
 				## insert "WHERE" if not set
 				$where="WHERE $where";
 			}
@@ -476,7 +476,7 @@ class Query extends DB_Sql {
 		if (Count($s)) {
 			$q=sprintf("UPDATE %s SET %s",$table,join($s,","));
 			if ($where) {
-				if (!eregi("^[[:space:]]*WHERE",$where)) {
+				if (!preg_match("/^[[:space:]]*WHERE/i",$where)) {
 					## insert "WHERE" if not set
 					$where="WHERE $where";
 				}
@@ -579,13 +579,13 @@ class Query extends DB_Sql {
 			$q.=" $andor ".$mywhere[$i];
 		}
 		if ($where) {
-			$where=eregi_Replace("^[[:space:]]*WHERE","",$where);
+			$where=preg_replace("/^[[:space:]]*WHERE/i","",$where);
 			$q.=" $andor $where";
 		}
 		if (!$q && $ckeck=='full') {
 			echo "WARNING: where_plain_Clause(): WHERE-clause is empty!<BR>";
 		}
-		$q=ereg_Replace("^ $andor "," WHERE ",$q);
+		$q=preg_replace("/^ $andor /"," WHERE ",$q);
 		$this->_QDebug("where_plain_Clause(): $q");
 		return($q);
 	}
@@ -638,13 +638,13 @@ class Query extends DB_Sql {
 			$q.=" $andor $k[name] $o $k[val]";
 		}
 		if ($where) {
-			$where=eregi_Replace("^[[:space:]]*WHERE","",$where);
+			$where=preg_replace("/^[[:space:]]*WHERE/i","",$where);
 			$q.=" $andor $where";
 		}
 		if (!$q && $ckeck=='full') {
 			echo "WARNING: where_Clause(): WHERE-clause is empty!<BR>";
 		}
-		$q=ereg_Replace("^ $andor "," WHERE ",$q);
+		$q=preg_replace("/^ $andor /"," WHERE ",$q);
 		$this->_QDebug("where_Clause(): $q");
 		return($q);
 	}
