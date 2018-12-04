@@ -503,7 +503,7 @@ class Query extends DB_Sql {
 
 		$q=sprintf("DELETE FROM %s",$table);
 		if ($where) {
-			if (!eregi("^[[:space:]]*WHERE",$where)) {
+			if (!preg_match("/^[[:space:]]*WHERE/i",$where)) {
 				## insert "WHERE" if not set
 				$where="WHERE $where";
 			}
