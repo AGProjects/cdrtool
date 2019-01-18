@@ -9,7 +9,7 @@ page_open(
     )
 );
 
-$loginname=$auth->auth["uname"];
+$loginname = $auth->auth["uname"];
 
 $title           = "Logs";
 $search_text     = isset($_REQUEST['search_text']) ? $_REQUEST['search_text'] : '';
@@ -20,6 +20,7 @@ $next            = isset($_REQUEST['next']) ? intval($_REQUEST['next']) : 0;
 $maxrowsperpage  = 20;
 $PHP_SELF        = htmlentities($_SERVER['PHP_SELF']);
 $thisMonth       = isset($_REQUEST['thisMonth']) ? $_REQUEST['thisMonth'] : '';
+$recipient       = isset($_REQUEST['recipient']) ? $_REQUEST['recipient'] : '';
 
 $db              = new DB_CDRTool;
 
@@ -30,16 +31,16 @@ if (is_readable("/etc/cdrtool/local/header.phtml")) {
 }
 
 if ($search_text) {
-    $search_text=preg_replace("/[^\d|\w| -\.@_]/s", "", $search_text);
+    $search_text = preg_replace("/[^\d|\w| -\.@_]/s", "", $search_text);
 }
 
 $layout = new pageLayoutLocal();
 $layout->showTopMenu($title);
 
 if ($thisMonth) {
-    $checked_thisMonth='checked';
+    $checked_thisMonth = 'checked';
 } else {
-    $checked_thisMonth='';
+    $checked_thisMonth = '';
 }
 
 $where = " (1=1) ";
@@ -51,13 +52,13 @@ if ($CDRTool['filter']['reseller']) {
 }
 
 if ($perm->have_perm('admin')) {
-    $query="select * from auth_user where perms like '%admin%'";
+    $query = "select * from auth_user where perms like '%admin%'";
     $db->query($query);
     while ($db->next_record()) {
         $Collegues[$db->f('email')] = $db->f('name');
         if ($loginname == $db->f('username')) {
-            $myEmailAddress=$db->f('email');
-            $myName=$db->f('name');
+            $myEmailAddress = $db->f('email');
+            $myName = $db->f('name');
         }
     }
 } else {
@@ -77,7 +78,11 @@ if ($current_log) {
 
         $db->query($query);
     } else if ($task == "mailLog" && $recipient) {
-        $query=sprintf("select * from log where %s and id = %d", $where, intval($current_log));
+        $query = sprintf(
+            "select * from log where %s and id = %d",
+            $where,
+            intval($current_log)
+        );
 
         $db->query($query);
         $db->next_record();
@@ -90,16 +95,16 @@ if ($current_log) {
             $protocolURL="http://";
         }
 
-        $subject="CDRTool";
+        $subject = "CDRTool";
 
-        $fullURL=$protocolURL.$_SERVER['HTTP_HOST'].$CDRTool['tld']."/".$rerun;
-        $body="CDRTool query to analize:\n\n$fullURL\n\n";
+        $fullURL = $protocolURL.$_SERVER['HTTP_HOST'].$CDRTool['tld']."/".$rerun;
+        $body = "CDRTool query to analize:\n\n$fullURL\n\n";
         if ($description) {
-            $body=$body."The query id $current_log is saved with name \"$description\"\n\n";
-            $subject=$subject.": ".$description;
+            $body = $body."The query id $current_log is saved with name \"$description\"\n\n";
+            $subject = $subject.": ".$description;
         }
 
-        $body=$body."This notification has been sent to you from CDRTool log interface by $myName";
+        $body = $body."This notification has been sent to you from CDRTool log interface by $myName";
 
         mail($recipient, $subject, $body, "From: $myEmailAddress");
         print "<p>Notified $recipient.";
@@ -135,13 +140,13 @@ if ($db->query($query)) {
 }
 
 if (!$next) {
-    $i=0;
-    $next=0;
+    $i = 0;
+    $next = 0;
 } else {
     $i = intval($next);
 }
-$j=0;
-$z=0;
+$j = 0;
+$z = 0;
 
 print "
 <form method=post action=$PHP_SELF>
@@ -200,8 +205,8 @@ if ($rows > 0) {
            </thead>
 	";
 
-    while ($i<$maxrows) {
-        $found=$i+1;
+    while ($i < $maxrows) {
+        $found = $i+1;
         $db->next_record();
 
         $current_log = $db->f('id');
@@ -244,10 +249,10 @@ if ($rows > 0) {
             $url_edit="<a class='btn btn-info' href=\"$reedit\">Edit</a>";
         }
 
-        $rr=floor($found/2);
-        $mod=$found-$rr*2;
+        $rr = floor($found / 2);
+        $mod = $found - $rr * 2;
 
-        if ($mod ==0) {
+        if ($mod == 0) {
             //$bgcolor="lightgrey";
         } else {
             //$bgcolor="white";
@@ -257,13 +262,13 @@ if ($rows > 0) {
 		<tr>
 		<td class=cdr><b>$found.</b></td>
 		<td class=cdr>$current_log</td>
-        <td class=cdr>$reseller_id</td>
-        <td class=cdr>$log_date</td>
+                <td class=cdr>$reseller_id</td>
+                <td class=cdr>$log_date</td>
 		<td class=cdr>$login</td>
 		<td class=cdr>$ip</td>
-        <td class=cdr>$datasource_print</td>
+                <td class=cdr>$datasource_print</td>
 		<td class=cdr>$results</td>
-        <td class=cdr><form class='cform form-inline' method=post>";
+                <td class=cdr><form class='cform form-inline' method=post>";
 
         if ($display_form == 1) {
             print "
@@ -310,8 +315,7 @@ if ($rows > 0) {
 		";
         $i++;
     }
-    print "</table>
-    ";
+    print "</table>";
 }
 
 print "
