@@ -111,7 +111,7 @@ if ($current_log) {
     }
 }
 
-$url_log = '';
+$url_log = array();
 if ($search_text) {
     $where.= sprintf(
         " and (description like '%s%s%s' or url like '%s' or id = '%s')",
@@ -121,13 +121,12 @@ if ($search_text) {
         addslashes($search_text),
         addslashes($search_text)
     );
-    $search_text_enc = urlencode($search_text);
-    $url_log .= "&search_text=$search_text_enc";
+    $url_log["search_text"] = $search_text;
 }
 
 if ($thisMonth) {
     $where .= sprintf(" and date like '%s'", date('Y-m').'%');
-    $url_log .= "&thisMonth=1";
+    $url_log["thisMonth"] = 1;
 }
 
 $query = sprintf("select count(*) as records from log where %s ", $where);
@@ -318,29 +317,34 @@ if ($rows > 0) {
     print "</table>";
 }
 
-print "
-<ul class=\"pager\">
-";
+print "<ul class=\"pager\">";
 
 if ($next != 0) {
     $show_next = $maxrowsperpage - $next;
-    $url_prev = $PHP_SELF."?".$url_log."&action=search";
+    $url_log['action'] = "search";
     if ($show_next < 0) {
-        $mod_show_next  =  $show_next - 2 * $show_next;
-        $url_prev = $PHP_SELF."?".$url_log."&action=search&next=$mod_show_next";
+        $url_log['next'] = $show_next - 2 * $show_next;
     }
+    $url_prev = sprintf(
+        "%s?%s",
+        $PHP_SELF,
+        http_build_query($url_log)
+    );
     print "<li><a href=\"$url_prev\">&larr; Previous</a></li>";
 }
 
 if ($rows > $maxrowsperpage && $rows != $maxrows) {
-    $show_next = $maxrowsperpage + $next;
-    $url_next = $PHP_SELF."?".$url_log."&action=search&next=$show_next";
+    $url_log['action'] = "search";
+    $url_log['next'] = $maxrowsperpage + $next;
+    $url_next = sprintf(
+        "%s?%s",
+        $PHP_SELF,
+        http_build_query($url_log)
+    );
     print "<li><a href=\"$url_next\">Next &rarr;</a></li>";
 }
 
-print "
-</div>
-";
+print "</div>";
 
 $layout->showFooter();
 
