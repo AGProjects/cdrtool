@@ -98,7 +98,7 @@ if ($current_log) {
         $subject = "CDRTool";
 
         $fullURL = $protocolURL.$_SERVER['HTTP_HOST'].$CDRTool['tld']."/".$rerun;
-        $body = "CDRTool query to analize:\n\n$fullURL\n\n";
+        $body = "CDRTool query to analyse:\n\n$fullURL\n\n";
         if ($description) {
             $body = $body."The query id $current_log is saved with name \"$description\"\n\n";
             $subject = $subject.": ".$description;
