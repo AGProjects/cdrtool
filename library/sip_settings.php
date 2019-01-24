@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * Copyright (c) 2007-2018 AG Projects
+ * Copyright (c) 2007-2019 AG Projects
  * http://ag-projects.com
  * Author Adrian Georgescu
  *
@@ -291,15 +291,10 @@ class SipSettings {
         $this->getResellerSettings();
         $this->getCustomerSettings();
 
-        if ($this->change_privacy_access_number) {
-            $_comment=sprintf(_("Dial %s to change"),$this->change_privacy_access_number);
+        if ($this->reject_anonymous_access_number) {
+            $_comment = sprintf(_("Dial %s to change"), $this->reject_anonymous_access_number);
         } else {
-            $_comment='';
-        }
-        if ($this->change_privacy_access_number) {
-            $_comment=sprintf(_("Dial %s to change"),$this->reject_anonymous_access_number);
-        } else {
-            $_comment='';
+            $_comment = '';
         }
 
         $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
@@ -1502,22 +1497,31 @@ class SipSettings {
 
         if (!$this->reseller) {
             if ($this->pstn_access) {
-                $this->availableGroups['free-pstn'] = array("Group"=>"free-pstn",
-                                                    "WEBName" =>   sprintf(_("PSTN Access")),
-                                                    "WEBComment"=> sprintf(_("Caller-ID")),
-                                                    "SubscriberMayEditIt" => 0,
-                                                    "SubscriberMaySeeIt"  => 1,
-                                                    "ResellerMayEditIt"=>1,
-                                                    "ResellerMaySeeIt"=>1
-                                                    );
-                $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                                            "WEBName" =>sprintf (_("PSTN Privacy")),
-                                            "WEBComment"=>$_comment,
-                                            "SubscriberMaySeeIt"=>1,
-                                            "SubscriberMayEditIt"=>1,
-                                            "ResellerMayEditIt"=>1,
-                                            "ResellerMaySeeIt"=>1
-                                            );
+                $this->availableGroups['free-pstn'] = array(
+                    "Group"      => "free-pstn",
+                    "WEBName"    => sprintf(_("PSTN Access")),
+                    "WEBComment" => sprintf(_("Caller-ID")),
+                    "SubscriberMayEditIt" => 0,
+                    "SubscriberMaySeeIt"  => 1,
+                    "ResellerMayEditIt"   => 1,
+                    "ResellerMaySeeIt"    => 1
+                );
+
+                if ($this->change_privacy_access_number) {
+                    $_comment = sprintf(_("Dial %s to change"), $this->change_privacy_access_number);
+                } else {
+                    $_comment = '';
+                }
+
+                $this->availableGroups['anonymous'] = array(
+                    "Group"   => "anonymous",
+                    "WEBName" => sprintf (_("PSTN Privacy")),
+                    "WEBComment" => $_comment,
+                    "SubscriberMaySeeIt"  => 1,
+                    "SubscriberMayEditIt" => 1,
+                    "ResellerMayEditIt"   => 1,
+                    "ResellerMaySeeIt"    => 1
+                );
                 if ($this->pstn_access) {
                     $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
                                                     "WEBName" =>sprintf(_("Rate on net")),
@@ -1688,21 +1692,31 @@ class SipSettings {
                                                 "ResellerMayEditIt"=>1,
                                                 "ResellerMaySeeIt"=>1
                                             );
-            $this->availableGroups['anonymous']=array("Group"=>"anonymous",
-                            "WEBName" =>sprintf (_("PSTN Privacy")),
-                            "WEBComment"=>$_comment,
-                            "SubscriberMaySeeIt"=>1,
-                            "SubscriberMayEditIt"=>1,
-                            "ResellerMayEditIt"=>1,
-                            "ResellerMaySeeIt"=>1
-                            );
-            $this->availableGroups['rate-on-net']  = array("Group"=>"rate-on-net",
-                                    "WEBName" =>sprintf(_("Rate on net")),
-                                    "SubscriberMayEditIt"=>0,
-                                    "SubscriberMaySeeIt"=>0,
-                                    "ResellerMayEditIt"=>1,
-                                    "ResellerMaySeeIt"=>1
-                                    );
+
+            if ($this->change_privacy_access_number) {
+                $_comment = sprintf(_("Dial %s to change"), $this->change_privacy_access_number);
+            } else {
+                $_comment = '';
+            }
+
+            $this->availableGroups['anonymous'] = array(
+                "Group"      => "anonymous",
+                "WEBName"    => sprintf (_("PSTN Privacy")),
+                "WEBComment" => $_comment,
+                "SubscriberMaySeeIt"  => 1,
+                "SubscriberMayEditIt" => 1,
+                "ResellerMayEditIt"   => 1,
+                "ResellerMaySeeIt"    => 1
+            );
+
+            $this->availableGroups['rate-on-net'] = array(
+                "Group"   => "rate-on-net",
+                "WEBName" => sprintf(_("Rate on net")),
+                "SubscriberMayEditIt" => 0,
+                "SubscriberMaySeeIt"  => 0,
+                "ResellerMayEditIt"   => 1,
+                "ResellerMaySeeIt"    => 1
+            );
 
             if ($this->sms_access) {
                 $this->availableGroups['sms']  = array("Group"=>"sms",
