@@ -7,7 +7,7 @@ function check_telephone($tel, $country)
             || preg_match("/^\+31\-\d{3}-\d{6}$/", $tel)
         ) {
         } else {
-            $err="NL numbers must be in format +31-DD-DDDDDDD or +31-DDD-DDDDDD";
+            $err = "NL numbers must be in format +31-DD-DDDDDDD or +31-DDD-DDDDDD";
             return 0;
         }
     }
@@ -169,10 +169,10 @@ $f->add_element(
     )
 );
 
-$use_yubikey=0;
+$use_yubikey = 0;
 if (stream_resolve_include_path('Auth/Yubico.php')) {
     require_once 'Auth/Yubico.php';
-    $use_yubikey=1;
+    $use_yubikey = 1;
 }
 
 if ($use_yubikey) {
@@ -189,9 +189,10 @@ if ($use_yubikey) {
 }
 
 $blocked_els=array(
-                array("label"=>"","value"=>"0"),
-                array("label"=>gettext("Blocked"),"value"=>"1")
-            );
+    array("label"=>"","value"=>"0"),
+    array("label"=>gettext("Blocked"),"value"=>"1")
+);
+
 $f->add_element(
     array(
         "type"=>"select",
@@ -212,8 +213,11 @@ $f->add_element(
 );
 
 while (list($k,$v) = each($DATASOURCES)) {
-    if ($k!="unknown") {
-        $cdrSourcesEls[]=array("label"=>$v[name],"value"=>$k);
+    if ($k != "unknown") {
+        $cdrSourcesEls[] = array(
+            "label" => $v[name],
+            "value" => $k
+        );
     }
 }
 
@@ -250,18 +254,18 @@ function showForm($id = "")
     global $CDRTool, $verbose, $perm, $auth, $sess, $cdr, $f,
     $perms, $source, $sources, $action;
 
-    $sources=explode(",", $sources);
+    $sources = explode(",", $sources);
 
-    $use_yubikey=0;
+    $use_yubikey = 0;
     if (stream_resolve_include_path('Auth/Yubico.php')) {
         require_once 'Auth/Yubico.php';
-        $use_yubikey=1;
+        $use_yubikey = 1;
     }
 
     global $afterDateFilter;
 
     if (preg_match("/^0000-00-00$/", $afterDateFilter)) {
-        $afterDateFilter="";
+        $afterDateFilter = "";
     }
 
     $f->load_defaults();
@@ -275,7 +279,7 @@ function showForm($id = "")
     }
 
     if (!$perm->have_perm("admin")) {
-        $ff=array(
+        $ff = array(
             "sources",
             "gatewayFilter",
             "domainFilter",
@@ -305,10 +309,13 @@ function showForm($id = "")
     $f->show_element("action", "");
 
     if ($id) {
-            $f->add_element(array("type"=>"hidden",
-                                  "name"=>"id",
-                                  "value"=>"$id"
-                            ));
+        $f->add_element(
+            array(
+                "type"=>"hidden",
+                "name"=>"id",
+                "value"=>"$id"
+            )
+        );
     }
 
     print "
@@ -443,11 +450,11 @@ function showForm($id = "")
            E-mail settings</label>
             <div class='controls'><font color=$labelcolor>
            ";
-           print "<input type=checkbox name=mailsettings value=1> ";
-           print "
+    print "<input type=checkbox name=mailsettings value=1> ";
+    print "
            </div>
            </div>
-           ";
+    ";
 
     if ($perm->have_perm("admin")) {
         print "<hr>
@@ -471,41 +478,41 @@ function showForm($id = "")
                <div class='controls'><font color=$labelcolor>
            ";
            $f->show_element("impersonate", "");
-           print "
+        print "
            </font>
            </div>
            </div>
-           ";
-           print "
+        ";
+        print "
               <div class=\"control-group\">
               <label class='control-label'><font color=$labelcolor>
            Delete </label>
            <div class='controls'><font color=$labelcolor>
-           ";
-           print "<input type=checkbox name=delete value=1>";
-           print "
+        ";
+        print "<input type=checkbox name=delete value=1>";
+        print "
            </font>
            </div>
            </div>
            ";
 
-           /*
-           print "
+        /*
+        print "
            <tr>
            <td valign=top><font color=$labelcolor>
            Lock </td>
            <td colspan=2 valign=top><font color=$labelcolor>
-           ";
-                   $f->show_element("blocked","");
-           print "
+        ";
+        $f->show_element("blocked","");
+        print "
            </font>
            </td>
            </tr>
-           ";
-           */
-           print "
+        ";
+        */
+        print "
             <hr>
-           ";
+        ";
     }
 
     print "
@@ -578,7 +585,7 @@ function accountList()
     $db->query($query);
     dprint_sql($query);
 
-    $rows=$db->num_rows();
+    $rows = $db->num_rows();
 
     print "
         <p>
@@ -619,7 +626,7 @@ function accountList()
 
         $bgcolor = "";
         if (date('Y-m-d') > $expire) {
-            $bgcolor="error";
+            $bgcolor = "error";
         }
 
         print "
