@@ -248,6 +248,27 @@ if ($use_yubikey) {
     );
 }
 
+function wrapFormElement($label, $element)
+{
+    if (is_array($label)) {
+        $label = implode('', $label);
+    }
+
+    if (is_array($element)) {
+        $element = implode('', $element);
+    }
+
+    printf('
+        <div class="control-group">
+            <label class="control-label">%s</label>
+            <div class="controls">
+            %s
+            </div>
+        </div>',
+        $label,
+        $element
+    );
+}
 
 function showForm($id = "")
 {
@@ -289,7 +310,8 @@ function showForm($id = "")
             "cscodeFilter",
             "afterDateFilter",
             "aclFilter",
-            "impersonate");
+            "impersonate"
+        );
         $f->freeze($ff);
     }
 
@@ -318,183 +340,145 @@ function showForm($id = "")
         );
     }
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Name");
-    print "<font color=orange> *</font></label>
-    ";
-    print "
-    <div class='controls'>
-    <font color=$formelcolor>
-    ";
-    $f->show_element("name", "");
-    print "
-    </font>
-    </div>
-    </div>
-    ";
+    wrapFormElement(
+        array(
+            _("Name"),
+            "<font color=orange> *</font>"
+        ),
+        array(
+            "<font color=$formelcolor>",
+            $f->get_element("name", ""),
+            "</font>"
+        )
+    );
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Organization");
-    print "</label>
-    <div class='controls'>
-      <font color=$formelcolor>
-    ";
-    $f->show_element("organization", "");
-    print "
-    </div>
-    </div>
-    ";
+    wrapFormElement(
+        _("Organization"),
+        array(
+            "<font color=$formelcolor>",
+            $f->get_element("organization", ""),
+            "</font>"
+        )
+    );
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("E-mail");
-    print "<font color=orange> *</font></label>
-      <div class='controls'>
-      <font color=$formelcolor>
-    ";
-    $f->show_element("email", "");
-    print "
-    </div>
-    </div>
-    ";
+    wrapFormElement(
+        array(
+            _("E-mail"),
+            "<font color=orange> *</font>"
+        ),
+        array(
+            "<font color=$formelcolor>",
+            $f->get_element("email", ""),
+            "</font>"
+        )
+    );
 
+    wrapFormElement(
+        _("Telephone"),
+        array(
+            "<font color=$labelcolor>",
+            $f->get_element("tel", ""),
+            "</font>"
+        )
+    );
 
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Telephone");
-    print "</label>
-      <div class='controls'>
-      <font color=$labelcolor>
-    ";
-    $f->show_element("tel", "");
-    print "
-    </div>
-    </div>
-    ";
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
+    wrapFormElement(
+        array(
+            _("Username"),
+            "<font color=orange>*</font>"
+        ),
+        array(
+            "<font color=$labelcolor>",
+            $f->get_element("username", ""),
+            "</font>"
+        )
+    );
 
-    print _("Username");
-    print " <font color=orange>*</font></label>
-      <div class='controls'><font color=$labelcolor>
-    ";
-
-    $f->show_element("username", "");
-
-    print "
-    </div>
-    </div>
-    ";
-
-    print "
-      <div class=\"control-group\">
-      <label class='control-label'>
-    ";
-    print _("Password");
-    print " <font color=orange>*</font></label>
-      <div class='controls'><font color=$labelcolor>
-    ";
-    $f->show_element("password", "");
-    print "</div>
-    </div>
-    ";
+    wrapFormElement(
+        array(
+            _("Password"),
+            "<font color=orange>*</font>"
+        ),
+        array(
+            "<font color=$labelcolor>",
+            $f->get_element("password", ""),
+            "</font>"
+        )
+    );
 
     if ($use_yubikey) {
-        print "
-          <div class=\"control-group\">
-          <label class='control-label'>
-        ";
-        print _("Yubikey");
-        print "</label>
-        <div class='controls'>
-          <font color=$formelcolor>
-        ";
-        $f->show_element("yubikey", "");
-        print "
-        </div>
-        </div>
-        ";
+        wrapFormElement(
+            _("Yubikey"),
+            array(
+                "<font color=$formelcolor>",
+                $f->get_element("yubikey", ""),
+                "</font>"
+            )
+        );
 
-        print "
-          <div class=\"control-group\">
-          <label class='control-label'>
-        ";
-        print _("Yubikey usage");
-        print "</label>
-        <div class='controls'>
-          <font color=$formelcolor>
-        ";
-        $f->show_element("auth_method", "");
-        print "
-        </div>
-        </div>
-        ";
+        wrapFormElement(
+            _("Yubikey usage"),
+            array(
+                "<font color=$formelcolor>",
+                $f->get_element("auth_method", ""),
+                "</font>"
+            )
+        );
     }
 
-    print "
-          <div class=\"control-group\">
-            <label class='control-label'>
-              <font color=$labelcolor>
-           E-mail settings</label>
-            <div class='controls'><font color=$labelcolor>
-           ";
-    print "<input type=checkbox name=mailsettings value=1> ";
-    print "
-           </div>
-           </div>
-    ";
+    wrapFormElement(
+        array(
+            "<font color=$labelcolor>",
+            "E-mail settings",
+            "</font>"
+        ),
+        array(
+            "<font color=$labelcolor>",
+            "<input type=checkbox name=mailsettings value=1>",
+            "</font>"
+        )
+    );
 
     if ($perm->have_perm("admin")) {
-        print "<hr>
-               <div class=\"control-group\">
-               <label class='control-label'>
-               <font color=$labelcolor>
-               Expire date </label>
-               <div class='controls'>
-               <font color=$labelcolor>
-        ";
-        $f->show_element("expire", "");
-        print "
-           </div>
-           </div>
-        ";
+        print "<hr>";
+        wrapFormElement(
+            array(
+                "<font color=$labelcolor>",
+                "Expire date",
+                "</font>"
+            ),
+            array(
+                "<font color=$labelcolor>",
+                $f->get_element("expire", ""),
+                "</font>"
+            )
+        );
 
-        print "
-              <div class=\"control-group\">
-              <label class='control-label'><font color=$labelcolor>
-              Impersonate </label>
-               <div class='controls'><font color=$labelcolor>
-           ";
-           $f->show_element("impersonate", "");
-        print "
-           </font>
-           </div>
-           </div>
-        ";
-        print "
-              <div class=\"control-group\">
-              <label class='control-label'><font color=$labelcolor>
-           Delete </label>
-           <div class='controls'><font color=$labelcolor>
-        ";
-        print "<input type=checkbox name=delete value=1>";
-        print "
-           </font>
-           </div>
-           </div>
-           ";
+        wrapFormElement(
+            array(
+                "<font color=$labelcolor>",
+                "Impersonate",
+                "</font>"
+            ),
+            array(
+                "<font color=$labelcolor>",
+                $f->get_element("impersonate", ""),
+                "</font>"
+            )
+        );
+
+        wrapFormElement(
+            array(
+                "<font color=$labelcolor>",
+                "Delete",
+                "</font>"
+            ),
+            array(
+                "<font color=$labelcolor>",
+                "<input type=checkbox name=delete value=1>",
+                "</font>"
+            )
+        );
 
         /*
         print "
@@ -541,26 +525,14 @@ function showForm($id = "")
       <p>
       <strong>Filters</strong></p>
      ";
-    print "<div class=\"control-group\">
-            <label class='control-label'>IP ACL</label><div class='controls'>";
-     $f->show_element("aclFilter", "");
+
+    wrapFormElement("IP ACL", $f->get_element("aclFilter", ""));
+    wrapFormElement("Trusted peers", $f->get_element("gatewayFilter", ""));
+    wrapFormElement("Domains", $f->get_element("domainFilter", ""));
+    wrapFormElement("Subscribers", $f->get_element("aNumberFilter", ""));
+    wrapFormElement("After date", $f->get_element("afterDateFilter", ""));
+
     print "</div></div>";
-    print "<div class=\"control-group\">
-            <label class='control-label'>Trusted peers</label><div class='controls'>";
-    $f->show_element("gatewayFilter", "");
-    print "</div></div>";
-    print "<div class=\"control-group\">
-            <label class='control-label'>Domains</label><div class='controls'>";
-    $f->show_element("domainFilter", "");
-    print "</div></div>";
-    print "<div class=\"control-group\">
-            <label class='control-label'>Subscribers</label><div class='controls'>";
-    $f->show_element("aNumberFilter", "");
-    print "</div></div>";
-    print "<div class=\"control-group\">
-            <label class='control-label'>After date</label><div class='controls'>";
-    $f->show_element("afterDateFilter", "");
-    print "</div></div></div></div>";
 
     if (!$frzall) {
         print "<div class='form-actions'>";
