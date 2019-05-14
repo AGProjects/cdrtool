@@ -1,7 +1,9 @@
 <?php
-// This library can be used to display the status of mysql replication of
-// arbitrary number of mysql servers and instructions about how to fix
-// a broken replication process
+/**
+ * This library can be used to display the status of mysql replication of
+ * arbitrary number of mysql servers and instructions about how to fix
+ * a broken replication process
+ */
 
 class DBx extends DB_Sql {
     public function DBx($user, $password, $host = 'localhost')
