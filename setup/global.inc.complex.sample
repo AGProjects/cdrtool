@@ -1,5 +1,6 @@
 <?php
-/** This file contains examples for all possible settings for CDRTool
+/**
+ * This file contains examples for all possible settings for CDRTool
  *
  * 1. Change all hostnames and passwords according to the installation
  * 2. Copy this file to /etc/cdrtool/global.inc
