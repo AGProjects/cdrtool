@@ -127,165 +127,165 @@ require_once('ngnpro_soap_library.php');
 
 */
 
-class SoapEngine {
+class SoapEngine
+{
+    public $version       = 1;
+    public $adminonly     = 0;
+    public $customer      = 0;
+    public $reseller      = 0;
+    public $login_type    = 'reseller';
+    public $allowedPorts  = array();
+    public $timeout       = 5;
+    public $exception     = array();
+    public $result        = false;
+    public $extraFormElements  = array();
+    public $default_enum_tld   =  'e164.arpa';
+    public $default_timezone   =  'Europe/Amsterdam';
+    public $default_sip_proxy  = "";
+    public $default_msrp_relay = "";
 
-    var $version       = 1;
-    var $adminonly     = 0;
-    var $customer      = 0;
-    var $reseller      = 0;
-    var $login_type    = 'reseller';
-    var $allowedPorts  = array();
-    var $timeout       = 5;
-    var $exception     = array();
-    var $result        = false;
-    var $extraFormElements = array();
-    var $default_enum_tld  =  'e164.arpa';
-    var $default_timezone  =  'Europe/Amsterdam';
-    var $default_sip_proxy = "";
-    var $default_msrp_relay = "";
+    public $ports = array(
+        'sip_accounts' => array(
+            'records_class' => 'SipAccounts',
+            'name'          => 'SIP accounts',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'sip',
+            'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use _ or % to match one or more characters. ',
+        ),
+        'customers' => array(
+            'records_class' => 'Customers',
+            'name'          => 'Owner Accounts',
+            'soap_class'    => 'WebService_NGNPro_CustomerPort',
+            'category'      => 'general',
+            'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
+        ),
+        'sip_domains' => array(
+            'records_class' => 'SipDomains',
+            'name'          => 'SIP domains',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'sip',
+            'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use _ or % to match one or more characters. '
+        ),
+        'trusted_peers' => array(
+            'records_class' => 'TrustedPeers',
+            'name'          => 'SIP trusted peers',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'sip',
+            'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
+            'resellers_only'=> true
+        ),
+        'enum_numbers' => array(
+            'records_class' => 'EnumMappings',
+            'name'          => 'ENUM numbers',
+            'soap_class'    => 'WebService_NGNPro_EnumPort',
+            'category'      => 'dns',
+            'description'   => 'Manage E164 numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use _ or % to match one or more characters. '
+        ),
+        'enum_ranges' => array(
+            'records_class' => 'EnumRanges',
+            'name'          => 'ENUM ranges',
+            'soap_class'    => 'WebService_NGNPro_EnumPort',
+            'category'      => 'dns',
+            'description'   => 'Manage E164 number ranges that hold individual phone numbers. Use _ or % to match one or more characters. '
+        ),
+        'dns_zones' => array(
+            'records_class' => 'DnsZones',
+            'name'          => 'DNS zones',
+            'soap_class'    => 'WebService_NGNPro_DnsPort',
+            'category'      => 'dns',
+            'description'   => 'Manage DNS zones. Use _ or % to match one or more characters. '
+        ),
+        'dns_records' => array(
+            'records_class' => 'DnsRecords',
+            'name'          => 'DNS records',
+            'soap_class'    => 'WebService_NGNPro_DnsPort',
+            'category'      => 'dns',
+            'description'   => 'Manage DNS records. Use _ or % to match one or more characters. '
+        ),
+        'pstn_carriers' => array(
+            'records_class' => 'Carriers',
+            'name'          => 'PSTN carriers',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'pstn',
+            'description'   => 'Manage outbound carriers for PSTN traffic. Click on Carier to edit its attributes. ',
+            'resellers_only'=> true
+        ),
+        'pstn_gateways' => array(
+            'records_class' => 'Gateways',
+            'name'          => 'PSTN gateways',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'pstn',
+            'description'   => 'Manage outbound PSTN gateways. Click on Gateway to edit its attributes. ',
+            'resellers_only'=> true
+        ),
+        'pstn_routes' => array(
+            'records_class' => 'Routes',
+            'name'          => 'PSTN routes',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'pstn',
+            'description'   => 'Manage outbound PSTN routes. A prefix must be formated as 00+E164, an empty prefix matches all routes. ',
+            'resellers_only'=> true
+        ),
+        'gateway_rules' => array(
+            'records_class' => 'GatewayRules',
+            'name'          => 'PSTN rules',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'pstn',
+            'description'   => 'Manage translation rules for PSTN gateways. Rules are applied against 00+E164 prefix. Click on Rule to edit its attributes. ',
+            'resellers_only'=> true
+        ),
+        'email_aliases' => array(
+            'records_class' => 'EmailAliases',
+            'name'          => 'Email aliases',
+            'soap_class'    => 'WebService_NGNPro_DnsPort',
+            'category'      => 'dns',
+            'description'   => 'Manage email aliases. Use _ or % to match one or more characters. '
+        ),
+        'url_redirect' => array(
+            'records_class' => 'UrlRedirect',
+            'name'          => 'URL redirect',
+            'soap_class'    => 'WebService_NGNPro_DnsPort',
+            'category'      => 'dns',
+            'description'   => 'Manage WEB URL redirections. Use _ or % to match one or more characters. '
+        ),
+        'sip_aliases' => array(
+            'records_class' => 'SipAliases',
+            'name'          => 'SIP aliases',
+            'soap_class'    => 'WebService_NGNPro_SipPort',
+            'category'      => 'sip',
+            'description'   => 'Manage redirections for SIP addresses e.g. redirect user1@example1.com (alias) to user2@example2.com (target). Use _ or % to match one or more characters. '
+        )
+    );
 
-    var $ports=array(
-                         'sip_accounts'   => array(
-                                           'records_class' => 'SipAccounts',
-                                           'name'          => 'SIP accounts',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage SIP accounts and their settings. Click on the SIP account to access the settings page. Use _ or % to match one or more characters. ',
-                                           ),
-                         'customers'      => array(
-                                           'records_class' => 'Customers',
-                                           'name'          => 'Owner Accounts',
-                                           'soap_class'    => 'WebService_NGNPro_CustomerPort',
-                                           'category'      => 'general',
-                                           'description'   => 'Manage accounts with address information and other properties. SIP domains and ENUM ranges can be assigned to accounts. Use _ or % to match one or more characters. '
-                                           ),
-                         'sip_domains'    => array(
-                                           'records_class' => 'SipDomains',
-                                           'name'          => 'SIP domains',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage SIP domains (e.g example.com) served by the SIP Proxy. Use _ or % to match one or more characters. '
-                                           ),
-                         'trusted_peers'   => array(
-                                           'records_class' => 'TrustedPeers',
-                                           'name'          => 'SIP trusted peers',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
-                                           'resellers_only'=> true
-                                           ),
-                         'enum_numbers'   => array(
-                                           'records_class' => 'EnumMappings',
-                                           'name'          => 'ENUM numbers',
-                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage E164 numbers used for incoming calls and their mappings (e.g. +31123456789 map to sip:user@example.com). Use _ or % to match one or more characters. '
-                                           ),
-                         'enum_ranges'    => array(
-                                           'records_class' => 'EnumRanges',
-                                           'name'          => 'ENUM ranges',
-                                           'soap_class'    => 'WebService_NGNPro_EnumPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage E164 number ranges that hold individual phone numbers. Use _ or % to match one or more characters. '
-                                           ),
-                         'dns_zones'      => array(
-                                           'records_class' => 'DnsZones',
-                                           'name'          => 'DNS zones',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage DNS zones. Use _ or % to match one or more characters. '
-                                           ),
-                         'dns_records'    => array(
-                                           'records_class' => 'DnsRecords',
-                                           'name'          => 'DNS records',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage DNS records. Use _ or % to match one or more characters. '
-                                           ),
-                         'pstn_carriers'  => array(
-                                           'records_class' => 'Carriers',
-                                           'name'          => 'PSTN carriers',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage outbound carriers for PSTN traffic. Click on Carier to edit its attributes. ',
-                                           'resellers_only'=> true
-                                           ),
-                         'pstn_gateways'  => array(
-                                           'records_class' => 'Gateways',
-                                           'name'          => 'PSTN gateways',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage outbound PSTN gateways. Click on Gateway to edit its attributes. ',
-                                           'resellers_only'=> true
-                                           ),
-                         'pstn_routes'    => array(
-                                           'records_class' => 'Routes',
-                                           'name'          => 'PSTN routes',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage outbound PSTN routes. A prefix must be formated as 00+E164, an empty prefix matches all routes. ',
-                                           'resellers_only'=> true
-                                           ),
-                         'gateway_rules'  => array(
-                                           'records_class' => 'GatewayRules',
-                                           'name'          => 'PSTN rules',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'pstn',
-                                           'description'   => 'Manage translation rules for PSTN gateways. Rules are applied against 00+E164 prefix. Click on Rule to edit its attributes. ',
-                                           'resellers_only'=> true
-                                           ),
-                         'email_aliases'    => array(
-                                           'records_class' => 'EmailAliases',
-                                           'name'          => 'Email aliases',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage email aliases. Use _ or % to match one or more characters. '
-                                           ),
-                         'url_redirect'    => array(
-                                           'records_class' => 'UrlRedirect',
-                                           'name'          => 'URL redirect',
-                                           'soap_class'    => 'WebService_NGNPro_DnsPort',
-                                           'category'      => 'dns',
-                                           'description'   => 'Manage WEB URL redirections. Use _ or % to match one or more characters. '
-                                           ),
-                         'sip_aliases'    => array(
-                                           'records_class' => 'SipAliases',
-                                           'name'          => 'SIP aliases',
-                                           'soap_class'    => 'WebService_NGNPro_SipPort',
-                                           'category'      => 'sip',
-                                           'description'   => 'Manage redirections for SIP addresses e.g. redirect user1@example1.com (alias) to user2@example2.com (target). Use _ or % to match one or more characters. '
-                                           )
-
-                        );
-
-    function getSoapEngineAllowed($soapEngines,$filter) {
-        // returns a list of allowed engines based on a filter
-        // the filter format is:
-        // engine1:port1,port2 engine2 engine3:port1
-
+    /**
+     * returns a list of allowed engines based on a filter
+     * the filter format is:
+     * engine1:port1,port2 engine2 engine3:port1
+     */
+    function getSoapEngineAllowed($soapEngines, $filter)
+    {
         if (!$filter){
-            $soapEngines_checked=$soapEngines;
+            $soapEngines_checked = $soapEngines;
         } else {
-
-            $_filter_els=explode(" ",$filter);
+            $_filter_els = explode(" ",$filter);
             foreach(array_keys($soapEngines) as $_engine) {
-                foreach ($_filter_els as $_filter) {
+                foreach($_filter_els as $_filter) {
                     unset($_allowed_engine);
-                    $_allowed_ports=array();
+                    $_allowed_ports = array();
 
-                    list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+                    list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
 
                     if ($_allowed_ports_els) {
-                        $_allowed_ports = explode(",",$_allowed_ports_els);
+                        $_allowed_ports = explode(",", $_allowed_ports_els);
                     }
 
                     if (count($_allowed_ports) == 0) {
-                        $_allowed_ports=array_keys($this->ports);
+                        $_allowed_ports = array_keys($this->ports);
                     }
 
                     if ($_engine == $_allowed_engine) {
-                        $soapEngines_checked[$_engine]=$soapEngines[$_engine];
-                        $this->allowedPorts[$_engine]=$_allowed_ports;
+                        $soapEngines_checked[$_engine] = $soapEngines[$_engine];
+                        $this->allowedPorts[$_engine] = $_allowed_ports;
                         continue;
                     }
                 }
@@ -295,58 +295,58 @@ class SoapEngine {
         return $soapEngines_checked;
     }
 
-    function SoapEngine($service,$soapEngines,$login_credentials=array()) {
-
-        /*
-            service is port@engine where:
-
-            - port is an available NGNPro service
-            - engine is a connection to an NGNPro server
-
-            - soapEngines is an array of NGNPro connections and
-            settings belonging to them:
-
-            $soapEngines=array(
-                                 'mdns' => array('name'        => 'Managed DNS',
-                                                 'username'    => 'soapadmin',
-                                                 'password'    => 'passwd',
-                                                 'url'         => 'http://example.com:9200/'
-                                                 )
-                               );
-        */
+    function SoapEngine($service, $soapEngines, $login_credentials = array())
+    {
+        /**
+         * service is port@engine where:
+         *
+         * - port is an available NGNPro service
+         * - engine is a connection to an NGNPro server
+         *
+         * - soapEngines is an array of NGNPro connections and
+         * settings belonging to them:
+         *
+         * $soapEngines = array(
+         *     'mdns' => array(
+         *         'name'        => 'Managed DNS',
+         *         'username'    => 'soapadmin',
+         *         'password'    => 'passwd',
+         *         'url'         => 'http://example.com:9200/'
+         *     )
+         * );
+         */
 
         $this->login_credentials = &$login_credentials;
 
         if (is_array($this->login_credentials['ports'])) {
-            $_ports=array();
-            foreach (array_keys($this->ports) as $_key) {
-                if (in_array($_key,array_keys($this->login_credentials['ports']))) {
+            $_ports = array();
+            foreach(array_keys($this->ports) as $_key) {
+                if (in_array($_key, array_keys($this->login_credentials['ports']))) {
                     if (strlen($this->login_credentials['ports'][$_key]['records_class'])){
-                        $_ports[$_key]['records_class']=$this->login_credentials['ports'][$_key]['records_class'];
+                        $_ports[$_key]['records_class'] = $this->login_credentials['ports'][$_key]['records_class'];
                     } else {
-                        $_ports[$_key]['records_class']=$this->ports[$_key]['records_class'];
+                        $_ports[$_key]['records_class'] = $this->ports[$_key]['records_class'];
                     }
                     if (strlen($this->login_credentials['ports'][$_key]['soap_class'])){
-                        $_ports[$_key]['soap_class']=$this->login_credentials['ports'][$_key]['soap_class'];
+                        $_ports[$_key]['soap_class'] = $this->login_credentials['ports'][$_key]['soap_class'];
                     } else {
-                        $_ports[$_key]['soap_class']=$this->ports[$_key]['soap_class'];
+                        $_ports[$_key]['soap_class'] = $this->ports[$_key]['soap_class'];
                     }
                     if (strlen($this->login_credentials['ports'][$_key]['name'])){
-                        $_ports[$_key]['name']=$this->login_credentials['ports'][$_key]['name'];
+                        $_ports[$_key]['name'] = $this->login_credentials['ports'][$_key]['name'];
                     } else {
-                        $_ports[$_key]['name']=$this->ports[$_key]['name'];
+                        $_ports[$_key]['name'] = $this->ports[$_key]['name'];
                     }
                     if (strlen($this->login_credentials['ports'][$_key]['description'])){
-                        $_ports[$_key]['description']=$this->login_credentials['ports'][$_key]['description'];
+                        $_ports[$_key]['description'] = $this->login_credentials['ports'][$_key]['description'];
                     } else {
-                        $_ports[$_key]['description']=$this->ports[$_key]['description'];
+                        $_ports[$_key]['description'] = $this->ports[$_key]['description'];
                     }
                 } else {
-                    $_ports[$_key]=$this->ports[$_key];
+                    $_ports[$_key] = $this->ports[$_key];
                 }
             }
-
-            $this->ports=$_ports;
+            $this->ports = $_ports;
         }
 
         //dprint_r($this->login_credentials);
@@ -365,21 +365,21 @@ class SoapEngine {
             if (!$service) {
                 // use first engine available
                 if (is_array($this->allowedPorts) && count($this->allowedPorts[$_engines[0]]) > 0) {
-                    $_ports=$this->allowedPorts[$_engines[0]];
+                    $_ports = $this->allowedPorts[$_engines[0]];
                 } else {
-                    $_ports    = array_keys($this->ports);
+                    $_ports = array_keys($this->ports);
                 }
                 // default service is:
-                $service   = $_ports[0].'@'.$_engines[0];
+                $service = $_ports[0].'@'.$_engines[0];
             }
 
             if (is_array($this->login_credentials['extra_form_elements'])) {
-                $this->extraFormElements    = $this->login_credentials['extra_form_elements'];
+                $this->extraFormElements = $this->login_credentials['extra_form_elements'];
             }
 
             $this->service = $service;
 
-            $_els=explode('@',$this->service);
+            $_els = explode('@', $this->service);
 
             if (!$_els[1]) {
                 $this->soapEngine = $_engines[0];
@@ -393,16 +393,16 @@ class SoapEngine {
                 $this->version = $this->soapEngines[$this->soapEngine]['version'];
             }
 
-            $default_port='customers';
+            $default_port = 'customers';
 
             if (count($this->allowedPorts[$this->soapEngine]) > 0 ) {
                 if (in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
-                    $this->port=$_els[0];
+                    $this->port = $_els[0];
                 } else if (in_array($default_port,$this->allowedPorts[$this->soapEngine])) {
                     $this->port = $default_port;
                 } else {
                     // disable some version dependent ports
-                    foreach (array_keys($this->ports) as $_p) {
+                    foreach(array_keys($this->ports) as $_p) {
                         if (in_array($_p,$this->allowedPorts[$this->soapEngine])) {
                             $this->port = $_p;
                             break;
@@ -420,27 +420,27 @@ class SoapEngine {
             $this->records_class   = $this->ports[$this->port]['records_class'];
             $this->soap_class      = $this->ports[$this->port]['soap_class'];
 
-            $this->service    = $this->port.'@'.$this->soapEngine;
+            $this->service = $this->port.'@'.$this->soapEngine;
 
             foreach(array_keys($this->soapEngines) as $_key ) {
-                $this->skip[$_key]=$this->soapEngines[$_key]['skip'];
+                $this->skip[$_key] = $this->soapEngines[$_key]['skip'];
                 if ($this->soapEngines[$_key]['skip_ports']) {
-                    $this->skip_ports[$_key]=$this->soapEngines[$_key]['skip_ports'];
+                    $this->skip_ports[$_key] = $this->soapEngines[$_key]['skip_ports'];
                 }
             }
 
-            $this->impersonate  = intval($this->soapEngines[$this->soapEngine]['impersonate']);
+            $this->impersonate = intval($this->soapEngines[$this->soapEngine]['impersonate']);
 
-			if ($this->soapEngines[$this->soapEngine]['default_enum_tld']) {
-            	$this->default_enum_tld  = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
+            if ($this->soapEngines[$this->soapEngine]['default_enum_tld']) {
+            	$this->default_enum_tld = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['default_timezone']) {
-            	$this->default_timezone  = $this->soapEngines[$this->soapEngine]['default_timezone'];
+            	$this->default_timezone = $this->soapEngines[$this->soapEngine]['default_timezone'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['sip_proxy']) {
-            	$this->default_sip_proxy  = $this->soapEngines[$this->soapEngine]['sip_proxy'];
+            	$this->default_sip_proxy = $this->soapEngines[$this->soapEngine]['sip_proxy'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['msrp_relay']) {
@@ -448,62 +448,62 @@ class SoapEngine {
             }
 
             if ($this->soapEngines[$this->soapEngine]['default_country']) {
-                $this->default_country  = $this->soapEngines[$this->soapEngine]['default_country'];
+                $this->default_country = $this->soapEngines[$this->soapEngine]['default_country'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['sip_engine'])) {
-                $this->sip_engine=$this->soapEngines[$this->soapEngine]['sip_engine'];
+                $this->sip_engine = $this->soapEngines[$this->soapEngine]['sip_engine'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['voicemail_engine'])) {
-                $this->voicemail_engine=$this->soapEngines[$this->soapEngine]['voicemail_engine'];
+                $this->voicemail_engine = $this->soapEngines[$this->soapEngine]['voicemail_engine'];
             }
 
             if (strlen($this->login_credentials['customer_engine'])) {
-                $this->customer_engine=$this->login_credentials['customer_engine'];
+                $this->customer_engine = $this->login_credentials['customer_engine'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
-                $this->customer_engine=$this->soapEngines[$this->soapEngine]['customer_engine'];
+                $this->customer_engine = $this->soapEngines[$this->soapEngine]['customer_engine'];
             } else {
-                $this->customer_engine=$this->soapEngine;
+                $this->customer_engine = $this->soapEngine;
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['sip_settings_page'])) {
-                $this->sip_settings_page=$this->soapEngines[$this->soapEngine]['sip_settings_page'];
+                $this->sip_settings_page = $this->soapEngines[$this->soapEngine]['sip_settings_page'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['call_limit'])) {
-                $this->call_limit=$this->soapEngines[$this->soapEngine]['call_limit'];
+                $this->call_limit = $this->soapEngines[$this->soapEngine]['call_limit'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['digest_settings_page'])) {
-                $this->digest_settings_page=$this->soapEngines[$this->soapEngine]['digest_settings_page'];
+                $this->digest_settings_page = $this->soapEngines[$this->soapEngine]['digest_settings_page'];
             }
 
             if (is_array($this->soapEngines[$this->soapEngine]['customer_properties'])) {
-                $this->customer_properties=$this->soapEngines[$this->soapEngine]['customer_properties'];
+                $this->customer_properties = $this->soapEngines[$this->soapEngine]['customer_properties'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['timeout'])) {
-                $this->timeout=intval($this->soapEngines[$this->soapEngine]['timeout']);
+                $this->timeout = intval($this->soapEngines[$this->soapEngine]['timeout']);
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['store_clear_text_passwords'])) {
-                $this->store_clear_text_passwords=$this->soapEngines[$this->soapEngine]['store_clear_text_passwords'];
+                $this->store_clear_text_passwords = $this->soapEngines[$this->soapEngine]['store_clear_text_passwords'];
             }
 
             if (strlen($this->soapEngines[$this->soapEngine]['allow_none_local_dns_zones'])) {
-                $this->allow_none_local_dns_zones=$this->soapEngines[$this->soapEngine]['allow_none_local_dns_zones'];
+                $this->allow_none_local_dns_zones = $this->soapEngines[$this->soapEngine]['allow_none_local_dns_zones'];
             }
             if (strlen($this->login_credentials['record_generator'])) {
-                $this->record_generator=$this->login_credentials['record_generator'];
+                $this->record_generator = $this->login_credentials['record_generator'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
-                $this->record_generator=$this->soapEngines[$this->soapEngine]['record_generator'];
+                $this->record_generator = $this->soapEngines[$this->soapEngine]['record_generator'];
             }
 
             if (strlen($this->login_credentials['name_servers'])) {
-                $this->name_servers=$this->login_credentials['name_servers'];
+                $this->name_servers = $this->login_credentials['name_servers'];
             } else if (strlen($this->soapEngines[$this->soapEngine]['name_servers'])) {
-                $this->name_servers=$this->soapEngines[$this->soapEngine]['name_servers'];
+                $this->name_servers = $this->soapEngines[$this->soapEngine]['name_servers'];
             }
 
             if (strlen($login_credentials['reseller'])) {
@@ -521,39 +521,45 @@ class SoapEngine {
             if (strlen($login_credentials['soap_username'])) {
                 $this->soapUsername=$login_credentials['soap_username'];
                 $this->SOAPlogin = array(
-                                       "username"    => $this->soapUsername,
-                                       "password"    => $login_credentials['soap_password'],
-                                       "admin"       => false
-                                       );
+                    "username"    => $this->soapUsername,
+                    "password"    => $login_credentials['soap_password'],
+                    "admin"       => false
+                );
             } else {
                 // use the credentials defined for the soap engine
-                $this->soapUsername=$this->soapEngines[$this->soapEngine]['username'];
+                $this->soapUsername = $this->soapEngines[$this->soapEngine]['username'];
                 if ($this->customer)  {
                     $this->SOAPlogin = array(
-                                           "username"    => $this->soapUsername,
-                                           "password"    => $this->soapEngines[$this->soapEngine]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->customer)
-                                           );
+                        "username"    => $this->soapUsername,
+                        "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                        "admin"       => true,
+                        "impersonate" => intval($this->customer)
+                    );
                 } else {
                     $this->SOAPlogin = array(
-                                           "username"    => $this->soapUsername,
-                                           "password"    => $this->soapEngines[$this->soapEngine]['password'],
-                                           "admin"       => true,
-                                           "impersonate" => intval($this->reseller)
-                                           );
+                        "username"    => $this->soapUsername,
+                        "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                        "admin"       => true,
+                        "impersonate" => intval($this->reseller)
+                    );
                 }
 
                 $this->SOAPloginAdmin = array(
-                                       "username"    => $this->soapUsername,
-                                       "password"    => $this->soapEngines[$this->soapEngine]['password'],
-                                       "admin"       => true
-                                       );
+                    "username"    => $this->soapUsername,
+                    "password"    => $this->soapEngines[$this->soapEngine]['password'],
+                    "admin"       => true
+                );
             }
 
-            $this->SOAPurl=$this->soapEngines[$this->soapEngine]['url'];
+            $this->SOAPurl = $this->soapEngines[$this->soapEngine]['url'];
 
-            $log=sprintf ("<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soap_class,$this->SOAPurl,$this->SOAPurl,$this->soapUsername);
+            $log = sprintf(
+                "<p>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",
+                $this->soap_class,
+                $this->SOAPurl,
+                $this->SOAPurl,
+                $this->soapUsername
+            );
             dprint($log);
 
             $this->SoapAuth      = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -572,11 +578,11 @@ class SoapEngine {
 
             if ($this->customer_engine) {
                 $this->SOAPloginCustomers = array(
-                                       "username"    => $this->soapEngines[$this->customer_engine]['username'],
-                                       "password"    => $this->soapEngines[$this->customer_engine]['password'],
-                                       "admin"       => true,
-                                       "impersonate" => intval($this->reseller)
-                                       );
+                    "username"    => $this->soapEngines[$this->customer_engine]['username'],
+                    "password"    => $this->soapEngines[$this->customer_engine]['password'],
+                    "admin"       => true,
+                    "impersonate" => intval($this->reseller)
+                );
 
                 $this->SoapAuthCustomers = array('auth', $this->SOAPloginCustomers , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -595,11 +601,11 @@ class SoapEngine {
 
             if ($this->voicemail_engine) {
                 $this->SOAPloginVoicemail = array(
-                                       "username"    => $this->soapEngines[$this->voicemail_engine]['username'],
-                                       "password"    => $this->soapEngines[$this->voicemail_engine]['password'],
-                                       "admin"       => true,
-                                       "impersonate" => intval($this->reseller)
-                                       );
+                    "username"    => $this->soapEngines[$this->voicemail_engine]['username'],
+                    "password"    => $this->soapEngines[$this->voicemail_engine]['password'],
+                    "admin"       => true,
+                    "impersonate" => intval($this->reseller)
+                );
 
                 $this->SoapAuthVoicemail = array('auth', $this->SOAPloginVoicemail , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -615,14 +621,13 @@ class SoapEngine {
                     $this->soapclientVoicemail->_options['timeout'] = $this->timeout;
                 }
             }
-
         } else {
             print "<font color=red>Error: No SOAP credentials defined.</font>";
         }
 
         $this->url = $_SERVER['PHP_SELF']."?1=1";
 
-        foreach (array_keys($this->extraFormElements) as $element) {
+        foreach(array_keys($this->extraFormElements) as $element) {
             if (!strlen($this->extraFormElements[$element])) continue;
             $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
         }
@@ -630,21 +635,25 @@ class SoapEngine {
         $this->support_email   = $this->soapEngines[$this->soapEngine]['support_email'];
         $this->support_web     = $this->soapEngines[$this->soapEngine]['support_web'];
         $this->welcome_message = $this->soapEngines[$this->soapEngine]['welcome_message'];
-
     }
 
-    function execute($function,$html=true,$adminonly=false) {
-
-        /*
-        $function=array('commit'   => array('name'       => 'addAccount',
-                                            'parameters' => array($param1,$param2),
-                                            'logs'       => array('success' => 'The function was a success',
-                                                                  'failure' => 'The function has failed'
-                                                                  )
-                                           )
-
-                        );
-        */
+    function execute($function, $html=true, $adminonly=false)
+    {
+        /**
+         * $function = array(
+         *     'commit'   => array(
+         *         'name'       => 'addAccount',
+         *         'parameters' => array(
+         *             $param1,
+         *             $param2
+         *          ),
+         *          'logs'       => array(
+         *              'success' => 'The function was a success',
+         *              'failure' => 'The function has failed'
+         *          )
+         *      )
+         *  );
+         */
 
         if (!$function['commit']['name']) {
             if ($html) {
@@ -656,9 +665,9 @@ class SoapEngine {
         }
 
         if ($adminonly) {
-        	$this->soapclient->addHeader($this->SoapAuthAdmin);
+            $this->soapclient->addHeader($this->SoapAuthAdmin);
         } else {
-        	$this->soapclient->addHeader($this->SoapAuth);
+            $this->soapclient->addHeader($this->SoapAuth);
         }
 
         $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
@@ -670,32 +679,39 @@ class SoapEngine {
 
             $this->exception   = $this->error_fault->detail->exception;
 
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SOAPurl,
-            $this->error_msg,
-            $this->error_fault->detail->exception->errorcode,
-            $this->error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SOAPurl,
+                $this->error_msg,
+                $this->error_fault->detail->exception->errorcode,
+                $this->error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
 
             if ($html) {
-                $log=sprintf("Failed to add record: %s (%s): %s",
-                $this->error_msg,
-                $this->error_fault->detail->exception->errorcode,
-                $this->error_fault->detail->exception->errorstring);
+                $log = sprintf(
+                    "Failed to add record: %s (%s): %s",
+                    $this->error_msg,
+                    $this->error_fault->detail->exception->errorcode,
+                    $this->error_fault->detail->exception->errorstring
+                );
                 print "<font color=red>$log</font>";
             }
             return false;
-
         } else {
-        	$this->result=$result;
+            $this->result = $result;
 
             if ($function['commit']['logs']['success']) {
                 if ($html) {
-                    printf ("<p><font color=green>%s </font>\n",htmlentities($function['commit']['logs']['success']));
+                    printf(
+                        "<p><font color=green>%s </font>\n",
+                        htmlentities($function['commit']['logs']['success'])
+                    );
                 }
             }
 
             if (is_object($result) || strlen($result)) {
-        		return $result;
+                return $result;
             } else {
                 return true;
             }
