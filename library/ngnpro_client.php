@@ -262,7 +262,7 @@ class SoapEngine
      * the filter format is:
      * engine1:port1,port2 engine2 engine3:port1
      */
-    function getSoapEngineAllowed($soapEngines, $filter)
+    public function getSoapEngineAllowed($soapEngines, $filter)
     {
         if (!$filter){
             $soapEngines_checked = $soapEngines;
