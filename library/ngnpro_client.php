@@ -257,44 +257,6 @@ class SoapEngine
         )
     );
 
-    /**
-     * returns a list of allowed engines based on a filter
-     * the filter format is:
-     * engine1:port1,port2 engine2 engine3:port1
-     */
-    public function getSoapEngineAllowed($soapEngines, $filter)
-    {
-        if (!$filter){
-            $soapEngines_checked = $soapEngines;
-        } else {
-            $_filter_els = explode(" ",$filter);
-            foreach(array_keys($soapEngines) as $_engine) {
-                foreach($_filter_els as $_filter) {
-                    unset($_allowed_engine);
-                    $_allowed_ports = array();
-
-                    list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
-
-                    if ($_allowed_ports_els) {
-                        $_allowed_ports = explode(",", $_allowed_ports_els);
-                    }
-
-                    if (count($_allowed_ports) == 0) {
-                        $_allowed_ports = array_keys($this->ports);
-                    }
-
-                    if ($_engine == $_allowed_engine) {
-                        $soapEngines_checked[$_engine] = $soapEngines[$_engine];
-                        $this->allowedPorts[$_engine] = $_allowed_ports;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        return $soapEngines_checked;
-    }
-
     public function __construct($service, $soapEngines, $login_credentials = array())
     {
         /**
@@ -716,6 +678,44 @@ class SoapEngine
                 return true;
             }
         }
+    }
+
+    /**
+     * returns a list of allowed engines based on a filter
+     * the filter format is:
+     * engine1:port1,port2 engine2 engine3:port1
+     */
+    public function getSoapEngineAllowed($soapEngines, $filter)
+    {
+        if (!$filter){
+            $soapEngines_checked = $soapEngines;
+        } else {
+            $_filter_els = explode(" ",$filter);
+            foreach(array_keys($soapEngines) as $_engine) {
+                foreach($_filter_els as $_filter) {
+                    unset($_allowed_engine);
+                    $_allowed_ports = array();
+
+                    list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
+
+                    if ($_allowed_ports_els) {
+                        $_allowed_ports = explode(",", $_allowed_ports_els);
+                    }
+
+                    if (count($_allowed_ports) == 0) {
+                        $_allowed_ports = array_keys($this->ports);
+                    }
+
+                    if ($_engine == $_allowed_engine) {
+                        $soapEngines_checked[$_engine] = $soapEngines[$_engine];
+                        $this->allowedPorts[$_engine] = $_allowed_ports;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return $soapEngines_checked;
     }
 }
 
