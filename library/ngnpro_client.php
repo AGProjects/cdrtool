@@ -295,7 +295,7 @@ class SoapEngine
         return $soapEngines_checked;
     }
 
-    function SoapEngine($service, $soapEngines, $login_credentials = array())
+    public function __construct($service, $soapEngines, $login_credentials = array())
     {
         /**
          * service is port@engine where:
