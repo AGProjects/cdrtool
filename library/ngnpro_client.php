@@ -257,27 +257,26 @@ class SoapEngine
         )
     );
 
+    /**
+     * service is port@engine where:
+     *
+     * - port is an available NGNPro service
+     * - engine is a connection to an NGNPro server
+     *
+     * - soapEngines is an array of NGNPro connections and
+     * settings belonging to them:
+     *
+     * $soapEngines = array(
+     *     'mdns' => array(
+     *         'name'        => 'Managed DNS',
+     *         'username'    => 'soapadmin',
+     *         'password'    => 'passwd',
+     *         'url'         => 'http://example.com:9200/'
+     *     )
+     * );
+     */
     public function __construct($service, $soapEngines, $login_credentials = array())
     {
-        /**
-         * service is port@engine where:
-         *
-         * - port is an available NGNPro service
-         * - engine is a connection to an NGNPro server
-         *
-         * - soapEngines is an array of NGNPro connections and
-         * settings belonging to them:
-         *
-         * $soapEngines = array(
-         *     'mdns' => array(
-         *         'name'        => 'Managed DNS',
-         *         'username'    => 'soapadmin',
-         *         'password'    => 'passwd',
-         *         'url'         => 'http://example.com:9200/'
-         *     )
-         * );
-         */
-
         $this->login_credentials = &$login_credentials;
 
         if (is_array($this->login_credentials['ports'])) {
@@ -599,24 +598,60 @@ class SoapEngine
         $this->welcome_message = $this->soapEngines[$this->soapEngine]['welcome_message'];
     }
 
-    function execute($function, $html=true, $adminonly=false)
+    /**
+     * returns a list of allowed engines based on a filter
+     * the filter format is:
+     * engine1:port1,port2 engine2 engine3:port1
+     */
+    public function getSoapEngineAllowed($soapEngines, $filter)
     {
-        /**
-         * $function = array(
-         *     'commit'   => array(
-         *         'name'       => 'addAccount',
-         *         'parameters' => array(
-         *             $param1,
-         *             $param2
-         *          ),
-         *          'logs'       => array(
-         *              'success' => 'The function was a success',
-         *              'failure' => 'The function has failed'
-         *          )
-         *      )
-         *  );
-         */
+        if (!$filter){
+            $soapEngines_checked = $soapEngines;
+        } else {
+            $_filter_els = explode(" ",$filter);
+            foreach(array_keys($soapEngines) as $_engine) {
+                foreach($_filter_els as $_filter) {
+                    unset($_allowed_engine);
+                    $_allowed_ports = array();
 
+                    list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
+
+                    if ($_allowed_ports_els) {
+                        $_allowed_ports = explode(",", $_allowed_ports_els);
+                    }
+
+                    if (count($_allowed_ports) == 0) {
+                        $_allowed_ports = array_keys($this->ports);
+                    }
+
+                    if ($_engine == $_allowed_engine) {
+                        $soapEngines_checked[$_engine] = $soapEngines[$_engine];
+                        $this->allowedPorts[$_engine] = $_allowed_ports;
+                        continue;
+                    }
+                }
+            }
+        }
+        return $soapEngines_checked;
+    }
+
+    /**
+     * $function = array(
+     *     'commit'   => array(
+     *         'name'       => 'addAccount',
+     *         'parameters' => array(
+     *             $param1,
+     *             $param2
+     *          ),
+     *          'logs'       => array(
+     *              'success' => 'The function was a success',
+     *              'failure' => 'The function has failed'
+     *          )
+     *      )
+     *  );
+     */
+    public function execute($function, $html=true, $adminonly=false)
+    {
         if (!$function['commit']['name']) {
             if ($html) {
                 print "<font color=red>Error: no function name supplied</font>";
@@ -678,44 +713,6 @@ class SoapEngine
                 return true;
             }
         }
-    }
-
-    /**
-     * returns a list of allowed engines based on a filter
-     * the filter format is:
-     * engine1:port1,port2 engine2 engine3:port1
-     */
-    public function getSoapEngineAllowed($soapEngines, $filter)
-    {
-        if (!$filter){
-            $soapEngines_checked = $soapEngines;
-        } else {
-            $_filter_els = explode(" ",$filter);
-            foreach(array_keys($soapEngines) as $_engine) {
-                foreach($_filter_els as $_filter) {
-                    unset($_allowed_engine);
-                    $_allowed_ports = array();
-
-                    list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
-
-                    if ($_allowed_ports_els) {
-                        $_allowed_ports = explode(",", $_allowed_ports_els);
-                    }
-
-                    if (count($_allowed_ports) == 0) {
-                        $_allowed_ports = array_keys($this->ports);
-                    }
-
-                    if ($_engine == $_allowed_engine) {
-                        $soapEngines_checked[$_engine] = $soapEngines[$_engine];
-                        $this->allowedPorts[$_engine] = $_allowed_ports;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        return $soapEngines_checked;
     }
 }
 
