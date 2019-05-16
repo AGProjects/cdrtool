@@ -717,43 +717,45 @@ class SoapEngine
 }
 
 class Records {
-    var $maxrowsperpage     = '20';
-    var $sip_settings_page  = 'sip_settings.phtml';
-    var $allowedDomains     = array();
-    var $selectionActive    = false;
-    var $selectionKeys      = array();
-    var $resellers          = array();
-    var $customers          = array();
-    var $record_generator   = false;
-    var $customer_properties = array();
-    var $loginProperties    = array();
-    var $errorMessage       = '';
-    var $html               = true;
-    var $filters            = array();
-    var $selectionActiveExceptions    = array();
+    public $maxrowsperpage     = '20';
+    public $sip_settings_page  = 'sip_settings.phtml';
+    public $allowedDomains     = array();
+    public $selectionActive    = false;
+    public $selectionKeys      = array();
+    public $resellers          = array();
+    public $customers          = array();
+    public $record_generator   = false;
+    public $customer_properties = array();
+    public $loginProperties    = array();
+    public $errorMessage       = '';
+    public $html               = true;
+    public $filters            = array();
+    public $selectionActiveExceptions    = array();
 
-    function log_action($action='Unknown') {
+    function log_action($action = 'Unknown')
+    {
        global $CDRTool;
        $location = "Unknown";
-       $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+       $_loc = geoip_record_by_name($_SERVER['REMOTE_ADDR']);
        if ($_loc['country_name']) {
            $location = $_loc['country_name'];
        }
-       $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
-       $this->login_credentials['username'], 
-       $this->login_credentials['login_type'], 
-       $CDRTool['impersonate'], 
-       $_SERVER['REMOTE_ADDR'],
-       $location,
-       $this->SoapEngine->port,
-       $action,
-       $_SERVER['PHP_SELF']
+       $log = sprintf(
+           "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
+           $this->login_credentials['username'],
+           $this->login_credentials['login_type'],
+           $CDRTool['impersonate'],
+           $_SERVER['REMOTE_ADDR'],
+           $location,
+           $this->SoapEngine->port,
+           $action,
+           $_SERVER['PHP_SELF']
        );
        syslog(LOG_NOTICE, $log);
     }
 
-    function Records($SoapEngine) {
-
+    function Records($SoapEngine)
+    {
         $this->SoapEngine          = $SoapEngine;
 
         $this->version             = $this->SoapEngine->version;
@@ -772,7 +774,7 @@ class Records {
 
         foreach(array_keys($this->filters) as $_filter) {
             if (strlen($this->filters[$_filter]) && !in_array($_filter,$this->selectionActiveExceptions)) {
-                $this->selectionActive=true;
+                $this->selectionActive = true;
                 break;
             }
         }
@@ -780,9 +782,9 @@ class Records {
         if ($this->adminonly) {
             $this->url .= sprintf('&adminonly=%s',$this->adminonly);
             if ($this->login_credentials['reseller']) {
-                $this->filters['reseller']=$this->login_credentials['reseller'];
+                $this->filters['reseller'] = $this->login_credentials['reseller'];
             } else {
-                $this->filters['reseller']=trim($_REQUEST['reseller_filter']);
+                $this->filters['reseller'] = trim($_REQUEST['reseller_filter']);
             }
         }
 
@@ -795,11 +797,11 @@ class Records {
         $this->getLoginAccount();
 
         if (strlen($this->SoapEngine->sip_settings_page)) {
-            $this->sip_settings_page=$this->SoapEngine->sip_settings_page;
+            $this->sip_settings_page = $this->SoapEngine->sip_settings_page;
         }
 
         if (strlen($this->SoapEngine->digest_settings_page)) {
-            $this->digest_settings_page=$this->SoapEngine->digest_settings_page;
+            $this->digest_settings_page = $this->SoapEngine->digest_settings_page;
         }
 
         $this->support_email   = $this->SoapEngine->support_email;
@@ -807,15 +809,16 @@ class Records {
 
     }
 
-    function showEngineSelection() {
-        $selected_soapEngine[$this->SoapEngine->service]=' selected';
+    function showEngineSelection()
+    {
+        $selected_soapEngine[$this->SoapEngine->service] =' selected';
 
-        $pstn_access=$this->getCustomerProperty('pstn_access');
+        $pstn_access = $this->getCustomerProperty('pstn_access');
 
         printf("<select class=span3 name='service' onChange=\"jumpMenu('this.form')\">\n");
 
-        $j=1;
-        foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
+        $j = 1;
+        foreach(array_keys($this->SoapEngine->soapEngines) as $_engine) {
         	if ($this->SoapEngine->skip[$_engine]) continue;
             if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
