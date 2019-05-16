@@ -1282,9 +1282,10 @@ class Records {
         }
     }
 
-    function getLoginAccount() {
+    function getLoginAccount()
+    {
         if (!$this->SoapEngine->customer_engine) {
-            dprint ("No customer_engine available");
+            dprint("No customer_engine available");
             return true;
         }
 
@@ -1293,16 +1294,16 @@ class Records {
             return true;
         }
 
-        $filter=array('customer'=>intval($this->customer));
-        $range=array('start' => 0,'count' => 1);
+        $filter = array('customer'=>intval($this->customer));
+        $range = array('start' => 0,'count' => 1);
         $orderBy = array('attribute' => 'customer','direction' => 'ASC');
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
-
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
@@ -1314,27 +1315,34 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-            $this->loginAccount=$result->accounts[0];
-            $this->loginImpersonate=$result->accounts[0]->impersonate;
-            $this->loginProperties=$this->loginAccount->properties;
+            $this->loginAccount = $result->accounts[0];
+            $this->loginImpersonate = $result->accounts[0]->impersonate;
+            $this->loginProperties = $this->loginAccount->properties;
         }
 
         if ($this->loginAccount->reseller == $this->customer) {
-        	$this->resellerProperties=$this->loginProperties;
+            $this->resellerProperties = $this->loginProperties;
         } else {
-            $filter=array('customer'=>intval($this->loginAccount->reseller));
-            $range=array('start' => 0,'count' => 1);
-            $orderBy = array('attribute' => 'customer','direction' => 'ASC');
+            $filter = array('customer' => intval($this->loginAccount->reseller));
+            $range = array('start' => 0, 'count' => 1);
+            $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
 
             // Compose query
-            $Query=array('filter'     => $filter,
-                            'orderBy' => $orderBy,
-                            'range'   => $range
-                            );
+            $Query = array(
+                'filter'     => $filter,
+                'orderBy' => $orderBy,
+                'range'   => $range
+            );
 
 
             // Insert credetials
@@ -1348,7 +1356,13 @@ class Records {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $log = sprintf(
+                    "SOAP request error from %s: %s (%s): %s",
+                    $this->SoapEngine->SOAPurl,
+                    $error_msg,
+                    $error_fault->detail->exception->errorcode,
+                    $error_fault->detail->exception->errorstring
+                );
                 syslog(LOG_NOTICE, $log);
                 return false;
             } else {
@@ -1358,44 +1372,67 @@ class Records {
         //dprint_r($this->resellerProperties);
     }
 
-    function showCustomerForm($name='customer_filter') {
+    function showCustomerForm($name = 'customer_filter')
+    {
         if ($this->login_credentials['customer'] != $this->login_credentials['reseller']) {
-            printf (" %s ",$this->login_credentials['customer']);
+            printf(" %s ",$this->login_credentials['customer']);
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
-                printf ("<select class=span2 name=%s>",$name);
-                print "<option>";
+                printf("<select class=span2 name=%s>",$name);
+                print("<option>");
                 foreach (array_keys($this->customers) as $_res) {
-                    printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_customer[$_res],$_res,$this->customers[$_res]);
+                    printf(
+                        "<option value='%s' %s>%s (%s)\n",
+                        $_res,
+                        $select_customer[$_res],
+                        $_res,
+                        $this->customers[$_res]
+                    );
                 }
-                print "</select>";
+                print("</select>");
             } else {
-                printf ("<input class=span1 type=text name=%s value='%s'>",$name,$this->filters['customer']);
+                printf(
+                    "<input class=span1 type=text name=%s value='%s'>",
+                    $name,
+                    $this->filters['customer']
+                );
             }
         }
     }
 
-    function showResellerForm($name='reseller_filter') {
+    function showResellerForm($name = 'reseller_filter')
+    {
         if (!$this->adminonly) return;
         if ($this->login_credentials['reseller']) {
-            printf (" %s ",$this->login_credentials['reseller']);
+            printf(" %s ",$this->login_credentials['reseller']);
         } else {
             if (count($this->resellers)) {
                 $select_reseller[$this->filters['reseller']]='selected';
-                printf ("<select class=span1 name=%s>",$name);
-                print "<option>";
+                printf("<select class=span1 name=%s>",$name);
+                print("<option>");
                 foreach (array_keys($this->resellers) as $_res) {
-                    printf ("<option value='%s' %s>%s (%s)\n",$_res,$select_reseller[$_res],$_res,$this->resellers[$_res]);
+                    printf(
+                        "<option value='%s' %s>%s (%s)\n",
+                        $_res,
+                        $select_reseller[$_res],
+                        $_res,
+                        $this->resellers[$_res]
+                    );
                 }
-                print "</select>";
+                print("</select>");
             } else {
-                printf ("<input class=span1 type=text size=7 name=%s value='%s'>",$name,$this->filters['reseller']);
+                printf(
+                    "<input class=span1 type=text size=7 name=%s value='%s'>",
+                    $name,
+                    $this->filters['reseller']
+                );
             }
         }
     }
 
-    function showTextBeforeCustomerSelection() {
+    function showTextBeforeCustomerSelection()
+    {
         print _("Owner");
     }
 
