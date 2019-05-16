@@ -1,5 +1,5 @@
 <?php
-require_once('ngnpro_soap_library.php');
+require_once 'ngnpro_soap_library.php';
 
 /*
     Copyright (c) 2007-2019 AG Projects
@@ -281,24 +281,24 @@ class SoapEngine
 
         if (is_array($this->login_credentials['ports'])) {
             $_ports = array();
-            foreach(array_keys($this->ports) as $_key) {
+            foreach (array_keys($this->ports) as $_key) {
                 if (in_array($_key, array_keys($this->login_credentials['ports']))) {
-                    if (strlen($this->login_credentials['ports'][$_key]['records_class'])){
+                    if (strlen($this->login_credentials['ports'][$_key]['records_class'])) {
                         $_ports[$_key]['records_class'] = $this->login_credentials['ports'][$_key]['records_class'];
                     } else {
                         $_ports[$_key]['records_class'] = $this->ports[$_key]['records_class'];
                     }
-                    if (strlen($this->login_credentials['ports'][$_key]['soap_class'])){
+                    if (strlen($this->login_credentials['ports'][$_key]['soap_class'])) {
                         $_ports[$_key]['soap_class'] = $this->login_credentials['ports'][$_key]['soap_class'];
                     } else {
                         $_ports[$_key]['soap_class'] = $this->ports[$_key]['soap_class'];
                     }
-                    if (strlen($this->login_credentials['ports'][$_key]['name'])){
+                    if (strlen($this->login_credentials['ports'][$_key]['name'])) {
                         $_ports[$_key]['name'] = $this->login_credentials['ports'][$_key]['name'];
                     } else {
                         $_ports[$_key]['name'] = $this->ports[$_key]['name'];
                     }
-                    if (strlen($this->login_credentials['ports'][$_key]['description'])){
+                    if (strlen($this->login_credentials['ports'][$_key]['description'])) {
                         $_ports[$_key]['description'] = $this->login_credentials['ports'][$_key]['description'];
                     } else {
                         $_ports[$_key]['description'] = $this->ports[$_key]['description'];
@@ -315,7 +315,7 @@ class SoapEngine
         if ($this->login_credentials['login_type'] == 'admin') $this->adminonly = 1;
 
         if (strlen($this->login_credentials['soap_filter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->login_credentials['soap_filter']);
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines, $this->login_credentials['soap_filter']);
         } else {
             $this->soapEngines = $soapEngines;
         }
@@ -356,15 +356,15 @@ class SoapEngine
 
             $default_port = 'customers';
 
-            if (count($this->allowedPorts[$this->soapEngine]) > 0 ) {
-                if (in_array($_els[0],$this->allowedPorts[$this->soapEngine])) {
+            if (count($this->allowedPorts[$this->soapEngine]) > 0) {
+                if (in_array($_els[0], $this->allowedPorts[$this->soapEngine])) {
                     $this->port = $_els[0];
-                } else if (in_array($default_port,$this->allowedPorts[$this->soapEngine])) {
+                } else if (in_array($default_port, $this->allowedPorts[$this->soapEngine])) {
                     $this->port = $default_port;
                 } else {
                     // disable some version dependent ports
-                    foreach(array_keys($this->ports) as $_p) {
-                        if (in_array($_p,$this->allowedPorts[$this->soapEngine])) {
+                    foreach (array_keys($this->ports) as $_p) {
+                        if (in_array($_p, $this->allowedPorts[$this->soapEngine])) {
                             $this->port = $_p;
                             break;
                         }
@@ -383,7 +383,7 @@ class SoapEngine
 
             $this->service = $this->port.'@'.$this->soapEngine;
 
-            foreach(array_keys($this->soapEngines) as $_key ) {
+            foreach (array_keys($this->soapEngines) as $_key) {
                 $this->skip[$_key] = $this->soapEngines[$_key]['skip'];
                 if ($this->soapEngines[$_key]['skip_ports']) {
                     $this->skip_ports[$_key] = $this->soapEngines[$_key]['skip_ports'];
@@ -393,19 +393,19 @@ class SoapEngine
             $this->impersonate = intval($this->soapEngines[$this->soapEngine]['impersonate']);
 
             if ($this->soapEngines[$this->soapEngine]['default_enum_tld']) {
-            	$this->default_enum_tld = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
+                $this->default_enum_tld = $this->soapEngines[$this->soapEngine]['default_enum_tld'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['default_timezone']) {
-            	$this->default_timezone = $this->soapEngines[$this->soapEngine]['default_timezone'];
+                $this->default_timezone = $this->soapEngines[$this->soapEngine]['default_timezone'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['sip_proxy']) {
-            	$this->default_sip_proxy = $this->soapEngines[$this->soapEngine]['sip_proxy'];
+                $this->default_sip_proxy = $this->soapEngines[$this->soapEngine]['sip_proxy'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['msrp_relay']) {
-            	$this->default_msrp_relay = $this->soapEngines[$this->soapEngine]['msrp_relay'];
+                $this->default_msrp_relay = $this->soapEngines[$this->soapEngine]['msrp_relay'];
             }
 
             if ($this->soapEngines[$this->soapEngine]['default_country']) {
@@ -469,13 +469,13 @@ class SoapEngine
 
             if (strlen($login_credentials['reseller'])) {
                 $this->reseller = $login_credentials['reseller'];
-            } else if ($this->adminonly && $_REQUEST['reseller_filter']){
+            } else if ($this->adminonly && $_REQUEST['reseller_filter']) {
                 $this->reseller = $_REQUEST['reseller_filter'];
             }
 
             if (strlen($login_credentials['customer'])) {
                 $this->customer = $login_credentials['customer'];
-            } else if ($this->adminonly && $_REQUEST['customer_filter']){
+            } else if ($this->adminonly && $_REQUEST['customer_filter']) {
                 $this->customer = $_REQUEST['customer_filter'];
             }
 
@@ -489,7 +489,7 @@ class SoapEngine
             } else {
                 // use the credentials defined for the soap engine
                 $this->soapUsername = $this->soapEngines[$this->soapEngine]['username'];
-                if ($this->customer)  {
+                if ($this->customer) {
                     $this->SOAPlogin = array(
                         "username"    => $this->soapUsername,
                         "password"    => $this->soapEngines[$this->soapEngine]['password'],
@@ -588,9 +588,13 @@ class SoapEngine
 
         $this->url = $_SERVER['PHP_SELF']."?1=1";
 
-        foreach(array_keys($this->extraFormElements) as $element) {
+        foreach (array_keys($this->extraFormElements) as $element) {
             if (!strlen($this->extraFormElements[$element])) continue;
-            $this->url  .= sprintf('&%s=%s',$element,urlencode($this->extraFormElements[$element]));
+            $this->url  .= sprintf(
+                '&%s=%s',
+                $element,
+                urlencode($this->extraFormElements[$element])
+            );
         }
 
         $this->support_email   = $this->soapEngines[$this->soapEngine]['support_email'];
@@ -605,12 +609,12 @@ class SoapEngine
      */
     public function getSoapEngineAllowed($soapEngines, $filter)
     {
-        if (!$filter){
+        if (!$filter) {
             $soapEngines_checked = $soapEngines;
         } else {
-            $_filter_els = explode(" ",$filter);
-            foreach(array_keys($soapEngines) as $_engine) {
-                foreach($_filter_els as $_filter) {
+            $_filter_els = explode(" ", $filter);
+            foreach (array_keys($soapEngines) as $_engine) {
+                foreach ($_filter_els as $_filter) {
                     unset($_allowed_engine);
                     $_allowed_ports = array();
 
@@ -650,7 +654,7 @@ class SoapEngine
      *      )
      *  );
      */
-    public function execute($function, $html=true, $adminonly=false)
+    public function execute($function, $html = true, $adminonly = false)
     {
         if (!$function['commit']['name']) {
             if ($html) {
@@ -667,7 +671,13 @@ class SoapEngine
             $this->soapclient->addHeader($this->SoapAuth);
         }
 
-        $result = call_user_func_array(array($this->soapclient,$function['commit']['name']),$function['commit']['parameters']);
+        $result = call_user_func_array(
+            array(
+                $this->soapclient,
+                $function['commit']['name']
+            ),
+            $function['commit']['parameters']
+        );
 
         if ((new PEAR)->isError($result)) {
             $this->error_msg   = $result->getMessage();
@@ -734,24 +744,24 @@ class Records {
 
     function log_action($action = 'Unknown')
     {
-       global $CDRTool;
-       $location = "Unknown";
-       $_loc = geoip_record_by_name($_SERVER['REMOTE_ADDR']);
-       if ($_loc['country_name']) {
-           $location = $_loc['country_name'];
-       }
-       $log = sprintf(
-           "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
-           $this->login_credentials['username'],
-           $this->login_credentials['login_type'],
-           $CDRTool['impersonate'],
-           $_SERVER['REMOTE_ADDR'],
-           $location,
-           $this->SoapEngine->port,
-           $action,
-           $_SERVER['PHP_SELF']
-       );
-       syslog(LOG_NOTICE, $log);
+        global $CDRTool;
+        $location = "Unknown";
+        $_loc = geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+        if ($_loc['country_name']) {
+            $location = $_loc['country_name'];
+        }
+        $log = sprintf(
+            "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
+            $this->login_credentials['username'],
+            $this->login_credentials['login_type'],
+            $CDRTool['impersonate'],
+            $_SERVER['REMOTE_ADDR'],
+            $location,
+            $this->SoapEngine->port,
+            $action,
+            $_SERVER['PHP_SELF']
+        );
+        syslog(LOG_NOTICE, $log);
     }
 
     function Records($SoapEngine)
@@ -772,15 +782,15 @@ class Records {
         $this->impersonate = $this->SoapEngine->impersonate;
         $this->url         = $this->SoapEngine->url;
 
-        foreach(array_keys($this->filters) as $_filter) {
-            if (strlen($this->filters[$_filter]) && !in_array($_filter,$this->selectionActiveExceptions)) {
+        foreach (array_keys($this->filters) as $_filter) {
+            if (strlen($this->filters[$_filter]) && !in_array($_filter, $this->selectionActiveExceptions)) {
                 $this->selectionActive = true;
                 break;
             }
         }
 
         if ($this->adminonly) {
-            $this->url .= sprintf('&adminonly=%s',$this->adminonly);
+            $this->url .= sprintf('&adminonly=%s', $this->adminonly);
             if ($this->login_credentials['reseller']) {
                 $this->filters['reseller'] = $this->login_credentials['reseller'];
             } else {
@@ -806,7 +816,6 @@ class Records {
 
         $this->support_email   = $this->SoapEngine->support_email;
         $this->support_web     = $this->SoapEngine->support_web;
-
     }
 
     function showEngineSelection()
@@ -818,17 +827,17 @@ class Records {
         printf("<select class=span3 name='service' onChange=\"jumpMenu('this.form')\">\n");
 
         $j = 1;
-        foreach(array_keys($this->SoapEngine->soapEngines) as $_engine) {
-        	if ($this->SoapEngine->skip[$_engine]) continue;
+        foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
+            if ($this->SoapEngine->skip[$_engine]) continue;
             if ($j > 1) printf ("<option value=''>--------\n");
             foreach (array_keys($this->SoapEngine->ports) as $_port) {
-                $idx=$_port.'@'.$_engine;
-                if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port,$this->SoapEngine->skip_ports[$_engine])) continue;
+                $idx = $_port.'@'.$_engine;
+                if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port, $this->SoapEngine->skip_ports[$_engine])) continue;
 
                 if ($this->login_credentials['login_type'] !='admin') {
-                    if (!$pstn_access && (preg_match("/^pstn_/",$_port))) continue;
+                    if (!$pstn_access && (preg_match("/^pstn_/", $_port))) continue;
                 }
-                if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port,$this->SoapEngine->allowedPorts[$_engine])) continue;
+                if (count($this->SoapEngine->allowedPorts[$_engine]) > 0 && !in_array($_port, $this->SoapEngine->allowedPorts[$_engine])) continue;
 
                 // disable some version dependent ports
 
@@ -836,170 +845,197 @@ class Records {
 
                 if ($this->SoapEngine->ports[$_port]['resellers_only']) {
                     if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive) {
-                        printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
+                        printf(
+                            "<option value=\"%s@%s\"%s>%s@%s\n",
+                            $_port,
+                            $_engine,
+                            $selected_soapEngine[$idx],
+                            $this->SoapEngine->ports[$_port]['name'],
+                            $this->SoapEngine->soapEngines[$_engine]['name']
+                        );
                     }
                 } else {
-            		printf ("<option value=\"%s@%s\"%s>%s@%s\n",$_port,$_engine,$selected_soapEngine[$idx],$this->SoapEngine->ports[$_port]['name'],$this->SoapEngine->soapEngines[$_engine]['name']);
-        		}
+                    printf(
+                        "<option value=\"%s@%s\"%s>%s@%s\n",
+                        $_port,
+                        $_engine,
+                        $selected_soapEngine[$idx],
+                        $this->SoapEngine->ports[$_port]['name'],
+                        $this->SoapEngine->soapEngines[$_engine]['name']
+                    );
+                }
             }
 
             $j++;
         }
-        printf ("</select>");
-        printf("
-        <script type=\"text/JavaScript\">
-        function jumpMenu(){
-            location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
-        }
-        </script>",
-        $this->url
+        print("</select>");
+        printf(
+            "<script type=\"text/JavaScript\">
+            function jumpMenu() {
+                location.href=\"%s&service=\" + document.engines.service.options[document.engines.service.selectedIndex].value;
+            }
+            </script>",
+            $this->url
         );
     }
 
-    function showAfterEngineSelection () {
+    function showAfterEngineSelection()
+    {
     }
 
     function showCustomerSelection() {
         $this->showCustomerForm();
     }
 
-    function showResellerSelection() {
+    function showResellerSelection()
+    {
         if ($this->adminonly) {
             $this->showResellerForm();
         } else {
-            printf ("%s",$this->reseller);
+            printf("%s", $this->reseller);
         }
     }
 
-    function showPagination($maxrows) {
-
-        $url .= $this->url.'&'.$this->addFiltersToURL().
-        sprintf("&service=%s&sortBy=%s&sortOrder=%s",
-        urlencode($this->SoapEngine->service),
-        urlencode($this->sorting['sortBy']),
-        urlencode($this->sorting['sortOrder'])
+    function showPagination($maxrows)
+    {
+        $url .= $this->url.'&'.$this->addFiltersToURL().sprintf(
+            "&service=%s&sortBy=%s&sortOrder=%s",
+            urlencode($this->SoapEngine->service),
+            urlencode($this->sorting['sortBy']),
+            urlencode($this->sorting['sortOrder'])
         );
 
         print "
           <ul class='pager'>
         ";
 
-        if ($this->next != 0  ) {
-            $show_next=$this->maxrowsperpage-$this->next;
-            if  ($show_next < 0)  {
+        if ($this->next != 0) {
+            $show_next = $this->maxrowsperpage-$this->next;
+            if ($show_next < 0) {
                 $mod_show_next  =  $show_next-2*$show_next;
             }
             if (!$mod_show_next) $mod_show_next=0;
 
-            printf ("<li><a href='%s&next=%s'>&larr;  Previous</a></li>",$url,$mod_show_next);
+            printf("<li><a href='%s&next=%s'>&larr;  Previous</a></li>", $url, $mod_show_next);
             if ($mod_show_next/$this->maxrowsperpage >= 1) {
-                printf ("<li><a href='%s&next=0'>Begin</a></li> ",$url);
+                printf("<li><a href='%s&next=0'>Begin</a></li> ", $url);
             }
         }
 
         if ($this->next + $this->maxrowsperpage < $this->rows)  {
             $show_next = $this->maxrowsperpage + $this->next;
-            printf ("<li><a href='%s&next=%s'>Next &rarr; </a></li> ",$url,$show_next);
+            printf("<li><a href='%s&next=%s'>Next &rarr; </a></li> ", $url, $show_next);
         }
 
-        print "
-        </ul>
-        ";
+        print("</ul>");
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
     }
 
-    function showSeachForm() {
+    function showSeachForm()
+    {
         if ($this->hide_html()) {
             return;
         }
 
-    	printf ("<p><b>%s</b>",
-        $this->SoapEngine->ports[$this->SoapEngine->port]['description']);
+        printf(
+            "<p><b>%s</b>",
+            $this->SoapEngine->ports[$this->SoapEngine->port]['description']
+        );
 
-        printf ("<form class=\"form-inline\" method=post name=engines action=%s><div class='well well-small'>",$_SERVER['PHP_SELF']);
+        printf(
+            "<form class=\"form-inline\" method=post name=engines action=%s><div class='well well-small'>",
+            $_SERVER['PHP_SELF']
+        );
         //print "
         //<td align=left>
         //";
-        print "<input class='btn btn-primary' type=submit name=action value=Search>";
+        print("<input class='btn btn-primary' type=submit name=action value=Search>");
 
         $this->showEngineSelection();
         $this->showAfterEngineSelection();
 
-        print "<div class=pull-right>
-          Order by";
+        print("<div class=pull-right>
+          Order by");
         $this->showSortForm();
-        print "</div>";
+        print("</div>");
         $this->printHiddenFormElements('skipServiceElement');
 
-        print "<div style=\"clear:both\"><br /></div>";
+        print("<div style=\"clear:both\"><br /></div>");
 
-        print "<div class=input-prepend><span class=add-on>";
+        print("<div class=input-prepend><span class=add-on>");
         $this->showTextBeforeCustomerSelection();
-        print "</span>";
+        print("</span>");
 
         $this->showCustomerSelection();
         $this->showResellerSelection();
-        print "</div>";
+        print("</div>");
 
         $this->showSeachFormCustom();
-        print "</div>
+        print("</div>
         </form>
-        ";
+        ");
 
         if ($_REQUEST['action'] != 'Delete') $this->showAddForm();
     }
 
-    function listRecords() {
+    function listRecords()
+    {
     }
 
-    function getRecordKeys() {
+    function getRecordKeys()
+    {
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary = array())
+    {
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary = array())
+    {
     }
 
-    function showSortCaret($sortSearch) {
+    function showSortCaret($sortSearch)
+    {
         if ($this->sorting['sortBy'] == $sortSearch && $this->sorting['sortOrder'] == 'DESC') {
-            print ' <i style="font-size:12px; color: #3a87ad" class="icon-caret-down"></i>';
+            print('<i style="font-size:12px; color: #3a87ad" class="icon-caret-down"></i>');
         } else if ($this->sorting['sortBy'] == $sortSearch && $this->sorting['sortOrder'] == 'ASC') {
-            print ' <i style="font-size:12px; color: #3a87ad" class="icon-caret-up"></i>';
+            print('<i style="font-size:12px; color: #3a87ad" class="icon-caret-up"></i>');
         }
     }
 
-    function tel2enum($tel,$tld) {
-
+    function tel2enum($tel, $tld)
+    {
         if (strlen($tld) == 0)  $tld="e164.arpa";
 
         // transform telephone number in FQDN Enum style domain name
-        if (preg_match("/^[+]?(\d+)$/",$tel,$m)) {
-            $l=strlen($m[1]);
-            $rev_num="";
-            $z=0;
+        if (preg_match("/^[+]?(\d+)$/", $tel, $m)) {
+            $l = strlen($m[1]);
+            $rev_num = "";
+            $z = 0;
             while ($z < $l) {
-                $ss=substr($m[1],$z,1);
-                $enum=$ss.".".$enum;
+                $ss = substr($m[1], $z, 1);
+                $enum = $ss.".".$enum;
                 $z++;
             }
-            preg_match("/^(.*)\.$/",$enum,$m);
-            $enum=$m[1];
-            $enum=$enum.".$tld.";
+            preg_match("/^(.*)\.$/", $enum, $m);
+            $enum = $m[1];
+            $enum = $enum.".$tld.";
             return($enum);
-         } else {
+        } else {
             return($tel);
-         }
+        }
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         if ($this->selectionActive) return;
     }
 
-    function showSortForm() {
-
+    function showSortForm()
+    {
         if (!count($this->sortElements)) {
             return;
         }
@@ -1008,63 +1044,74 @@ class Records {
 
         print "<select class=span2 name=sortBy>";
         foreach (array_keys($this->sortElements) as $key) {
-            printf ("<option value='%s' %s>%s",$key,$selected_sortBy[$key],$this->sortElements[$key]);
+            printf(
+                "<option value='%s' %s>%s",
+                $key,
+                $selected_sortBy[$key],
+                $this->sortElements[$key]
+            );
         }
-        print "</select>";
+        print("</select>");
 
         $selected_sortOrder[$this->sorting['sortOrder']]='selected';
-        print "<select class=span1 name=sortOrder>";
-        printf ("<option value='DESC' %s>DESC",$selected_sortOrder['DESC']);
-        printf ("<option value='ASC' %s>ASC",$selected_sortOrder['ASC']);
-        print "</select>";
+        print("<select class=span1 name=sortOrder>");
+        printf("<option value='DESC' %s>DESC", $selected_sortOrder['DESC']);
+        printf("<option value='ASC' %s>ASC", $selected_sortOrder['ASC']);
+        print("</select>");
     }
 
-    function showTimezones($timezone) {
+    function showTimezones($timezone)
+    {
         if (!$fp = fopen("timezones", "r")) {
             print _("Failed to open timezone file.");
             return false;
         }
         print "<select name=timezone>";
         print "<option>";
-        while ($buffer = fgets($fp,1024)) {
-            $buffer=trim($buffer);
-            if ($this->timezone==$buffer) {
-                $selected="selected";
+        while ($buffer = fgets($fp, 1024)) {
+            $buffer = trim($buffer);
+            if ($this->timezone == $buffer) {
+                $selected = "selected";
             } else {
-                $selected="";
+                $selected = "";
             }
-            printf ("<option %s>%s>",$selected,$buffer);
+            printf("<option %s>%s>", $selected, $buffer);
         }
         print "</select>";
         fclose($fp);
-
     }
 
-    function printHiddenFormElements ($skipServiceElement='') {
+    function printHiddenFormElements($skipServiceElement = '')
+    {
         if (!$skipServiceElement) {
-            printf("<input type=hidden name=service value='%s'>",$this->SoapEngine->service);
+            printf("<input type=hidden name=service value='%s'>", $this->SoapEngine->service);
         }
 
         if ($this->adminonly) {
-            printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
+            printf("<input type=hidden name=adminonly value='%s'>", $this->adminonly);
         }
 
         foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
-            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->SoapEngine->extraFormElements[$element]);
+            printf(
+                "<input type=hidden name=%s value='%s'>\n",
+                $element,
+                $this->SoapEngine->extraFormElements[$element]
+            );
         }
-
     }
 
-    function getAllowedDomains() {
+    function getAllowedDomains()
+    {
     }
 
-    function showActionsForm() {
+    function showActionsForm()
+    {
         if (!$this->selectionActive) {
             return;
         }
 
-        $class_name=get_class($this).'Actions';
+        $class_name = get_class($this).'Actions';
 
         if (class_exists($class_name)) {
             $actions = new $class_name($this->SoapEngine, $this->login_credentials);
@@ -1072,7 +1119,8 @@ class Records {
         }
     }
 
-    function executeActions() {
+    function executeActions()
+    {
         $this->showSeachForm();
 
         $this->getRecordKeys();
@@ -1083,11 +1131,16 @@ class Records {
 
         if (class_exists($class_name)) {
             $actions=new $class_name($this->SoapEngine, $this->login_credentials);
-            $actions->execute($this->selectionKeys,$_REQUEST['sub_action'],trim($_REQUEST['sub_action_parameter']));
+            $actions->execute(
+                $this->selectionKeys,
+                $_REQUEST['sub_action'],
+                trim($_REQUEST['sub_action_parameter'])
+            );
         }
     }
 
-    function getCustomers() {
+    function getCustomers()
+    {
         if (!$this->SoapEngine->customer_engine) {
             dprint ("No customer_engine available");
             return true;
@@ -1095,22 +1148,25 @@ class Records {
         if (!$this->filters['reseller']) return;
 
         // Filter
-        $filter=array('reseller'=>intval($this->filters['reseller']));
+        $filter = array('reseller'=>intval($this->filters['reseller']));
 
-        $range=array('start' => 0,
-                     'count' => 100
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 100
+        );
 
         // Order
-        $orderBy = array('attribute' => 'customer',
-                         'direction' => 'ASC'
-                         );
+        $orderBy = array(
+            'attribute' => 'customer',
+            'direction' => 'ASC'
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
@@ -1123,22 +1179,27 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             if ($result->total > $range['count']) return;
 
             if ($range['count'] <= $result->total) {
-                $max=$range['count'];
+                $max = $range['count'];
             } else {
-                $max=$result->total;
+                $max = $result->total;
             }
 
-            $i=0;
+            $i = 0;
             while ($i < $max)  {
-                $customer=$result->accounts[$i];
+                $customer = $result->accounts[$i];
                 $this->customers[$customer->id] = $customer->firstName.' '.$customer->lastName;
                 $i++;
             }
@@ -1146,31 +1207,35 @@ class Records {
         }
     }
 
-    function getResellers() {
+    function getResellers()
+    {
         if (!$this->SoapEngine->customer_engine) {
-            dprint ("No customer_engine available");
+            dprint("No customer_engine available");
             return true;
         }
 
         if (!$this->adminonly) return;
         // Filter
 
-        $filter=array('reseller'=>intval($this->filters['reseller']));
+        $filter = array('reseller'=>intval($this->filters['reseller']));
 
-        $range=array('start' => 0,
-                     'count' => 200
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 200
+        );
 
         // Order
-        $orderBy = array('attribute' => 'customer',
-                         'direction' => 'ASC'
-                         );
+        $orderBy = array(
+            'attribute' => 'customer',
+            'direction' => 'ASC'
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
@@ -1182,21 +1247,26 @@ class Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             //if ($result->total > $range['count']) return;
 
             if ($range['count'] <= $result->total) {
-                $max=$range['count'];
+                $max = $range['count'];
             } else {
-                $max=$result->total;
+                $max = $result->total;
             }
 
-            $i=0;
-            while ($i < $max)  {
+            $i = 0;
+            while ($i < $max) {
                 $reseller = $result->accounts[$i];
 
                 if (strlen($reseller->organization) && $reseller->organization!= 'N/A') {
