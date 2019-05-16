@@ -1,3 +1,18 @@
+cdrtool (9.7.0) unstable; urgency=medium
+
+  * Fixed destinations cache to only use UTF-8
+  * Removed ereg functions
+  * Updated syntax and formatting
+  * Updated copyright years
+
+  [ Web Interface ]
+
+  * Placed back removed code to decode callid, from and to tag in trace urls
+  * Fixed the notifying in logs
+  * Added missing 'Dial *XX to change' for PSTN privacy in sip settings page
+
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Thu, 16 May 2019 12:23:28 +0200
+
 cdrtool (9.6.2) unstable; urgency=medium
 
   * Fixed sample vhost for Apache 2.4
