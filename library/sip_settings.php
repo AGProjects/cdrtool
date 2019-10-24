@@ -6024,59 +6024,67 @@ class SipSettings {
 
     }
 
-    function getHistory ($status='all') {
+    function getHistory($status = 'all')
+    {
         dprint("getHistory()");
 
-        $fromDate=time()-3600*24*14; // last two weeks
-        $toDate=time();
+        $fromDate = time() - 3600 * 24 * 14; // last two weeks
+        $toDate = time();
 
-        $CallQuery=array("fromDate"=>$fromDate,
-                         "toDate"=>$toDate,
-                         "limit"=>50
-                         );
+        $CallQuery = array(
+            "fromDate" => $fromDate,
+            "toDate"   => $toDate,
+            "limit"    => 50
+        );
 
-        $CallsQuery=array("placed"=>$CallQuery,
-                          "received"=>$CallQuery
-                          );
+        $CallsQuery = array(
+            "placed"   => $CallQuery,
+            "received" => $CallQuery
+        );
 
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->getCalls($this->sipId,$CallsQuery);
+        $result = $this->SipPort->getCalls($this->sipId, $CallsQuery);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
 
-        // received  calls
+        // received calls
         foreach ($result->received as $callStructure) {
             $media = array();
-            $apps = explode(",",quoted_printable_decode($callStructure->applicationTypes[0]));
+            $apps = explode(",", quoted_printable_decode($callStructure->applicationTypes[0]));
             foreach ($apps as $app) {
-                $media[]=trim($app);
+                $media[] = trim($app);
             }
             if (!$callStructure->stopTime && $status == 'completed') {
                 continue;
             }
 
-            $fromHeader =  quoted_printable_decode($callStructure->fromHeader);
+            $fromHeader = quoted_printable_decode($callStructure->fromHeader);
 
-            $this->calls_received[]=array(
-                                    "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
-                                    "displayName"  => getDisplayNameFromFromHeader($fromHeader),
-                                    "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
-                                    "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
-                                    "timezone"     => $this->timezone,
-                                    "duration"     => $callStructure->duration,
-                                    "status"       => $callStructure->status,
-                                    "sessionId"    => quoted_printable_decode($callStructure->sessionId),
-                                    "fromTag"      => quoted_printable_decode($callStructure->fromTag),
-                                    "toTag"        => quoted_printable_decode($callStructure->toTag),
-                                    "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => $media
-                                    );
+            $this->calls_received[] = array(
+                "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
+                "displayName"  => getDisplayNameFromFromHeader($fromHeader),
+                "startTime"    => getLocalTime($this->timezone, $callStructure->startTime),
+                "stopTime"     => getLocalTime($this->timezone, $callStructure->stopTime),
+                "timezone"     => $this->timezone,
+                "duration"     => $callStructure->duration,
+                "status"       => $callStructure->status,
+                "sessionId"    => quoted_printable_decode($callStructure->sessionId),
+                "fromTag"      => quoted_printable_decode($callStructure->fromTag),
+                "toTag"        => quoted_printable_decode($callStructure->toTag),
+                "proxyIP"      => $callStructure->proxyIP,
+                "media"        => $media
+            );
         }
 
         // placed calls
@@ -6084,37 +6092,37 @@ class SipSettings {
             if ($callStructure->status == 435) continue;
 
             $media = array();
-            $apps = explode(",",quoted_printable_decode($callStructure->applicationTypes[0]));
+            $apps = explode(",", quoted_printable_decode($callStructure->applicationTypes[0]));
             foreach ($apps as $app) {
-                $media[]=trim($app);
+                $media[] = trim($app);
             }
             if (!$callStructure->stopTime && $status == 'completed') {
                 continue;
             }
 
-            $fromHeader =  quoted_printable_decode($callStructure->fromHeader);
+            $fromHeader = quoted_printable_decode($callStructure->fromHeader);
 
-            $this->calls_placed[]=array(
-                                    "remoteParty"  => quoted_printable_decode($callStructure->toURI),
-                                    "displayName"  => getDisplayNameFromFromHeader($fromHeader),
-                                    "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
-                                    "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
-                                    "timezone"     => $this->timezone,
-                                    "duration"     => $callStructure->duration,
-                                    "status"       => $callStructure->status,
-                                    "price"        => $callStructure->price,
-                                    "sessionId"    => quoted_printable_decode($callStructure->sessionId),
-                                    "fromTag"      => quoted_printable_decode($callStructure->fromTag),
-                                    "toTag"        => quoted_printable_decode($callStructure->toTag),
-                                    "proxyIP"      => $callStructure->proxyIP,
-                                    "media"        => $media
-                                     );
+            $this->calls_placed[] = array(
+                "remoteParty"  => quoted_printable_decode($callStructure->toURI),
+                "displayName"  => getDisplayNameFromFromHeader($fromHeader),
+                "startTime"    => getLocalTime($this->timezone, $callStructure->startTime),
+                "stopTime"     => getLocalTime($this->timezone, $callStructure->stopTime),
+                "timezone"     => $this->timezone,
+                "duration"     => $callStructure->duration,
+                "status"       => $callStructure->status,
+                "price"        => $callStructure->price,
+                "sessionId"    => quoted_printable_decode($callStructure->sessionId),
+                "fromTag"      => quoted_printable_decode($callStructure->fromTag),
+                "toTag"        => quoted_printable_decode($callStructure->toTag),
+                "proxyIP"      => $callStructure->proxyIP,
+                "media"        => $media
+            );
         }
 
-        $this->call_history=array('placed'=>$this->calls_placed,
-                                  'received'=>$this->calls_received
-                                  );
-
+        $this->call_history = array(
+            'placed'   => $this->calls_placed,
+            'received' => $this->calls_received
+        );
     }
 
     function getCallStatistics () {
@@ -11741,15 +11749,15 @@ class Enrollment {
         syslog(LOG_NOTICE, $log);
     }
 
-    function Enrollment() {
-
+    function Enrollment()
+    {
         require($this->configuration_file);
         require("/etc/cdrtool/ngnpro_engines.inc");
 
     	$this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
 
-		$this->loadTimezones();
+        $this->loadTimezones();
 
         if (!is_array($this->soapEngines)) {
             $return=array('success'       => false,
@@ -11768,7 +11776,7 @@ class Enrollment {
         }
 
         $this->sipDomain      = $this->enrollment['sip_domain'];
-		$this->sipEngine      = $this->enrollment['sip_engine'];
+        $this->sipEngine      = $this->enrollment['sip_engine'];
 
         if ($this->enrollment['timezone']) {
             $this->default_timezone = $this->enrollment['timezone'];
@@ -12934,7 +12942,8 @@ class DIDProcessor {
     }
 }
 
-function RandomIdentifier($length=30) {
+function RandomIdentifier($length = 30)
+{
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $randomString = '';
     for ($i = 0; $i < $length; $i++) {
@@ -12943,15 +12952,16 @@ function RandomIdentifier($length=30) {
     return $randomString;
 }
 
-function getDisplayNameFromFromHeader($header) {
-   // match all words and whitespace, will be terminated by '<'
-   $name = preg_match('/[\w\s]+/', $header, $matches);
-   $matches[0] = trim($matches[0]);
-   return $matches[0];
+function getDisplayNameFromFromHeader($header)
+{
+    // match all words and whitespace, will be terminated by '<'
+    preg_match('/[\w\s]+/', $header, $matches);
+    $matches[0] = trim($matches[0]);
+    return $matches[0];
 }
-                                                                                
+
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
-	require_once('/etc/cdrtool/local/sip_settings.php');
+    require_once '/etc/cdrtool/local/sip_settings.php';
 }
 
 ?>
