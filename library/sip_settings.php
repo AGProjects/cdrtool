@@ -6065,7 +6065,7 @@ class SipSettings {
 
             $this->calls_received[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
-                                    "displayName"  => get_displayname_from_from_header($fromHeader),
+                                    "displayName"  => getDisplayNameFromFromHeader($fromHeader),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
                                     "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
                                     "timezone"     => $this->timezone,
@@ -6096,7 +6096,7 @@ class SipSettings {
 
             $this->calls_placed[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->toURI),
-                                    "displayName"  => get_displayname_from_from_header($fromHeader),
+                                    "displayName"  => getDisplayNameFromFromHeader($fromHeader),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
                                     "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
                                     "timezone"     => $this->timezone,
@@ -12943,9 +12943,9 @@ function RandomIdentifier($length=30) {
     return $randomString;
 }
 
-function get_displayname_from_from_header($rfc_email_string) {
+function getDisplayNameFromFromHeader($header) {
    // match all words and whitespace, will be terminated by '<'
-   $name = preg_match('/[\w\s]+/', $rfc_email_string, $matches);
+   $name = preg_match('/[\w\s]+/', $header, $matches);
    $matches[0] = trim($matches[0]);
    return $matches[0];
 }
