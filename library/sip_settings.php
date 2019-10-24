@@ -6060,8 +6060,12 @@ class SipSettings {
             if (!$callStructure->stopTime && $status == 'completed') {
                 continue;
             }
+
+            $fromHeader =  quoted_printable_decode($callStructure->fromHeader);
+
             $this->calls_received[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->fromURI),
+                                    "displayName"  => get_displayname_from_from_header($fromHeader),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
                                     "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
                                     "timezone"     => $this->timezone,
@@ -6087,8 +6091,12 @@ class SipSettings {
             if (!$callStructure->stopTime && $status == 'completed') {
                 continue;
             }
+
+            $fromHeader =  quoted_printable_decode($callStructure->fromHeader);
+
             $this->calls_placed[]=array(
                                     "remoteParty"  => quoted_printable_decode($callStructure->toURI),
+                                    "displayName"  => get_displayname_from_from_header($fromHeader),
                                     "startTime"    => getLocalTime($this->timezone,$callStructure->startTime),
                                     "stopTime"     => getLocalTime($this->timezone,$callStructure->stopTime),
                                     "timezone"     => $this->timezone,
@@ -12935,7 +12943,13 @@ function RandomIdentifier($length=30) {
     return $randomString;
 }
 
-
+function get_displayname_from_from_header($rfc_email_string) {
+   // match all words and whitespace, will be terminated by '<'
+   $name = preg_match('/[\w\s]+/', $rfc_email_string, $matches);
+   $matches[0] = trim($matches[0]);
+   return $matches[0];
+}
+                                                                                
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
 	require_once('/etc/cdrtool/local/sip_settings.php');
 }
