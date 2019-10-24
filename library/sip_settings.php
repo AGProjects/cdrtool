@@ -6125,29 +6125,39 @@ class SipSettings {
         );
     }
 
-    function getCallStatistics () {
+    function getCallStatistics()
+    {
         dprint("getCallStatistics()");
 
-        $fromDate=mktime(0, 0, 0, date("m"), "01", date("Y"));
-        $toDate=time();
+        $fromDate = mktime(0, 0, 0, date("m"), "01", date("Y"));
+        $toDate = time();
 
-        $CallQuery=array("fromDate"=>$fromDate,
-                         "toDate"=>$toDate
-                         );
+        $CallQuery = array(
+            "fromDate" => $fromDate,
+            "toDate"   => $toDate
+        );
 
-        $CallQuery=array("limit"=>1
-                         );
+        $CallQuery = array(
+            "limit" => 1
+        );
 
-        $CallsQuery=array("placed"=>$CallQuery);
+        $CallsQuery = array(
+            "placed" => $CallQuery
+        );
 
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->getCallStatistics($this->sipId,$CallsQuery);
+        $result = $this->SipPort->getCallStatistics($this->sipId, $CallsQuery);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
 
@@ -6157,7 +6167,8 @@ class SipSettings {
         $this->thisMonth['price'] = $result->placed->price;
     }
 
-    function addPhonebookEntry() {
+    function addPhonebookEntry()
+    {
         dprint("addPhonebookEntry()");
 
         $uri       = strtolower(trim($_REQUEST['uri']));
@@ -6166,109 +6177,138 @@ class SipSettings {
 
         if (!strlen($uri)) return false;
 
-        $phonebookEntry=array(  'uri'       => $uri,
-                                'name'      => $name,
-                                'group'     => $group
-
-                              );
+        $phonebookEntry = array(
+            'uri'       => $uri,
+            'name'      => $name,
+            'group'     => $group
+        );
 
         dprint("addPhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->addPhoneBookEntry($this->sipId,$phonebookEntry);
+        $result = $this->SipPort->addPhoneBookEntry($this->sipId, $phonebookEntry);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<div class=row-fluid><div class=span12><span class='alert alert-error'>Error (SipPort): %s (%s): %s</span></div></div>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "
+                <div class=row-fluid>
+                    <div class=span12>
+                        <span class='alert alert-error'>Error (SipPort): %s (%s): %s</span>
+                    </div>
+                </div>
+                ",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
-
-
         return true;
     }
 
-    function updatePhonebookEntry() {
-
+    function updatePhonebookEntry()
+    {
         dprint("updatePhonebookEntry()");
+
         $uri       = strtolower(trim($_REQUEST['uri']));
         $group     = trim($_REQUEST['group']);
 
         $name = trim($_REQUEST['name']);
-        $phonebookEntry=array('name' => $name,
-                              'uri'       => $uri,
-                              'group'     => $group
-                          );
+        $phonebookEntry = array(
+            'name'  => $name,
+            'uri'   => $uri,
+            'group' => $group
+        );
         //dprint_r($phonebookEntry);
 
         dprint("updatePhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->updatePhoneBookEntry($this->sipId,$phonebookEntry);
+        $result = $this->SipPort->updatePhoneBookEntry($this->sipId, $phonebookEntry);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
-
         return true;
-
     }
 
-    function deletePhonebookEntry() {
+    function deletePhonebookEntry()
+    {
         dprint("deletePhonebookEntry()");
 
         $uri = strtolower($_REQUEST['uri']);
 
         dprint("deletePhonebookEntry");
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->deletePhoneBookEntry($this->sipId,$uri);
+        $result = $this->SipPort->deletePhoneBookEntry($this->sipId, $uri);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
-
         return true;
     }
 
-    function getPhoneBookEntries() {
+    function getPhoneBookEntries()
+    {
         dprint("getPhoneBookEntries()");
+
         if ($_REQUEST['task'] == 'search') {
             $search_text = trim($_REQUEST['uri']);
         }
-        $group       = trim($_REQUEST['group']);
+        $group = trim($_REQUEST['group']);
 
         if (!strlen($search_text)) $search_text="%" ;
 
-        $match=array('uri'  => '%'.$search_text.'%',
-                     'name' => '%'.$search_text.'%'
-                     );
+        $match = array(
+            'uri'  => '%'.$search_text.'%',
+            'name' => '%'.$search_text.'%'
+        );
 
         if (strlen($group)) {
-            if ($group=="empty") {
-                $match['group']='';
+            if ($group == "empty") {
+                $match['group'] = '';
             } else {
-                $match['group']=$group;
+                $match['group'] = $group;
             }
         }
 
-        $range=array('start'=>0,
-                     'count'=>100);
+        $range = array(
+            'start' => 0,
+            'count' => 100
+        );
 
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->getPhoneBookEntries($this->sipId,$match,$range);
+        $result = $this->SipPort->getPhoneBookEntries($this->sipId, $match, $range);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
 
