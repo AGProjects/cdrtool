@@ -6316,153 +6316,156 @@ class SipSettings {
         //dprint_r($this->PhonebookEntries);
     }
 
-    function showContactsTab() {
+    function showContactsTab()
+    {
         dprint("showContactsTab()");
 
         if ($this->show_directory) {
-            $chapter=sprintf(_("Directory"));
+            $chapter = sprintf(_("Directory"));
             $this->showChapter($chapter);
 
-            print "
-                <div class=row-fluid>
-                <div class=span12>";
+            print "<div class=row-fluid><div class=span12>";
             print _("To find other SIP Addresses fill in the First Name or the Last Name and click the Search button. ");
-            print "
-            </div>
-            ";
-
+            print "</div>";
 
             $this->showSearchDirectory();
 
-            print "
-            </div>
-            ";
-
+            print "</div>";
         }
 
-        if ($this->rows || $_REQUEST['task']=='directory') {
+        if ($this->rows || $_REQUEST['task'] == 'directory') {
             // hide local contacts if we found a global contact
             return true;
         }
 
-        $chapter=sprintf(_("Don't Disturb")).' '.sprintf(_("Groups"));
+        $chapter = sprintf(_("Don't Disturb")).' '.sprintf(_("Groups"));
         $this->showChapter($chapter);
 
-        print "
-        <div class=row-fluid>
-        <div class=span12>";
+        print "<div class=row-fluid><div class=span12>";
         print _("You can organize contacts into groups that can be used to accept incoming calls in Don't Disturb section. ");
-        print "
-        </div>
-        </div>
-        ";
-
-
+        print "</div></div>";
 
         $adminonly = $_REQUEST['adminonly'];
-        $accept = $_REQUEST['accept']; // selected search group;
+        $accept    = $_REQUEST['accept']; // selected search group;
 
-        $task = $_REQUEST['task'];
+        $task      = $_REQUEST['task'];
         //if ($task == "search" ){
             $search_text = $_REQUEST['uri'];
        // }
 
-        $confirm = $_REQUEST['confirm'];
+        $confirm  = $_REQUEST['confirm'];
 
-        $group = $_REQUEST['group'];
-        $uri = $_REQUEST['uri'];
+        $group    = $_REQUEST['group'];
+        $uri      = $_REQUEST['uri'];
 
-        $name = $_REQUEST['name'];
+        $name     = $_REQUEST['name'];
 
-        if ($task=="deleteContact" && $confirm) {
+        if ($task == "deleteContact" && $confirm) {
             $this->deletePhonebookEntry();
             unset($task);
             unset($confirm);
-        } else if ($task=="update") {
+        } elseif ($task == "update") {
             $this->updatePhonebookEntry();
             unset($task);
-        } else if ($task=="add") {
+        } elseif ($task == "add") {
             $this->addPhonebookEntry();
             unset($task);
         }
 
         $this->getPhoneBookEntries();
-        $maxrowsperpage=250;
+        $maxrowsperpage = 250;
 
-        $url_string=$this->url."&tab=contacts";
+        $url_string = $this->url."&tab=contacts";
 
-        print "
-        <script type=\"text/javascript\">
-        <!--//
+        printf(
+            "
+            <script type=\"text/javascript\">
+            <!--//
 
-            function toggleVisibility(rowid) {
-                if (document.getElementById) {
-                    row = document.getElementById(rowid);
-                    if (row.style.display == 'block') {
-                        row.style.display = 'none';
+                function toggleVisibility(rowid) {
+                    if (document.getElementById) {
+                        row = document.getElementById(rowid);
+                        if (row.style.display == 'block') {
+                            row.style.display = 'none';
+                        } else {
+                            row.style.display = 'block';
+                        }
+                        return false;
                     } else {
-                        row.style.display = 'block';
+                        return true;
                     }
-                    return false;
-                } else {
-                    return true;
                 }
-            }
 
-            function changeAction(url) {
-                if (url ==='add') {
-                    document.forms.contacts.action='$this->url&task=add';
-                } else {
-                    document.forms.contacts.action='$this->url&task=search';
+                function changeAction(url) {
+                    if (url ==='add') {
+                        document.forms.contacts.action='%s&task=add';
+                    } else {
+                        document.forms.contacts.action='%s&task=search';
+                    }
                 }
+
+                //-->
+            </script>
+
+            <form class=form-inline name=contacts action=%s method=post>
+            <input type=hidden name=tab value=contacts>
+            <div class='control-group'>
+                <div class='control'>
+                    <input class=span3 type=text size=20 name=uri placeholder=\"%s\">
+                    <div class=input-append>
+            ",
+            $this->url,
+            $this->url,
+            $this->url,
+            _("Add sip address or search for contacts")
+        );
+
+        if (count($this->PhonebookEntries) || $task == "search"){
+            $selected[$group] = "selected";
+
+            printf(
+                "
+                <select class=span2 name=group>
+                    <option value=\"\">
+                    %s
+                    </option>
+                ",
+                _('Group')
+            );
+
+            foreach (array_keys($this->PhonebookGroups) as $key) {
+                printf(
+                    "<option value=\"%s\" %s>%si</option>",
+                    $key,
+                    $selected[$key],
+                    $this->PhonebookGroups[$key]
+                );
             }
-
-            //-->
-        </script>
-
-        <form class=form-inline name=contacts action=$this->url method=post>
-        <input type=hidden name=tab value=contacts>
-        <div class='control-group'>
-        <div class='control'>
-        <input class=span3 type=text size=20 name=uri placeholder=\"";
-        print _("Add sip address or search for contacts");
-        print "\">
-        <div class=input-append>
-        ";
-
-        if (count($this->PhonebookEntries) || $task=="search"){
-
-            $selected[$group]="selected";
-
-            print "<select class=span2 name=group>";
-            print "<option value=\"\">";
-            print _('Group');
-            foreach(array_keys($this->PhonebookGroups) as $key) {
-                printf ("<option value=\"%s\" %s>%s",$key,$selected[$key],$this->PhonebookGroups[$key]);
-            }
-            print "<option value=\"\">------";
-            printf ("<option value=\"empty\" %s>%s",$selected['empty'],_("No group"));
-
-            print "</select>";
-
-            print "<input class='btn btn-primary' type=submit onClick='changeAction(\"search\")' value=";
-            print _("Search");
-            print ">";
+            printf(
+                "
+                <option value=\"\">------</option>
+                <option value=\"empty\" %s>%s</option>
+                </select>
+                <input class='btn btn-primary' type=submit onClick='changeAction(\"search\")' value=%s>
+                ",
+                $selected['empty'],
+                _("No group"),
+                _("Search")
+            );
         }
 
-        print "<input class='btn' type=submit onclick='changeAction(\"add\")' value=";
-        print _("Add");
-        print "></div><span class=help-inline>";
-        print _("(wildcard %)");
-        print "</span>
-        </div>
-        </div>
-        ";
-
-        print "
-        </form>
-        ";
-
+        printf(
+            "
+            <input class='btn' type=submit onclick='changeAction(\"add\")' value=%s>
+            </div>
+            <span class=help-inline>%s</span>
+            </div>
+            </div>
+            </form>
+            ",
+            _("Add"),
+            _("(wildcard %)")
+        );
 
         if (count($this->PhonebookEntries)){
             print "
@@ -6488,74 +6491,95 @@ class SipSettings {
             print "</th>";
             print "</tr></thead>";
 
-            foreach(array_keys($this->PhonebookEntries) as $_entry) {
+            foreach (array_keys($this->PhonebookEntries) as $_entry) {
+                $found = $i + 1;
 
-                $found=$i+1;
+                $rr = floor($found / 2);
+                $mod = $found - $rr * 2;
 
-                $rr=floor($found/2);
-                $mod=$found-$rr*2;
-
-                if ($mod ==0) {
-                    $_class='odd';
+                if ($mod == 0) {
+                    $_class = 'odd';
                 } else {
-                    $_class='even';
+                    $_class = 'even';
                 }
 
-                print "
-                <tr class='$_class contacts_table'>
-                <form name=\"Entry$found\" class=form-inline action=\"$this->url&tab=$this->tab\">
-                $this->hiddenElements
-                <input type=hidden name=tab value=\"$this->tab\">
-                <input type=hidden name=task value=\"update\">
-                ";
-                printf ("<input type=hidden name=uri value=\"%s\">",$this->PhonebookEntries[$_entry]->uri);
+                printf(
+                    "
+                    <tr class='%s contacts_table'>
+                    <form name=\"Entry$%s\" class=form-inline action=\"%s&tab=%s\">
+                    %s
+                    <input type=hidden name=tab value=\"%s\">
+                    <input type=hidden name=task value=\"update\">
+                    <input type=hidden name=uri value=\"%s\">
+                    <td>%s</td><td>%s</td>
+                    ",
+                    $_class,
+                    $found,
+                    $this->url,
+                    $this->tab,
+                    $this->hiddenElements,
+                    $this->tab,
+                    $this->PhonebookEntries[$_entry]->uri,
+                    $found,
+                    $this->PhonebookEntries[$_entry]->uri
+                );
 
-                print "<td>$found</td>
-                <td>";
-                print $this->PhonebookEntries[$_entry]->uri;
 
-                if (preg_match("/\%/",$this->PhonebookEntries[$_entry]->uri)) {
-                   printf ("</td>
-                   <td></td>
-                   <td>");
+                if (preg_match("/\%/", $this->PhonebookEntries[$_entry]->uri)) {
+                    print "<td></td><td>";
                 } else {
-                   printf ("</td>
-                   <td>%s</td>
-                   <td>",
-                   $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri));
+                    printf(
+                        "
+                        <td>%s</td>
+                        <td>
+                        ",
+                        $this->PhoneDialURL($this->PhonebookEntries[$_entry]->uri)
+                    );
                 }
 
-                printf ("<div class='input-append' style='margin-bottom:0px' ><input style='margin-bottom:0' type=text name=name value='%s'>",$this->PhonebookEntries[$_entry]->name);
-                printf ("<a class=btn href=\"javascript: document.Entry$found.submit()\">%s</a></div>",_("Update"));
+                printf("<div class='input-append' style='margin-bottom:0px' ><input style='margin-bottom:0' type=text name=name value='%s'>", $this->PhonebookEntries[$_entry]->name);
+                printf("<a class=btn href=\"javascript: document.Entry$found.submit()\">%s</a></div>", _("Update"));
 
-                print "
-                </td>
-                <td>";
-                printf ("<select style='margin-bottom:0' name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($this->PhonebookEntries[$_entry]->name));
+                print "</td><td>";
+                printf(
+                    "<select style='margin-bottom:0' name=group onChange=\"location.href='%s&task=update&uri=%s&name=%s&group='+this.options[this.selectedIndex].value\">",
+                    $url_string,
+                    urlencode($this->PhonebookEntries[$_entry]->uri),
+                    urlencode($this->PhonebookEntries[$_entry]->name)
+                );
 
                 print "<option value=\"\">";
-                $selected_grp[$this->PhonebookEntries[$_entry]->group]="selected";
-                foreach(array_keys($this->PhonebookGroups) as $_key) {
-                    printf ("<option value=\"%s\" %s>%s",$_key,$selected_grp[$_key],$this->PhonebookGroups[$_key]);
+                $selected_grp[$this->PhonebookEntries[$_entry]->group] = "selected";
+                foreach (array_keys($this->PhonebookGroups) as $_key) {
+                    printf(
+                        "<option value=\"%s\" %s>%s</option>",
+                        $_key,
+                        $selected_grp[$_key],
+                        $this->PhonebookGroups[$_key]
+                    );
                 }
                 unset($selected_grp);
 
                 print "</select>";
+                print "</td>";
 
-
-                print "</td>
-                ";
-
-                if ($task=="deleteContact" && $uri==$this->PhonebookEntries[$_entry]->uri) {
-                    print "
-                    <td bgcolor=red style='vertical-align: middle'>
-                    ";
-                    printf ("<a href=%s&task=deleteContact&uri=%s&confirm=1&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
+                if ($task == "deleteContact" && $uri == $this->PhonebookEntries[$_entry]->uri) {
+                    print "<td bgcolor=red style='vertical-align: middle'>";
+                    printf(
+                        "<a href=%s&task=deleteContact&uri=%s&confirm=1&search_text=%s>",
+                        $url_string,
+                        urlencode($this->PhonebookEntries[$_entry]->uri),
+                        urlencode($search_text)
+                    );
                     print _("Confirm");
                 } else {
-                    print "
-                    <td>";
-                    printf ("<a href=%s&task=deleteContact&uri=%s&search_text=%s>",$url_string,urlencode($this->PhonebookEntries[$_entry]->uri),urlencode($search_text));
+                    print "<td>";
+                    printf(
+                        "<a href=%s&task=deleteContact&uri=%s&search_text=%s>",
+                        $url_string,
+                        urlencode($this->PhonebookEntries[$_entry]->uri),
+                        urlencode($search_text)
+                    );
                     if ($this->delete_img) {
                         //print $this->delete_img;
                         print "<i class=\"icon-remove\"></i>";
@@ -6564,23 +6588,16 @@ class SipSettings {
                     }
                 }
                 print "</a>";
-                print "</td>
-                </form>
-                </tr>";
+                print "</td></form></tr>";
                 $i++;
-
             }
-
             print "</table>";
-            print "
-            </td>
-            </tr>
-            </table>
-            ";
+            print "</td></tr></table>";
         }
     }
 
-    function exportPhonebook($userAgent) {
+    function exportPhonebook($userAgent)
+    {
         dprint("exportPhonebook()");
         $this->getPhonebookEntries();
 
