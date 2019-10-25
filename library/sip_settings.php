@@ -6601,120 +6601,155 @@ class SipSettings {
         dprint("exportPhonebook()");
         $this->getPhonebookEntries();
 
-        $this->contentType="Content-type: text/csv";
+        $this->contentType = "Content-type: text/csv";
 
         if (!is_array($this->PhonebookEntries) || !count($this->PhonebookEntries)) return true;
 
-        if (!$userAgent) $userAgent='snom';
+        if (!$userAgent) $userAgent = 'snom';
 
-        if ($userAgent=='snom') {
-            $this->export_filename="tbook.csv";
-            $phonebook.=sprintf("Name,Address,Group\n");
-        } else if ($userAgent == 'eyebeam') {
-            $phonebook.=sprintf("Name,Group Name,SIP URL,Proxy ID\n");
-        } else if ($userAgent == 'csco') {
-            $this->contentType="Content-type: text/xml";
-            $this->export_filename="directory.xml";
-            $phonebook.=sprintf ("<CiscoIPPhoneDirectory>\n\t<Title>%s</Title>\n\t<Prompt>Directory</Prompt>\n",$this->account);
-        } else if ($userAgent == 'unidata') {
-            $this->export_filename="phonebook.csv";
-            $phonebook.=sprintf("Index,Name,,,,\n");
-            $phonebook.=sprintf("0,Undefined,,,,\n");
+        if ($userAgent == 'snom') {
+            $this->export_filename = "tbook.csv";
+            $phonebook .= sprintf("Name,Address,Group\n");
+        } elseif ($userAgent == 'eyebeam') {
+            $phonebook .= sprintf("Name,Group Name,SIP URL,Proxy ID\n");
+        } elseif ($userAgent == 'csco') {
+            $this->contentType = "Content-type: text/xml";
+            $this->export_filename = "directory.xml";
+            $phonebook .= sprintf(
+                "<CiscoIPPhoneDirectory>\n\t<Title>%s</Title>\n\t<Prompt>Directory</Prompt>\n",
+                $this->account
+            );
+        } elseif ($userAgent == 'unidata') {
+            $this->export_filename = "phonebook.csv";
+            $phonebook .= sprintf("Index,Name,,,,\n");
+            $phonebook .= sprintf("0,Undefined,,,,\n");
 
-            $z=1;
-            foreach($this->PhonebookGroups as $_group) {
-                $this->groupIndex[$_group]=$z;
-                $phonebook.=sprintf ("%s,%s,,,,\n",$z,$_group);
+            $z = 1;
+            foreach ($this->PhonebookGroups as $_group) {
+                $this->groupIndex[$_group] = $z;
+                $phonebook .= sprintf("%s,%s,,,,\n", $z, $_group);
                 $z++;
             }
 
-            $phonebook.=sprintf("\nIndex,Name,RdNm,Tel,Group\n");
-
+            $phonebook .= sprintf("\nIndex,Name,RdNm,Tel,Group\n");
         }
 
-        $found=0;
+        $found = 0;
 
         foreach (array_keys($this->PhonebookEntries) as $_entry) {
-
             $fname    = $this->PhonebookEntries[$_entry]->firstName;
             $lname    = $this->PhonebookEntries[$_entry]->lastName;
             $uri      = $this->PhonebookEntries[$_entry]->uri;
             $group    = $this->PhonebookEntries[$_entry]->group;
 
-            if (!preg_match("/[_%]/",$uri)) {
-                $uri=substr($uri,4);
-                $els=explode("@",$uri);
-                if ($els[1]==$this->domain) $uri=$els[0];
-                if ($userAgent=='snom') {
-                    $phonebook.=sprintf ("%s %s,%s,%s\n",$fname,$lname,$uri,$this->PhonebookGroups[$group]);
-                } else if ($userAgent == 'unidata' && $fname && $lname) {
-                    $phonebook.=sprintf ("%s,%s,%s %s,%s,%s\n",$found,$fname,$fname,$lname,$uri,$this->PhonebookGroups[$group]);
-                } else if ($userAgent == 'eyebeam') {
-                    $phonebook.=sprintf ("%s %s,%s,1\n",$fname,$lname,$this->PhonebookEntries[$_entry]->uri,$this->PhonebookGroups[$group]);
-                } else if ($userAgent == 'csco') {
-                    $phonebook.=sprintf ("\n\t<DirectoryEntry>\n\t<Name>%s %s</Name>\n\t<Telephone>%s</Telephone>\n\t</DirectoryEntry>\n",$fname,$lname,$uri);
+            if (!preg_match("/[_%]/", $uri)) {
+                $uri = substr($uri, 4);
+                $els = explode("@", $uri);
+                if ($els[1] == $this->domain) $uri=$els[0];
+                if ($userAgent == 'snom') {
+                    $phonebook .= sprintf(
+                        "%s %s,%s,%s\n",
+                        $fname,
+                        $lname,
+                        $uri,
+                        $this->PhonebookGroups[$group]
+                    );
+                } elseif ($userAgent == 'unidata' && $fname && $lname) {
+                    $phonebook .= sprintf(
+                        "%s,%s,%s %s,%s,%s\n",
+                        $found,
+                        $fname,
+                        $fname,
+                        $lname,
+                        $uri,
+                        $this->PhonebookGroups[$group]
+                    );
+                } elseif ($userAgent == 'eyebeam') {
+                    $phonebook .= sprintf(
+                        "%s %s,%s,1\n",
+                        $fname,
+                        $lname,
+                        $this->PhonebookEntries[$_entry]->uri,
+                        $this->PhonebookGroups[$group]
+                    );
+                } elseif ($userAgent == 'csco') {
+                    $phonebook .= sprintf(
+                        "\n\t<DirectoryEntry>\n\t<Name>%s %s</Name>\n\t<Telephone>%s</Telephone>\n\t</DirectoryEntry>\n",
+                        $fname,
+                        $lname,
+                        $uri
+                    );
                 }
                 $found++ ;
             }
         }
 
         if ($userAgent == 'csco') {
-            $phonebook.=sprintf ("\n</CiscoIPPhoneDirectory>\n");
+            $phonebook .= sprintf("\n</CiscoIPPhoneDirectory>\n");
         }
 
         Header($this->contentType);
-        $_header=sprintf("Content-Disposition: inline; filename=%s",$this->export_filename);
+        $_header = sprintf("Content-Disposition: inline; filename=%s", $this->export_filename);
         Header($_header);
         header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
         header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
         header("Pragma: no-cache");
 
         print $phonebook;
-
     }
 
-    function getRejectMembers() {
+    function getRejectMembers()
+    {
         dprint("getRejectMembers()");
+
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->getRejectMembers($this->sipId);
+        $result = $this->SipPort->getRejectMembers($this->sipId);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
-
-        $this->rejectMembers=$result;
+        $this->rejectMembers = $result;
         //dprint_r($this->rejectMembers);
 
         return true;
     }
 
-    function setRejectMembers() {
-
-        $members=array();
-
-        $rejectMembers=$_REQUEST['rejectMembers'];
+    function setRejectMembers()
+    {
+        $members = array();
+        $rejectMembers = $_REQUEST['rejectMembers'];
 
         foreach ($rejectMembers as $_member) {
-            if (strlen($_member) && !preg_match("/^sip:/",$_member)) {
+            if (strlen($_member) && !preg_match("/^sip:/", $_member)) {
                 $_member = 'sip:'.$_member;
             }
-            if (strlen($_member)) $members[]=$_member;
+            if (strlen($_member)) $members[] = $_member;
         }
 
         dprint("setRejectMembers");
 
         $this->SipPort->addHeader($this->SoapAuth);
-        $result     = $this->SipPort->setRejectMembers($this->sipId,$members);
+        $result = $this->SipPort->setRejectMembers($this->sipId, $members);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
     }
