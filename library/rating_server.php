@@ -659,6 +659,8 @@ class ratingEngineClient extends socketServerClient {
                 $allow_connection = false;
                 foreach ($this->ratingEngineSettings['allow'] as $_allow) {
                     if (preg_match("/^$_allow/", $this->remote_address)) {
+			$log = sprintf("Client %s allowed by server configuration %s", $this->remote_address, $_allow);
+			syslog(LOG_NOTICE, $log);
                         $allow_connection = true;
                         break;
                     }
