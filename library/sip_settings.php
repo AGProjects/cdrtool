@@ -3121,10 +3121,12 @@ class SipSettings {
 
     function showSettingsTab() {
         $use_yubikey=0;
+        /*
         if (stream_resolve_include_path('Auth/Yubico.php')) {
             require_once 'Auth/Yubico.php';
             $use_yubikey=1;
         }
+        */
 
         $this->getVoicemail();
 
