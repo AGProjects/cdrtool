@@ -7376,43 +7376,57 @@ class DnsRecords extends Records {
                     'name'     => '',
                     'type'     => 'NAPTR',
                     'priority' => '100',
-                    'ttl'      => '3600',
-                    'value'    => '10 100 "s" "SIP+D2T" "" _sip._tcp'
+                    'ttl'      => '600',
+                    'value'    => '20 100 "s" "SIP+D2T" "" _sip._tcp'
                 ),
                 'naptr2' => array(
                     'name'     => '',
                     'type'     => 'NAPTR',
                     'priority' => '100',
-                    'ttl'      => '3600',
+                    'ttl'      => '600',
                     'value'    => '30 100 "s" "SIP+D2U" "" _sip._udp'
+                ),
+                'naptr3' => array(
+                    'name'     => '',
+                    'type'     => 'NAPTR',
+                    'priority' => '100',
+                    'ttl'      => '600',
+                    'value'    => '10 100 "s" "SIPS+D2T" "" _sips._tcp'
                 ),
                 'srv1'   => array(
                     'name'     => '_sip._tcp',
                     'type'     => 'SRV',
                     'priority' => '100',
-                    'ttl'      => '3600',
+                    'ttl'      => '600',
                     'value'    => '100 5060 proxy.sipthor.net'
                 ),
                 'srv2'   => array(
                     'name'     => '_sip._udp',
                     'type'     => 'SRV',
                     'priority' => '100',
-                    'ttl'      => '3600',
+                    'ttl'      => '600',
                     'value'    => '100 5060 proxy.sipthor.net'
                 ),
                 'srv3'   => array(
-                    'name'     => '_stun._udp',
+                    'name'     => '_sips._tls',
                     'type'     => 'SRV',
-                    'priority' => '0',
-                    'value'    => '10 3478 stun1.dns-hosting.info'
+                    'priority' => '100',
+                    'ttl'      => '600',
+                    'value'    => '100 443 proxy.sipthor.net'
                 ),
                 'srv4'   => array(
                     'name'     => '_stun._udp',
                     'type'     => 'SRV',
                     'priority' => '0',
-                    'value'    => '10 3478 stun2.dns-hosting.info'
+                    'value'    => '10 3478 stun1.sipthor.net'
                 ),
                 'srv5'   => array(
+                    'name'     => '_stun._udp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 3478 stun2.sipthor.net'
+                ),
+                'srv6'   => array(
                     'name'     => '_msrps._tcp',
                     'type'     => 'SRV',
                     'priority' => '10',
@@ -8405,6 +8419,42 @@ class DnsRecords extends Records {
                 return true;
             }
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
+            $push_notifications_server = $this->getResellerProperty('push_notifications_server_private') or $this->getResellerProperty('push_notifications_server');
+            if ($type == "sip2sip" && $push_notifications_server) {
+                if (preg_match("/^(.*):(\d+);transport=(.*)$/", $push_notifications_server, $m)) {
+                    $push_hostname = $m[1];
+                    $push_port = $m[2];
+                    $push_transport = $m[3];
+                    if ($push_transport == "tls") {
+                        $naptr_type = "_sips._tcp";
+                        $naptr_s = "SIPS+D2T";
+                    } else if ($push_transport == "tcp") {
+                        $naptr_type = "_sip._tcp";
+                        $naptr_s = "SIP+D2T";
+                    } else {
+                        $naptr_type = "_sip._udp";
+                        $naptr_s = "SIP+D2U";
+                    }
+
+                    $this->recordTypesTemplate[$type]['records']['push_naptr'] =
+                                        array(
+                                            'name'     => 'push',
+                                            'type'     => 'NAPTR',
+                                            'priority' => '100',
+                                            'ttl'      => '600',
+                                            'value'    => sprintf('10 100 "s" "%s" "" %s.push', $naptr_s, $naptr_type)
+                                        );
+                    $this->recordTypesTemplate[$type]['records']['push_srv'] =
+                                        array(
+                                            'name'     => sprintf('%s.push', $naptr_type),
+                                            'type'     => 'SRV',
+                                            'priority' => '100',
+                                            'ttl'      => '600',
+                                            'value'    => sprintf('100 %d %s', $push_port, $push_hostname)
+                                        );
+                 }
+            }
+
             foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
                 $value_new='';
 
@@ -11156,6 +11206,10 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
+                                 'sip_outbound_proxy'   => array('name'      => 'SIP Client Outbound proxy',
+                                                               'category'   => 'sip',
+                                                               'permission' => 'customer'
+                                                               ),
                                  'store_clear_text_passwords' => array('name'      => 'Store clear text passwords',
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
@@ -11168,7 +11222,7 @@ class Customers extends Records {
                                                                'category'   => 'sip',
                                                                'permission' => 'customer'
                                                                ),
-    		    			     'dns_admin_email'     => array('name'     => 'DNS zones Administrator Email',
+                                 'dns_admin_email'     => array('name'     => 'DNS zones Administrator Email',
                                                                'category' => 'dns',
                                                                'permission'  => 'customer'),
                                  'support_web'         => array('name'      => 'Support Web Site',
@@ -11203,8 +11257,12 @@ class Customers extends Records {
                                                                'category'  => 'web',
                                                                'permission'  => 'customer'
                                                                 ),
-                                             'yubikey' => array('name'=>'Yubikey',
-                                                                'category' =>'web',
+                                 'push_notifications_server' => array('name'=>'Push server public interface',
+                                                                'category' =>'sip',
+                                                                'permission' => 'customer'
+                                                               ),
+                                 'push_notifications_server_private' => array('name'=>'Push server private interface',
+                                                                'category' =>'sip',
                                                                 'permission' => 'customer'
                                                                )
                                  );

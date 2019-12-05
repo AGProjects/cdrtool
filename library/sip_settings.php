@@ -40,6 +40,8 @@ class SipSettings {
     var $pstn_changes_allowed      = false;
     var $prepaid_changes_allowed   = false;
     var $sip_proxy                 = "proxy.example.com";
+    var $sip_outbound_proxy        = "";
+    var $sip_mobile_outbound_proxy = "";
     var $voicemail_server          = "vm.example.com";
     var $absolute_voicemail_uri    = false; // use <voice-mailbox>
     var $enable_thor               = false;
@@ -497,6 +499,10 @@ class SipSettings {
         // overwrite default settings
         if (strlen($this->soapEngines[$this->sip_engine]['sip_proxy'])) {
             $this->sip_proxy        = $this->soapEngines[$this->sip_engine]['sip_proxy'];
+        }
+
+        if (strlen($this->soapEngines[$this->sip_engine]['sip_outbound_proxy'])) {
+            $this->sip_outbound_proxy        = $this->soapEngines[$this->sip_engine]['sip_outbound_proxy'];
         }
 
         if (strlen($this->soapEngines[$this->sip_engine]['support_company'])) {
@@ -1579,6 +1585,22 @@ class SipSettings {
             $this->sip_proxy             = $this->resellerProperties['sip_proxy'];
         }
 
+        if ($this->resellerProperties['sip_outbound_proxy']) {
+            $this->sip_outbound_proxy    = $this->resellerProperties['sip_outbound_proxy'];
+        }
+
+        if ($this->resellerProperties['push_notifications_server']) {
+            $this->sip_mobile_outbound_proxy    = $this->resellerProperties['push_notifications_server'];
+        }
+
+        if (!$this->sip_outbound_proxy) {
+            $this->sip_outbound_proxy = $this->sip_proxy;
+        }
+
+        if (!$this->sip_mobile_outbound_proxy) {
+            $this->sip_mobile_outbound_proxy = $this->sip_outbound_proxy;
+        }
+
         if ($this->resellerProperties['store_clear_text_passwords']) {
             $this->store_clear_text_passwords = $this->resellerProperties['store_clear_text_passwords'];
         }
@@ -2436,9 +2458,15 @@ class SipSettings {
         print "
                         <tr>
                             <td>";
-        print _("Outbound Proxy");
+        if (in_array("mobile",$this->groups)) {
+            print _("Push Outbound Proxy");
+            $ob = $this->sip_mobile_outbound_proxy;
+        } else {
+            print _("Outbound Proxy");
+            $ob = $this->sip_outbound_proxy;
+        }
         print "</td>
-                            <td>$this->sip_proxy</td>
+                            <td>$ob</td>
                         </tr>
         ";
 
@@ -3092,7 +3120,6 @@ class SipSettings {
     }
 
     function showSettingsTab() {
-
         $use_yubikey=0;
         if (stream_resolve_include_path('Auth/Yubico.php')) {
             require_once 'Auth/Yubico.php';
