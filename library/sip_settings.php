@@ -3604,27 +3604,27 @@ class SipSettings {
         </div>
         ";
 
-        print "
-        <div class='row-fluid odd'>
-        <label for=extra class=control-label>";
-        print _("Tabs");
-        print "
-        </label>
-        <div id='extra' class=controls>";
-
         if (in_array("free-pstn",$this->groups) && !$this->show_barring_tab) {
+            print "
+            <div class='row-fluid odd'>
+            <label for=extra class=control-label>";
+            print _("Tabs");
+            print "
+            </label>
+            <div id='extra' class=controls>";
+
             if ($this->Preferences['show_barring_tab']){
                 $check_show_barring_tab="checked";
             } else {
                 $check_show_barring_tab="";
             }
             printf ("<label class='checkbox'><input type=checkbox %s value=1 name='show_barring_tab'>%s</label>\n",$check_show_barring_tab,_("Barring"));
-        }
+            print "
+            </div>
+            </div>
+            ";
 
-        print "
-        </div>
-        </div>
-        ";
+        }
 
         $this->showVoicemail();
 
