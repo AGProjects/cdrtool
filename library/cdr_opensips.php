@@ -4791,8 +4791,8 @@ class SIP_trace
                     $toport    = $m[2];
                 } else {
                     $toip      = $_trace->to_ip;
-                    $transport = 'udp';
-                    $toport    = '5060';
+                    $transport = $_trace->to_proto;
+                    $toport    = $_trace->to_port;
                 }
 
                 if (preg_match("/^(udp|tcp|tls):(.*):(.*)$/", $_trace->from_ip, $m)) {
@@ -4803,6 +4803,7 @@ class SIP_trace
                     $fromport  = $m[2];
                 } else {
                     $fromip    = $_trace->from_ip;
+                    $fromport  = $_trace->from_port;
                 }
 
                 if (!isset($this->column[$fromip])) {
