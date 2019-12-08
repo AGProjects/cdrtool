@@ -3032,6 +3032,11 @@ class SipAccounts extends Records {
         $selected_group[$this->filters['group']]='selected';
         print "<select class=span2 name=group_filter><option value=''>Feature...";
         foreach (array_keys($this->group_filter_list) as $key) {
+            if (!$this->getResellerProperty('pstn_access')) {
+                if ($key == 'free-pstn' or $key == 'prepaid' or $key == 'quota') {
+                    continue;
+                }
+            }  
             printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
         }
         print "</select>";
@@ -3152,13 +3157,14 @@ class SipAccounts extends Records {
         printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s' autocomplete='off'></div>",$_REQUEST['fullname']);
         printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s' autocomplete='off'></div>",$_REQUEST['email']);
         printf (" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
-        printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
-        printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
-
-        if ($this->prepaidChangesAllowed()) {
-            printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
-        } else {
-            printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
+        if ($this->getResellerProperty('pstn_access')) {
+            printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
+            printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
+            if ($this->prepaidChangesAllowed()) {
+                printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
+            } else {
+                printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
+            }
         }
 
         $this->printHiddenFormElements();
@@ -11143,11 +11149,6 @@ class Customers extends Records {
                                                                'resellerMayManageForChildAccounts' => true
                                                                ),
                                  'pstn_access'         => array('name'      => 'Access to PSTN',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'sms_access'         => array('name'      => 'Access to SMS',
                                                                'category'   => 'sip',
                                                                'permission' => 'admin',
                                                                'resellerMayManageForChildAccounts' => true
