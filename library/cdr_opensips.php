@@ -1284,11 +1284,21 @@ class CDRS_opensips extends CDRS
         $Realm = trim($Realm);
 
         if ($Realms) {
-            $where .= sprintf("and %s in (", $this->domainField);
+            $where .= sprintf(" and (");
+            $count_realms = count($Realms);
+            $j = 1;
             foreach ($Realms as $realm) {
-                $where .= sprintf("'%s',", addslashes($realm));
+                if (preg_match("/%/", $realm)) {
+                    $where .= sprintf(" ( %s like '%s' or %s like '%s' ) ", $this->domainField, addslashes($realm), $this->CanonicalURIField, addslashes($realm));
+                } else {
+                    $where .= sprintf(" ( %s = '%s' or %s like '%s' )", $this->domainField, addslashes($realm), $this->CanonicalURIField, addslashes($realm));
+                }
+
+                if ($j < $count_realms) {
+                    $where .= " or ";
+                }
+                $j = $j + 1;
             }
-            $where = rtrim($where, ",");
             $where .= ") ";
         } elseif ($Realm) {
             $Realm = urldecode($Realm);
