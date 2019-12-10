@@ -527,7 +527,8 @@ class CDRTool_Perm extends Perm
         "showCallerId"  => 64,
         "showPrice"     => 128,
         "provisioning"  => 256,
-        "readonly"      => 512
+        "readonly"      => 512,
+        "sessions"      => 1024
     );
 
     function perm_invalid($does_have, $must_have)
@@ -1196,16 +1197,15 @@ class pageLayout
                     <li><a href=rating_tables.phtml?table=quota_usage>Quota</a></li>";
         }
 
-        if ($perm->have_perm("statistics")) {
-            print "
-                    <li><a href=network_status.phtml>Network</a></li>";
-            print "
-                    <li><a href=media_sessions.phtml>Sessions</a></li>";
-            print "
-                    <li><a href=sip_usage.phtml>Usage</a></li>";
+        if ($perm->have_perm("sessions")) {
+            print "<li><a href=media_sessions.phtml>Sessions</a></li>";
         }
 
         if ($perm->have_perm("admin")) {
+            print "
+                    <li><a href=network_status.phtml>Network</a></li>";
+            print "
+                    <li><a href=sip_usage.phtml>Usage</a></li>";
             print "<li><a href=mysql_replication_status.phtml>Replication</a></li>";
         }
 

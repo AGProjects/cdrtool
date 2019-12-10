@@ -115,6 +115,7 @@ class MediaSessions {
                 'caller'   => 0,
                 'callee'   => 0
             );
+
             foreach ($_sessions as $_session) {
                 list($user1, $domain1) = explode("@", $_session->from_uri);
                 list($user2, $domain2) = explode("@", $_session->to_uri);
@@ -123,7 +124,18 @@ class MediaSessions {
                     $domain1 = $m[1];
                 }
 
-                if (!in_array($domain1, $this->allowedDomains) && !in_array($domain2, $this->allowedDomains)) {
+                $may_display = false;
+                foreach ($this->allowedDomains as $allow_domain) {
+                    if ($this->endsWith($domain1, $allow_domain)) {
+                        $may_display = true;
+                        break;
+                    }
+                    if ($this->endsWith($domain2, $allow_domain)) {
+                        $may_display = true;
+                        break;
+                    }
+                }
+                if (!$may_display) {
                     continue;
                 }
 
@@ -268,7 +280,9 @@ class MediaSessions {
     public function showAll()
     {
         $this->showHeader();
-        $this->showSummary();
+        if (!$this->allowedDomains) {
+            $this->showSummary();
+        }
         $this->showSearch();
         $this->showSessions();
         $this->showFooter();
@@ -736,6 +750,15 @@ class MediaSessionsNGNPro extends MediaSessions {
         } else {
             return $ip;
         }
+    }
+
+    public function endsWith($string, $endString)
+    {
+        $len = strlen($endString);
+        if ($len == 0) {
+            return true;
+        }
+        return (substr($string, -$len) === $endString);
     }
 }
 ?>
