@@ -5,6 +5,7 @@ $userAgentImages = array(
     "Asterisk"          => "asterisk.png",
     "AVM FRITZ"         => "avm-fritzbox-wlan.png",
     "Cisco ATA"         => "cisco-ata.png",
+    "MURA IP"           => "muraip.png",
     "Cisco.*Gateway"    => "cisco.png",
     "7960"              => "7960.png",
     "CSCO"              => "7960.png",
