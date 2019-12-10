@@ -1288,11 +1288,7 @@ class CDRS_opensips extends CDRS
             $count_realms = count($Realms);
             $j = 1;
             foreach ($Realms as $realm) {
-                if (preg_match("/%/", $realm)) {
-                    $where .= sprintf(" ( %s like '%s' or %s like '%s' ) ", $this->domainField, addslashes($realm), $this->CanonicalURIField, addslashes($realm));
-                } else {
-                    $where .= sprintf(" ( %s = '%s' or %s like '%s' )", $this->domainField, addslashes($realm), $this->CanonicalURIField, addslashes($realm));
-                }
+                $where .= sprintf(" ( %s like '%%%s' or %s like '%%%s' ) ", $this->domainField, addslashes($realm), $this->CanonicalURIField, addslashes($realm));
 
                 if ($j < $count_realms) {
                     $where .= " or ";
