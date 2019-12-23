@@ -6535,7 +6535,7 @@ class SipSettings {
                 printf(
                     "
                     <tr class='%s contacts_table'>
-                    <form name=\"Entry$%s\" class=form-inline action=\"%s&tab=%s\">
+                    <form name=\"Entry%s\" class=form-inline action=\"%s&tab=%s\">
                     %s
                     <input type=hidden name=tab value=\"%s\">
                     <input type=hidden name=task value=\"update\">
