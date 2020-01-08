@@ -6133,7 +6133,7 @@ class SipSettings {
 
             $this->calls_placed[] = array(
                 "remoteParty"  => quoted_printable_decode($callStructure->toURI),
-                "displayName"  => getDisplayNameFromFromHeader($fromHeader),
+                "displayName"  => quoted_printable_decode($callStructure->toURI),
                 "startTime"    => getLocalTime($this->timezone, $callStructure->startTime),
                 "stopTime"     => getLocalTime($this->timezone, $callStructure->stopTime),
                 "timezone"     => $this->timezone,
@@ -13076,7 +13076,7 @@ function RandomIdentifier($length = 30)
 function getDisplayNameFromFromHeader($header)
 {
     // match all words and whitespace, will be terminated by '<'
-    preg_match('/[\w\s]+/', $header, $matches);
+    preg_match('/([\w\s]+)<.*/', $header, $matches); 
     $matches[0] = trim($matches[0]);
     return $matches[0];
 }
