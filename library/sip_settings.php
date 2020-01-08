@@ -6133,7 +6133,7 @@ class SipSettings {
 
             $this->calls_placed[] = array(
                 "remoteParty"  => quoted_printable_decode($callStructure->toURI),
-                "displayName"  => quoted_printable_decode($callStructure->toURI),
+                "displayName"  => "",
                 "startTime"    => getLocalTime($this->timezone, $callStructure->startTime),
                 "stopTime"     => getLocalTime($this->timezone, $callStructure->stopTime),
                 "timezone"     => $this->timezone,
@@ -13076,9 +13076,12 @@ function RandomIdentifier($length = 30)
 function getDisplayNameFromFromHeader($header)
 {
     // match all words and whitespace, will be terminated by '<'
-    preg_match('/([\w\s]+)<.*/', $header, $matches); 
-    $matches[0] = trim($matches[0]);
-    return $matches[0];
+    $name = preg_match("/([\w\s]+).*<.*/", $header, $matches);
+    if (isset($matches[1])) {
+        return trim($matches[1]);
+    } else {
+        return "";
+    }
 }
 
 if (file_exists("/etc/cdrtool/local/sip_settings.php")) {
