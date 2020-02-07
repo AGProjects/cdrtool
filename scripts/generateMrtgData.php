@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 require("/etc/cdrtool/global.inc");
 require("sip_statistics.php");
@@ -10,5 +10,3 @@ if (count($argv)!= 3) {
 
 $SIPstatistics = new SIPstatistics();
 $SIPstatistics->generateMrtgData($argv[1], $argv[2]);
-
-?>

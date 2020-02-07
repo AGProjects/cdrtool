@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 set_time_limit(0);
 
@@ -108,5 +108,3 @@ while (list($k,$v) = each($DATASOURCES)) {
 }
 
 keepAliveRatingEngine();
-
-?>

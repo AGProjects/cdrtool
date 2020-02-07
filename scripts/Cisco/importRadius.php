@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 # This script import RADIUS records from FREERADIUS generated files
 # It accepts two arguments, first argument is the radacct file with
@@ -48,4 +48,3 @@ function checkArguments($argv)
     }
     return 1;
 }
-?>

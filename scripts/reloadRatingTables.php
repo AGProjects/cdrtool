@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 require("/etc/cdrtool/global.inc");
 require('cdr_generic.php');
@@ -13,4 +13,3 @@ if (!reloadRatingEngineTables()) {
         $RatingEngine["socketPort"]
     );
 }
-?>

@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 set_time_limit(0);
 ini_set('mbstring.func_overload', '0');
@@ -37,5 +37,3 @@ $server = $daemon->create_server(
 syslog(LOG_NOTICE, "Rating Engine is now ready to serve network requests");
 
 $daemon->process();
-
-?>

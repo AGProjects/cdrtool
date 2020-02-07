@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/bin/env php
 <?php
 require("/etc/cdrtool/global.inc");
 require('cdr_generic.php');
@@ -30,5 +30,3 @@ if ($RatingTables->mustReload) {
         print "Error: cannot connect to network rating engine\n";
     }
 }
-
-?>
