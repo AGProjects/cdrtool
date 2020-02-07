@@ -22,7 +22,7 @@ if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     exit(1);
 }
 
-$RatingTables= new RatingTables();
+$RatingTables = new RatingTables();
 $RatingTables->ImportCSVFiles();
 
 if ($RatingTables->mustReload) {

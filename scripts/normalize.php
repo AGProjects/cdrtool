@@ -16,7 +16,7 @@ if ($argv[1]) {
     }
 }
 
-if ($f=fopen($lockFile, "w")) {
+if ($f = fopen($lockFile, "w")) {
     if (flock($f, LOCK_EX + LOCK_NB, $w)) {
         if ($w) {
             print "Another CDRTool normalization is in progress. Aborting.\n";
@@ -29,7 +29,7 @@ if ($f=fopen($lockFile, "w")) {
         exit(1);
     }
 } else {
-    $log=sprintf("Error: Cannot open lock file %s for writing\n", $lockFile);
+    $log = sprintf("Error: Cannot open lock file %s for writing\n", $lockFile);
     print $log;
     syslog(LOG_NOTICE, $log);
     exit(2);
@@ -50,7 +50,7 @@ while (list($k,$v) = each($DATASOURCES)) {
             $db_class = $CDRS->db_class;
         }
 
-        if ($table) $CDRS->table=$table;
+        if ($table) $CDRS->table = $table;
 
         $log = sprintf("Normalize datasource %s, database %s, table %s\n", $k, $db_class, $CDRS->table);
         print $log;
@@ -58,11 +58,11 @@ while (list($k,$v) = each($DATASOURCES)) {
 
         $CDRS->NormalizeCDRS();
 
-        $e=time();
-        $d=$e-$b;
+        $e = time();
+        $d = $e - $b;
 
         if ($CDRS->status['cdr_to_normalize']) {
-            $speed=0;
+            $speed = 0;
             if ($d) $speed = number_format($CDRS->status['cdr_to_normalize']/$d, 0, "", "");
             $log = sprintf(
                 " %d CDRs, %d normalized in %s s @ %s cps\n",
@@ -82,16 +82,16 @@ while (list($k,$v) = each($DATASOURCES)) {
             print $log;
             syslog(LOG_NOTICE, $log);
 
-            $b=time();
+            $b = time();
 
             $CDRS->table = $lastMonthTable;
             $CDRS->NormalizeCDRS();
 
             if ($CDRS->status['cdr_to_normalize']) {
-                $e=time();
-                $d=$e-$b;
+                $e = time();
+                $d = $e - $b;
 
-                $speed=0;
+                $speed = 0;
                 if ($d) $speed = number_format($CDRS->status['cdr_to_normalize']/$d, 0, "", "");
                 $log = sprintf(
                     " %d CDRs, %d normalized in %s s @ %s cps\n",
