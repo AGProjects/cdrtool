@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 if [ ! -f library/cdr_generic.php ]; then
     echo "Run this program inside the CDRTool directory"

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 make cdrtool.pot
 msgmerge ro.po cdrtool.pot > ronew.po; mv ronew.po ro.po
 msgmerge nl.po cdrtool.pot > nlnew.po; mv nlnew.po nl.po

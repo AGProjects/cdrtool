@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 if [ $# -ge 1 ]; then
    radacct=$1
