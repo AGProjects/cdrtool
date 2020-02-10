@@ -23,11 +23,11 @@ fi
 
 mysqladmin 	-u root -p$1 -h $2 create $db
 
-if test $? = 0  ; then
+if test $? = 0; then
 	mysql 		-u root -p$1 -h $2 mysql < ./create_users.mysql
 	mysql 		-u root -p$1 -h $2 $db   < ./create_tables.mysql
 	mysql 		-u root -p$1 -h $2 $db   < ./create_data.mysql
-else 
+else
 	echo "Failed to create $db database on host $2"
 	exit 1
 fi

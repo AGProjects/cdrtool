@@ -23,7 +23,7 @@ test -x $DAEMON || exit 0
 
 # Include cdrtool defaults if available
 if [ -f /etc/default/cdrtool ] ; then
-	. /etc/default/cdrtool
+    . /etc/default/cdrtool
 fi
 
 if [ "$RUN_ratingEngine" != "yes" ]; then

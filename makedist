@@ -38,4 +38,3 @@ tar --exclude-from=$pkgignore --directory ../ -zchf "$archive" CDRTool
 if [ $create -eq 1 ]; then
    rm ../CDRTool
 fi
-
