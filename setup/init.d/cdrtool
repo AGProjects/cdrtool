@@ -13,10 +13,11 @@
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 CDRTOOL_PATH=/var/www/CDRTool
 DAEMON=$CDRTOOL_PATH/scripts/ratingEngine.php
-MEMCACHE_DAEMON=/usr/bin/memcached
 NAME=cdrtool
 DESC=cdrtool
 RUN_ratingEngine=no
+
+. /lib/lsb/init-functions
 
 test -x $DAEMON || exit 0
 
@@ -58,16 +59,13 @@ case "$1" in
     stop)
         stop
         ;;
+    reload|force-reload)
+        reload
+        ;;
     restart)
         stop
         #sleep 1
         start
-        ;;
-    force-reload)
-        reload
-        ;;
-    reload)
-        reload
         ;;
   *)
 	N=/etc/init.d/$NAME
