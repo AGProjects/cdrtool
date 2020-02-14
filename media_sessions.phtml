@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -11,10 +11,10 @@ page_open(
 
 $perm->check("statistics");
 
-require("media_sessions.php");
+require 'media_sessions.php';
 
-$title="Media sessions";
-include("header.phtml");
+$title = "Media sessions";
+include 'header.phtml';
 
 global $CDRTool;
 $allowedDomains = array();

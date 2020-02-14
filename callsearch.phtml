@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -17,17 +17,17 @@ $cdr_source = isset($_REQUEST["cdr_source"]) ? $_REQUEST['cdr_source'] : '';
 $trace      = isset($_REQUEST["trace"])? $_REQUEST['trace'] : '';
 $action     = isset($_REQUEST["action"])? $_REQUEST['action'] : '';
 $previous_page = isset($_REQUEST['previous_page']) ? $_REQUEST['previous_page'] : '';
-require("cdr_generic.php");
-require("rating.php");
+require 'cdr_generic.php';
+require 'rating.php';
 
 set_time_limit(1800);
 
 if (!$export) {
     $title="CDRTool call search ";
     if (is_readable("/etc/cdrtool/local/header.phtml")) {
-        include("/etc/cdrtool/local/header.phtml");
+        include '/etc/cdrtool/local/header.phtml';
     } else {
-        include("header.phtml");
+        include 'header.phtml';
     }
 
     if ($previous_page == 'license_page') {

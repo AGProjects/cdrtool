@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 page_open(
     array(
         "sess" => "CDRTool_Session",
@@ -8,13 +8,13 @@ page_open(
     )
 );
 
-require("sip_statistics.php");
-require("media_sessions.php");
+require 'sip_statistics.php';
+require 'media_sessions.php';
 
 $perm->check("admin");
 
 $title = "SIP network status";
-include("header.phtml");
+include 'header.phtml';
 
 global $CDRTool;
 $allowedDomains = array();

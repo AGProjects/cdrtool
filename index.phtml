@@ -3,7 +3,7 @@ $errorReporting = (E_ALL & ~E_NOTICE);
 $errorReporting = 1;    // comment this out to enable PHP warnings
 error_reporting($errorReporting);
 
-include("/etc/cdrtool/global.inc");
+include '/etc/cdrtool/global.inc';
 
 if ($DATASOURCES) {
     page_open(array(
@@ -27,11 +27,11 @@ if ($DATASOURCES) {
         }
     }
 
-	if (is_readable("/etc/cdrtool/local/header.phtml")) {
-		include_once("/etc/cdrtool/local/header.phtml");
-	} else {
-		include_once("header.phtml");
-	}
+    if (is_readable("/etc/cdrtool/local/header.phtml")) {
+        include_once '/etc/cdrtool/local/header.phtml';
+    } else {
+        include_once 'header.phtml';
+    }
 
     $layout = new pageLayoutLocal();
     $layout->showHeader();

@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -25,9 +25,9 @@ $recipient       = isset($_REQUEST['recipient']) ? $_REQUEST['recipient'] : '';
 $db              = new DB_CDRTool;
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
-    include("/etc/cdrtool/local/header.phtml");
+    include '/etc/cdrtool/local/header.phtml';
 } else {
-    include("header.phtml");
+    include 'header.phtml';
 }
 
 if ($search_text) {

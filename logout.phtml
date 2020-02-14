@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -16,9 +16,9 @@ $sess->delete();
 
 $title = "Logout";
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
-    include("/etc/cdrtool/local/header.phtml");
+    include '/etc/cdrtool/local/header.phtml';
 } else {
-    include("header.phtml");
+    include 'header.phtml';
 }
 
 $layout = new pageLayoutLocal();

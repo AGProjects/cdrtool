@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -10,8 +10,8 @@ page_open(
 );
 
 $title = sprintf("CDRTool media trace for session %s", $callid);
-include("header.phtml");
-$cdr_source  = $_REQUEST['cdr_source'];
+include 'header.phtml';
+$cdr_source = $_REQUEST['cdr_source'];
 
 if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
@@ -20,7 +20,7 @@ if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
     $fromtag     = $_REQUEST['fromtag'];
     $totag       = $_REQUEST['totag'];
 
-    require("cdr_generic.php");
+    require 'cdr_generic.php';
 
     $mediaTrace = new Media_trace($cdr_source);
     $mediaTrace->show($proxyIP, $callid, $fromtag, $totag);
