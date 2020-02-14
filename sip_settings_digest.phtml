@@ -8,9 +8,9 @@
  *
  */
 
-require("/etc/cdrtool/global.inc");
-require("/etc/cdrtool/ngnpro_engines.inc");
-require('sip_settings.php');
+require '/etc/cdrtool/global.inc';
+require '/etc/cdrtool/ngnpro_engines.inc';
+require 'sip_settings.php';
 
 if ($credentials=getSipAccountFromHTTPDigest()) {
     $account    = $credentials['account'];
@@ -23,16 +23,16 @@ if ($credentials=getSipAccountFromHTTPDigest()) {
 }
 
 if ($CDRTool['sip_settings_class']) {
-    $_class=$CDRTool['sip_settings_class'];
+    $_class = $CDRTool['sip_settings_class'];
 } else {
-    $_class='SipSettings';
+    $_class = 'SipSettings';
 }
-$_reseller_class=$_class.$reseller;
+$_reseller_class = $_class.$reseller;
 
 if (class_exists($_reseller_class)) {
-    $SipSettings_class=$_reseller_class;
+    $SipSettings_class = $_reseller_class;
 } else {
-    $SipSettings_class=$_class;
+    $SipSettings_class = $_class;
 }
 
 $login_credentials = array(

@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 // if ($_REQUEST['public']) {
 //     $db = new DB_CDRTool;
@@ -43,8 +43,8 @@ $format      = isset($_REQUEST['format']) ? $_REQUEST['format'] : 'html';
 
 $title = sprintf("CDRTool SIP trace for session %s", $callid);
 
-include("header.phtml");
-require("cdr_generic.php");
+include 'header.phtml';
+require 'cdr_generic.php';
 
 if (!$authorize || in_array($cdr_source, $CDRTool['dataSourcesAllowed'])) {
     $sipTrace = new SIP_trace($cdr_source);

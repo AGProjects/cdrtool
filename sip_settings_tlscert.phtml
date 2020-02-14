@@ -8,9 +8,9 @@
  *
  */
 
-require("/etc/cdrtool/global.inc");
-require("/etc/cdrtool/ngnpro_engines.inc");
-require('sip_settings.php');
+require '/etc/cdrtool/global.inc';
+require '/etc/cdrtool/ngnpro_engines.inc';
+require 'sip_settings.php';
 
 if ($credentials=getSipAccountFromX509Certificate($_REQUEST['account'])) {
     $account    = $credentials['account'];
@@ -22,13 +22,13 @@ if ($credentials=getSipAccountFromX509Certificate($_REQUEST['account'])) {
     die('X.509 Credentials error');
 }
 
-$_class='SipSettings';
-$_reseller_class=$_class.$reseller;
+$_class = 'SipSettings';
+$_reseller_class = $_class.$reseller;
 
 if (class_exists($_reseller_class)) {
-    $SipSettings_class=$_reseller_class;
+    $SipSettings_class = $_reseller_class;
 } else {
-    $SipSettings_class=$_class;
+    $SipSettings_class = $_class;
 }
 
 $login_credentials = array(

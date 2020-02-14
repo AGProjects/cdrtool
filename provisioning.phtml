@@ -10,8 +10,8 @@
  *
  */
 
-require("/etc/cdrtool/global.inc");
-require("ngnpro_client.php");
+require '/etc/cdrtool/global.inc';
+require 'ngnpro_client.php';
 
 set_time_limit(600);
 
@@ -26,9 +26,9 @@ page_open(
 $title = "Provisioning";
 
 if (is_readable("/etc/cdrtool/local/header.phtml")) {
-    include("/etc/cdrtool/local/header.phtml");
+    include '/etc/cdrtool/local/header.phtml';
 } else {
-    include("header.phtml");
+    include 'header.phtml';
 }
 
 $perm->check("provisioning");
@@ -47,8 +47,8 @@ if ($export) {
 
 global $CDRTool;
 
-$login_credentials=array();
-$login_credentials['username']=$auth->auth["uname"];
+$login_credentials = array();
+$login_credentials['username'] = $auth->auth["uname"];
 
 if ($CDRTool['impersonate']) {
     if (preg_match("/^([0-9]*)\.([0-9]*)$/", $CDRTool['impersonate'], $m)) {
@@ -89,7 +89,7 @@ if ($CDRTool['impersonate']) {
 }
 
 if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
-    require("/etc/cdrtool/ngnpro_engines.inc");
+    require '/etc/cdrtool/ngnpro_engines.inc';
 } else {
     page_close();
     printf("Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again");

@@ -10,9 +10,9 @@
 
 Header('Content-Type: text/html; charset=utf-8');
 
-require("/etc/cdrtool/global.inc");
-require("/etc/cdrtool/ngnpro_engines.inc");
-require('sip_settings.php');
+require '/etc/cdrtool/global.inc';
+require '/etc/cdrtool/ngnpro_engines.inc';
+require 'sip_settings.php';
 
 if ($_REQUEST['action'] == 'get_location') {
     $location = get_location($_SERVER['REMOTE_ADDR']);
@@ -100,9 +100,9 @@ $_class = 'SipSettings';
 $_reseller_class = $_class.$reseller;
 
 if (class_exists($_reseller_class)) {
-    $SipSettings_class=$_reseller_class;
+    $SipSettings_class = $_reseller_class;
 } else {
-    $SipSettings_class=$_class;
+    $SipSettings_class = $_class;
 }
 
 if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
