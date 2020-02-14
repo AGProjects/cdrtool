@@ -9,7 +9,7 @@ page_open(
     )
 );
 
-$loginname=$auth->auth["uname"];
+$loginname = $auth->auth["uname"];
 $perm->check('callsearch');
 
 $export     = isset($_REQUEST['export']) ? $_REQUEST['export'] : '';
@@ -46,15 +46,18 @@ if (!$export) {
 }
 
 if (isset($CDRTool['dataSourcesAllowed'])) {
-    while (list($k,$v)=each($CDRTool['dataSourcesAllowed'])) {
-        $cdr_source_els[]=array("label"=>$DATASOURCES[$v]['name'],"value"=>$v);
+    while (list($k,$v) = each($CDRTool['dataSourcesAllowed'])) {
+        $cdr_source_els[] = array(
+            "label" => $DATASOURCES[$v]['name'],
+            "value" => $v
+        );
     }
     if (!$cdr_source) {
         $cdr_source = $cdr_source_els[0]['value'];
     }
 }
 
-$CDR_class=$DATASOURCES[$cdr_source]["class"];
+$CDR_class = $DATASOURCES[$cdr_source]["class"];
 
 if (!$export && !$trace) {
     $layout = new pageLayoutLocal();
@@ -70,13 +73,13 @@ if (is_array($DATASOURCES[$cdr_source])) {
     if (class_exists($CDR_class)) {
         $CDRS = new $CDR_class($cdr_source);
 
-        if ($action=='edit' || !$action) {
+        if ($action =='edit' || !$action) {
             if ($CDRTool['filter']['aNumber']) {
                 $CDRS->searchFormSubscriber();
             } else {
                 $CDRS->searchForm();
             }
-        } elseif ($action==search) {
+        } elseif ($action == search) {
             $CDRS->show();
         }
 

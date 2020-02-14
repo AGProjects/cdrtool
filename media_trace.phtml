@@ -24,13 +24,12 @@ if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $mediaTrace = new Media_trace($cdr_source);
     $mediaTrace->show($proxyIP, $callid, $fromtag, $totag);
-
 } else {
     printf("Error: Invalid datasource '%s' for user '%s'", $cdr_source, $auth->auth["uname"]);
 }
 
 print "
-</body>
+    </body>
 </html>
 ";
 page_close();
