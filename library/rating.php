@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright (c) 2007-2019 AG Projects
- * http://ag-projects.com
+ * Copyright (c) 2007-2020 AG Project
+ * https://ag-projects.com
  *
  * This library contains classes and functions for rating functionality
  */

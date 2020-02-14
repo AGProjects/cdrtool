@@ -2,8 +2,8 @@
 require_once 'ngnpro_soap_library.php';
 
 /*
-    Copyright (c) 2007-2019 AG Projects
-    http://ag-projects.com
+    Copyright (c) 2007-2020 AG Projects
+    https://ag-projects.com
     Author Adrian Georgescu
 
     This client library provide the functions for managing SIP accounts,

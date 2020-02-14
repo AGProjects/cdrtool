@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright (c) 2007-2019 AG Projects
- * http://ag-projects.com
+ * Copyright (c) 2007-2020 AG Projects
+ * https://ag-projects.com
  * Author Adrian Georgescu
  *
  * This library provide the functions for managing properties

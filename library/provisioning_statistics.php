@@ -1,7 +1,7 @@
 <?php
 /*
- * Copyright (c) 2015 AG Projects
- * http://ag-projects.com
+ * Copyright (c) 2015-2020 AG Projects
+ * https://ag-projects.com
  * Author Tijmen de Mes
 */
 
