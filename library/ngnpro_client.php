@@ -7414,7 +7414,7 @@ class DnsRecords extends Records {
                     'value'    => '100 5060 proxy.sipthor.net'
                 ),
                 'srv3'   => array(
-                    'name'     => '_sips._tls',
+                    'name'     => '_sips._tcp',
                     'type'     => 'SRV',
                     'priority' => '100',
                     'ttl'      => '600',
