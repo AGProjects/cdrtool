@@ -7,7 +7,7 @@ class MediaSessions {
     public $domain_statistics = array();
     public $timeout           = 3;
 
-    public function MediaSessions($dispatcher = '', $allowedDomains = array(), $filters = array())
+    public function __construct($dispatcher = '', $allowedDomains = array(), $filters = array())
     {
         $this->dispatcher     = $dispatcher;
         $this->filters        = $filters;
@@ -655,7 +655,7 @@ class MediaSessions {
 class MediaSessionsNGNPro extends MediaSessions {
     // get Media session from NGNPro
 
-    public function MediaSessionsNGNPro($engineId, $allowedDomains=array(), $filters=array())
+    public function __construct($engineId, $allowedDomains = array(), $filters = array())
     {
 
         if (!strlen($engineId)) {
