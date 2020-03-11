@@ -45,18 +45,24 @@ class MediaSessions {
 
             if ($m[1] == 'tls') {
                 if (!file_exists($this->mp_tls_cert_file)) {
-                    printf("<p><font color=red>Error: mediaproxy certificate file %s does not exist. </font>\n", $this->mp_tls_cert_file);
+                    printf(
+                        "<p><font color=red>Error: mediaproxy certificate file %s does not exist. </font>\n",
+                        $this->mp_tls_cert_file
+                    );
                     return false;
                 }
 
                 $tls_options=array('ssl' => array('local_cert'        => $this->mp_tls_cert_file));
 
-                $context=stream_context_create($tls_options);
+                $context = stream_context_create($tls_options);
             } else {
-                $context=stream_context_create(array());
+                $context = stream_context_create(array());
             }
         } else {
-            printf("<p><font color=red>Error: MediaProxy dispatcher '%s' must be in the form: tls:hostname:port or tcp:hostname:port</font>", $this->dispatcher);
+            printf(
+                "<p><font color=red>Error: MediaProxy dispatcher '%s' must be in the form: tls:hostname:port or tcp:hostname:port</font>",
+                $this->dispatcher
+            );
             return false;
         }
 
@@ -247,7 +253,9 @@ class MediaSessions {
             "
             <div class='pull-right' id='session_search'><form method=post class='form-inline' action=%s>
             <div class='input-append'>
-            <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'><button class='btn btn-primary' type=submit><i class='icon-search'></i></button></div>
+                <input class=span2 type=text name=user placeholder=\"Search for callers\" value='%s'>
+                <button class='btn btn-primary' type=submit><i class='icon-search'></i></button>
+            </div>
             </form></div>
             ",
             $_SERVER['PHP_SELF'],
@@ -461,7 +469,7 @@ class MediaSessions {
                         title=\"$fromAgent\"
                         ONMOUSEOVER='window.status=\"$fromAgent\";'
                         ONMOUSEOUT='window.status=\"\";'></i>";
-            } else if ($fromImage == 'asterisk.png') {
+            } elseif ($fromImage == 'asterisk.png') {
                 print "<i style=\"font-size:25px\" class=\"icon-asterisk\"
                         title=\"$fromAgent\"
                         ONMOUSEOVER='window.status=\"$fromAgent\";'
@@ -485,7 +493,7 @@ class MediaSessions {
                         title=\"$toAgent\"
                         ONMOUSEOVER='window.status=\"$toAgent\";'
                         ONMOUSEOUT='window.status=\"\";'></i>";
-            } else if ($toImage == 'asterisk.png') {
+            } elseif ($toImage == 'asterisk.png') {
                 print "<i style=\"font-size:25px\" class=\"icon-asterisk\"
                         title=\"$toAgent\"
                         ONMOUSEOVER='window.status=\"$toAgent\";'
@@ -553,9 +561,9 @@ class MediaSessions {
                     }
                     if ($type == 'Unknown') {
                         $type = '&#150;';    // a dash
-                    } else if ($type == 'video') {
+                    } elseif ($type == 'video') {
                         $type  = "<span class=\"badge badge-success\">$type</span>";
-                    } else if ($type == 'audio') {
+                    } elseif ($type == 'audio') {
                         $type  = "<span class=\"badge badge-info\">$type</span>";
                     } else {
                         $type  = "<span class=\"badge\">$type</span>";
@@ -591,7 +599,7 @@ class MediaSessions {
         $kb = $bytes /1024.0;
         if ($mb >= 0.95) {
             return sprintf("%.2fM", $mb);
-        } else if ($kb >= 1) {
+        } elseif ($kb >= 1) {
             return sprintf("%.2fk", $kb);
         } else {
             return sprintf("%d", $bytes);
@@ -624,11 +632,11 @@ class MediaSessions {
         $kb = $traffic / 1024.0;
         if ($gb >= 0.95) {
             return sprintf("%.2f Gbit/s", $gb);
-        } else if ($mb >= 0.95) {
+        } elseif ($mb >= 0.95) {
             return sprintf("%.2f Mbit/s", $mb);
-        } else if ($kb >= 1) {
+        } elseif ($kb >= 1) {
             return sprintf("%.2f Kbit/s", $kb);
-        } else if ($traffic == 0) {
+        } elseif ($traffic == 0) {
             return $traffic;
         } else {
             return sprintf("%d bit/s", $traffic);
@@ -716,7 +724,12 @@ class MediaSessionsNGNPro extends MediaSessions {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            printf("<font color=red>Error from %s: %s: %s</font>", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            printf(
+                "<font color=red>Error from %s: %s: %s</font>",
+                $this->SOAPurl,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return false;
         }
 
@@ -737,7 +750,12 @@ class MediaSessionsNGNPro extends MediaSessions {
             $error_fault = $result->getFault();
             $error_code  = $result->getCode();
 
-            printf("<font color=red>Error from %s: %s: %s</font>", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            printf(
+                "<font color=red>Error from %s: %s: %s</font>",
+                $this->SOAPurl,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             return array();
         }
         return json_decode($result, true);
