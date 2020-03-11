@@ -429,6 +429,7 @@ class MediaSessions {
             <thead>
                 <tr valign=bottom>
                     <th rowspan=2>Callers (".count($this->sessions).")</th>
+                    <th rowspan=2>Session ID</th>
                     <th rowspan=2 colspan=2>Phones</th>
                     <th colspan=10>Media Streams</th>
                 </tr>
@@ -450,20 +451,30 @@ class MediaSessions {
         foreach ($this->sessions as $session) {
             $from = $session->from_uri;
             $to   = $session->to_uri;
+            $sessionId = rtrim(base64_encode(hash('md5', $session->call_id, true)), "=");
             $fromAgent = $session->caller_ua;
             $toAgent   = $session->callee_ua;
             $fromImage = $this->getImageForUserAgent($fromAgent);
             $toImage = $this->getImageForUserAgent($toAgent);
             $sc = count($session->streams);
 
-            print "
+            printf(
+                "
                 <tr>
-                 <td style='height: 39px' rowspan=$sc>
-                   <nobr><b>From:</b> $from</nobr><br>
-                   <nobr><b>To:</b> $to</nobr><br>
-                 </td>
-                 <td rowspan=$sc style='text-align:center; vertical-align:middle'>
-                 ";
+                    <td style='height: 39px' rowspan=\"%d\">
+                        <nobr><b>From:</b> %s</nobr><br>
+                        <nobr><b>To:</b> %s</nobr><br>
+                    </td>
+                    <td> rowspan=\"%d\"><span class=\"label label-inverse\">%s</span></td>
+                    <td rowspan=\"%d\" style='text-align:center; vertical-align:middle'>
+                ",
+                $sc,
+                $from,
+                $to,
+                $sc,
+                $sessionId,
+                $sc
+            );
             if ($fromImage == 'unknown.png') {
                 print "<i style=\"font-size:28px\" class=\"icon-question\"
                         title=\"$fromAgent\"
