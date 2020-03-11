@@ -466,7 +466,7 @@ class MediaSessions {
                         <nobr><b>To:</b> %s</nobr><br>
                     </td>
                     <td rowspan=\"%d\">
-                        <span style=\"font-family: courier, monospace; font-size: 8pt;\" class=\"label label-inverse\">%s</span>
+                        <span style=\"font-size: 8pt;\" class=\"label label-inverse\">%s</span>
                     </td>
                     <td rowspan=\"%d\" style='text-align:center; vertical-align:middle'>
                 ",
