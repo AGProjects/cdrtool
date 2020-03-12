@@ -3315,7 +3315,15 @@ class CDR_opensips extends CDR
                 );
             }
 
-            $this->SipCodec   = quoted_printable_decode($this->SipCodec);
+            $sessionId = rtrim(base64_encode(hash('md5', $session->call_id, true)), "=");
+            $this->cdr_details .= "
+                <div class=\"row-fluid\">
+                    <div class=\"span5\">Session ID: </div>
+                    <div class=\"span7\">$sessionId</div>
+                </div>
+            ";
+
+            $this->SipCodec = quoted_printable_decode($this->SipCodec);
 
             if ($this->SipCodec) {
                 $this->cdr_details.= "
@@ -4982,7 +4990,7 @@ class SIP_trace
         echo "
             <div class=container-fluid>
                 <div id=trace class=main>
-                    <h1 class='page-header'>CDRTool SIP trace<br /><small>Session: $callid $authorize</small></h1>
+                    <h1 class='page-header'>CDRTool SIP trace<br /><small>Call ID: $callid $authorize</small></h1>
                         <div class=row-fluid>
                             <div class=span9>
         ";
@@ -5192,7 +5200,7 @@ class SIP_trace
                     $media_index++;
                     $search_ice=1;
                     $search_ip=1;
-                    $media['streams'][$media_index]=array(
+                    $media['streams'][$media_index] = array(
                         'type' => $m[1],
                         'ip'   => $media['ip'],
                         'port' => $m[2],
@@ -5775,7 +5783,8 @@ class Media_trace
         }
 
         print "<div class='container-fluid'><div id=trace class='main'>";
-        print "<h1 class=page-header>CDRTool Media Trace<br/><small>Session: $callid</small></h1>";
+        $sessionId = rtrim(base64_encode(hash('md5', $callid, true)), "=");
+        print "<h1 class=page-header>CDRTool Media Trace<br/><small>Call ID: $callid</small><br /><small>Media Session ID: $sessionId</small></h1>";
 
         foreach (array_values($this->info->streams) as $_val) {
             $_diff=$_val->end_time-$_val->timeout_wait;
