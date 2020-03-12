@@ -160,7 +160,7 @@ class MediaSessions {
                     $_relay_statistics[$relay_ip]['stream_count'][$streamInfo->media_type]++;
 
                     if ($_session->duration) {
-                        $session_bps =($streamInfo->caller_bytes + $streamInfo->callee_bytes) / $_session->duration * 8;
+                        $session_bps = ($streamInfo->caller_bytes + $streamInfo->callee_bytes) / $_session->duration * 8;
                         $_relay_statistics[$relay_ip]['bps_relayed'] = $_relay_statistics[$relay_ip]['bps_relayed'] + $session_bps;
                     }
 
@@ -199,10 +199,10 @@ class MediaSessions {
 
                 foreach ($_session->streams as $streamInfo) {
                     if ($_session->duration) {
-                        $this->domain_statistics[$domain1]['caller'] = $this->domain_statistics[$domain1]['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                        $this->domain_statistics['total']['caller'] = $this->domain_statistics['total']['caller']+intval($streamInfo->caller_bytes/$_session->duration*2);
-                        $this->domain_statistics[$domain1]['callee'] = $this->domain_statistics[$domain1]['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
-                        $this->domain_statistics['total']['callee'] = $this->domain_statistics['total']['callee']+intval($streamInfo->callee_bytes/$_session->duration*2);
+                        $this->domain_statistics[$domain1]['caller'] = $this->domain_statistics[$domain1]['caller'] + intval($streamInfo->caller_bytes / $_session->duration * 2);
+                        $this->domain_statistics['total']['caller'] = $this->domain_statistics['total']['caller'] + intval($streamInfo->caller_bytes / $_session->duration * 2);
+                        $this->domain_statistics[$domain1]['callee'] = $this->domain_statistics[$domain1]['callee'] + intval($streamInfo->callee_bytes / $_session->duration * 2);
+                        $this->domain_statistics['total']['callee'] = $this->domain_statistics['total']['callee'] + intval($streamInfo->callee_bytes / $_session->duration * 2);
                     }
                 }
             }
@@ -212,13 +212,14 @@ class MediaSessions {
 
         if (count($this->allowedDomains)) {
             foreach (array_keys($_relay_statistics) as $_ip) {
-                $this->relay_statistics[]=array('ip'            => $_ip,
-                                                'bps_relayed'   => $_relay_statistics[$_ip]['bps_relayed'],
-                                                'session_count' => $_relay_statistics[$_ip]['session_count'],
-                                                'stream_count'  => $_relay_statistics[$_ip]['stream_count'],
-                                                'status'        => 'ok',
-                                                'uptime'        => 'unknown'
-                                                );
+                $this->relay_statistics[] = array(
+                    'ip'            => $_ip,
+                    'bps_relayed'   => $_relay_statistics[$_ip]['bps_relayed'],
+                    'session_count' => $_relay_statistics[$_ip]['session_count'],
+                    'stream_count'  => $_relay_statistics[$_ip]['stream_count'],
+                    'status'        => 'ok',
+                    'uptime'        => 'unknown'
+                );
             }
         }
 
@@ -590,8 +591,8 @@ class MediaSessions {
 
     private function normalizeBytes($bytes)
     {
-        $mb = $bytes /1024 /1024.0;
-        $kb = $bytes /1024.0;
+        $mb = $bytes / 1024 / 1024.0;
+        $kb = $bytes / 1024.0;
         if ($mb >= 0.95) {
             return sprintf("%.2fM", $mb);
         } elseif ($kb >= 1) {
@@ -623,7 +624,7 @@ class MediaSessions {
     {
         // input is in bits/second
         $mb = $traffic / 1024 / 1024.0;
-        $gb = $traffic/ 1024 / 1024 / 1024;
+        $gb = $traffic / 1024 / 1024 / 1024;
         $kb = $traffic / 1024.0;
         if ($gb >= 0.95) {
             return sprintf("%.2f Gbit/s", $gb);
@@ -644,19 +645,19 @@ class MediaSessions {
             if (preg_match("/$agentRegexp/i", $agent)) {
                 if ($image == 'asterisk.png') {
                     return sprintf(
-                        "<i style=\"font-size:25px\" class=\"icon-asterisk\"
-                            title=\"%s\"
-                            onmouseover='window.status=\"%s\";' onmouseout='window.status=\"\";'
-                         ></i>",
+                        '<i style="font-size:25px" class="icon-asterisk"
+                            title="%s"
+                            onmouseover=\'window.status="%s";\' onmouseout=\'window.status="";\'
+                         ></i>',
                         $agent,
                         $agent
                     );
                 }
                 return sprintf(
-                    "<img src=\"images/%s\" alt=\"%s\" title=\"%s\"
-                          onmouseover='window.status=\"%s\";' onmouseout='window.status=\"\";'
-                          style='border: 0; max-height:30px; max-width:30px;'
-                    />",
+                    '<img src="images/%s" alt="%s" title="%s"
+                          onmouseover=\'window.status="%s";\' onmouseout=\'window.status="";\'
+                          style="border: 0; max-height:30px; max-width:30px;"
+                    />',
                     $image,
                     $agent,
                     $agent,
@@ -691,8 +692,8 @@ class MediaSessionsNGNPro extends MediaSessions {
 
         $this->getUserAgentPictures();
 
-        require("/etc/cdrtool/ngnpro_engines.inc");
-        require_once("ngnpro_soap_library.php");
+        require "/etc/cdrtool/ngnpro_engines.inc";
+        require_once "ngnpro_soap_library.php";
 
         if (!strlen($this->soapEngineId)) {
             return false;
@@ -702,12 +703,12 @@ class MediaSessionsNGNPro extends MediaSessions {
         }
 
         $this->SOAPlogin = array(
-                               "username"    => $soapEngines[$this->soapEngineId]['username'],
-                               "password"    => $soapEngines[$this->soapEngineId]['password'],
-                               "admin"       => true
-                               );
+            "username"  => $soapEngines[$this->soapEngineId]['username'],
+            "password"  => $soapEngines[$this->soapEngineId]['password'],
+            "admin"     => true
+        );
 
-        $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+        $this->SOAPurl = $soapEngines[$this->soapEngineId]['url'];
 
         $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -719,9 +720,9 @@ class MediaSessionsNGNPro extends MediaSessions {
         $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         if (is_array($soapEngines[$this->soapEngineId]['hostnames'])) {
-            $this->hostnames=$soapEngines[$this->soapEngineId]['hostnames'];
+            $this->hostnames = $soapEngines[$this->soapEngineId]['hostnames'];
         } else {
-            $this->hostnames=array();
+            $this->hostnames = array();
         }
     }
 
@@ -758,7 +759,7 @@ class MediaSessionsNGNPro extends MediaSessions {
         }
 
         $this->soapclient->addHeader($this->SoapAuth);
-        $result     = $this->soapclient->getMediaSummary();
+        $result = $this->soapclient->getMediaSummary();
 
         if ((new PEAR)->isError($result)) {
             $error_msg   = $result->getMessage();
