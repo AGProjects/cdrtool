@@ -24,7 +24,7 @@ class MediaSessions {
             $userAgentImagesFile = "phone_images.php";
         }
 
-        require_once($userAgentImagesFile);
+        require_once "$userAgentImagesFile";
 
         $this->userAgentImages = $userAgentImages;
     }
