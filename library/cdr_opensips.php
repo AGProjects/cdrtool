@@ -3315,7 +3315,7 @@ class CDR_opensips extends CDR
                 );
             }
 
-            $sessionId = rtrim(base64_encode(hash('md5', $session->call_id, true)), "=");
+            $sessionId = rtrim(base64_encode(hash('md5', $session->callId, true)), "=");
             $this->cdr_details .= "
                 <div class=\"row-fluid\">
                     <div class=\"span5\">Session ID: </div>
