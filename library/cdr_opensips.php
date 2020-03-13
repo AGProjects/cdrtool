@@ -2071,7 +2071,6 @@ class CDRS_opensips extends CDRS
 
     function getBlockedByQuotaStatus($account)
     {
-
         if (!$this->quotaEnabled) {
             return true;
         }
@@ -3105,9 +3104,9 @@ class CDR_opensips extends CDR
 
         if (!is_object($perm)) return;
 
-        $this->geo_location=$this->lookupGeoLocation($this->SourceIP);
+        $this->geo_location = $this->lookupGeoLocation($this->SourceIP);
 
-        $this->cdr_details="
+        $this->cdr_details = "
         <div class=\"alert alert-info\" style='color: black'>
           <div class='row-fluid'>
             <div class='span4'>
@@ -3115,7 +3114,7 @@ class CDR_opensips extends CDR
 
         ";
 
-        $this->cdr_details.= sprintf(
+        $this->cdr_details .= sprintf(
             "<a href=%s&call_id=%s><font color=orange>Click here to show only this call id</font></a>",
             $this->CDRS->url_run,
             urlencode($this->callId)
@@ -3173,7 +3172,7 @@ class CDR_opensips extends CDR
         </div>
         ";
 
-        $this->cdr_details.= sprintf(
+        $this->cdr_details .= sprintf(
             "
             <div class=\"row-fluid\">
                 <div class=\"span3\">Country:</div>
@@ -3183,7 +3182,7 @@ class CDR_opensips extends CDR
             $this->geo_location
         );
 
-        $this->cdr_details.= "
+        $this->cdr_details .= "
         <div class=\"row-fluid\">
             <div class=\"span3\">Method:</div>
             <div class=\"span9\">$this->SipMethod from <i>$this->SourceIP:$this->SourcePort</i></div>
@@ -3243,7 +3242,7 @@ class CDR_opensips extends CDR
         }
 
         if ($this->ENUMtld && $this->ENUMtld != 'none' && $this->ENUMtld != 'N/A') {
-            $this->cdr_details.= "
+            $this->cdr_details .= "
                 <div class=\"row-fluid\">
                     <div class=\"span3\">ENUM TLD: </div>
                     <div class=\"span9\">$this->ENUMtld</div>
@@ -3269,7 +3268,7 @@ class CDR_opensips extends CDR
             ";
         }
 
-        $this->cdr_details.= "
+        $this->cdr_details .= "
         <div class=\"row-fluid\">
             <div class=\"span3\">Billing Party:</div>
             <div class=\"span9\"><font color=brown>$this->BillingPartyIdPrint</font></div>
@@ -3281,14 +3280,10 @@ class CDR_opensips extends CDR
         </div>
         ";
 
-        $this->cdr_details.= "
-        <div class='span3'>
-        ";
+        $this->cdr_details .= "<div class='span3'>";
 
         if ($this->application != 'message') {
-            $this->cdr_details.= "
-                <h5>Media Streams</h5>
-            ";
+            $this->cdr_details .= "<h5>Media Streams</h5>";
 
             if ($this->CDRS->mediaTrace) {
                 $media_query = array(
@@ -3299,13 +3294,13 @@ class CDR_opensips extends CDR
                     'proxyIP'       => $this->SipProxyServer
                 );
 
-                $this->mediaTraceLink=sprintf(
+                $this->mediaTraceLink = sprintf(
                     "<a href=\"javascript:void(null);\" onClick=\"return window.open('media_trace.phtml?%s', '_blank',
                     'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=800,height=730')\">Click here for media information</a> &nbsp;",
                     http_build_query($media_query)
                 );
 
-                $this->cdr_details.= sprintf(
+                $this->cdr_details .= sprintf(
                     "
                     <div class=\"row-fluid\">
                         <div class='span12'>%s</div>
@@ -3326,7 +3321,7 @@ class CDR_opensips extends CDR
             $this->SipCodec = quoted_printable_decode($this->SipCodec);
 
             if ($this->SipCodec) {
-                $this->cdr_details.= "
+                $this->cdr_details .= "
                 <div class=\"row-fluid\">
                     <div class=\"span5\">Codecs: </div>
                     <div class=\"span7\">$this->SipCodec</div>
@@ -3334,7 +3329,7 @@ class CDR_opensips extends CDR
                 ";
             }
 
-            $this->cdr_details.= "
+            $this->cdr_details .= "
                 <div class=\"row-fluid\">
                     <div class=\"span5\">Caller RTP: </div>
                     <div class=\"span7\">$this->inputTrafficPrint KB</div>
@@ -3346,7 +3341,7 @@ class CDR_opensips extends CDR
             ";
 
             if ($this->MediaInfo) {
-                $this->cdr_details.= "
+                $this->cdr_details .= "
                 <div class=\"row-fluid\">
                     <div class=\"span5\">Media Info:</div>
                     <div class=\"span7\"><font color=red>$this->MediaInfo</font></div>
@@ -3354,7 +3349,7 @@ class CDR_opensips extends CDR
                 ";
             }
 
-            $this->cdr_details.= "
+            $this->cdr_details .= "
             <div class=\"row-fluid\">
                 <div class=\"span5\">Applications: </div>
                 <div class=\"span7\">$this->application_print</div>
@@ -3364,7 +3359,7 @@ class CDR_opensips extends CDR
 
 
         if ($this->SipUserAgents) {
-            $this->SipUserAgents   = quoted_printable_decode($this->SipUserAgents);
+            $this->SipUserAgents = quoted_printable_decode($this->SipUserAgents);
 
             $callerAgents = explode("+", $this->SipUserAgents);
             $callerUA = htmlentities($callerAgents[0]);
@@ -3449,7 +3444,7 @@ class CDR_opensips extends CDR
 
     function traceOut()
     {
-        $datasource=$this->CDRS->traceOutURL[$this->remoteGateway];
+        $datasource = $this->CDRS->traceOutURL[$this->remoteGateway];
         global $DATASOURCES;
 
         if (!$datasource || !$DATASOURCES[$datasource]) {
@@ -3483,30 +3478,30 @@ class CDR_opensips extends CDR
         global $found;
         global $perm;
 
-        $rr=floor($found/2);
-        $mod=$found-$rr*2;
+        $rr = floor($found / 2);
+        $mod = $found - $rr * 2;
 
-        if ($mod ==0) {
-            $inout_color="#F9F9F9";
+        if ($mod == 0) {
+            $inout_color = "#F9F9F9";
         } else {
-            $inout_color="white";
+            $inout_color = "white";
         }
 
-        $this->ratePrint=nl2br($this->rate);
+        $this->ratePrint = nl2br($this->rate);
 
         if ($this->CDRS->Accounts[$this->BillingPartyId]['timezone']) {
-            $timezone_print=$this->CDRS->Accounts[$this->BillingPartyId]['timezone'];
+            $timezone_print = $this->CDRS->Accounts[$this->BillingPartyId]['timezone'];
         } else {
-            $timezone_print=$this->CDRS->CDRTool['provider']['timezone'];
+            $timezone_print = $this->CDRS->CDRTool['provider']['timezone'];
         }
 
-        $found_print=$found;
+        $found_print = $found;
 
         if ($this->normalized) {
-            $found_print.='N';
+            $found_print .= 'N';
         }
 
-        $providerTimezone=$this->CDRS->CDRTool['provider']['timezone'];
+        $providerTimezone = $this->CDRS->CDRTool['provider']['timezone'];
 
         print "
         <tr rel=tooltip data-placement='bottom' data-original-title='For more information about this call click the row.'>
@@ -4746,7 +4741,6 @@ class SIP_trace
 
     private function getTrace($proxyIP, $callid, $fromtag, $totag)
     {
-
         if ($this->enableThor) {
             // get trace using soap request
             if (!$proxyIP || !$callid || !$fromtag) {
@@ -4958,7 +4952,6 @@ class SIP_trace
 
     public function show($proxyIP, $callid, $fromtag, $totag)
     {
-
         $action           = $_REQUEST['action'];
         $toggleVisibility = $_REQUEST['toggleVisibility'];
 
@@ -5424,7 +5417,6 @@ class SIP_trace
 
     public function showText($proxyIP, $callid, $fromtag, $totag)
     {
-
         $this->getTrace($proxyIP, $callid, $fromtag, $totag);
         print "<pre>";
 
@@ -5471,7 +5463,6 @@ class SIP_trace
 
     public function purgeRecords($days = '')
     {
-
         if ($this->enableThor) {
             return true;
         }
@@ -5628,10 +5619,10 @@ class Media_trace
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 
                 $this->SOAPlogin = array(
-                                       "username"    => $soapEngines[$this->soapEngineId]['username'],
-                                       "password"    => $soapEngines[$this->soapEngineId]['password'],
-                                       "admin"       => true
-                                       );
+                    "username"    => $soapEngines[$this->soapEngineId]['username'],
+                    "password"    => $soapEngines[$this->soapEngineId]['password'],
+                    "admin"       => true
+                );
 
                 $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
 
@@ -5654,7 +5645,7 @@ class Media_trace
 
             $db_class = $DATASOURCES[$this->cdr_source]['db_class'];
             if (class_exists($db_class)) {
-                $this->db                = new $db_class;
+                $this->db = new $db_class;
             } else {
                 printf("<p><font color=red>Error: database class %s is not defined in datasource %s</font>", $db_class, $this->cdr_source);
                 return false;
@@ -5664,7 +5655,6 @@ class Media_trace
 
     private function getTrace($proxyIP, $callid, $fromtag, $totag)
     {
-
         if ($this->enableThor) {
             // get trace using soap request
             if (!$proxyIP || !$callid || !$fromtag) {
@@ -5914,7 +5904,7 @@ class Media_trace
     }
 }
 
-include_once("phone_images.php");
+include_once "phone_images.php";
 
 function getImageForUserAgent($msg)
 {
