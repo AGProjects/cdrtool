@@ -7418,7 +7418,7 @@ class DnsRecords extends Records {
                     'type'     => 'SRV',
                     'priority' => '100',
                     'ttl'      => '600',
-                    'value'    => '100 443 proxy.sipthor.net'
+                    'value'    => '100 5061 proxy.sipthor.net'
                 ),
                 'srv4'   => array(
                     'name'     => '_stun._udp',
