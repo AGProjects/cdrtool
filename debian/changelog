@@ -1,3 +1,32 @@
+cdrtool (9.8.0) U unstable;urgency=medium
+
+  * Added trunking group for sip users and call limit for trusted peers
+  * Adjusted SRV port for TLS in sip2sip DNS template
+  * Fixed variable name in sessionId generation
+  * Added media session id to media trace and CDR details
+  * Refactored/redesigned media sessions table
+  * Added hashed callid to media sessions
+  * Fixed wrong SRV name for tls in sip2sip template
+  * Added environment to shebang
+  * Synced debian init and setup init scriptw
+  * Removed not needed php closing tags and use env in shebang
+  * Fixed matching FromHeader for json CDRs 
+  * Fixed returning per account history json
+  * Fixed update button in phonebook
+  * Fixed filtering CDRs by domains 
+  * Allow filtering of statistics per domain allowed for login account
+  * Added mura-ip door phone icon in user agents database
+  * Fixed filter domains based on login account limits
+  * Added door-phone icon
+  * Hide PSTN form elements if reseller has no PSTN rights
+  * Use trace data for protocol and port
+  * Small html adjustments
+  * Comment out Yubico section
+  * Update SIP and DNS logic for sip2sip.info
+  * Added Display name to call_history data
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Sat, 11 Apr 2020 17:37:38 +0200
+
 cdrtool (9.7.0) unstable; urgency=medium
 
   * Fixed destinations cache to only use UTF-8
