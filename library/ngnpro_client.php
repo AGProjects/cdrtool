@@ -8953,6 +8953,7 @@ class TrustedPeers extends Records {
                 <td><b>Owner</b></td>
                 <td><b>IP address</b></td>
                 <td><b>Protocol</b></td>
+                <td><b>Call limit</b></td>
                 <td><b>Description</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
@@ -9006,6 +9007,7 @@ class TrustedPeers extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $index,
@@ -9013,6 +9015,7 @@ class TrustedPeers extends Records {
                     $peer->reseller,
                     $peer->ip,
                     $peer->protocol,
+                    $peer->callLimit,
                     $peer->description,
                     $peer->changeDate,
                     $_url,
@@ -9045,6 +9048,7 @@ class TrustedPeers extends Records {
             $this->showCustomerTextBox();
 
             printf (" <div class='input-prepend'><span class='add-on'>IP address</span><input class=span2 type=text size=20 name=ipaddress></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span2 type=text size=4 name=callLimit></div>");
             printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
 
             $this->printHiddenFormElements();
@@ -9070,6 +9074,12 @@ class TrustedPeers extends Records {
             $description   = trim($_REQUEST['description']);
         }
 
+        if ($dictionary['callLimit']) {
+            $callLimit   = $dictionary['callLimit'];
+        } else {
+            $callLimit   = trim($_REQUEST['callLimit']);
+        }
+
         if ($dictionary['owner']) {
             $owner   = $dictionary['owner'];
         } else {
@@ -9086,6 +9096,7 @@ class TrustedPeers extends Records {
         $peer=array(
                      'ip'          => $ipaddress,
                      'description' => $description,
+                     'callLimit'  => intval($callLimit),
                      'owner'       => intval($_REQUEST['owner']),
                      'customer'    => intval($customer),
                      'reseller'    => intval($reseller)

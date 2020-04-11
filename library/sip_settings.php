@@ -281,6 +281,14 @@ class SipSettings {
                                         "ResellerMaySeeIt"=>1
                                         );
 
+        $this->availableGroups['trunking']  = array("Group"=>"trunking",
+                                        "WEBName" =>sprintf(_("Trunking")),
+                                        "SubscriberMayEditIt"=>0,
+                                        "SubscriberMaySeeIt"=>0,
+                                        "ResellerMayEditIt"=>1,
+                                        "ResellerMaySeeIt"=>1
+                                        );
+
         $this->availableGroups['deny-password-change']  = array("Group"=>"deny-password-change",
                                         "WEBName" =>sprintf(_("Deny password change")),
                                         "SubscriberMayEditIt"=>0,
@@ -326,11 +334,14 @@ class SipSettings {
         $this->tabs=array('identity'=>_('Identity'),
                           'devices'=>_('Devices'),
                           'settings'=>_('Settings'),
-                          'diversions'=>_('Forwarding'),
-                          'accept' =>_("DND"),
-                          'contacts'=>_("Contacts"),
                           'calls'=>_('History'),
                           );
+
+        if (!in_array("trunking",$this->groups)) {
+          	$this->tabs['diversions']=_('Forwarding');
+          	$this->tabs['accept']=_('Accept');
+          	$this->tabs['contacts']=_('Contacts');
+        }
 
         if (in_array("free-pstn",$this->groups)) {
             if ($this->show_barring_tab || $this->Preferences['show_barring_tab']) {
@@ -338,11 +349,11 @@ class SipSettings {
             }
         }
 
-        if ($this->show_did_tab) {
+        if ($this->show_did_tab && !in_array("trunking",$this->groups)) {
             $this->tabs['did']=_("DID");
         }
 
-	if (!$this->isEmbedded() && $this->show_download_tab) {
+	if (!$this->isEmbedded() && $this->show_download_tab && !in_array("trunking",$this->groups)) {
             $this->tabs['download'] = $this->show_download_tab;
         }
 
@@ -2458,19 +2469,13 @@ class SipSettings {
         print "
                         <tr>
                             <td>";
-        if (in_array("mobile",$this->groups)) {
-            print _("Push Outbound Proxy");
-            $ob = $this->sip_mobile_outbound_proxy;
-        } else {
-            print _("Outbound Proxy");
-            $ob = $this->sip_outbound_proxy;
-        }
+        print _("Outbound Proxy");
         print "</td>
-                            <td>$ob</td>
+                            <td>$this->sip_outbound_proxy</td>
                         </tr>
         ";
 
-        if ($this->xcap_root) {
+        if ($this->xcap_root && !in_array("trunking", $this->groups)) {
                 print "
                     <tr>
                     <td>";
@@ -2525,6 +2530,7 @@ class SipSettings {
 
         print "</table></div></div>";
 	}
+        if (!in_array("trunking",$this->groups)) {
         $chapter=sprintf(_("Aliases"));
         $this->showChapter($chapter);
 
@@ -2594,6 +2600,7 @@ class SipSettings {
         </form>
         ";
 
+        }
         if (!$this->isEmbedded() && $this->show_tls_section) {
 
             if ($this->enrollment_url) {
@@ -2697,6 +2704,9 @@ class SipSettings {
     }
 
     function showDownloadTab() {
+        if (in_array("trunking",$this->groups)) {
+            return false;
+        }
 
         $chapter=sprintf(_("SIP Client download"));
         $this->showChapter($chapter);
@@ -3540,6 +3550,7 @@ class SipSettings {
                     }
                 }
 
+
             } else if ($key=="free-pstn") {
 
                 if ($this->pstn_changes_allowed) {
@@ -3668,6 +3679,9 @@ class SipSettings {
     }
 
     function showDiversionsTab () {
+        if (in_array("trunking",$this->groups)) {
+            return false;
+        }
 
         $this->getVoicemail();
         $this->getEnumMappings();
@@ -4181,6 +4195,13 @@ class SipSettings {
                             $newACLarray[]=trim($key);
                         }
                     }
+                } else if ($key == 'trunking') {
+                    if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
+                        if (!$val && in_array($key,$this->groups)) {
+                             # TODO remove diversions 
+                        }
+                    }
+                    if ($val) $newACLarray[]=trim($key);
 
                 } else if ($key == 'blocked') {
                     if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
@@ -7185,6 +7206,10 @@ class SipSettings {
     }
 
     function showAcceptTab() {
+        if (in_array("trunking",$this->groups)) {
+            return false;
+        }
+
         $chapter=sprintf(_("Do Not Disturb"));
         $this->showChapter($chapter);
 
@@ -8588,6 +8613,9 @@ class SipSettings {
 	}
 
     function showDirectorySearchForm () {
+        if (in_array("trunking",$this->groups)) {
+            return false;
+        }
         print "
 
         <form class='form-inline' action=$this->url method=post>
