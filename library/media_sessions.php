@@ -431,7 +431,7 @@ class MediaSessions {
         foreach ($this->sessions as $session) {
             $from = $session->from_uri;
             $to   = $session->to_uri;
-            $sessionId = rtrim(base64_encode(hash('md5', $session->call_id, true)), "=");
+            $sessionId = $session->call_id; # rtrim(base64_encode(hash('md5', $session->call_id, true)), "=");
             $fromAgent = $session->caller_ua;
             $toAgent   = $session->callee_ua;
             $fromImage = $this->getImageForUserAgent($fromAgent);
