@@ -38,6 +38,7 @@ class CDRS_opensips extends CDRS
         'BillingPartyId'  => 'UserName',
         'SipRPID'         => 'SipRPID',
         'SipProxyServer'  => 'NASIPAddress',
+        'MediaRelay'      => 'FramedIPAddress',
         'gateway'         => 'SourceIP',
         'SourceIP'        => 'SourceIP',
         'SourcePort'      => 'SourcePort',
@@ -89,6 +90,7 @@ class CDRS_opensips extends CDRS
         'CanonicalURI'         => 'SIP Canonical URI',
         'DestinationId'        => 'SIP Destination Id',
         'NASIPAddress'         => 'SIP Proxy',
+        'FramedIPAddress'      => 'Media Relay',
         'MediaInfo'            => 'Media Information',
         'SourceIP'             => 'Source IP',
         'Realm'                => 'SIP Billing domain',
@@ -110,7 +112,7 @@ class CDRS_opensips extends CDRS
     public $FormElements = array(
         "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime","begin_time","end_time",
         "end_hour","end_min","end_month","end_day","end_year","end_datetime","end_date","begin_date",
-        "call_id","sip_proxy",
+        "call_id","sip_proxy", "media_relay",
         "a_number","a_number_comp","UserName","UserName_comp","BillingId",
         "c_number","c_number_comp","DestinationId","ExcludeDestinations",
         "NASPortId","Realm","Realms",
@@ -177,6 +179,7 @@ class CDRS_opensips extends CDRS
                     <th>Caller Location</th>
                     <th>Sip Proxy</th>
                     <th>Media</th>
+                    <th>Relay</th>
                     <th>SIP Destination</th>
                     <th>Dur</th>
                     <th>Price</th>
@@ -480,6 +483,7 @@ class CDRS_opensips extends CDRS
                 array("label"=>"less than 5 seconds","value"=>"< 5"),
                 array("label"=>"more than 5 seconds","value"=>"> 5"),
                 array("label"=>"less than 60 seconds","value"=>"< 60"),
+                array("label"=>"more than 2 minutes","value"=>"> 120"),
                 array("label"=>"greater than 1 hour","value"=>"> 3600"),
                 array("label"=>"one hour","value"=>"onehour"),
                 array("label"=>"greater than 5 hours","value"=>"> 18000"),
@@ -704,6 +708,16 @@ class CDRS_opensips extends CDRS
         );
         $this->f->add_element(
             array(
+                "name"=>"media_relay",
+                "type"=>"text",
+                "size"=>"25",
+                "maxlength"=>"255",
+                "value"=>$media_proxy,
+                "extrahtml"=>"class=span2"
+            )
+        );
+        $this->f->add_element(
+            array(
                 "name"=>"gateway",
                 "type"=>"text",
                 "size"=>"25",
@@ -815,6 +829,8 @@ class CDRS_opensips extends CDRS
         $this->f->show_element("UserAgent", "");
         print " Codec: ";
         $this->f->show_element("SipCodec", "");
+        print " Relay:";
+        $this->f->show_element("media_relay", "");
         print "
             </td>
             </tr>
@@ -1357,6 +1373,12 @@ class CDRS_opensips extends CDRS
             $this->url.=sprintf("&sip_proxy=%s", urlencode($sip_proxy));
         }
 
+        if ($media_relay) {
+            $media_relay = urldecode($media_relay);
+            $where .= " and $this->MediaRelayField = '".addslashes($media_relay)."'";
+            $this->url.=sprintf("&media_relay=%s", urlencode($media_relay));
+        }
+
         if ($SipCodec) {
             $this->url.=sprintf("&SipCodec=%s", urlencode($SipCodec));
             if ($SipCodec != "empty") {
@@ -1735,6 +1757,9 @@ class CDRS_opensips extends CDRS
                         $traceValue = urlencode($mygroup);
                     } elseif ($this->group_byOrig==$this->SipProxyServerField) {
                         $traceField="sip_proxy";
+                        $traceValue = urlencode($mygroup);
+                    } elseif ($this->group_byOrig==$this->MediaRelayField) {
+                        $traceField="media_relay";
                         $traceValue = urlencode($mygroup);
                     } elseif ($this->group_byOrig==$this->SipCodecField) {
                         $traceField="SipCodec";
@@ -3512,6 +3537,7 @@ class CDR_opensips extends CDR
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->application</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->MediaRelay</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
 
@@ -3621,6 +3647,7 @@ class CDR_opensips extends CDR
         print ",$disconnectName";
         printf(",%s", preg_replace("/,/", "/", quoted_printable_decode($this->SipCodec)));
         print ",$this->application";
+        print ",$this->MediaRelay";
         print "\n";
     }
 
@@ -4162,6 +4189,12 @@ class CDRS_opensips_mongo extends CDRS_opensips
             $this->url.=sprintf("&sip_proxy=%s", urlencode($sip_proxy));
         }
 
+        if ($media_relay) {
+            $media_relay=urldecode($media_relay);
+            $mongo_where[$this->MediaRelayField] = $media_relay;
+            $this->url.=sprintf("&media_relay=%s", urlencode($media_relay));
+        }
+
         if ($SipCodec) {
             $this->url.=sprintf("&SipCodec=%s", urlencode($SipCodec));
             if ($SipCodec != "empty") {
@@ -4470,6 +4503,9 @@ class CDRS_opensips_mongo extends CDRS_opensips
                         $traceValue = urlencode($mygroup);
                     } elseif ($this->group_byOrig == $this->SipProxyServerField) {
                         $traceField="sip_proxy";
+                        $traceValue=urlencode($mygroup);
+                    } elseif ($this->group_byOrig == $this->MediaRelayField) {
+                        $traceField="media_relay";
                         $traceValue=urlencode($mygroup);
                     } elseif ($this->group_byOrig == $this->SipCodecField) {
                         $traceField="SipCodec";
