@@ -660,6 +660,7 @@ CREATE PROCEDURE `update_raddact_record_mediaproxy`(
 	IN var_AcctSessionTime decimal(32,6),
 	IN var_AcctInputOctets bigint(12),
 	IN var_AcctOutputOctets bigint(12),
+        IN var_MediaRelay VARCHAR(15),
 	IN var_SipUserAgents VARCHAR(255),
 	IN var_SipCodecs VARCHAR(255),
 	IN var_SipApplicationType VARCHAR(255),
@@ -681,6 +682,7 @@ BEGIN
         @v_AcctSessionTime = var_AcctSessionTime,
         @v_AcctInputOctets = var_AcctInputOctets,
         @v_AcctOutputOctets = var_AcctOutputOctets,
+        @v_MediaRelay = var_MediaRelay,
         @v_SipUserAgents = var_SipUserAgents,
         @v_SipCodecs = var_SipCodecs,
         @v_SipApplicationType = var_SipApplicationType,
@@ -700,14 +702,14 @@ BEGIN
         FROM information_schema.tables
         WHERE TABLE_SCHEMA = @v_dbname
         AND TABLE_NAME = @var_tbl_prev_month),
-        @proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        @proc_query = CONCAT("CALL proc_update_raddact_record_mediaproxy (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 
 	PREPARE proc_rad_stmt FROM @proc_query;
 
 	IF @var_tbl_cnt1 = 1 THEN
         -- FOR THE CURRENT MONTH
         EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime, 
-                @v_AcctInputOctets, @v_AcctOutputOctets,
+                @v_AcctInputOctets, @v_AcctOutputOctets, @v_MediaRelay,
                 @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
                 @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
                 @v_SipToTag, @v_SipFromTag, @v_dbname;
@@ -716,7 +718,7 @@ BEGIN
     IF @updatedrows = 0 AND @var_tbl_cnt2 = 1 THEN
         -- FOR THE PREVIOUS MONTH
         EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
-                @v_AcctInputOctets, @v_AcctOutputOctets,
+                @v_AcctInputOctets, @v_AcctOutputOctets, @v_MediaRelay,
                 @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
                 @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
                 @v_SipToTag, @v_SipFromTag, @v_dbname;
@@ -724,7 +726,7 @@ BEGIN
         IF @var_tbl_cnt1 = 1 AND @updatedrows = 0 THEN
             -- FOR THE CURRENT MONTH WITH SipToTag = 'n/a'
             EXECUTE proc_rad_stmt USING @var_tbl, @v_AcctSessionTime,
-                    @v_AcctInputOctets, @v_AcctOutputOctets,
+                    @v_AcctInputOctets, @v_AcctOutputOctets, @v_MediaRelay,
                     @v_SipUserAgents, @v_SipCodecs, @v_SipApplicationType,
                     @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
                     @v_na, @v_SipFromTag, @v_dbname;
@@ -732,7 +734,7 @@ BEGIN
 			IF @var_tbl_cnt2 = 1 AND @updatedrows = 0 THEN
 				-- FOR THE PREVIOUS MONTH WITH SipToTag = 'n/a'
 				EXECUTE proc_rad_stmt USING @var_tbl_prev_month, @v_AcctSessionTime,
-                    		@v_AcctInputOctets, @v_AcctOutputOctets,
+                    		@v_AcctInputOctets, @v_AcctOutputOctets, @v_MediaRelay,
                     		@v_SipUserAgents, @v_SipCodecs, 
 				            @v_SipApplicationType, @v_MediaInfo, @v_Normalized, @v_AcctSessionId,
 				            @v_na, @v_SipFromTag, @v_dbname;
@@ -754,6 +756,7 @@ BEGIN
         @v_AcctSessionTime = null,
         @v_AcctInputOctets = null,
         @v_AcctOutputOctets = null,
+        @v_MediaRelay = null,
         @v_SipUserAgents = null,
         @v_SipCodecs = null,
         @v_SipApplicationType = null,
@@ -780,6 +783,7 @@ CREATE PROCEDURE `proc_update_raddact_record_mediaproxy`(
     IN var_AcctSessionTime decimal(32,6),
     IN var_AcctInputOctets bigint(12),
     IN var_AcctOutputOctets bigint(12),
+    IN var_MediaRelay VARCHAR(15),
     IN var_SipUserAgents VARCHAR(255),
     IN var_SipCodecs VARCHAR(255),
     IN var_SipApplicationType VARCHAR(255),
@@ -809,6 +813,7 @@ BEGIN
         IF @var_MediaInfo = 'ICE session' THEN
             SET @radupdstmt = CONCAT("UPDATE ", @var_tbl, " SET
                 MediaInfo = ?,
+                FramedIPAddress = ?,
                 SipUserAgents = ?,
                 SipCodecs = ?,
                 Normalized = '0' 
@@ -818,13 +823,14 @@ BEGIN
             PREPARE update_rad FROM @radupdstmt;
 
             SET @v_MediaInfo = var_MediaInfo,
+                @v_MediaRelay = var_MediaRelay,
                 @v_SipUserAgents = var_SipUserAgents,
                 @v_SipCodecs = var_SipCodecs,
                 @v_AcctSessionId = var_AcctSessionId,
                 @v_SipToTag = var_SipToTag,
                 @v_SipFromTag = var_SipFromTag;
 
-            EXECUTE update_rad USING @v_MediaInfo, @v_SipUserAgents, @v_SipCodecs, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
+            EXECUTE update_rad USING @v_MediaInfo, @v_MediaRelay, @v_SipUserAgents, @v_SipCodecs, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 
             SET @rcnt = (SELECT ROW_COUNT());
             DEALLOCATE PREPARE update_rad;
@@ -834,6 +840,7 @@ BEGIN
                 AcctStopTime = DATE_FORMAT(DATE_ADD(AcctStartTime, INTERVAL AcctSessionTime SECOND), '%Y-%m-%d %H:%i:%s.%f'),
                 AcctInputOctets = AcctInputOctets + ?,
                 AcctOutputOctets = AcctOutputOctets + ?,
+                FramedIPAddress = ?,
                 SipUserAgents = ?,
                 SipCodecs = ?,
                 MediaInfo = ?,
@@ -846,6 +853,7 @@ BEGIN
 			SET @v_AcctSessionTime = var_AcctSessionTime,
 			    @v_AcctInputOctets = var_AcctInputOctets,
 			    @v_AcctOutputOctets = var_AcctOutputOctets,
+                            @v_MediaRelay = var_MediaRelay,
 			    @v_SipUserAgents = var_SipUserAgents,
 			    @v_SipCodecs = var_SipCodecs,
 			    @v_MediaInfo = var_MediaInfo,
@@ -855,7 +863,7 @@ BEGIN
 			    @v_SipFromTag = var_SipFromTag;
 
 			EXECUTE update_rad USING @v_AcctSessionTime, @v_AcctInputOctets, @v_AcctOutputOctets,
-				@v_SipUserAgents, @v_SipCodecs,
+				@v_MediaRelay, @v_SipUserAgents, @v_SipCodecs,
 				@v_MediaInfo, @v_Normalized, @v_AcctSessionId, @v_SipToTag, @v_SipFromTag;
 			SET @rcnt = (SELECT ROW_COUNT());
 			DEALLOCATE PREPARE update_rad;
