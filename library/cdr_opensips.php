@@ -174,12 +174,11 @@ class CDRS_opensips extends CDRS
                 <tr>
                     <th>Id</th>
                     <th>Start Time</th>
-                    <th>Flow</th>
+                    <th>Media/Flow</th>
                     <th>SIP Caller</th>
                     <th>Caller Location</th>
                     <th>Sip Proxy</th>
-                    <th>Media</th>
-                    <th>Relay</th>
+                    <th>Media Relay</th>
                     <th>SIP Destination</th>
                     <th>Dur</th>
                     <th>Price</th>
@@ -3532,11 +3531,10 @@ class CDR_opensips extends CDR
         <tr rel=tooltip data-placement='bottom' data-original-title='For more information about this call click the row.'>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><a href=#>$found_print</a></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->startTime</nobr></td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->flow</nobr></td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->application $this->flow</nobr></td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->application</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->MediaRelay</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
