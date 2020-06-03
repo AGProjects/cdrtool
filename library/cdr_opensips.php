@@ -184,7 +184,6 @@ class CDRS_opensips extends CDRS
                     <th>Price</th>
                     <th>KBIn</th>
                     <th>KBOut</th>
-                    <th>Codecs</th>
                     <th class='pull-right'>Status</th>
                 </tr>
             </thead>
@@ -3597,7 +3596,6 @@ class CDR_opensips extends CDR
         }
 
         print "
-        <td valign=top align=right>$this->SipCodec</td>
         <td valign=top align=right>$status_color $this->disconnectPrint</span>";
         if ($this->disconnectOrig != $this->disconnect
             && $this->CDRS->rating_settings['rate_on_net_diverted_calls']) {
