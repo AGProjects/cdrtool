@@ -27,7 +27,6 @@ class Rate
 
     var $rateValuesCache        = array(); // used to speed up prepaid apoplication
     var $broken_rate            = false;
-    var $mongo_db               = null;
     var $db                     = null;
     var $database_backend       = "mysql";
 
@@ -75,21 +74,6 @@ class Rate
             $this->database_backend = $this->settings['database_backend'];
         }
 
-        if ($this->database_backend == "mongo") {
-            if (is_array($this->settings['mongo_db'])) {
-                $mongo_uri        = $this->settings['mongo_db']['uri'];
-                $mongo_replicaSet = $this->settings['mongo_db']['replicaSet'];
-                $mongo_database   = $this->settings['mongo_db']['database'];
-                try {
-                    $mongo_connection = new Mongo("mongodb://$mongo_uri?readPreference=secondaryPreferred", array("replicaSet" => $mongo_replicaSet));
-                    $this->mongo_db = $mongo_connection->selectDB($mongo_database);
-                } catch (Exception $e) {
-                    $log = sprintf("Error: cannot connect to mongo database %s: %s", $mongo_uri, $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                    $this->mongo_db = null;
-                }
-            }
-        }
     }
 
     public function calculateAudio($dictionary)
@@ -591,44 +575,6 @@ class Rate
             $_value = $this->DestinationId;
         }
 
-        if ($this->mongo_db != null) {
-            // mongo backend
-            if ($this->CustomerProfile == 'default') {
-                $mongo_where['subscriber']  = '';
-                $mongo_where['domain']      = '';
-                $mongo_where['domain']      = '';
-                $mongo_where['domain']      = '';
-                $mongo_where['application'] = $this->application;
-                $mongo_where[$_field]       = $_value;
-            } else {
-                $els = explode("=", $this->CustomerProfile);
-                $mongo_where[$els[0]]  = $els[1];
-                $mongo_where['application'] = $this->application;
-                $mongo_where[$_field]       = $_value;
-            }
-
-            try {
-                $table = $this->mongo_db->selectCollection('billing_discounts');
-                $cursor = $table->find($mongo_where)->limit(1)->slaveOkay();
-                $result = $cursor->getNext();
-            } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupDiscounts(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-            if ($result) {
-                if ($result['connect'] > 0 && $result['connect'] <=100) {
-                    $this->discount_connect  = $result['connect'];
-                }
-
-                if ($result['duration'] > 0 && $result['duration'] <=100) {
-                    $this->discount_duration = $result['duration'];
-                }
-                return true;
-            }
-        }
-
         if ($this->CustomerProfile == 'default') {
             $query = sprintf(
                 "select * from billing_discounts
@@ -692,48 +638,6 @@ class Rate
             return false;
         }
 
-        if ($this->mongo_db != null) {
-            // mongo backend
-            $mongo_where['dest_id'] = $this->DestinationId;
-            $mongo_where['$or'] = array(
-                array(
-                    'reseller_id' => intval($this->ResellerId)
-                ),
-                array('reseller_id' => 0)
-            );
-
-            try {
-                $table = $this->mongo_db->selectCollection('destinations');
-                $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
-                $result = $cursor->getNext();
-            } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-            if (!$result) {
-                $log = sprintf("Error: cannot find mongo destination details for dest id %s", $this->DestinationId);
-                syslog(LOG_NOTICE, $log);
-                //return false;
-            }
-
-            if ($result) {
-                $this->region          = $result['region'];
-                $this->max_duration    = $result['max_duration'];
-                $this->max_price       = $result['max_price'];
-
-                if ($result['increment']) {
-                    $this->increment = $result['increment'];
-                }
-
-                if ($result['min_duration']) {
-                    $this->min_duration = $result['min_duration'];
-                }
-                return true;
-            }
-        }
-
         // mysql backend
         $query = sprintf(
             "select * from destinations
@@ -789,102 +693,6 @@ class Rate
             If no rates are found for destination in the profileX,
             than lookup rates in profileX_alt
         */
-
-        if ($this->mongo_db != null) {
-            // mongo backend
-
-            $mongo_where['$or'] = array(
-                array('subscriber' => $this->BillingPartyId),
-                array('domain'     => $this->domain),
-                array('gateway'    => $this->gateway),
-                array(
-                    'gateway'    => '',
-                    'domain'     => '',
-                    'subscriber' => ''
-                )
-            );
-
-            try {
-                $table = $this->mongo_db->selectCollection('billing_customers');
-                $cursor = $table->find($mongo_where)->sort(array('subscriber'=>-1, 'domain'=>-1, 'gateway'=>-1))->limit(1)->slaveOkay();
-                $result = $cursor->getNext();
-            } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupProfiles(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-            if (!$result) {
-                $log = sprintf(
-                    "Error: no customer found in mongo billing_customers table for billing party=%s, domain=%s, gateway=%s",
-                    $this->BillingPartyId,
-                    $this->domain,
-                    $this->gateway
-                );
-                syslog(LOG_NOTICE, $log);
-                //return false;
-            }
-
-            if ($result) {
-                if ($result['subscriber']) {
-                    $this->CustomerProfile = sprintf("subscriber=%s", $result['subscriber']);
-                } elseif ($result['domain']) {
-                    $this->CustomerProfile = sprintf("domain=%s", $result['domain']);
-                } elseif ($result['gateway']) {
-                    $this->CustomerProfile = sprintf("gateway=%s", $result['gateway']);
-                } else {
-                    $this->CustomerProfile = "default";
-                }
-
-                if (!$result['profile_name1']) {
-                    $log = sprintf(
-                        "Error: customer %s (id=%d) has no weekday profile assigned in profiles table",
-                        $this->CustomerProfile,
-                        $result['id']
-                    );
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                if (!$result['profile_name2']) {
-                    $log = sprintf(
-                        "Error: customer %s (id=%d) has no weekend profile assigned in profiles table",
-                        $this->CustomerProfile,
-                        $result['id']
-                    );
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-
-                if (!$result['timezone']) {
-                    $log = sprintf(
-                        "Error: missing timezone for customer %s",
-                        $this->CustomerProfile
-                    );
-                    syslog(LOG_NOTICE, $log);
-                    return false;
-                }
-
-                $this->billingTimezone = $result['timezone'];
-
-                $this->allProfiles = array(
-                    "profile_workday"     => $result['profile_name1'],
-                    "profile_weekend"     => $result['profile_name2'],
-                    "profile_workday_alt" => $result['profile_name1_alt'],
-                    "profile_weekend_alt" => $result['profile_name2_alt'],
-                    "timezone"            => $result['timezone']
-                );
-                if ($result['increment']) {
-                    $this->increment = $result['increment'];
-                }
-
-                if ($result['min_duration']) {
-                    $this->min_duration = $result['min_duration'];
-                }
-                return true;
-            }
-        }
 
         // mysql backend
         $query = sprintf(
@@ -1577,45 +1385,6 @@ class Rate
             return $this->rateValuesCache[$rateName][$DestinationId][$this->application];
         }
 
-        if ($this->mongo_db != null) {
-            // mongo backend
-            $mongo_where['destination'] = $DestinationId;
-            $mongo_where['application'] = $this->application;
-            $mongo_where['$or'] = array(
-                array('reseller_id' => intval($this->ResellerId)),
-                array('reseller_id' => 0)
-            );
-
-            try {
-                $table = $this->mongo_db->selectCollection('billing_rates');
-                $cursor = $table->find($mongo_where)->sort(array('reseller_id'=>-1))->limit(1)->slaveOkay();
-                $result = $cursor->getNext();
-            } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupRateValuesAudio(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-            if (!$result) {
-                $log = sprintf("Error: cannot find mongo rate values for dest id %s", $DestinationId);
-                syslog(LOG_NOTICE, $log);
-                //return false;
-            }
-
-            if ($result) {
-                $values=array(
-                    "connectCost"     => $result['connectCost'],
-                    "durationRate"    => $result['durationRate'],
-                    "connectCostIn"   => $result['connectCostIn'],
-                    "durationRateIn"  => $result['durationRateIn']
-                );
-
-                // cache values
-                $this->rateValuesCache[$rateName][$DestinationId][$this->application]=$values;
-                return $values;
-            }
-        }
-
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table="billing_rates_".$rateName;
@@ -1694,48 +1463,6 @@ class Rate
             return $this->rateValuesCache[$rateName][$DestinationId]['sms'];
         }
 
-        if ($this->mongo_db != null) {
-            // mongo backend
-            $mongo_where['application'] = 'sms';
-            $mongo_where['$or'] = array(
-                array('reseller_id' => intval($this->ResellerId)),
-                array('reseller_id' => 0)
-            );
-            $mongo_where['$or'] = array(
-                array('destination' => $DestinationId),
-                array('destination' => '')
-            );
-
-            try {
-                $table = $this->mongo_db->selectCollection('billing_rates');
-                $cursor = $table->find($mongo_where)->sort(array('destination'=>-1))->limit(1)->slaveOkay();
-                $result = $cursor->getNext();
-            } catch (Exception $e) {
-                $log = sprintf("<p>Caught exception in lookupRateValuesMessage(): %s", $e->getMessage());
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-
-            if (!$result) {
-                $log = sprintf(
-                    "Error: cannot find mongo rate sms values for dest id %s",
-                    $DestinationId
-                );
-                syslog(LOG_NOTICE, $log);
-                //return false;
-            }
-
-            if ($result) {
-                $values = array(
-                    "connectCost"     => $result['connectCost']
-                );
-
-                // cache values
-                $this->rateValuesCache[$rateName][$DestinationId]['sms'] = $values;
-                return $values;
-            }
-        }
-
         if ($this->settings['split_rating_table']) {
             if ($rateName) {
                 $table = "billing_rates_".$rateName;
@@ -1806,7 +1533,7 @@ class Rate
 
 class RatingTables
 {
-    var $database_backend = 'mysql';   // mongo or mysql
+    var $database_backend = 'mysql'; 
     var $csv_export=array(
         "destinations"          => "destinations.csv",
         "billing_customers"     => "customers.csv",
@@ -2459,9 +2186,6 @@ class RatingTables
         global $CDRTool;
         global $RatingEngine;
 
-        $this->mongo_db_ro = null;
-        $this->mongo_db_rw = null;
-
         $this->settings = $RatingEngine;
         $this->CDRTool  = $CDRTool;
 
@@ -2507,63 +2231,6 @@ class RatingTables
         $this->db->Halt_On_Error="no";
         $this->db1->Halt_On_Error="no";
 
-        if ($this->database_backend == "mysql") {
-            # TODO
-        } elseif ($this->database_backend == "mongo") {
-            $this->mongo_safe = 1;
-            if (is_array($this->settings['mongo_db'])) {
-                $mongo_uri        = $this->settings['mongo_db']['uri'];
-                $mongo_replicaSet = $this->settings['mongo_db']['replicaSet'];
-                $mongo_database   = $this->settings['mongo_db']['database'];
-                if ($this->settings['mongo_db']['safe']) {
-                    $this->mongo_safe = $this->settings['mongo_db']['safe'];
-                }
-                try {
-                    $mongo_connection_rw = new Mongo(
-                        "mongodb://$mongo_uri?readPreference=primaryPreferred",
-                        array(
-                            "replicaSet" => $mongo_replicaSet
-                        )
-                    );
-                    $mongo_connection_ro = new Mongo(
-                        "mongodb://$mongo_uri?readPreference=secondaryPreferred",
-                        array(
-                            "replicaSet" => $mongo_replicaSet
-                        )
-                    );
-                    $this->mongo_db_rw = $mongo_connection_rw->selectDB($mongo_database);
-                    $this->mongo_db_ro = $mongo_connection_ro->selectDB($mongo_database);
-                } catch (Exception $e) {
-                    $log = sprintf("Error: mongo exception in RatingTables(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                }
-
-                $existing_rating_tables=array();
-                try {
-                    $_tables=$this->mongo_db_ro->listCollections();
-                    foreach ($_tables as $_table) {
-                        list($collection, $table) = explode(".", strval($_table));
-                        $existing_rating_tables[]=$table;
-                    }
-                } catch (Exception $e) {
-                    $log = sprintf("<p>Caught exception in RatingTables(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                }
-
-                foreach (array_keys($this->csv_export) as $table) {
-                    if (!in_array($table, $existing_rating_tables)) {
-                        try {
-                            $this->mongo_db_rw->command(array("create" => $table));
-                            $log=sprintf("Created mongo collection %s", $table);
-                            syslog(LOG_NOTICE, $log);
-                        } catch (Exception $e) {
-                            $log=sprintf("Error creating mongo collection %s: %s", $table, $e->getMessage());
-                            syslog(LOG_NOTICE, $log);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public function ImportCSVFiles($dir = false)
@@ -2753,29 +2420,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'    => intval(reseller_id),
-                            'name'           => $name,
-                            'destination'    => $destination,
-                            'application'    => $application,
-                            'connectCost'    => intval($connectCost),
-                            'durationRate'   => intval($durationRate),
-                            'connectCostIn'  => intval($connectCostIn),
-                            'durationRateIn' => intval($durationRateIn)
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_rates
@@ -2838,44 +2482,6 @@ class RatingTables
 
                     $deleted++;
                 }
-
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $name,
-                                'destination' => $destination,
-                                'application' => $application
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array(
-                                    "safe" => $self->mongo_safe
-                                )
-                            );
-                        } catch (Exception $e) {
-                            $log = sprintf("Error: Mongo exception when deleting from billing_rates: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
-            } elseif ($ops == "2") {
-                $query = sprintf(
-                    "select * from billing_rates
-                    where name       = '%s'
-                    and destination  = '%s'
-                    and reseller_id  = '%s'
-                    and application  = '%s'
-                    ",
-                    addslashes($name),
-                    addslashes($destination),
-                    addslashes($reseller_id),
-                    addslashes($application)
-                );
 
                 // mysql backend
                 if (!$this->db->query($query)) {
@@ -2967,39 +2573,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $name,
-                                'destination' => $destination,
-                                'application' => $application
-                            );
-                            $mongo_data = array(
-                                'reseller_id'    => intval(reseller_id),
-                                'name'           => $name,
-                                'destination'    => $destination,
-                                'application'    => $application,
-                                'connectCost'    => intval($connectCost),
-                                'durationRate'   => intval($durationRate),
-                                'connectCostIn'  => intval($connectCostIn),
-                                'durationRateIn' => intval($durationRateIn)
-                            );
-                            $mongo_options = array(
-                                "upsert" => true,
-                                "safe" => $self->mongo_safe
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating billing_rates: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into billing_rates
@@ -3104,28 +2677,6 @@ class RatingTables
                         $failed++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_data = array(
-                                'reseller_id'    => intval(reseller_id),
-                                'name'           => $name,
-                                'destination'    => $destination,
-                                'application'    => $application,
-                                'connectCost'    => intval($connectCost),
-                                'durationRate'   => intval($durationRate),
-                                'connectCostIn'  => intval($connectCostIn),
-                                'durationRateIn' => intval($durationRateIn)
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates');
-                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (Exception $e) {
-                                $log = sprintf("Error: Mongo exception when inserting in billing_rates: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                            }
-                        }
-                    }
                 }
             } else {
                 $skipped++;
@@ -3265,30 +2816,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'    => intval(reseller_id),
-                            'name'           => $name,
-                            'destination'    => $destination,
-                            'application'    => $application,
-                            'connectCost'    => intval($connectCost),
-                            'durationRate'   => intval($durationRate),
-                            'connectCostIn'  => intval($connectCostIn),
-                            'durationRateIn' => intval($durationRateIn),
-                            'startDate'      => $startDate,
-                            'endDate'        => $endDate
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                        }
-                    }
-                }
             } elseif ($ops=="3") {
                 $query = sprintf(
                     "delete from billing_rates_history
@@ -3320,30 +2847,6 @@ class RatingTables
                     $deleted++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $name,
-                                'destination' => $destination,
-                                'application' => $application,
-                                'startDate'   => $startDate,
-                                'endDate'     => $endDate
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array("safe" => $self->mongo_safe)
-                            );
-                        } catch (Exception $e) {
-                            $log = sprintf("Error: Mongo exception when deleting from billing_rates_history: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops=="2") {
                 $query = sprintf(
                     "select * from billing_rates_history
@@ -3414,43 +2917,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $name,
-                                'destination' => $destination,
-                                'application' => $application,
-                                'startDate'   => $startDate,
-                                'endDate'     => $endDate
-                            );
-                            $mongo_data = array(
-                                'reseller_id'    => intval(reseller_id),
-                                'name'           => $name,
-                                'destination'    => $destination,
-                                'application'    => $application,
-                                'connectCost'    => intval($connectCost),
-                                'durationRate'   => intval($durationRate),
-                                'connectCostIn'  => intval($connectCostIn),
-                                'durationRateIn' => intval($durationRateIn),
-                                'startDate'      => $startDate,
-                                'endDate'        => $endDate
-                            );
-                            $mongo_options = array(
-                                "upsert" => true,
-                                "safe" => $self->mongo_safe
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating billing_rates_history: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into billing_rates_history
@@ -3507,30 +2973,6 @@ class RatingTables
                         $failed++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_data=array(
-                                'reseller_id'    => intval(reseller_id),
-                                'name'           => $name,
-                                'destination'    => $destination,
-                                'application'    => $application,
-                                'connectCost'    => intval($connectCost),
-                                'durationRate'   => intval($durationRate),
-                                'connectCostIn'  => intval($connectCostIn),
-                                'durationRateIn' => intval($durationRateIn),
-                                'startDate'      => $startDate,
-                                'endDate'        => $endDate
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_rates_history');
-                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (Exception $e) {
-                                $log = sprintf("Error: Mongo exception when inserting in billing_rates_history: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                            }
-                        }
-                    }
                 }
             } else {
                 $skipped++;
@@ -3652,30 +3094,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'       => intval(reseller_id),
-                            'gateway'           => $gateway,
-                            'domain'            => $domain,
-                            'subscriber'        => $subscriber,
-                            'profile_name1'     => $profile_name1,
-                            'profile_name2'     => $profile_name2,
-                            'profile_name1_alt' => $profile_name1_alt,
-                            'profile_name2_alt' => $profile_name2_alt,
-                            'timezone'          => $timezone
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log = sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_customers
@@ -3705,29 +3123,6 @@ class RatingTables
                     $deleted++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
-                            $mongo_match = array(
-                                'gateway'     => $gateway,
-                                'reseller_id' => intval(reseller_id),
-                                'domain'      => $domain,
-                                'subscriber'  => $subscriber,
-                                'dest_id'     => $dest_id
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array("safe" => $self->mongo_safe)
-                            );
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_customers
@@ -3793,40 +3188,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match = array(
-                                'gateway'     => $gateway,
-                                'reseller_id' => intval(reseller_id),
-                                'domain'      => $domain,
-                                'subscriber'  => $subscriber
-                            );
-                            $mongo_data = array(
-                                'reseller_id'       => intval(reseller_id),
-                                'gateway'           => $gateway,
-                                'domain'            => $domain,
-                                'subscriber'        => $subscriber,
-                                'profile_name1'     => $profile_name1,
-                                'profile_name2'     => $profile_name2,
-                                'profile_name1_alt' => $profile_name1_alt,
-                                'profile_name2_alt' => $profile_name2_alt,
-                                'timezone'          => $timezone
-                            );
-                            $mongo_options = array("upsert" => true,
-                                                   "safe" => $self->mongo_safe
-                                                   );
-
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating billing_customers: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into billing_customers
@@ -3878,27 +3239,6 @@ class RatingTables
                         $inserted++;
                     }
 
-                    if ($this->mongo_db_rw) {
-                        $mongo_data=array('reseller_id'       => intval(reseller_id),
-                                          'gateway'           => $gateway,
-                                          'domain'            => $domain,
-                                          'subscriber'        => $subscriber,
-                                          'profile_name1'     => $profile_name1,
-                                          'profile_name2'     => $profile_name2,
-                                          'profile_name1_alt' => $profile_name1_alt,
-                                          'profile_name2_alt' => $profile_name2_alt,
-                                          'timezone'          => $timezone
-                                          );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_customers');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_customers: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
                 }
             } else {
                 $skipped++;
@@ -4021,32 +3361,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'  => intval(reseller_id),
-                            'gateway'      => $gateway,
-                            'domain'       => $domain,
-                            'subscriber'   => $subscriber,
-                            'dest_id'      => $dest_id,
-                            'region'       => $region,
-                            'dest_name'    => $dest_name,
-                            'increment'    => intval($increment),
-                            'min_duration' => intval($min_duration),
-                            'max_duration' => intval($max_duration),
-                            'max_price'    => floatval($max_price)
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in destinations: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from destinations
@@ -4078,29 +3392,6 @@ class RatingTables
                     $deleted++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                            $mongo_match = array(
-                                'gateway'     => $gateway,
-                                'reseller_id' => intval(reseller_id),
-                                'domain'      => $domain,
-                                'subscriber'  => $subscriber,
-                                'dest_id'     => $dest_id
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array("safe" => $self->mongo_safe)
-                            );
-                        } catch (Exception $e) {
-                            $log = sprintf("Error: Mongo exception when deleting from destinations: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from destinations
@@ -4172,45 +3463,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    dprint($this->database_backend);
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match = array(
-                                'gateway'     => $gateway,
-                                'reseller_id' => intval(reseller_id),
-                                'domain'      => $domain,
-                                'subscriber'  => $subscriber,
-                                'dest_id'     => $dest_id
-                            );
-                            $mongo_data = array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'dest_id'      => $dest_id,
-                                'region'       => $region,
-                                'dest_name'    => $dest_name,
-                                'increment'    => intval($increment),
-                                'min_duration' => intval($min_duration),
-                                'max_duration' => intval($max_duration),
-                                'max_price'    => floatval($max_price)
-                            );
-                            $mongo_options = array(
-                                "upsert" => true,
-                                "safe" => $self->mongo_safe
-                            );
-
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log = sprintf("Error: Mongo exception when updating destinations: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into destinations
@@ -4269,31 +3521,6 @@ class RatingTables
                         $failed++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_data = array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'dest_id'      => $dest_id,
-                                'region'       => $region,
-                                'dest_name'    => $dest_name,
-                                'increment'    => intval($increment),
-                                'min_duration' => intval($min_duration),
-                                'max_duration' => intval($max_duration),
-                                'max_price'    => floatval($max_price)
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('destinations');
-                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when inserting in destinations: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                            }
-                        }
-                    }
                 }
             } else {
                 $skipped++;
@@ -4408,30 +3635,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'  => intval(reseller_id),
-                            'gateway'      => $gateway,
-                            'domain'       => $domain,
-                            'subscriber'   => $subscriber,
-                            'application'  => $application,
-                            'destination'  => $destination,
-                            'region'       => $region,
-                            'connect'      => intval($connect),
-                            'duration'     => intval($min_duration)
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log = sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "3") {
                 $query=sprintf(
                     "delete from billing_discounts
@@ -4468,31 +3671,6 @@ class RatingTables
                     $deleted++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                            $mongo_match = array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'application'  => $application,
-                                'destination'  => $destination,
-                                'region'       => $region
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array("safe" => $self->mongo_safe)
-                            );
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from billing_discounts: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_discounts
@@ -4565,44 +3743,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match=array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'application'  => $application,
-                                'destination'  => $destination,
-                                'region'       => $region
-                            );
-                            $mongo_data=array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'application'  => $application,
-                                'destination'  => $destination,
-                                'region'       => $region,
-                                'connect'      => intval($connect),
-                                'duration'     => intval($min_duration)
-                            );
-                            $mongo_options = array(
-                                "upsert" => true,
-                                "safe" => $self->mongo_safe
-                            );
-
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating billing_discounts: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into billing_discounts
@@ -4656,30 +3796,6 @@ class RatingTables
                         $failed++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_data=array(
-                                'reseller_id'  => intval(reseller_id),
-                                'gateway'      => $gateway,
-                                'domain'       => $domain,
-                                'subscriber'   => $subscriber,
-                                'application'  => $application,
-                                'destination'  => $destination,
-                                'region'       => $region,
-                                'connect'      => intval($connect),
-                                'duration'     => intval($min_duration)
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_discounts');
-                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when inserting in billing_discounts: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 }
             } else {
                 $skipped++;
@@ -4795,30 +3911,6 @@ class RatingTables
                     $failed++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        $mongo_data = array(
-                            'reseller_id'   => intval(reseller_id),
-                            'name'          => $profile,
-                            'rate_name1'    => $rate1,
-                            'hour1'         => $hour1,
-                            'rate_name2'    => $rate2,
-                            'hour2'         => $hour2,
-                            'rate_name3'    => $rate3,
-                            'hour3'         => $hour3,
-                            'rate_name4'    => $rate4,
-                            'hour4'         => $hour4
-                        );
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
-                            $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                        }
-                    }
-                }
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_profiles
@@ -4844,26 +3936,6 @@ class RatingTables
                     $deleted++;
                 }
 
-                if ($this->database_backend == 'mongo') {
-                    if ($this->mongo_db_rw) {
-                        try {
-                            $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $name
-                            );
-                            $mongo_table_rw->remove(
-                                $mongo_match,
-                                array("safe" => $self->mongo_safe)
-                            );
-                        } catch (Exception $e) {
-                            $log=sprintf("Error: Mongo exception when deleting from billing_profiles: %s", $e->getMessage());
-                            print $log;
-                            syslog(LOG_NOTICE, $log);
-                            return false;
-                        }
-                    }
-                }
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_profiles
@@ -4928,40 +4000,6 @@ class RatingTables
                         $updated++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_match = array(
-                                'reseller_id' => intval(reseller_id),
-                                'name'        => $profile
-                            );
-                            $mongo_data = array(
-                                'reseller_id'   => intval(reseller_id),
-                                'name'          => $profile,
-                                'rate_name1'    => $rate1,
-                                'hour1'         => $hour1,
-                                'rate_name2'    => $rate2,
-                                'hour2'         => $hour2,
-                                'rate_name3'    => $rate3,
-                                'hour3'         => $hour3,
-                                'rate_name4'    => $rate4,
-                                'hour4'         => $hour4
-                            );
-
-                            $mongo_options = array(
-                                "upsert" => true,
-                                "safe" => $self->mongo_safe
-                            );
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
-                                $result = $mongo_table_rw->update($mongo_match, $mongo_data, $mongo_options);
-                            } catch (Exception $e) {
-                                $log=sprintf("Error: Mongo exception when updating billing_profiles: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                                return false;
-                            }
-                        }
-                    }
                 } else {
                     $query = sprintf(
                         "insert into billing_profiles
@@ -5017,31 +4055,6 @@ class RatingTables
                         $failed++;
                     }
 
-                    if ($this->database_backend == 'mongo') {
-                        if ($this->mongo_db_rw) {
-                            $mongo_data = array(
-                                'reseller_id'   => intval(reseller_id),
-                                'name'          => $profile,
-                                'rate_name1'    => $rate1,
-                                'hour1'         => $hour1,
-                                'rate_name2'    => $rate2,
-                                'hour2'         => $hour2,
-                                'rate_name3'    => $rate3,
-                                'hour3'         => $hour3,
-                                'rate_name4'    => $rate4,
-                                'hour4'         => $hour4
-                            );
-
-                            try {
-                                $mongo_table_rw = $this->mongo_db_rw->selectCollection('billing_profiles');
-                                $mongo_table_rw->insert($mongo_data, array("safe" => $self->mongo_safe));
-                            } catch (Exception $e) {
-                                $log = sprintf("Error: Mongo exception when inserting in billing_profiles: %s", $e->getMessage());
-                                print $log;
-                                syslog(LOG_NOTICE, $log);
-                            }
-                        }
-                    }
                 }
             }
 
@@ -5090,41 +4103,6 @@ class RatingTables
 
     private function LoadENUMtldsTable()
     {
-        if ($this->database_backend == 'mongo') {
-            if ($this->mongo_db_ro) {
-                // mongo backend
-                try {
-                    $table = $this->mongo_db_ro->selectCollection('billing_enum_tlds');
-                    $cursor = $table->find()->slaveOkay();
-                } catch (Exception $e) {
-                    $log = sprintf("<p>Caught Mongo exception in LoadENUMtldsTable(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                    return 0;
-                }
-
-                $i=0;
-                foreach ($cursor as $result) {
-                    if ($result['enum_tld']) {
-                        $i++;
-                        $_app=$result['application'];
-                        if (!$_app) $_app='audio';
-
-                        $_ENUMtlds[$result['enum_tld']] = array(
-                            "discount"    => $result['discount'],
-                            "e164_regexp" => $result['e164_regexp']
-                        );
-                    }
-                }
-                $this->ENUMtlds = $_ENUMtlds;
-                $this->ENUMtldsCount = $i;
-                return $i;
-            } else {
-                $log = sprintf("<p>Error: mongo db is not initialized in LoadENUMtldsTable()");
-                syslog(LOG_NOTICE, $log);
-                return 0;
-            }
-        }
-
         $query = "select * from billing_enum_tlds";
         if (!$this->db->query($query)) {
             $log = sprintf(
@@ -5160,53 +4138,6 @@ class RatingTables
 
     private function LoadRatesHistoryTable()
     {
-        if ($this->database_backend == 'mongo') {
-            if ($this->mongo_db_ro) {
-                // mongo backend
-                try {
-                    $table = $this->mongo_db_ro->selectCollection('billing_rates_history');
-                    $cursor = $table->find()->slaveOkay();
-                } catch (Exception $e) {
-                    $log = sprintf("<p>Caught Mongo exception in LoadRatesHistoryTable(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                    return 0;
-                }
-
-                $i=0;
-                foreach ($cursor as $result) {
-                    $i++;
-                    if ($result['name'] && $result['destination']) {
-                        $i++;
-                        $_app=$result['application'];
-                        if (!$_app) $_app='audio';
-
-                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/", $result['startDateTimestamp'], $m);
-                        $startDate = mktime($m[4], $m[5], $m[6], $m[2], $m[3], $m[1]);
-                        preg_match("/^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)$/", $result['endDateTimestamp'], $m);
-                        $endDate = mktime($m[4], $m[5], $m[6], $m[2], $m[3], $m[1]);
-
-                        $_rates[$result['name']][$result['destination']][$_app][$result['id']] = array(
-                            "connectCost"    => $result['connectCost'],
-                            "durationRate"   => $result['durationRate'],
-                            "connectCostIn"  => $result['connectCostIn'],
-                            "durationRateIn" => $result['durationRateIn'],
-                            "increment"      => $result['increment'],
-                            "min_duration"   => $result['min_duration'],
-                            "startDate"      => $startDate,
-                            "endDate"        => $endDate
-                        );
-                    }
-                }
-                $this->ratesHistory=$_rates;
-                $this->ratesHistoryCount=$i;
-                return $i;
-            } else {
-                $log = sprintf("<p>Error: mongo db is not initialized in LoadRatesHistoryTable()");
-                syslog(LOG_NOTICE, $log);
-                return 0;
-            }
-        }
-
         $query = "select *,
         UNIX_TIMESTAMP(startDate) as startDateTimestamp,
         UNIX_TIMESTAMP(endDate) as endDateTimestamp
@@ -5255,43 +4186,6 @@ class RatingTables
 
     private function LoadProfilesTable()
     {
-        if ($this->database_backend == 'mongo') {
-            if ($this->mongo_db_ro) {
-                // mongo backend
-                try {
-                    $table = $this->mongo_db_ro->selectCollection('billing_profiles');
-                    $cursor = $table->find()->slaveOkay();
-                } catch (Exception $e) {
-                    $log = sprintf("<p>Caught Mongo exception in LoadProfilesTable(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                    return 0;
-                }
-
-                $i=0;
-                foreach ($cursor as $result) {
-                    $i++;
-                    if ($result['name'] && $result['hour1'] > 0) {
-                        $_profiles[$result['name']] = array(
-                            "rate_name1"  => $result['rate_name1'],
-                            "hour1"       => $result['hour1'],
-                            "rate_name2"  => $result['rate_name2'],
-                            "hour2"       => $result['hour2'],
-                            "rate_name3"  => $result['rate_name3'],
-                            "hour3"       => $result['hour3'],
-                            "rate_name4"  => $result['rate_name4'],
-                            "hour4"       => $result['hour4'],
-                        );
-                    }
-                }
-                $this->profiles=$_profiles;
-                return $i;
-            } else {
-                $log = sprintf("<p>Error: mongo db is not initialized in LoadProfilesTable()");
-                syslog(LOG_NOTICE, $log);
-                return 0;
-            }
-        }
-
         $query = "select * from billing_profiles order by name";
         if (!$this->db->query($query)) {
             $log = sprintf(
@@ -5329,35 +4223,6 @@ class RatingTables
 
     private function LoadHolidaysTable()
     {
-        if ($this->database_backend == 'mongo') {
-            if ($this->mongo_db_ro) {
-                // mongo backend
-                try {
-                    $table = $this->mongo_db_ro->selectCollection('billing_holidays');
-                    $cursor = $table->find()->slaveOkay();
-                } catch (Exception $e) {
-                    $log = sprintf("<p>Caught Mongo exception in LoadHolidaysTable(): %s", $e->getMessage());
-                    syslog(LOG_NOTICE, $log);
-                    return 0;
-                }
-
-                $i=0;
-                foreach ($cursor as $result) {
-                    $i++;
-                    if ($result['day']) {
-                        $i++;
-                        $_holidays[$result['day']]++;
-                    }
-                }
-                $this->holidays=$_holidays;
-                return $i;
-            } else {
-                $log = sprintf("<p>Error: mongo db is not initialized in LoadHolidaysTable()");
-                syslog(LOG_NOTICE, $log);
-                return 0;
-            }
-        }
-
         $query="select * from billing_holidays order by day";
         if (!$this->db->query($query)) {
             $log = sprintf(

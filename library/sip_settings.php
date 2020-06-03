@@ -137,7 +137,7 @@ class SipSettings {
     var $enrollment_url      = false;
     var $sip_settings_api_url= false;
     var $journalEntries      = array();
-    var $chat_replication_backend = 'mysql';   // mongo or mysql
+    var $chat_replication_backend = 'mysql';
     var $owner_information   =array();
 
     var $languages=array("en"=>array('name'=>"English",
@@ -433,10 +433,6 @@ class SipSettings {
 
         if ($this->soapEngines[$this->sip_engine]['chat_replication_backend']) {
             $this->chat_replication_backend = $this->soapEngines[$this->sip_engine]['chat_replication_backend'];
-        }
-
-        if ($this->soapEngines[$this->sip_engine]['mongo_db']) {
-            $this->mongo_db = $this->soapEngines[$this->sip_engine]['mongo_db'];
         }
 
         if ($this->soapEngines[$this->sip_engine]['sip_settings_api_url']) {
@@ -770,37 +766,6 @@ class SipSettings {
         if ($this->showSoapConnectionInfo && $this->SOAPurlCustomer != $this->SOAPurl)  {
             printf ("<br>%s at <a href=%swsdl target=wsdl>%s</a> as %s ",$this->soapClassCustomerPort,$this->SOAPurlCustomer,$this->SOAPurlCustomer,$this->soapEngines[$this->customer_engine]['username']);
         }
-    }
-
-    function getMongoJournalTable() {
-        $this->mongo_table_ro = NULL;
-        $this->mongo_table_rw = NULL;
-        $this->mongo_exception = 'Mongo exception';
-
-        if (is_array($this->mongo_db)) {
-            $mongo_uri        = $this->mongo_db['uri'];
-            $mongo_replicaSet = $this->mongo_db['replicaSet'];
-            $mongo_database   = $this->mongo_db['database'];
-            $mongo_table      = $this->mongo_db['table'];
-            try {
-                $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
-                $mongo_db = $mongo_connection->selectDB($mongo_database);
-                $this->mongo_table_ro = $mongo_db->selectCollection($mongo_table);
-                $this->mongo_table_ro->setSlaveOkay(true);
-                $this->mongo_table_rw = $mongo_db->selectCollection($mongo_table);
-                return true;
-            } catch (MongoException $e) {
-                $this->mongo_exception=$e->getMessage();
-                return false;
-            } catch (MongoConnectionException $e) {
-                $this->mongo_exception=$e->getMessage();
-                return false;
-            } catch (Exception $e) {
-                $this->mongo_exception=$e->getMessage();
-                return false;
-            }
-        }
-        return false;
     }
 
     function getAccount($account) {
@@ -6858,68 +6823,6 @@ class SipSettings {
                     $this->journalEntries['results'][]=$entry;
                 }
             }
-        } else {
-            if (!$this->getMongoJournalTable()) {
-                $result['success'] = false;
-                $result['error_message'] = $this->mongo_exception;
-                return $result;
-            }
-
-            $mongo_where=array();
-            $mongo_where['account'] = $this->account;
-            if ($_REQUEST['except_uuid']) {
-                $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
-            }
-
-            if ($_REQUEST['after_timestamp']) {
-                $mongo_where['timestamp'] = array('$gt' => intval($_REQUEST['after_timestamp']));
-            }
-
-            if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
-                $limit = intval($limit);
-            } else {
-                $limit = 5000;
-            }
-
-            $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
-            $this->journalEntries['success'] = true;
-            $this->journalEntries['rows'] = $cursor->count();
-
-            foreach ($cursor as $result) {
-                $entry = array(
-                               'id'          => strval($result['_id']),
-                               'source'      => 'default',
-                               'timestamp'   => $result['timestamp'],
-                               'account'     => $result['account'],
-                               'uuid'        => $result['uuid'],
-                               'ip_address'  => $result['ip_address'],
-                               'data'        => $result['data']
-                               );
-                $this->journalEntries['results'][]=$entry;
-            }
-
-            if ($return_summary) {
-                $mongo_where=array();
-                $mongo_where['account'] = $this->account;
-                if ($_REQUEST['except_uuid']) {
-                    $mongo_where['uuid'] = array('$ne' => $_REQUEST['except_uuid']);
-                }
-
-                if ($_REQUEST['limit'] and intval($_REQUEST['limit']) < 5000) {
-                    $limit = intval($limit);
-                } else {
-                    $limit = 5000;
-                }
-
-                $cursor = $this->mongo_table_ro->find($mongo_where)->sort(array('timestamp'=>1))->limit($limit)->slaveOkay();
-                foreach ($cursor as $result) {
-                    $entry = array(
-                                   'journal_id'  => strval($result['_id']),
-                                   'timestamp'   => $result['timestamp'],
-                                   );
-                    $this->journalEntries['summary'][]=$entry;
-                }
-            }
 
         }
         return True;
@@ -6944,12 +6847,6 @@ class SipSettings {
 
         if ($this->chat_replication_backend == 'mysql') {
             $this->db = new DB_CDRTool();
-        } else if ($this->chat_replication_backend == 'mongo') {
-            if (!$this->getMongoJournalTable()) {
-                $result['success'] = false;
-                $result['error_message'] = $this->mongo_exception;
-                return $result;
-            }
         }
         if ($rows=json_decode($data)) {
             foreach ($rows as $row) {
@@ -6981,43 +6878,6 @@ class SipSettings {
                                                    );
                     }
 
-                } else if ($this->chat_replication_backend == 'mongo') {
-                    if ($action == 'add') {
-                        $timestamp = time();
-                        $mongo_query=array('timestamp'  => $timestamp,
-                                           'datetime'   => Date("Y-m-d H:i:s", $timestamp),
-                                           'account'    => $this->account,
-                                           'uuid'       => $uuid,
-                                           'data'       => $entry,
-                                           'ip_address' => $_SERVER['REMOTE_ADDR']
-                                           );
-
-                        $this->mongo_table_rw->insert($mongo_query);
-                        if ($mongo_query['_id']) {
-                            $mongo_id = strval($mongo_query['_id']);
-                            $result['results'][]=array('id'         => $row->id,
-                                                       'journal_id' => $mongo_id,
-                                                       'source'     => 'default'
-                                                       );
-                        } else {
-                            $result['results'][]=array('id'         => $row->id,
-                                                       'journal_id' => NULL,
-                                                       'source'     => 'default'
-                                                    );
-                        }
-                    } else if ($action == 'remove') {
-                        if (property_exists($row, 'journal_id')) {
-                            $mongo_query=array(
-                                               'account'    => $this->account,
-                                               'journal_id' => $row->journal_id
-                                               );
-
-                            $this->mongo_table_rw->remove($mongo_query);
-                            $result['results'][]=array('id'         => NULL,
-                                                       'journal_id' => $row->journal_id
-                                                      );
-                        }
-                    }
                 }
             }
             $result['success'] = true;
@@ -7044,12 +6904,6 @@ class SipSettings {
 
         if ($this->chat_replication_backend == 'mysql') {
             $this->db = new DB_CDRTool();
-        } else if ($this->chat_replication_backend == 'mongo') {
-            if (!$this->getMongoJournalTable()) {
-                $result['success'] = false;
-                $result['error_message'] = $this->mongo_exception;
-                return $result;
-            }
         }
 
         if ($entries) {
@@ -7065,18 +6919,6 @@ class SipSettings {
                 } else {
                     $result['success'] = true;
                 }
-
-            } else if ($this->chat_replication_backend == 'mongo') {
-                $id_entries=array();
-                foreach ($entries as $entry) {
-                    $id_entries[] = new MongoId($entry);
-                }
-                $mongo_query=array('account' => $this->account,
-                                   '_id'     => array('$in'=> $id_entries)
-                                   );
-
-                $this->mongo_table_rw->remove($mongo_query);
-                $result['success'] = true;
             }
         } else {
             $result['success'] = false;

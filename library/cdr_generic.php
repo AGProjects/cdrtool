@@ -159,24 +159,6 @@ class CDRS {
 
         $this->table           = $this->DATASOURCES[$this->cdr_source]['table'];
 
-        #TODO remove me, I am used to temporary sync mysql data with mongo data
-        if ($DATASOURCES[$cdr_source]['mongo_db']) {
-            $mongo_db         = $this->CDRTool['mongo_db'][$DATASOURCES[$this->cdr_source]['mongo_db']];
-            $mongo_uri        = $mongo_db['uri'];
-            $mongo_replicaSet = $mongo_db['replicaSet'];
-            $mongo_database   = $mongo_db['database'];
-            try {
-                $mongo_connection = new Mongo("mongodb://$mongo_uri", array("replicaSet" => $mongo_replicaSet));
-                $db = $mongo_connection->selectDB($mongo_database);
-                $this->mongo_table = $db->selectCollection($this->table);
-            } catch (Exception $e) {
-                printf("<p>Caught exception in initDatabaseConnection(): %s", $e->getMessage());
-                return 0;
-            }
-        } else {
-            $this->mongo_table = NULL;
-        }
-
         $this->initCDRFields();
 
         if ($this->DATASOURCES[$this->cdr_source]['rating']) {
@@ -2251,16 +2233,12 @@ class CDR {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s='1' ",addslashes($this->CDRS->normalizedField));
-                $mongo_field = array_search($this->CDRS->normalizedField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = 1;
             }
 
             if ($this->CDRS->BillingPartyIdField && $this->BillingPartyId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
-                $mongo_field = array_search($this->CDRS->BillingPartyIdField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->BillingPartyId;
             }
 
             if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
@@ -2268,35 +2246,24 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s ='%s' ",addslashes($this->CDRS->durationField),addslashes($this->durationNormalized));
                 $this->duration=$this->durationNormalized;
-                $mongo_field = array_search($this->CDRS->durationField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = intval($this->durationNormalized);
-            } else {
-                $mongo_field = array_search($this->CDRS->durationField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = intval($this->duration);
             }
 
             if ($this->CDRS->DestinationIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->DestinationIdField),addslashes($this->DestinationId));
-                $mongo_field = array_search($this->CDRS->DestinationIdField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->DestinationId;
             }
 
             if ($this->CDRS->ResellerIdField) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->ResellerIdField),addslashes($this->ResellerId));
-                $mongo_field = array_search($this->CDRS->ResellerIdField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->ResellerId;
             }
 
             if ($this->usernameNormalized && $this->usernameNormalized!=$this->username) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->usernameField),addslashes($this->usernameNormalized));
-                $mongo_field = array_search($this->CDRS->usernameField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->usernameNormalized;
             }
 
             if ($this->aNumberNormalized && $this->aNumberNormalized!=$this->aNumber) {
@@ -2304,8 +2271,6 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->aNumberField),addslashes($this->aNumberNormalized));
                 $this->aNumber=$this->aNumberNormalized;
-                $mongo_field = array_search($this->CDRS->aNumberField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->aNumberNormalized;
             }
 
             if ($this->CDRS->applicationField && $this->applicationNormalized) {
@@ -2313,16 +2278,12 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->applicationField), addslashes($this->applicationNormalized));
                 $this->application=$this->applicationNormalized;
-                $mongo_field = array_search($this->CDRS->applicationField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->applicationNormalized;
             }
 
             if ($this->CDRS->flowField && $this->flow) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->flowField),addslashes($this->flow));
-                $mongo_field = array_search($this->CDRS->flowField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->flow;
             }
 
             if ($this->domainNormalized && $this->domainNormalized != $this->domain) {
@@ -2331,8 +2292,6 @@ class CDR {
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->domainField),addslashes($this->domainNormalized));
                 $this->domainNumber=$this->domainNormalized;
                 $this->domain=$this->domainNormalized;
-                $mongo_field = array_search($this->CDRS->domainField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->domainNormalized;
             }
 
             if ($this->cNumberNormalized && $this->cNumberNormalized!=$this->cNumber) {
@@ -2340,40 +2299,30 @@ class CDR {
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->cNumberField),addslashes($this->cNumberNormalized));
                 $this->cNumber=$this->cNumberNormalized;
-                $mongo_field = array_search($this->CDRS->cNumberField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->cNumberNormalized;
             }
 
             if ($this->CDRS->BillingIdField && $this->BillingId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingIdField),addslashes($this->BillingId));
-                $mongo_field = array_search($this->CDRS->BillingIdField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->BillingId;
             }
 
             if ($this->CDRS->RemoteAddressField && $this->RemoteAddressNormalized && $this->RemoteAddressNormalized!= $this->RemoteAddress) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->RemoteAddressField),addslashes($this->RemoteAddressNormalized));
-                $mongo_field = array_search($this->CDRS->RemoteAddressField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->RemoteAddressNormalized;
             }
 
             if ($this->CDRS->CanonicalURIField && $this->CanonicalURINormalized && $this->CanonicalURINormalized!= $this->CanonicalURI) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->CanonicalURIField),addslashes($this->CanonicalURINormalized));
-                $mongo_field = array_search($this->CDRS->CanonicalURIField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->CanonicalURINormalized;
             }
 
             if ($this->stopTimeNormalized) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->stopTimeField),addslashes($this->stopTimeNormalized));
-                $mongo_field = array_search($this->CDRS->stopTimeField, $this->CDRS->CDRFields);
-                $this->mongo_cdr[$mongo_field] = $this->stopTimeNormalized;
             }
 
             if ($this->CDRS->ratingEnabled && ($this->duration || $this->application == 'message')) {
@@ -2445,15 +2394,11 @@ class CDR {
                         addslashes($this->CDRS->priceField),
                         addslashes($this->pricePrint)
                     );
-                    $mongo_field = array_search($this->CDRS->priceField, $this->CDRS->CDRFields);
-                    $this->mongo_cdr[$mongo_field] = floatval($this->pricePrint);
 
                     if ($this->CDRS->rateField ) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
                         $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->rateField),addslashes($this->rateInfo));
-                        $mongo_field = array_search($this->CDRS->rateField, $this->CDRS->CDRFields);
-                        $this->mongo_cdr[$mongo_field] = $this->rateInfo;
                     }
                 }
             }
@@ -2465,18 +2410,6 @@ class CDR {
                 addslashes($this->idField),
                 addslashes($this->id));
             dprint_sql($query1);
-
-            // TODO remove me, I am used to temporary sync mysql data with mongo data
-            if ($this->CDRS->mongo_table) {
-                $mongo_field = array_search($this->idField, $this->CDRS->CDRFields);
-                try {
-                    $this->CDRS->mongo_table->update(array($mongo_field => $this->id), $this->mongo_cdr, array("upsert" => true));
-                } catch (MongoException $e) {
-                    printf("Caught Mongo exception: %s", $e->getMessage());
-                } catch (Exception $e) {
-                    printf("Caught exception: %s", $e->getMessage());
-                }
-            }
 
             if ($updatedFields) {
                 if ($this->CDRS->CDRdb1->query($query1)) {
