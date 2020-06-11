@@ -21,6 +21,7 @@ class CDRS_opensips extends CDRS
         'inputTraffic'    => 'AcctInputOctets',
         'outputTraffic'   => 'AcctOutputOctets',
         'flow'            => 'ServiceType',
+        'tlscn'           => 'AcctAuthentic', 
         'aNumber'         => 'CallingStationId',
         'username'        => 'UserName',
         'domain'          => 'Realm',
@@ -28,7 +29,7 @@ class CDRS_opensips extends CDRS
         'timestamp'       => 'timestamp',
         'SipMethod'       => 'SipMethod',
         'disconnect'      => 'SipResponseCode',
-        'disconnectOrig' => 'AcctTerminateCause',
+        'disconnectOrig'  => 'AcctTerminateCause',
         'SipFromTag'      => 'SipFromTag',
         'SipToTag'        => 'SipToTag',
         'RemoteAddress'   => 'SipTranslatedRequestURI',
@@ -38,7 +39,7 @@ class CDRS_opensips extends CDRS
         'BillingPartyId'  => 'UserName',
         'SipRPID'         => 'SipRPID',
         'SipProxyServer'  => 'NASIPAddress',
-        'MediaRelay'      => 'FramedIPAddress',
+        'MediaProxy'      => 'FramedIPAddress',
         'gateway'         => 'SourceIP',
         'SourceIP'        => 'SourceIP',
         'SourcePort'      => 'SourcePort',
@@ -90,8 +91,9 @@ class CDRS_opensips extends CDRS
         'CanonicalURI'         => 'SIP Canonical URI',
         'DestinationId'        => 'SIP Destination Id',
         'NASIPAddress'         => 'SIP Proxy',
-        'FramedIPAddress'      => 'Media Relay',
+        'FramedIPAddress'      => 'Media Proxy',
         'MediaInfo'            => 'Media Information',
+        'AcctAuthentic'        => 'TLS Common Name', 
         'SourceIP'             => 'Source IP',
         'Realm'                => 'SIP Billing domain',
         'UserAgent'            => 'User Agent',
@@ -112,7 +114,7 @@ class CDRS_opensips extends CDRS
     public $FormElements = array(
         "begin_hour","begin_min","begin_month","begin_day","begin_year","begin_datetime","begin_time","end_time",
         "end_hour","end_min","end_month","end_day","end_year","end_datetime","end_date","begin_date",
-        "call_id","sip_proxy", "media_relay",
+        "call_id","sip_proxy", "media_proxy", "tlscn",
         "a_number","a_number_comp","UserName","UserName_comp","BillingId",
         "c_number","c_number_comp","DestinationId","ExcludeDestinations",
         "NASPortId","Realm","Realms",
@@ -178,7 +180,7 @@ class CDRS_opensips extends CDRS
                     <th>SIP Caller</th>
                     <th>Caller Location</th>
                     <th>Sip Proxy</th>
-                    <th>Media Relay</th>
+                    <th>Media Proxy</th>
                     <th>SIP Destination</th>
                     <th>Dur</th>
                     <th>Price</th>
@@ -192,7 +194,7 @@ class CDRS_opensips extends CDRS
 
     function showExportHeader()
     {
-        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Media\n";
+        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,MediaProxy,TLSCN\n";
     }
 
     function showTableHeaderSubscriber()
@@ -706,11 +708,21 @@ class CDRS_opensips extends CDRS
         );
         $this->f->add_element(
             array(
-                "name"=>"media_relay",
+                "name"=>"media_proxy",
                 "type"=>"text",
                 "size"=>"25",
                 "maxlength"=>"255",
                 "value"=>$media_proxy,
+                "extrahtml"=>"class=span2"
+            )
+        );
+        $this->f->add_element(
+            array(
+                "name"=>"tlscn",
+                "type"=>"text",
+                "size"=>"25",
+                "maxlength"=>"255",
+                "value"=>$tlscn,
                 "extrahtml"=>"class=span2"
             )
         );
@@ -827,8 +839,8 @@ class CDRS_opensips extends CDRS
         $this->f->show_element("UserAgent", "");
         print " Codec: ";
         $this->f->show_element("SipCodec", "");
-        print " Relay:";
-        $this->f->show_element("media_relay", "");
+        print " Media Proxy:";
+        $this->f->show_element("media_proxy", "");
         print "
             </td>
             </tr>
@@ -872,6 +884,8 @@ class CDRS_opensips extends CDRS
         $this->f->show_element("a_number_comp", "");
         print "&nbsp;";
         $this->f->show_element("a_number");
+        print "&nbsp; TLS CN:";
+        $this->f->show_element("tlscn");
         print "
             </td>
         </tr>
@@ -1371,10 +1385,16 @@ class CDRS_opensips extends CDRS
             $this->url.=sprintf("&sip_proxy=%s", urlencode($sip_proxy));
         }
 
-        if ($media_relay) {
-            $media_relay = urldecode($media_relay);
-            $where .= " and $this->MediaRelayField = '".addslashes($media_relay)."'";
-            $this->url.=sprintf("&media_relay=%s", urlencode($media_relay));
+        if ($media_proxy) {
+            $media_proxy = urldecode($media_proxy);
+            $where .= " and $this->MediaProxyField = '".addslashes($media_proxy)."'";
+            $this->url.=sprintf("&media_proxy=%s", urlencode($media_proxy));
+        }
+
+        if ($tlscn) {
+            $tlscn = urldecode($tlscn);
+            $where .= " and $this->tlscnField = '".addslashes($tlscn)."'";
+            $this->url.=sprintf("&tlscn=%s", urlencode($tlscn));
         }
 
         if ($SipCodec) {
@@ -1755,8 +1775,11 @@ class CDRS_opensips extends CDRS
                     } elseif ($this->group_byOrig==$this->SipProxyServerField) {
                         $traceField="sip_proxy";
                         $traceValue = urlencode($mygroup);
-                    } elseif ($this->group_byOrig==$this->MediaRelayField) {
-                        $traceField="media_relay";
+                    } elseif ($this->group_byOrig==$this->MediaProxyField) {
+                        $traceField="media_proxy";
+                        $traceValue = urlencode($mygroup);
+                    } elseif ($this->group_byOrig==$this->tlscnField) {
+                        $traceField="tlscn";
                         $traceValue = urlencode($mygroup);
                     } elseif ($this->group_byOrig==$this->SipCodecField) {
                         $traceField="SipCodec";
@@ -3493,7 +3516,7 @@ class CDR_opensips extends CDR
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->aNumberPrint</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\"><nobr>$this->geo_location</td>
         <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->SipProxyServer</td>
-        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->MediaRelay</td>
+        <td valign=top onClick=\"return toggleVisibility('row$found')\">$this->MediaProxy</td>
         <td valign=top><nobr>$this->destinationPrint</nobr>
         ";
 
@@ -3602,7 +3625,8 @@ class CDR_opensips extends CDR
         print ",$disconnectName";
         printf(",%s", preg_replace("/,/", "/", quoted_printable_decode($this->SipCodec)));
         print ",$this->application";
-        print ",$this->MediaRelay";
+        print ",$this->MediaProxy";
+        print ",$this->tlscn";
         print "\n";
     }
 

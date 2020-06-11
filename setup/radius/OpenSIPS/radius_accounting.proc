@@ -1,5 +1,7 @@
 /*
-LAST UPDATED: 2012-05-08
+LAST UPDATED: 2020-06-11
+
+Added TLS-Common-Name -> AcctAuthentic
 
 CHANGELOG:
 - Added support for using usec when no Start/Stop time are given by radius.
@@ -296,6 +298,7 @@ CREATE PROCEDURE `insert_radacct_record`(
 	IN var_AcctSessionTime DECIMAL(32,6),
 	IN var_AcctInputOctets BIGINT(12),
 	IN var_AcctOutputOctets BIGINT(12),
+	IN var_AcctAuthentic VARCHAR(32),
 	IN var_CalledStationId VARCHAR(50),
 	IN var_CallingStationId VARCHAR(50),
 	IN var_AcctTerminateCause VARCHAR(32),
@@ -353,6 +356,7 @@ BEGIN
         @v_AcctSessionTime = var_AcctSessionTime,
         @v_AcctInputOctets = var_AcctInputOctets,
         @v_AcctOutputOctets = var_AcctOutputOctets,
+        @v_AcctAuthentic = var_AcctAuthentic,
         @v_CalledStationId = var_CalledStationId,
         @v_CallingStationId = var_CallingStationId,
         @v_AcctTerminateCause = var_AcctTerminateCause,
@@ -405,11 +409,12 @@ BEGIN
 
 	-- INSERT RECORD IN NEW TABLE
 	SET @instmt = CONCAT("INSERT INTO ", @var_tbl, " (
-		RadAcctId, AcctSessionId, AcctUniqueId,
-		UserName, Realm, NASIPAddress, NASPortId,
-		AcctStartTime, AcctStopTime, AcctSessionTime,
-		AcctInputOctets, AcctOutputOctets, CalledStationId,
-		CallingStationId, AcctTerminateCause, ServiceType,
+		RadAcctId, AcctSessionId, AcctUniqueId, UserName, Realm, 
+                NASIPAddress, NASPortId,
+                AcctStartTime, AcctStopTime, AcctSessionTime,
+		AcctInputOctets, AcctOutputOctets, 
+                AcctAuthentic, CalledStationId, CallingStationId, 
+                AcctTerminateCause, ServiceType,
 		ENUMtld, FramedIPAddress, AcctStartDelay,
 		AcctStopDelay, SipResponseCode,
 		SipMethod, SipTranslatedRequestURI, SipToTag,
@@ -417,8 +422,10 @@ BEGIN
 		Rate, RTPStatistics, SipApplicationType, UserAgent, FromHeader)
 		VALUES
 		(NULL, ?, ?, ?, SUBSTRING_INDEX(?, '@',-1),
-		?, ?, ?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)),
-		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
+		?, ?, 
+                ?, ?, ?, 
+                ?, ?, 
+                ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		?, ?, ?, ?, ?, ?, ?, ?,
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?, ?, ?
@@ -428,8 +435,9 @@ BEGIN
 	EXECUTE add_rad USING @v_AcctSessionId, @v_AcctUniqueId,
 		@v_UserName, @v_Realm, @v_NASIPAddress, @v_NASPortId,
 		@v_AcctStartTime, @v_AcctStopTime, @v_AcctSessionTime,
-		@v_AcctInputOctets, @v_AcctOutputOctets, @v_CalledStationId,
-		@v_CallingStationId, @v_AcctTerminateCause, @v_ServiceType,
+		@v_AcctInputOctets, @v_AcctOutputOctets, 
+                @v_AcctAuthentic, @v_CalledStationId, @v_CallingStationId, 
+                @v_AcctTerminateCause, @v_ServiceType,
 		@v_ENUMtld, @v_FramedIPAddress, @v_AcctStartDelay,
 		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
 		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag,
@@ -450,6 +458,7 @@ BEGIN
         @v_AcctSessionTime = null,
         @v_AcctInputOctets = null,
         @v_AcctOutputOctets = null,
+        @v_AcctAuthentic = null,
         @v_CalledStationId = null,
         @v_CallingStationId = null,
         @v_AcctTerminateCause = null,
