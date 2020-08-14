@@ -247,7 +247,7 @@ class socketServer extends socket {
 
     public function accept()
     {
-        $client = new $this->client_class(parent::accept(),$this);
+        $client = new $this->client_class(parent::accept(), $this);
         if (!is_subclass_of($client, 'socketServerClient')) {
             throw new socketException("Invalid serverClient class specified! Has to be a subclass of socketServerClient");
         }
@@ -388,7 +388,7 @@ class socketDaemon {
             if ($events > 0) {
                 foreach ($read_set as $socket) {
                     $socket = $this->get_class($socket);
-                    if (is_subclass_of($socket,'socketServer')) {
+                    if (is_subclass_of($socket, 'socketServer')) {
                         $client = $socket->accept();
                         $this->clients[(int)$client->socket] = $client;
                     } elseif (is_subclass_of($socket, 'socketClient')) {
@@ -580,8 +580,8 @@ class socket {
 }
 
 class ratingEngineServer extends socketServer {
-    var $requests=array();
-    var $connected_clients=array();
+    public $requests = array();
+    public $connected_clients = array();
 }
 
 class ratingEngineClient extends socketServerClient {
@@ -612,9 +612,9 @@ class ratingEngineClient extends socketServerClient {
         if ($tinput == 'exit' || $tinput =='quit') {
             $this->on_disconnect();
             $this->close();
-        } else if (strtolower($tinput) == 'showclients') {
-            $output='';
-            $j=0;
+        } elseif (strtolower($tinput) == 'showclients') {
+            $output = '';
+            $j = 0;
 
             $uptime=time()-$this->parentServer->startTime;
 
@@ -663,8 +663,8 @@ class ratingEngineClient extends socketServerClient {
                 $allow_connection = false;
                 foreach ($this->ratingEngineSettings['allow'] as $_allow) {
                     if (preg_match("/^$_allow/", $this->remote_address)) {
-			$log = sprintf("Client %s allowed by server configuration %s", $this->remote_address, $_allow);
-			syslog(LOG_NOTICE, $log);
+                        $log = sprintf("Client %s allowed by server configuration %s", $this->remote_address, $_allow);
+                        syslog(LOG_NOTICE, $log);
                         $allow_connection = true;
                         break;
                     }
