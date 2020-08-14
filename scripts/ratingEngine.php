@@ -5,10 +5,10 @@ ini_set('mbstring.func_overload', '0');
 ini_set('output_handler', '');
 @ob_end_flush();
 
-require('/etc/cdrtool/global.inc');
-require('cdr_generic.php');
-require('rating.php');
-require('rating_server.php');
+require '/etc/cdrtool/global.inc';
+require 'cdr_generic.php';
+require 'rating.php';
+require 'rating_server.php';
 
 // Init Rating Engine
 syslog(LOG_NOTICE, "Starting CDRTool Rating Engine...");
