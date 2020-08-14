@@ -2,9 +2,9 @@
 <?php
 set_time_limit(0);
 
-require("/etc/cdrtool/global.inc");
-require("cdr_generic.php");
-require("rating.php");
+require '/etc/cdrtool/global.inc';
+require 'cdr_generic.php';
+require 'rating.php';
 
 $lockFile = "/var/lock/CDRTool_normalize.lock";
 
@@ -35,7 +35,7 @@ if ($f = fopen($lockFile, "w")) {
     exit(2);
 }
 
-while (list($k,$v) = each($DATASOURCES)) {
+while (list($k, $v) = each($DATASOURCES)) {
     if (strlen($v["normalizedField"] and !$v["skipNormalize"])) {
         $b = time();
         $class_name = $v["class"];
