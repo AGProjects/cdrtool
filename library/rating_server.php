@@ -1,6 +1,10 @@
 <?php
 
-declare(ticks = 1);
+if (function_exists('pcntl_async_signals')) {
+    pcntl_async_signals(true);
+} else {
+    declare(ticks = 1);
+}
 
 function signalHandler($sig)
 {
@@ -23,7 +27,7 @@ function signalHandler($sig)
 
 class Daemon {
 
-    public function Daemon($pidFile = false)
+    public function __construct($pidFile = false)
     {
         $this->pidFile  = $pidFile;
     }
