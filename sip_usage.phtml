@@ -1,13 +1,14 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
      array("sess" => "CDRTool_Session",
            "auth" => "CDRTool_Auth",
            "perm" => "CDRTool_Perm"
-           ));
+     )
+);
 
-$loginname=$auth->auth["uname"];
+$loginname = $auth->auth["uname"];
 
 $perm->check("statistics");
 
@@ -22,7 +23,7 @@ if ($start_date == $stop_date){
 
 global $CDRTool;
 
-require("sip_statistics.php");
+require 'sip_statistics.php';
 
 // trap AJAX requests
 
@@ -36,7 +37,7 @@ if (isset($_POST['action'])) {
             } catch (Exception $e) {
                 $json = json_encode(array('error' => "entity not found"));
             }
-        break;
+            break;
     }
 
     // return data and terminate

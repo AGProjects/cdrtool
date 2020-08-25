@@ -22,9 +22,9 @@ if ($perm->have_perm("readonly")) {
 if (!$_REQUEST['export']) {
     $title="Rating tables";
     if (is_readable("/etc/cdrtool/local/header.phtml")) {
-        include("/etc/cdrtool/local/header.phtml");
+        include '/etc/cdrtool/local/header.phtml';
     } else {
-        include("header.phtml");
+        include 'header.phtml';
     }
     $layout = new pageLayoutLocal();
     $layout->showTopMenu($title);
