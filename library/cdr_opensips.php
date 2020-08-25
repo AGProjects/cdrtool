@@ -21,7 +21,7 @@ class CDRS_opensips extends CDRS
         'inputTraffic'    => 'AcctInputOctets',
         'outputTraffic'   => 'AcctOutputOctets',
         'flow'            => 'ServiceType',
-        'tlscn'           => 'AcctAuthentic', 
+        'tlscn'           => 'AcctAuthentic',
         'aNumber'         => 'CallingStationId',
         'username'        => 'UserName',
         'domain'          => 'Realm',
@@ -93,7 +93,7 @@ class CDRS_opensips extends CDRS
         'NASIPAddress'         => 'SIP Proxy',
         'FramedIPAddress'      => 'Media Proxy',
         'MediaInfo'            => 'Media Information',
-        'AcctAuthentic'        => 'TLS Common Name', 
+        'AcctAuthentic'        => 'TLS Common Name',
         'SourceIP'             => 'Source IP',
         'Realm'                => 'SIP Billing domain',
         'UserAgent'            => 'User Agent',
@@ -130,19 +130,18 @@ class CDRS_opensips extends CDRS
     {
         // init names of CDR fields
         foreach (array_keys($this->CDRFields) as $field) {
-            $mysqlField=$this->CDRFields[$field];
-            $_field=$field."Field";
-            $this->$_field=$mysqlField;
+            $mysqlField = $this->CDRFields[$field];
+            $_field = $field."Field";
+            $this->$_field = $mysqlField;
         }
     }
 
     function LoadDisconnectCodes()
     {
-
-        $query="select * from sip_status order by code";
-        $this->disconnectCodesElements[]=array("label"=>"Any Status","value"=>"");
-        $this->disconnectCodesElements[]=array("label"=>"Undefined (0)","value"=>"0");
-        $this->disconnectCodesClassElements[]=array("label"=>"Any Status Class","value"=>"");
+        $query = "select * from sip_status order by code";
+        $this->disconnectCodesElements[] = array("label"=>"Any Status","value"=>"");
+        $this->disconnectCodesElements[] = array("label"=>"Undefined (0)","value"=>"0");
+        $this->disconnectCodesClassElements[] = array("label"=>"Any Status Class","value"=>"");
 
         if ($this->cdrtool->query($query)) {
             while ($this->cdrtool->next_record()) {
@@ -153,14 +152,14 @@ class CDRS_opensips extends CDRS
                 if (preg_match("/^[^2-6]/", $key)) {
                     continue;
                 }
-                $this->disconnectCodesElements[]=array("label"=>$value_print,"value"=>$key);
-                $this->disconnectCodesDescription[$key]=$value;
+                $this->disconnectCodesElements[] = array("label"=>$value_print,"value"=>$key);
+                $this->disconnectCodesDescription[$key] = $value;
 
                 $class = substr($key, 0, 1);
                 $class_text = substr($key, 0, 1)."XX (".$this->cdrtool->f('code_type').")";
                 if (!$seen[$class]) {
-                    $this->disconnectCodesClassElements[]=array("label"=>$class_text,"value"=>substr($key, 0, 1));
-                    $this->disconnectCodesClassDescription[substr($key, 0, 1)]=$class_text;
+                    $this->disconnectCodesClassElements[] = array("label"=>$class_text,"value"=>substr($key, 0, 1));
+                    $this->disconnectCodesClassDescription[substr($key, 0, 1)] = $class_text;
                     $seen[$class]++;
                 }
                 $i++;
@@ -194,7 +193,33 @@ class CDRS_opensips extends CDRS
 
     function showExportHeader()
     {
-        print "id,StartTime,StopTime,BillingParty,BillingDomain,PSTNCallerId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,MediaProxy,TLSCN\n";
+        $fields = [
+            "id",
+            "StartTime",
+            "StopTime",
+            "BillingParty",
+            "BillingDomain",
+            "PSTNCallerId",
+            "CallerParty",
+            "CalledParty",
+            "DestinationId",
+            "DestinationName",
+            "RemoteAddress",
+            "CanonicalURI",
+            "Duration",
+            "Price",
+            "SIPProxy",
+            "Caller KBIn",
+            "Called KBIn",
+            "CallingUserAgent",
+            "CalledUserAgent",
+            "StatusCode",
+            "StatusName",
+            "Codec",
+            "MediaProxy",
+            "TLSCN"
+        ];
+        printf("%s\n", implode(',', $fields);
     }
 
     function showTableHeaderSubscriber()
@@ -224,7 +249,7 @@ class CDRS_opensips extends CDRS
 
     function showTableHeaderStatistics()
     {
-        $group_byPrint=$this->GROUPBY[$this->group_byOrig];
+        $group_byPrint = $this->GROUPBY[$this->group_byOrig];
 
         if (!$this->export) {
             print "
@@ -264,11 +289,11 @@ class CDRS_opensips extends CDRS
         $action         = "search";
 
         if ($this->CDRTool['filter']['gateway']) {
-            $gateway=$this->CDRTool["filter"]["gateway"];
+            $gateway = $this->CDRTool["filter"]["gateway"];
         }
 
         if ($this->CDRTool['filter']['aNumber']) {
-            $UserName=$this->CDRTool['filter']['aNumber'];
+            $UserName = $this->CDRTool['filter']['aNumber'];
         }
 
         if ($this->CDRTool['filter']['domain']) {
@@ -276,7 +301,7 @@ class CDRS_opensips extends CDRS
         }
 
         if (!$maxrowsperpage) {
-            $maxrowsperpage=15;
+            $maxrowsperpage = 15;
         }
 
         $this->f = new form;
