@@ -193,7 +193,7 @@ class CDRS_opensips extends CDRS
 
     function showExportHeader()
     {
-        $fields = [
+        $fields = array(
             "id",
             "StartTime",
             "StopTime",
@@ -218,7 +218,7 @@ class CDRS_opensips extends CDRS
             "Codec",
             "MediaProxy",
             "TLSCN"
-        ];
+        );
         printf("%s\n", implode(',', $fields);
     }
 
