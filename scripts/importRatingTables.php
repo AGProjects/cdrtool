@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
-require("/etc/cdrtool/global.inc");
-require('cdr_generic.php');
-require("rating.php");
+require '/etc/cdrtool/global.inc';
+require 'cdr_generic.php';
+require 'rating.php';
 
 set_time_limit(0);
 

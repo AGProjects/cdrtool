@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-require("/etc/cdrtool/global.inc");
-require("cdr_generic.php");
+require '/etc/cdrtool/global.inc';
+require 'cdr_generic.php';
 
 // purge old logs of debit balance
 $PrepaidHistory = new PrepaidHistory();
