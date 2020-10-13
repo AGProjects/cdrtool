@@ -684,7 +684,7 @@ class Rate
 
         /*
         lookup the profile_name in billing_customers in the following order:
-           subscriber, domain, gateway (based on $dayofweek):
+           subscriber, username@gateway, domain, gateway (based on $dayofweek):
            - profile_workday matches days [1-5] (Work-day)
            - profile_weekend matches days [6-0] (Week-end)
            - week starts with 0 Sunday and ends with 6 Saturday
@@ -695,19 +695,25 @@ class Rate
         */
 
         // mysql backend
+        list($username, $domain) = explode("@", $this->BillingPartyId);
+        $trusted_peer_account = sprintf("%s@%s", $username, $this->gateway);
         $query = sprintf(
             "select * from billing_customers
             where
             (subscriber  = '%s' and domain       = '' and gateway = '' )
+            or (subscriber  = '%s' and domain       = '' and gateway = '' )
             or (domain      = '%s' and subscriber   = '' and gateway = '' )
             or (gateway     = '%s' and subscriber   = '' and domain  = '' )
             or (subscriber  = ''   and domain       = '' and gateway = '' )
             order by subscriber desc, domain desc, gateway desc limit 1
             ",
             addslashes($this->BillingPartyId),
+            addslashes($trusted_peer_account),
             addslashes($this->domain),
             addslashes($this->gateway)
         );
+
+        dprint_sql($query);
 
         if (!$this->db->query($query)) {
             $log = sprintf(
@@ -724,11 +730,15 @@ class Rate
             $this->db->next_record();
 
             if ($this->db->Record['subscriber']) {
-                $this->CustomerProfile = sprintf("subscriber=%s", $this->db->Record['subscriber']);
+                if ($this->db->Record['subscriber'] == $trusted_peer_account) {
+                    $this->CustomerProfile = sprintf("remote_account=%s", $this->db->Record['subscriber']);
+                } else {
+                    $this->CustomerProfile = sprintf("local_account=%s", $this->db->Record['subscriber']);
+                }
             } elseif ($this->db->Record['domain']) {
                 $this->CustomerProfile = sprintf("domain=%s", $this->db->Record['domain']);
             } elseif ($this->db->Record['gateway']) {
-                $this->CustomerProfile = sprintf("gateway=%s", $this->db->Record['gateway']);
+                $this->CustomerProfile = sprintf("trusted_peer=%s", $this->db->Record['gateway']);
             } else {
                 $this->CustomerProfile = "default";
             }
@@ -6300,7 +6310,7 @@ class RatingTables
                 }
 
                 if ($checkType == 'sip_account') {
-                    if (!checkEmail($value)) {
+                    if (!checkSipAccount($value)) {
                         printf(
                             "Error: value '%s' for field '%s' must be of format 'user@domain'\n",
                             $value,

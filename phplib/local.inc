@@ -740,6 +740,17 @@ function checkEmail($email)
     return 1;
 }
 
+function checkSipAccount($account)
+{
+    $regexp = "/^(\w*)@(\w*)/i";
+    dprint($regexp);
+    if (!preg_match($regexp, $account)) {
+        return false;
+    }
+    return true;
+}
+
+
 class OpenSIPS_DomainAuth
 {
 

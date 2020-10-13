@@ -63,9 +63,10 @@ billing_customers table for the the BillingPartyId field of the the CDR
 (radacct.UserName for radius based datasources) in the following order:
 
 a. SIP account user@domain 
-b. SIP domain of the SIP account
-c. Source IP of the session
-d. Default (when none of the above matches)
+b. Username@SourceIP (Trusted peer account)
+c. SIP domain of the SIP account
+d. SourceIP of the session (Trusted peer IP)
+e. Default (when none of the above matches)
 
 You must have a maximum of one column (either subscriber, domain or gateway)
 set in every row of billing_customers table for this to work.
