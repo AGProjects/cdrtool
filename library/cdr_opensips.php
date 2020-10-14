@@ -219,7 +219,7 @@ class CDRS_opensips extends CDRS
             "MediaProxy",
             "TLSCN"
         );
-        printf("%s\n", implode(',', $fields);
+        printf("%s\n", implode(',', $fields));
     }
 
     function showTableHeaderSubscriber()
