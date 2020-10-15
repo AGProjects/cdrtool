@@ -2632,7 +2632,8 @@ class SipAccounts extends Records {
                                    'anonymous'        => 'Anonymous',
                                    'anonymous-reject' => 'Reject Anonymous',
                                    'voicemail'        => 'Has Voicemail',
-                                   'missed-calls'     => 'Missed Calls'
+                                   'missed-calls'     => 'Missed Calls',
+                                   'trunking'         => 'Trunking'
                                    );
 
     function SipAccounts($SoapEngine) {
