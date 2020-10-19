@@ -79,8 +79,8 @@ alter table radacctYYYMMDD change column FramedProtocol ENUMtld varchar(64) not 
 8. apply the changes from setup/mysql/alter_tables.mysql
 
 
-Version 10.0.0
---------------
+Version 9.9.0
+-------------
 
 Reload the SQL stored procedures into the radius database from:
 
