@@ -70,7 +70,6 @@ $uid             = isset($_REQUEST['uid']) ? $_REQUEST['uid'] : '';
 $check           = isset($_REQUEST['check']) ? $_REQUEST['check'] : '';
 $mailsettings    = isset($_REQUEST['mailsettings']) ? $_REQUEST['mailsettings'] : '';
 
-$otp_yubikey     = isset($_REQUEST["yubikey"]) ? $_REQUEST["yubikey"] : '';
 $auth_method     = isset($_REQUEST["auth_method"]) ? $_REQUEST["auth_method"] : '';
 
 $PHP_SELF        = htmlentities($_SERVER['PHP_SELF']);
@@ -116,7 +115,6 @@ if ($action == "edit" && $id) {
                     organization     = '%s',
                     tel              = '%s',
                     email            = '%s',
-                    yubikey          = '%s',
                     auth_method      = '%s'
                     ",
                     addslashes($username),
@@ -124,7 +122,6 @@ if ($action == "edit" && $id) {
                     addslashes($organization),
                     addslashes($tel),
                     addslashes($email),
-                    addslashes($otp_yubikey),
                     addslashes($auth_method)
                 );
                 if (strlen($password)) {
@@ -250,7 +247,6 @@ if ($action == "edit" && $id) {
         $afterDateFilter  = $db->f('afterDateFilter');
         $aclFilter        = $db->f('aclFilter');
         $impersonate      = $db->f('impersonate');
-        $yubikey          = $db->f('yubikey');
         $auth_method      = $db->f('auth_method');
 
         showForm($id);
@@ -308,13 +304,11 @@ if ($action == "edit" && $id) {
                         afterDateFilter,
                         aclFilter,
                         impersonate,
-                        yubikey,
                         auth_method
                     ) values (
                         '%s',
                         '%s',
                         '',
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -353,7 +347,6 @@ if ($action == "edit" && $id) {
                     addslashes($afterDateFilter),
                     addslashes($aclFilter),
                     addslashes($impersonate),
-                    addslashes($yubikey),
                     addslashes($auth_method)
                 );
             } else {
@@ -379,10 +372,8 @@ if ($action == "edit" && $id) {
                         afterDateFilter,
                         aclFilter,
                         impersonate,
-                        yubikey,
                         auth_method
                     ) values (
-                        '%s',
                         '%s',
                         '%s',
                         '%s',
@@ -423,7 +414,6 @@ if ($action == "edit" && $id) {
                     addslashes($afterDateFilter),
                     addslashes($aclFilter),
                     addslashes($impersonate),
-                    addslashes($yubikey),
                     addslashes($auth_method)
                 );
             }
