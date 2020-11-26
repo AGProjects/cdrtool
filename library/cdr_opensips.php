@@ -3240,6 +3240,18 @@ class CDR_opensips extends CDR
         </div>
         ";
 
+        if ($this->tlscn) {
+            $this->cdr_details .= sprintf(
+                "
+                <div class=\"row-fluid\">
+                    <div class=\"span3\">TLS Common Name: </div>
+                    <div class=\"span9\">%s</div>
+                </div>
+                ",
+                htmlentities($this->tlscn)
+            );
+        }
+
         if ($this->CanonicalURI) {
             $this->cdr_details .= sprintf(
                 "
