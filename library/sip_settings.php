@@ -6450,7 +6450,7 @@ class SipSettings {
 
             foreach (array_keys($this->PhonebookGroups) as $key) {
                 printf(
-                    "<option value=\"%s\" %s>%si</option>",
+                    "<option value=\"%s\" %s>%s</option>",
                     $key,
                     $selected[$key],
                     $this->PhonebookGroups[$key]
