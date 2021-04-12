@@ -742,7 +742,7 @@ function checkEmail($email)
 
 function checkSipAccount($account)
 {
-    $regexp = "/^(\w*)@(\w*)/i";
+    $regexp = "/^\+?[a-zA-Z0-9_\-\.]+@[a-zA-Z0-9_\-\.]/i";
     dprint($regexp);
     if (!preg_match($regexp, $account)) {
         return false;
