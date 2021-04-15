@@ -1791,10 +1791,10 @@ class CDRS {
     {
         // delete records for a given month with minimal locking of database
         // this function is useful after archive of CDR data using rotate script
-        $begin=time();
+        $begin = time();
 
         if ($month) {
-            if (!preg_match("/^(\d{4})(\d{2})$/",$month,$m)) {
+            if (!preg_match("/^(\d{4})(\d{2})$/", $month, $m)) {
                 print "Error: Month must be in YYYYMM format\n";
                 return 0;
             } else {
@@ -1824,7 +1824,7 @@ class CDRS {
         dprint($query);
 
         if (!$this->CDRdb->query($query)) {
-            printf ("Error: %s",$this->CDRdb->Error);
+            printf("Error: %s", $this->CDRdb->Error);
             return 0;
         }
 
@@ -1833,9 +1833,9 @@ class CDRS {
         $max=$this->CDRdb->f('max');
 
         if (!$min || !$max) {
-            $log=sprintf("No CDRs found in %s between %s and %s\n",$sourceTable,$beginDate,$endDate);
+            $log = sprintf("No CDRs found in %s between %s and %s\n", $sourceTable, $beginDate, $endDate);
             print $log;
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
             return 0;
         }
 
@@ -2035,30 +2035,33 @@ class CDRS {
             }
 
         } else {
-            $log=sprintf("Database error: failed to request mysql lock %s (%s)\n",$locker->Error,$locker->Errno);
+            $log = sprintf("Database error: failed to request mysql lock %s (%s)\n", $locker->Error, $locker->Errno);
             print $log;
             syslog(LOG_NOTICE, $log);
             return 0;
         }
     }
 
-    function getQuota($account) {
+    function getQuota($account)
+    {
     }
 
-    function getBlockedByQuotaStatus($account) {
+    function getBlockedByQuotaStatus($account)
+    {
     }
 
-    function resetQuota($accounts=array()) {
+    function resetQuota($accounts = array())
+    {
 
         if (!$this->quotaEnabled) return true;
 
-        $_reset_array=array_unique($accounts);
+        $_reset_array = array_unique($accounts);
 
         foreach ($_reset_array as $_el) {
             if (strlen($_el)) $_accounts[]=$_el;
         }
 
-        $_reset_array=$_accounts;
+        $_reset_array = $_accounts;
 
         $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
         syslog(LOG_NOTICE,$log );
@@ -2187,12 +2190,13 @@ class CDR {
     var $traceIn              = "";
     var $traceOut             = "";
     var $defaultApplicationType    = "audio";
-      var $supportedApplicationTypes = array('audio',
-                                           'message',
-                                           'video',
-                                           'chat',
-                                           'file-transfer'
-                                           );
+    var $supportedApplicationTypes = array(
+        'audio',
+        'message',
+        'video',
+        'chat',
+        'file-transfer'
+    );
 
     function CDR() {
     }
