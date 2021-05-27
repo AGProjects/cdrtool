@@ -7516,7 +7516,7 @@ class DnsRecords extends Records {
             ),
         ),
         'xmpp-server' =>  array(
-            'name'    => 'XMPP server',
+            'name'    => 'XMPP server-to-server over TCP',
             'records' =>  array(
                 'srv'   => array(
                     'name'     => '_xmpp-server._tcp',
@@ -7533,10 +7533,38 @@ class DnsRecords extends Records {
             ),
         ),
         'xmpp-client' =>  array(
-            'name'    => 'XMPP client',
+            'name'    => 'XMPP client-to-server over TCP',
             'records' =>  array(
                 'srv'   => array(
                     'name'     => '_xmpp-client._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5222 #VALUE#|10 5222 xmpp'
+                )
+            ),
+        ),
+        'xmpps-server' =>  array(
+            'name'    => 'XMPP server-to-server over TLS',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_xmpps-server._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5269 #VALUE#|10 5269 xmpp'
+                ),
+                'srv1'   => array(
+                    'name'     => '_jabbers._tcp',
+                    'type'     => 'SRV',
+                    'priority' => '0',
+                    'value'    => '10 5269 #VALUE#|10 5269 xmpp'
+                )
+            ),
+        ),
+        'xmpps-client' =>  array(
+            'name'    => 'XMPP client-to-server over TLS',
+            'records' =>  array(
+                'srv'   => array(
+                    'name'     => '_xmpps-client._tcp',
                     'type'     => 'SRV',
                     'priority' => '0',
                     'value'    => '10 5222 #VALUE#|10 5222 xmpp'

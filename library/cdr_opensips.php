@@ -3888,7 +3888,6 @@ class SIP_trace
         if ($this->enableThor) {
             require("/etc/cdrtool/ngnpro_engines.inc");
             require_once("ngnpro_soap_library.php");
-
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 
@@ -3936,6 +3935,7 @@ class SIP_trace
         if (is_array($DATASOURCES[$this->cdr_source]['SIPProxies'])) {
             $this->SIPProxies = $DATASOURCES[$this->cdr_source]['SIPProxies'];
         }
+        
     }
 
     private function isProxy($ip, $sip_proxy = '')
