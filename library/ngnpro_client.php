@@ -3445,42 +3445,51 @@ class SipAccounts extends Records {
 
     }
 
-    function getAllowedDomains() {
-
+    function getAllowedDomains()
+    {
         // Filter
-        $filter=array(
-                      'domain'    => ''
-                      );
+        $filter = array(
+            'domain'    => ''
+        );
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 500
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 750
+        );
 
-        $orderBy = array('attribute' => 'domain',
-                         'direction' => 'ASC'
-                         );
+        $orderBy = array(
+            'attribute' => 'domain',
+            'direction' => 'ASC'
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getDomains');
-        $result     = $this->SoapEngine->soapclient->getDomains($Query);
+        $result = $this->SoapEngine->soapclient->getDomains($Query);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf(
+                "<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
             //return false;
         } else {
             foreach ($result->domains as $_domain) {
                 if ($this->validDomain($_domain->domain)) {
-                    $this->allowedDomains[]=$_domain->domain;
+                    $this->allowedDomains[] = $_domain->domain;
                 }
             }
         }
