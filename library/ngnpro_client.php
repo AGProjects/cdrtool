@@ -8918,7 +8918,8 @@ class TrustedPeers extends Records {
     function TrustedPeers($SoapEngine) {
 
         $this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
-                                 'description'  => trim($_REQUEST['description_filter'])
+                                 'description'  => trim($_REQUEST['description_filter']),
+                                 'msteams'  => trim($_REQUEST['msteams_filter'])
                                  );
 
         $this->Records($SoapEngine);
@@ -8926,7 +8927,7 @@ class TrustedPeers extends Records {
         $this->sortElements=array(
                         'changeDate'  => 'Change date',
                         'description' => 'Description',
-                        'ip'          => 'IP address'
+                        'ip'          => 'Address'
                         );
     }
 
@@ -8939,7 +8940,8 @@ class TrustedPeers extends Records {
 
         // Filter
         $filter=array('ip' => $this->filters['ip'],
-                      'description'   => $this->filters['description']
+                      'description'   => $this->filters['description'],
+                      'msteams' => 1 == intval($this->filters['msteams'])
                       );
 
         // Range
@@ -8989,7 +8991,8 @@ class TrustedPeers extends Records {
             <tr>
                 <td><b>Id</b></th>
                 <td><b>Owner</b></td>
-                <td><b>IP address</b></td>
+                <td><b>Address</b></td>
+                <td><b>MS Teams</b></td>
                 <td><b>Protocol</b></td>
                 <td><b>Call limit</b></td>
                 <td><b>Description</b></td>
@@ -9019,9 +9022,10 @@ class TrustedPeers extends Records {
 
                     $index=$this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s",
+                    $_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s&msteams_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($peer->ip)
+                    urlencode($peer->ip),
+                    urlencode(intval($peer->msteams))
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
@@ -9046,12 +9050,14 @@ class TrustedPeers extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $index,
                     $_customer_url,
                     $peer->reseller,
                     $peer->ip,
+                    $peer->msteams,
                     $peer->protocol,
                     $peer->callLimit,
                     $peer->description,
@@ -9085,9 +9091,10 @@ class TrustedPeers extends Records {
             ";
             $this->showCustomerTextBox();
 
-            printf (" <div class='input-prepend'><span class='add-on'>IP address</span><input class=span2 type=text size=20 name=ipaddress></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span2 type=text size=4 name=callLimit></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ipaddress></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span1 type=text size=4 name=callLimit></div>");
             printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>MS Teams domain<input type=checkbox class=span1 name=msteams value=1></span></div>");
 
             $this->printHiddenFormElements();
 
@@ -9104,6 +9111,12 @@ class TrustedPeers extends Records {
             $ipaddress   = $dictionary['ipaddress'];
         } else {
             $ipaddress   = trim($_REQUEST['ipaddress']);
+        }
+
+        if ($dictionary['msteams']) {
+            $msteams   = $dictionary['msteams'];
+        } else {
+            $msteams   = trim($_REQUEST['msteams']);
         }
 
         if ($dictionary['description']) {
@@ -9126,7 +9139,7 @@ class TrustedPeers extends Records {
 
         list($customer,$reseller)=$this->customerFromLogin($dictionary);
 
-        if (!strlen($ipaddress) || !strlen($description)) {
+        if (!strlen($ipaddress)) {
             printf ("<p><font color=red>Error: Missing IP or description. </font>");
             return false;
         }
@@ -9135,6 +9148,7 @@ class TrustedPeers extends Records {
                      'ip'          => $ipaddress,
                      'description' => $description,
                      'callLimit'  => intval($callLimit),
+                     'msteams'    => 1 == $msteams,
                      'owner'       => intval($_REQUEST['owner']),
                      'customer'    => intval($customer),
                      'reseller'    => intval($reseller)
@@ -9169,9 +9183,15 @@ class TrustedPeers extends Records {
     }
 
     function showSeachFormCustom() {
-
-        printf (" <div class='input-prepend'><span class='add-on'>IP address</span><input class=span2 type=text size=20 name=ip_filter value='%s'></div>",$this->filters['ip']);
+        if (intval($this->filters['msteams'])  == 1) {
+            $checked_msteams = 'checked';
+        } else {
+            $checked_msteams = '';
+        }
+                                                
+        printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ip_filter value='%s'></div>",$this->filters['ip']);
         printf (" <div class='input-prepend'><span class='add-on'>Description</span><input type=text size=30 name=description_filter value='%s'></div>",$this->filters['description']);
+        printf (" <div class='input-prepend'><span class='add-on'>MS Teams domain<input type=checkbox value=1 name=msteams_filter class=span1 %s></span></div>",$checked_msteams);
 
     }
 
