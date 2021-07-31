@@ -3956,7 +3956,7 @@ class SIP_trace
             if (isset($this->thor_nodes[$ip])) {
                 return true;
             } else {
-                if (isThorNode($ip, $sip_proxy)) {
+                if (isThorNode($ip, $sip_proxy) || isThorNode($ip, $sip_proxy, 'msteams_gateway')) {
                     $this->thor_nodes[$ip]=1;
                     return true;
                 } else {
@@ -5216,7 +5216,7 @@ function getImageForUserAgent($msg)
     return "unknown.png";
 }
 
-function isThorNode($ip, $sip_proxy)
+function isThorNode($ip, $sip_proxy, $role="sip_proxy")
 {
     if (!$ip || !$sip_proxy) {
         return false;
@@ -5228,7 +5228,7 @@ function isThorNode($ip, $sip_proxy)
         return false;
     }
 
-    $request=sprintf("is_online %s as sip_proxy", $ip);
+    $request=sprintf("is_online %s as %s", $ip, $role);
 
     if (fputs($socket, "$request\r\n") !== false) {
         $ret = trim(fgets($socket, 4096));
