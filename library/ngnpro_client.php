@@ -2,7 +2,7 @@
 require_once 'ngnpro_soap_library.php';
 
 /*
-    Copyright (c) 2007-2020 AG Projects
+    Copyright (c) 2007-2021 AG Projects
     https://ag-projects.com
     Author Adrian Georgescu
 
@@ -697,7 +697,7 @@ class SoapEngine
 
             if ($html) {
                 $log = sprintf(
-                    "Failed to add record: %s (%s): %s",
+                    "SOAP query failed: %s (%s): %s",
                     $this->error_msg,
                     $this->error_fault->detail->exception->errorcode,
                     $this->error_fault->detail->exception->errorstring
@@ -8914,6 +8914,11 @@ class UrlRedirect extends FancyRecords {
 }
 
 class TrustedPeers extends Records {
+    var $Fields=array(
+                              'msteams'     => array('type'=>'boolean'),
+                              'callLimit'     => array('type'=>'integer'),
+                              'description'    => array('type'=>'string')
+                              );
 
     function TrustedPeers($SoapEngine) {
 
@@ -9022,15 +9027,20 @@ class TrustedPeers extends Records {
 
                     $index=$this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s&msteams_filter=%s",
+                    $delete_url = $this->url.sprintf("&service=%s&action=Delete&ip_filter=%s&msteams_filter=%s",
                     urlencode($this->SoapEngine->service),
                     urlencode($peer->ip),
                     urlencode(intval($peer->msteams))
                     );
 
+                    $update_url = $this->url.sprintf("&service=%s&action=Update&ip_filter=%s",
+                    urlencode($this->SoapEngine->service),
+                    urlencode($peer->ip)
+                    );
+
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['ip_filter'] == $peer->ip) {
-                        $_url .= "&confirm=1";
+                        $delete_url .= "&confirm=1";
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -9045,7 +9055,7 @@ class TrustedPeers extends Records {
                     <tr>
                     <td>%s</td>
                     <td><a href=%s>%s</a></td>
-                    <td>%s</td>
+                    <td><a href=%s>%s</a></td>
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
@@ -9056,13 +9066,14 @@ class TrustedPeers extends Records {
                     $index,
                     $_customer_url,
                     $peer->reseller,
+                    $update_url,
                     $peer->ip,
                     $peer->msteams,
                     $peer->protocol,
                     $peer->callLimit,
                     $peer->description,
                     $peer->changeDate,
-                    $_url,
+                    $delete_url,
                     $actionText
                     );
 
@@ -9071,11 +9082,113 @@ class TrustedPeers extends Records {
             }
 
             print "</table>";
-
+            
+            if ($result->total == 1) {
+                $this->showRecord($peer);
+            }
             $this->showPagination($maxrows);
 
             return true;
         }
+    }
+
+    function showRecord($peer) {
+
+        print "<table border=0 cellpadding=10>";
+        print "
+        <tr>
+        <td valign=top>
+        <table border=0>";
+        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "<input type=hidden name=action value=Update>";
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
+
+        if ($this->adminonly) {
+
+            foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($this->FieldsAdminOnly[$item]['name']) {
+                    $item_name=$this->FieldsAdminOnly[$item]['name'];
+                } else {
+                    $item_name=ucfirst($item);
+                }
+
+                if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $peer->$item
+                    );
+                } else {
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $peer->$item
+                    );
+                }
+            }
+        }
+
+        foreach (array_keys($this->Fields) as $item) {
+            if ($this->Fields[$item]['name']) {
+                $item_name=$this->Fields[$item]['name'];
+            } else {
+                $item_name=ucfirst($item);
+            }
+
+            if ($this->Fields[$item]['type'] == 'text') {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                </tr>",
+                $item_name,
+                $item,
+                $peer->$item
+                );
+            } else if ($this->Fields[$item]['type'] == 'boolean') {
+                if ($peer->$item == 1) {
+                    $checked = "checked";   
+                } else {
+                    $checked = "";
+                }
+                
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                </tr>",
+                $item_name,
+                $item,
+                $checked
+                );
+            } else {
+                printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                </tr>",
+                $item_name,
+                $item,
+                $peer->$item
+                );
+            }
+        }
+
+        printf ("<input type=hidden name=ip_filter value='%s'>",$peer->ip);
+        $this->printFiltersToForm();
+
+        $this->printHiddenFormElements();
+
+        print "</form>";
+        print "
+        </table>
+        ";
     }
 
     function showAddForm() {
@@ -9092,7 +9205,7 @@ class TrustedPeers extends Records {
             $this->showCustomerTextBox();
 
             printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ipaddress></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span1 type=text size=4 name=callLimit></div>");
+            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span1 type=text size=4 name=callLimit value=30></div>");
             printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
             printf (" <div class='input-prepend'><span class='add-on'>MS Teams domain<input type=checkbox class=span1 name=msteams value=1></span></div>");
 
@@ -9157,6 +9270,30 @@ class TrustedPeers extends Records {
         $function=array('commit'   => array('name'       => 'addTrustedPeer',
                                             'parameters' => array($peer),
                                             'logs'       => array('success' => sprintf('Trusted peer %s has been added',$ipaddress)))
+                        );
+
+        return $this->SoapEngine->execute($function,$this->html);
+    }
+
+    function updateRecord() {
+        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+
+        if (!strlen($this->filters['ip'])) {
+            print "<p><font color=red>Error: missing peer address. </font>";
+            return false;
+        }
+        $peer=array(
+                     'ip'          => $this->filters['ip'],
+                     'description' => $_REQUEST['description_form'],
+                     'callLimit'   => intval($_REQUEST['callLimit_form']),
+                     'msteams'     => 1 == $_REQUEST['msteams_form'],
+                     'customer'    => intval($customer),
+                     'reseller'    => intval($reseller)
+                    );
+    
+        $function=array('commit'   => array('name'       => 'updateTrustedPeer',
+                                            'parameters' => array($peer),
+                                            'logs'       => array('success' => sprintf('Trusted peer %s has been updated',$this->filters['ip'])))
                         );
 
         return $this->SoapEngine->execute($function,$this->html);

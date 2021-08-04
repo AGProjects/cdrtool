@@ -487,6 +487,17 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
                                     'use' => 'encoded'));
         return $result;
     }
+    function &updateTrustedPeer($peer)
+    {
+        $peer = new SOAP_Value('peer', '{urn:AGProjects:NGNPro}TrustedPeer', $peer);
+        $result = $this->call('updateTrustedPeer',
+                              $v = array('peer' => $peer),
+                              array('namespace' => 'urn:AGProjects:NGNPro:Sip',
+                                    'soapaction' => '',
+                                    'style' => 'rpc',
+                                    'use' => 'encoded'));
+        return $result;
+    }
     function &getTrustedPeers($query)
     {
         // query is a ComplexType TrustedPeerQuery,
