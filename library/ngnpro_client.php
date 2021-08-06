@@ -2339,7 +2339,22 @@ class SipDomains extends Records {
     }
 
     function showRecord($domain) {
+        if ($domain->certificate and $domain->private_key) {
+            $pemdata = sprintf("%s\n%s", $domain->certificate,  $domain->private_key);
+            $cert = openssl_x509_read( $pemdata );
+            if ($cert) {
+                $cert_data = openssl_x509_parse( $cert );
+                openssl_x509_free( $cert );
+                $expire = mktime($cert_data['validTo_time_t']);
+            } else {
+                $cert_data = "";
+            }
+            
+        }
 
+        #print("<pre>");
+        #print_r($cert_data);
+        #print("</pre>");
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
@@ -2352,6 +2367,14 @@ class SipDomains extends Records {
         <td colspan=2><input type=submit value=Update>
         </td></tr>";
 
+        if ($cert_data) {
+            // Parse the resource and print out the contents.
+                $ts = $cert_data['validTo_time_t'];
+                $expire = new DateTime("@$ts");
+                printf("<tr><td>TLS CN</td><td>%s</td></tr>", $cert_data['subject']['CN']);
+                printf("<tr><td>CA Issuer</td><td>%s %s %s</td></tr>", $cert_data['issuer']['C'], $cert_data['issuer']['O'], $cert_data['issuer']['CN']);;
+                printf("<tr><td>Expire date</td><td>%s</td></tr>", $expire->format('Y-m-d'));
+        }
         if ($this->adminonly) {
 
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
