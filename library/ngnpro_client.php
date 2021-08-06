@@ -1754,7 +1754,12 @@ class SipDomains extends Records {
                               );
 
     var $Fields=array(
-                              'customer'    => array('type'=>'integer')
+                              'customer'    => array('type'=>'integer'),
+                              'certificate' =>  array('type'=>'text'),
+                              'private_key' =>  array('type'=>'text'),
+                              'match_ip_address' =>  array('type'=>'text'),
+                              'verify_cert' => array('type'=>'boolean'),   
+                              'require_cert' => array('type'=>'boolean')
                               );
 
     function SipDomains($SoapEngine) {
@@ -2353,7 +2358,7 @@ class SipDomains extends Records {
                 if ($this->FieldsAdminOnly[$item]['name']) {
                     $item_name=$this->FieldsAdminOnly[$item]['name'];
                 } else {
-                    $item_name=ucfirst($item);
+                    $item_name=preg_replace("/_/"," ",ucfirst($item));
                 }
 
                 if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
@@ -2364,6 +2369,21 @@ class SipDomains extends Records {
                     $item_name,
                     $item,
                     $domain->$item
+                    );
+                } else if ($this->FieldsAdminOnly[$item]['type'] == 'boolean') {
+                    if ($domain->$item == 1) {
+                        $checked = "checked";   
+                    } else {
+                        $checked = "";
+                    }
+                
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $checked
                     );
                 } else {
                     printf ("<tr>
@@ -2382,7 +2402,7 @@ class SipDomains extends Records {
             if ($this->Fields[$item]['name']) {
                 $item_name=$this->Fields[$item]['name'];
             } else {
-                $item_name=ucfirst($item);
+                $item_name = preg_replace("/_/"," ",ucfirst($item));
             }
 
             if ($this->Fields[$item]['type'] == 'text') {
@@ -2394,8 +2414,23 @@ class SipDomains extends Records {
                 $item,
                 $domain->$item
                 );
-            } else {
+            } else if ($this->Fields[$item]['type'] == 'boolean') {
+                if ($domain->$item == 1) {
+                    $checked = "checked";   
+                } else {
+                    $checked = "";
+                }
+            
                 printf ("<tr>
+                <td class=border valign=top>%s</td>
+                <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                </tr>",
+                $item_name,
+                $item,
+                $checked
+                );
+        } else {
+            printf ("<tr>
                 <td class=border valign=top>%s</td>
                 <td class=border><input name=%s_form size=30 type=text value='%s'></td>
                 </tr>",
@@ -2432,6 +2467,8 @@ class SipDomains extends Records {
             $var_name=$item.'_form';
             //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
+                $domain->$item = intval($_REQUEST[$var_name] == 1);
+            } else if ($this->Fields[$item]['type'] == 'boolean') {
                 $domain->$item = intval($_REQUEST[$var_name]);
             } else {
                 $domain->$item = trim($_REQUEST[$var_name]);
@@ -2443,6 +2480,8 @@ class SipDomains extends Records {
                 $var_name=$item.'_form';
                 //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
                 if ($this->FieldsAdminOnly[$item]['type'] == 'integer') {
+                    $domain->$item = intval($_REQUEST[$var_name]);
+                } else if ($this->Fields[$item]['type'] == 'boolean') {
                     $domain->$item = intval($_REQUEST[$var_name]);
                 } else {
                     $domain->$item = trim($_REQUEST[$var_name]);
@@ -8914,7 +8953,7 @@ class UrlRedirect extends FancyRecords {
 }
 
 class TrustedPeers extends Records {
-    var $Fields=array(
+    var $FieldsAdminOnly=array(
                               'msteams'     => array('type'=>'boolean'),
                               'callLimit'     => array('type'=>'integer'),
                               'description'    => array('type'=>'string')
