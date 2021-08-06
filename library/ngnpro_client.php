@@ -1757,7 +1757,7 @@ class SipDomains extends Records {
                               'customer'    => array('type'=>'integer'),
                               'certificate' =>  array('type'=>'text'),
                               'private_key' =>  array('type'=>'text'),
-                              'match_ip_address' =>  array('type'=>'text'),
+                              'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
                               'verify_cert' => array('type'=>'boolean'),   
                               'require_cert' => array('type'=>'boolean')
                               );
@@ -8956,6 +8956,9 @@ class TrustedPeers extends Records {
     var $FieldsAdminOnly=array(
                               'msteams'     => array('type'=>'boolean'),
                               'callLimit'     => array('type'=>'integer'),
+                              'blocked'    => array('type'=>'integer')
+                              );
+    var $Fields=array(
                               'description'    => array('type'=>'string')
                               );
 
@@ -9037,9 +9040,9 @@ class TrustedPeers extends Records {
                 <td><b>Owner</b></td>
                 <td><b>Address</b></td>
                 <td><b>MS Teams</b></td>
-                <td><b>Protocol</b></td>
                 <td><b>Call limit</b></td>
                 <td><b>Description</b></td>
+                <td><b>Blocked</b></td>
                 <td><b>Change date</b></td>
                 <td><b>Actions</b></td>
             </tr>
@@ -9072,9 +9075,10 @@ class TrustedPeers extends Records {
                     urlencode(intval($peer->msteams))
                     );
 
-                    $update_url = $this->url.sprintf("&service=%s&action=Update&ip_filter=%s",
+                    $update_url = $this->url.sprintf("&service=%s&ip_filter=%s&msteams_filter=%s",
                     urlencode($this->SoapEngine->service),
-                    urlencode($peer->ip)
+                    urlencode($peer->ip),
+                    urlencode($peer->msteams)
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
@@ -9083,6 +9087,11 @@ class TrustedPeers extends Records {
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
+                    }
+                    if ($peer->msteams) {
+                        $msteams = 'Yes';
+                    } else {
+                        $msteams = 'No';
                     }
 
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
@@ -9107,10 +9116,10 @@ class TrustedPeers extends Records {
                     $peer->reseller,
                     $update_url,
                     $peer->ip,
-                    $peer->msteams,
-                    $peer->protocol,
+                    $msteams,
                     $peer->callLimit,
                     $peer->description,
+                    $peer->blocked,
                     $peer->changeDate,
                     $delete_url,
                     $actionText
@@ -9162,6 +9171,21 @@ class TrustedPeers extends Records {
                     $item_name,
                     $item,
                     $peer->$item
+                    );
+                } else if ($this->FieldsAdminOnly[$item]['type'] == 'boolean') {
+                    if ($peer->$item == 1) {
+                        $checked = "checked";   
+                    } else {
+                        $checked = "";
+                    }
+                
+                    printf ("<tr>
+                    <td class=border valign=top>%s</td>
+                    <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $checked
                     );
                 } else {
                     printf ("<tr>
@@ -9301,6 +9325,7 @@ class TrustedPeers extends Records {
                      'description' => $description,
                      'callLimit'  => intval($callLimit),
                      'msteams'    => 1 == $msteams,
+                     'blocked'    => 0,
                      'owner'       => intval($_REQUEST['owner']),
                      'customer'    => intval($customer),
                      'reseller'    => intval($reseller)
@@ -9325,6 +9350,7 @@ class TrustedPeers extends Records {
                      'ip'          => $this->filters['ip'],
                      'description' => $_REQUEST['description_form'],
                      'callLimit'   => intval($_REQUEST['callLimit_form']),
+                     'blocked'   => intval($_REQUEST['blocked_form']),
                      'msteams'     => 1 == $_REQUEST['msteams_form'],
                      'customer'    => intval($customer),
                      'reseller'    => intval($reseller)
@@ -9367,6 +9393,7 @@ class TrustedPeers extends Records {
                                                 
         printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ip_filter value='%s'></div>",$this->filters['ip']);
         printf (" <div class='input-prepend'><span class='add-on'>Description</span><input type=text size=30 name=description_filter value='%s'></div>",$this->filters['description']);
+        printf (" <div class='input-prepend'><span class='add-on'>Blocked</span><input class=span1 type=text size=4 name=blocked_filter value='%s'></div>",$this->filters['blocked']);
         printf (" <div class='input-prepend'><span class='add-on'>MS Teams domain<input type=checkbox value=1 name=msteams_filter class=span1 %s></span></div>",$checked_msteams);
 
     }
