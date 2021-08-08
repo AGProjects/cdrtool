@@ -5751,7 +5751,7 @@ class EnumMappings extends Records {
         </select>
         ";
 
-        printf ("<input class=span2 type=text size=20 name=mapto_filter value='%s'></nobr></div>",$this->filters['mapto']);
+        printf ("<input class=span3 type=text size=30 name=mapto_filter value='%s'></nobr></div>",$this->filters['mapto']);
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
 
     }
@@ -5905,9 +5905,9 @@ class EnumMappings extends Records {
         } else if ($_number=$this->getCustomerProperty('enum_numbers_last_number')) {
             $_prefix=$_range['prefix'];
             preg_match("/^$_prefix(.*)/",$_number,$m);
-            printf ("<input class=span2 type=text name=number value='%s'>",$m[1]);
+            printf ("<input class=span1 type=text name=number value='%s'>",$m[1]);
         } else {
-            printf ("<input class=span2 type=text name=number>");
+            printf ("<input class=span1 type=text name=number>");
         }
 
         print "</div> <div class='input-prepend'><span class='add-on'>";
@@ -5936,7 +5936,7 @@ class EnumMappings extends Records {
             $selected_naptr_service[$_type]='selected';
         }
 
-        printf (" <input class=span2 type=text size=25 name=mapto value='%s'>",$_REQUEST['mapto']);
+        printf (" <input class=span2 type=text size=40 name=mapto value='%s'>",$_REQUEST['mapto']);
 
         print "</div> <div class='input-prepend'><span class='add-on'>";
         print "TTL";
@@ -6363,7 +6363,7 @@ class EnumMappings extends Records {
             printf ("<td class=border>%d<input type=hidden name=mapping_id[] value='%d'></td>",$_mapping->id,$_mapping->id);
             $selected_type[$_mapping->type]='selected';
             printf ("
-            <td class=border><select name=mapping_type[]>");
+            <td class=border><select class=span2 name=mapping_type[]>");
             reset($this->NAPTR_services);
             while (list($k,$v) = each($this->NAPTR_services)) {
                 printf ("<option value='%s' %s>%s",$k,$selected_type[$k],$this->NAPTR_services[$k]['webname']);
@@ -6374,8 +6374,8 @@ class EnumMappings extends Records {
             </td>";
 
             printf ("
-            <td class=border><input name=mapping_mapto[] size=30 value='%s'></td>
-            <td class=border><input name=mapping_ttl[] size=6 value='%s'></td>
+            <td><input class=span4 name=mapping_mapto[] size=40 value='%s'></td>
+            <td><input class=span1 name=mapping_ttl[] size=6 value='%s'></td>
             ",
             $_mapping->mapto,
             $_mapping->ttl
@@ -6389,7 +6389,7 @@ class EnumMappings extends Records {
         print "<td></td>";
 
         printf ("
-        <td class=border><select name=mapping_type[]>");
+        <td class=border><select class=span2 name=mapping_type[]>");
         reset($this->NAPTR_services);
         while (list($k,$v) = each($this->NAPTR_services)) {
             printf ("<option value='%s'>%s",$k,$this->NAPTR_services[$k]['webname']);
@@ -6400,8 +6400,8 @@ class EnumMappings extends Records {
         </td>";
 
         printf ("
-        <td class=border><input name=mapping_mapto[] size=30></td>
-        <td class=border><input name=mapping_ttl[] size=6></td>
+        <td class=border><input class=span4 name=mapping_mapto[] size=40></td>
+        <td class=border><input class=span1 name=mapping_ttl[] size=6></td>
         "
         );
 
