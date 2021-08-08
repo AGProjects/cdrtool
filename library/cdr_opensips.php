@@ -4632,8 +4632,8 @@ class SIP_trace
                         print "&nbsp;";
                     } elseif ($arrow_possition == $msg_possition) {
                         echo "<td></td>";
-                    } elseif ($column_current != $this->column[$fromip] && $column_current != $this->column[$toip]) {
-                        echo "<td colspan=2 border-left: 2px solid #95b3d0'></td>";
+                    #} elseif ($column_current != $this->column[$fromip] && $column_current != $this->column[$toip]) {
+                    #    echo "<td colspan=2 border-left: 2px solid #95b3d0'></td>";
                     }
                     echo "</td>";
                 }
