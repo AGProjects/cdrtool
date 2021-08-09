@@ -8977,8 +8977,10 @@ class UrlRedirect extends FancyRecords {
 
 class TrustedPeers extends Records {
     var $FieldsAdminOnly=array(
-                              'msteams'     => array('type'=>'boolean'),
-                              'callLimit'     => array('type'=>'integer'),
+
+                              'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
+                              'tenant'      => array('type'=>'string'),
+                              'callLimit'     => array('type'=>'integer', 'name' => 'Call limit'),
                               'blocked'    => array('type'=>'integer')
                               );
     var $Fields=array(
@@ -9173,10 +9175,6 @@ class TrustedPeers extends Records {
         printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
-        print "<tr>
-        <td colspan=2><input type=submit value=Update>
-        </td></tr>";
-
         if ($this->adminonly) {
 
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
@@ -9265,6 +9263,10 @@ class TrustedPeers extends Records {
                 );
             }
         }
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
 
         printf ("<input type=hidden name=ip_filter value='%s'>",$peer->ip);
         $this->printFiltersToForm();
@@ -9372,6 +9374,7 @@ class TrustedPeers extends Records {
         $peer=array(
                      'ip'          => $this->filters['ip'],
                      'description' => $_REQUEST['description_form'],
+                     'tenant'      => $_REQUEST['tenant_form'],
                      'callLimit'   => intval($_REQUEST['callLimit_form']),
                      'blocked'   => intval($_REQUEST['blocked_form']),
                      'msteams'     => 1 == $_REQUEST['msteams_form'],
