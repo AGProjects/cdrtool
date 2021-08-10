@@ -9404,7 +9404,7 @@ class TrustedPeers extends Records {
                      'description' => $_REQUEST['description_form'],
                      'tenant'      => $_REQUEST['tenant_form'],
                      'callLimit'   => intval($_REQUEST['callLimit_form']),
-                     'prepaid'   => intval($_REQUEST['prepaid_form']),
+                     'prepaid'   => 1 == $_REQUEST['prepaid_form'],
                      'blocked'   => intval($_REQUEST['blocked_form']),
                      'msteams'     => 1 == $_REQUEST['msteams_form'],
                      'customer'    => intval($customer),
