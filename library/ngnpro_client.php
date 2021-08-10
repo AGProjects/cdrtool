@@ -2872,7 +2872,7 @@ class SipAccounts extends Records {
                 <th>Full name</th>
                 <th>Email address</th>
                 <th>Timezone</th>
-                <th align=right>Call limit</th>
+                <th align=right>Capacity</th>
                 <th align=right>Quota</th>
                 <th align=right>Balance</th>
                 <th>Owner</th>
@@ -8980,8 +8980,9 @@ class TrustedPeers extends Records {
 
                               'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
                               'tenant'      => array('type'=>'string'),
-                              'callLimit'     => array('type'=>'integer', 'name' => 'Call limit'),
-                              'blocked'    => array('type'=>'integer')
+                              'callLimit'     => array('type'=>'integer', 'name' => 'Capacity'),
+                              'blocked'    => array('type'=>'integer'),
+                              'prepaid'    => array('type'=>'boolean')
                               );
     var $Fields=array(
                               'description'    => array('type'=>'string')
@@ -9065,10 +9066,11 @@ class TrustedPeers extends Records {
             <tr>
                 <td><b>Id</b></th>
                 <td><b>Owner</b></td>
-                <td><b>Address</b></td>
+                <td><b>Trusted peer</b></td>
+                <td><b>Prepaid</b></td>
+                <td><b>Capacity</b></td>
                 <td><b>MS Teams</b></td>
                 <td><b>Tenant</b></td>
-                <td><b>Call limit</b></td>
                 <td><b>Description</b></td>
                 <td><b>Blocked</b></td>
                 <td><b>Change date</b></td>
@@ -9122,6 +9124,12 @@ class TrustedPeers extends Records {
                         $msteams = 'No';
                     }
 
+                    if ($peer->prepaid) {
+                        $prepaid = 'Yes';
+                    } else {
+                        $prepaid = 'No';
+                    }
+
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SoapEngine->customer_engine),
                     urlencode($peer->reseller)
@@ -9138,6 +9146,7 @@ class TrustedPeers extends Records {
                     <td>%s</td>
                     <td>%s</td>
                     <td>%s</td>
+                    <td>%s</td>
                     <td><a href=%s>%s</a></td>
                     </tr>",
                     $index,
@@ -9145,9 +9154,10 @@ class TrustedPeers extends Records {
                     $peer->reseller,
                     $update_url,
                     $peer->ip,
+                    $prepaid,
+                    $peer->callLimit,
                     $msteams,
                     $peer->tenant,
-                    $peer->callLimit,
                     $peer->description,
                     $peer->blocked,
                     $peer->changeDate,
@@ -9171,7 +9181,6 @@ class TrustedPeers extends Records {
     }
 
     function showRecord($peer) {
-
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
@@ -9181,7 +9190,6 @@ class TrustedPeers extends Records {
         print "<input type=hidden name=action value=Update>";
 
         if ($this->adminonly) {
-
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
                 if ($this->FieldsAdminOnly[$item]['name']) {
                     $item_name=$this->FieldsAdminOnly[$item]['name'];
@@ -9396,6 +9404,7 @@ class TrustedPeers extends Records {
                      'description' => $_REQUEST['description_form'],
                      'tenant'      => $_REQUEST['tenant_form'],
                      'callLimit'   => intval($_REQUEST['callLimit_form']),
+                     'prepaid'   => intval($_REQUEST['prepaid_form']),
                      'blocked'   => intval($_REQUEST['blocked_form']),
                      'msteams'     => 1 == $_REQUEST['msteams_form'],
                      'customer'    => intval($customer),
