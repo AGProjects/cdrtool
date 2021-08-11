@@ -8985,7 +8985,8 @@ class TrustedPeers extends Records {
                               'prepaid'    => array('type'=>'boolean')
                               );
     var $Fields=array(
-                              'description'    => array('type'=>'string')
+                              'description'    => array('type'=>'string'),
+                              'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
                               );
 
     function TrustedPeers($SoapEngine) {
@@ -9402,6 +9403,7 @@ class TrustedPeers extends Records {
         $peer=array(
                      'ip'          => $this->filters['ip'],
                      'description' => $_REQUEST['description_form'],
+                     'authToken' => $_REQUEST['authToken_form'],
                      'tenant'      => $_REQUEST['tenant_form'],
                      'callLimit'   => intval($_REQUEST['callLimit_form']),
                      'prepaid'   => 1 == $_REQUEST['prepaid_form'],
