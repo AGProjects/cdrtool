@@ -168,7 +168,7 @@ class SoapEngine
         ),
         'trusted_peers' => array(
             'records_class' => 'TrustedPeers',
-            'name'          => 'SIP trusted peers',
+            'name'          => 'Trusted peers',
             'soap_class'    => 'WebService_NGNPro_SipPort',
             'category'      => 'sip',
             'description'   => 'Manage trusted parties that are allowed to route sessions through the SIP proxy without digest authentication. ',
@@ -8979,10 +8979,10 @@ class TrustedPeers extends Records {
     var $FieldsAdminOnly=array(
 
                               'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
+                              'prepaid'    => array('type'=>'boolean'),
                               'tenant'      => array('type'=>'string'),
-                              'callLimit'     => array('type'=>'integer', 'name' => 'Capacity'),
-                              'blocked'    => array('type'=>'integer'),
-                              'prepaid'    => array('type'=>'boolean')
+                              'callLimit'   => array('type'=>'integer', 'name' => 'Capacity'),
+                              'blocked'    => array('type'=>'integer')
                               );
     var $Fields=array(
                               'description'    => array('type'=>'string'),
