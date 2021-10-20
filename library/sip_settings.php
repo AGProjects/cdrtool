@@ -7502,6 +7502,17 @@ class SipSettings {
 
     }
 
+    private function includeSmarty()
+    {
+        define("SMARTY_DIR", "/usr/share/php/smarty3/");
+        include_once(SMARTY_DIR . 'Smarty.class.php');
+
+        if (!class_exists(Smarty)) {
+            define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
+            include_once(SMARTY_DIR . 'Smarty.class.php');
+        }
+    }
+
     function deleteAccount($skip_html=False) {
         dprint ("SipSettings->deleteAccount($this->account, $this->email)");
 
@@ -7534,8 +7545,7 @@ class SipSettings {
         }
 
         //print "$tpl_html";
-        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
-        include_once(SMARTY_DIR . 'Smarty.class.php');
+        $this->includeSmarty();
 
         $smarty = new Smarty;
         $smarty->template_dir = '.';
@@ -7624,8 +7634,7 @@ class SipSettings {
         }
         if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
 
-        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
-        include_once(SMARTY_DIR . 'Smarty.class.php');
+        $this->includeSmarty();
 
         $smarty = new Smarty;
         $smarty->template_dir = '.';
@@ -7706,8 +7715,7 @@ class SipSettings {
 
         $tpl_html = $this->getChangedEmailTemplateHTML($this->reseller, $this->Preferences['language']);
 
-        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
-        include_once(SMARTY_DIR . 'Smarty.class.php');
+        $this->includeSmarty();
 
         $smarty = new Smarty;
         $smarty->template_dir = '.';
@@ -7795,8 +7803,7 @@ class SipSettings {
 
         $tpl_html = $this->getEmailPasswordTemplateHTML($this->reseller, $this->Preferences['language']);
 
-        define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
-        include_once(SMARTY_DIR . 'Smarty.class.php');
+        $this->includeSmarty();
 
         $smarty = new Smarty;
         $smarty->template_dir = '.';
