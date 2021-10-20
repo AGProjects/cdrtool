@@ -243,13 +243,13 @@ class SipSettings {
             ";
 
         } else {
-        	$this->url=$this->settingsPage;
-			if (!$this->isEmbedded()) {
-            	$this->url.="?account=$this->account";
+            $this->url=$this->settingsPage;
+            if (!$this->isEmbedded()) {
+                $this->url.="?account=$this->account";
             } else {
-            	$this->url.=sprintf("?1=1&realm=%s",urlencode($_REQUEST['realm']));
+                $this->url.=sprintf("?1=1&realm=%s",urlencode($_REQUEST['realm']));
                 if ($_REQUEST['user_agent']) {
-            		$this->url.=sprintf("&user_agent=%s",urlencode($_REQUEST['user_agent']));
+                    $this->url.=sprintf("&user_agent=%s",urlencode($_REQUEST['user_agent']));
                 }
             }
 
@@ -353,7 +353,7 @@ class SipSettings {
             $this->tabs['did']=_("DID");
         }
 
-	if (!$this->isEmbedded() && $this->show_download_tab && !in_array("trunking",$this->groups)) {
+        if (!$this->isEmbedded() && $this->show_download_tab && !in_array("trunking",$this->groups)) {
             $this->tabs['download'] = $this->show_download_tab;
         }
 
@@ -871,7 +871,7 @@ class SipSettings {
         $this->getMobileNumber();
 
         if ($this->append_domain_to_xcap_root) {
-        	$this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
+            $this->xcap_root     = rtrim($this->xcap_root,'/')."@".$this->domain."/";
         }
 
         $this->result    = $result;
@@ -913,9 +913,9 @@ class SipSettings {
 
         $this->chapterTableStart();
 
-    	$this->showAboveTabs();
+        $this->showAboveTabs();
         $this->showTabs();
-    	$this->showUnderTabs();
+        $this->showUnderTabs();
 
         $this->showTitleBar();
 
@@ -929,7 +929,7 @@ class SipSettings {
 
         $this->showFooter();
 
-    	$this->chapterTableStop();
+        $this->chapterTableStop();
     }
 
     function getDomainOwner ($domain='') {
@@ -1390,8 +1390,8 @@ class SipSettings {
             // for a reseller we need to check if a subaccount is allowed
             if ($this->loginCredentials['customer'] == $this->loginCredentials['reseller']) {
                 if ($this->resellerProperties['sms_access']) {
-                	dprint("is reseller");
-                	$this->sms_changes_allowed = true;
+                    dprint("is reseller");
+                    $this->sms_changes_allowed = true;
                 }
                 return;
             } else if ($this->customerImpersonate == $this->loginCredentials['reseller']) {
@@ -2055,7 +2055,7 @@ class SipSettings {
         $chapter=sprintf(_("Proof of Identity"));
         $this->showChapter($chapter);
 
-	if ($_REQUEST['task'] == 'upload') {
+        if ($_REQUEST['task'] == 'upload') {
             if (!$_FILES['tmpfile']['tmp_name']) {
                 print "<font color=red>";
                 printf (_("Error: Please specify a file"));
@@ -2158,7 +2158,7 @@ class SipSettings {
             }
         }
 
-  	if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
+        if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
             $query=sprintf("delete from subscriber_docs
             where username = '%s'
             and domain = '%s'
@@ -2189,27 +2189,27 @@ class SipSettings {
         }
 
         if ($this->db->num_rows()) {
-
             print "
                 <div class=row-fluid>
                 <table class='table table-condensed table-striped'>";
 
-	    if (!in_array("payments",$this->groups)) {
+            if (!in_array("payments",$this->groups)) {
                 print "<p>";
                 print _("Credit Card payments will be activated after your identity is verified. ");
             }
 
-            printf ("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
-            _("Name"),
-            _("Document"),
-            _("Type"),
-            _("Size"),
-            _("Date"),
-            _("Last digits"),
-            _("Mobile Number")
+            printf(
+                "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>",
+                _("Name"),
+                _("Document"),
+                _("Type"),
+                _("Size"),
+                _("Date"),
+                _("Last digits"),
+                _("Mobile Number")
             );
 
-	    if ($this->login_type != 'subscriber') {
+            if ($this->login_type != 'subscriber') {
                 print "<td>";
                 print _("Actions");
                 print "</td>";
@@ -2221,28 +2221,29 @@ class SipSettings {
 
             $download_url=$this->url.'&action=export_identity_proof';
 
-            printf ("<tr> <td>%s</td><td><a href=%s>%s</a></td> <td>%s</td> <td>%s KB</td> <td>%s</td><td align=right>%s</td><td align=right>%s</td>",
-            $this->db->f('name'),
-            $download_url,
-            $this->db->f('file_name'),
-            $this->db->f('file_type'),
-            number_format($this->db->f('file_size')/1024,2),
-            $this->db->f('file_date'),
-            $this->db->f('last_digits'),
-            $this->db->f('mobile_number')
+            printf(
+                "<tr> <td>%s</td><td><a href=%s>%s</a></td> <td>%s</td> <td>%s KB</td> <td>%s</td><td align=right>%s</td><td align=right>%s</td>",
+                $this->db->f('name'),
+                $download_url,
+                $this->db->f('file_name'),
+                $this->db->f('file_type'),
+                number_format($this->db->f('file_size')/1024,2),
+                $this->db->f('file_date'),
+                $this->db->f('last_digits'),
+                $this->db->f('mobile_number')
             );
 
-	    if ($this->login_type != 'subscriber') {
+            if ($this->login_type != 'subscriber') {
                 if ($_REQUEST['task'] == 'delete_identity_proof' && !$_REQUEST['confirm']){
                     $delete_url=$this->url.'&tab=payments&task=delete_identity_proof&confirm=1';
-                    printf ("<td align=right><a href='%s'>%s</a></td>",$delete_url,_("Confirm"));
+                    printf("<td align=right><a href='%s'>%s</a></td>", $delete_url, _("Confirm"));
                 } else {
                     $delete_url=$this->url.'&tab=payments&task=delete_identity_proof';
-                    printf ("<td align=right><a href='%s'>%s</a></td>",$delete_url,$this->delete_img);
+                    printf("<td align=right><a href='%s'>%s</a></td>", $delete_url, $this->delete_img);
                 }
             }
 
-            printf ("</tr>");
+            printf("</tr>");
             print "
             </table>
             </div>
@@ -2353,10 +2354,9 @@ class SipSettings {
     }
 
     function exportIdentityProof() {
-
         $this->db = new DB_CDRTool();
 
-    	$query=sprintf("select * from subscriber_docs
+        $query = sprintf("select * from subscriber_docs
         where username = '%s'
         and domain = '%s'
         and document = 'identity'",
@@ -2791,7 +2791,7 @@ class SipSettings {
                             'uniq_hash'     => md5(mt_rand())
                             );
 
-            	$did_processor->createOrder($data);
+                $did_processor->createOrder($data);
 
                 /*
                 if (class_exists($this->payment_processor_class)) {
@@ -2810,7 +2810,6 @@ class SipSettings {
                 </td>
                 </tr>
                 ";
-
             } else if ($_REQUEST['ddi_action'] == 'Renew' && $_REQUEST['number'] && $_REQUEST['period']) {
                 $chapter=sprintf(_("Renew Number"));
                 $this->showChapter($chapter);
@@ -2825,15 +2824,14 @@ class SipSettings {
                             );
 
                 print "Renewing number....";
-            	$did_processor->renewOrder($data);
+                $did_processor->renewOrder($data);
 
                 print "
                 </td>
                 </tr>
                 ";
-
             } else if ($_REQUEST['ddi_action'] == 'Drop' && $_REQUEST['number']) {
-            	$chapter=sprintf(_("Cancel Number"));
+                $chapter = sprintf(_("Cancel Number"));
                 $this->showChapter($chapter);
 
                 print "
@@ -2849,9 +2847,8 @@ class SipSettings {
                 </td>
                 </tr>
                 ";
-
             } else {
-            	$chapter=sprintf(_("Register New Number"));
+                $chapter = sprintf(_("Register New Number"));
                 $this->showChapter($chapter);
 
                 print "
@@ -3027,47 +3024,57 @@ class SipSettings {
         if (in_array($os,$this->valid_os)) {
             print "<tr><td>";
 
-            printf (_("Download and install <a href=%s target=blink>%s</a> preconfigured with your SIP account:"), $this->blink_download_url, $this->show_download_tab);
+            printf(_("Download and install <a href=%s target=blink>%s</a> preconfigured with your SIP account:"), $this->blink_download_url, $this->show_download_tab);
             print "</td></tr>";
             print "<tr><td>";
-            printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
-            <param name='label_text' value='Download'>
-            <param name='click_label_text' value='Downloading...'>
-            <param name='download_url' value='%s'>
-            <param name='file_name' value=''>
-            <param name='file_content' value='%s'>
-            </applet>",
-            rand(),
-            $this->blink_download_url,
-            rawurlencode(json_encode($_account))
+            printf(
+                "<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkDownload' height='35' width='250' align='left'>
+                    <param name='label_text' value='Download'>
+                    <param name='click_label_text' value='Downloading...'>
+                    <param name='download_url' value='%s'>
+                    <param name='file_name' value=''>
+                    <param name='file_content' value='%s'>
+                </applet>",
+                rand(),
+                $this->blink_download_url,
+                rawurlencode(json_encode($_account))
             );
-        	print "</td></tr>";
+            print "</td></tr>";
 
         } else {
-        	print "<tr><td>";
+            print "<tr><td>";
 
             print "<p>";
-            printf (_("To download %s visit <a href='%s' target=blink>%s</a>"),$this->show_download_tab, $this->blink_download_url, $this->blink_download_url);
-        	print "</td></tr>";
+            printf(
+                _("To download %s visit <a href='%s' target=blink>%s</a>"),
+                $this->show_download_tab,
+                $this->blink_download_url,
+                $this->blink_download_url
+            );
+            print "</td></tr>";
         }
 
         print "<tr><td>";
 
-        printf (_("If you have already installed %s, you can configure it to use your SIP account:"), $this->show_download_tab);
+        printf(
+            _("If you have already installed %s, you can configure it to use your SIP account:"),
+            $this->show_download_tab
+        );
 
         print "</td></tr>";
         print "<tr><td>";
 
-        printf ("<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
-        <param name='label_text' value='Configure this account'>
-        <param name='click_label_text' value='Please restart %s now!'>
-        <param name='download_url' value=''>
-        <param name='file_name' value=''>
-        <param name='file_content' value='%s'>
-        </applet>",
-        rand(),
-        $this->show_download_tab,
-        urlencode(json_encode($_account))
+        printf(
+            "<applet code='com.agprojects.apps.browserinfo.BlinkConfigure' archive='blink_download.jar?version=%s' name='BlinkConfigure' height='35' width='250' align='left'>
+                <param name='label_text' value='Configure this account'>
+                <param name='click_label_text' value='Please restart %s now!'>
+                <param name='download_url' value=''>
+                <param name='file_name' value=''>
+                <param name='file_content' value='%s'>
+            </applet>",
+            rand(),
+            $this->show_download_tab,
+            urlencode(json_encode($_account))
         );
 
         print "</td></tr>";
@@ -4080,7 +4087,7 @@ class SipSettings {
                 $this->SipPort->removeFromGroup(array("username" => $this->username,"domain"=> $this->domain), "quota");
             }
 
-	    $rpid=trim($rpid);
+            $rpid=trim($rpid);
             if (strcmp($rpid,$this->rpid) != 0) {
                 dprint ("change the rpid");
                 $result->rpid=$rpid;
@@ -4128,8 +4135,8 @@ class SipSettings {
             if ($this->login_type != 'subscriber' || $this->availableGroups[$key]['SubscriberMayEditIt']) {
 
                 if ($key == 'free-pstn') {
-                	if (in_array($key,$this->groups) && !$val) {
-                    	if ($this->quota) {
+                    if (in_array($key,$this->groups) && !$val) {
+                        if ($this->quota) {
                             // we save quota for later use when pstn access is re-granted
                             $this->somethingChanged=1;
                             $this->setPreference('last_sip_quota',"$this->quota");
@@ -4137,14 +4144,14 @@ class SipSettings {
 
                         $this->somethingChanged=1;
                     } else if (!in_array($key,$this->groups) && $val) {
-                    	if (!$this->prepaid_changes_allowed) {
+                        if (!$this->prepaid_changes_allowed) {
                             $this->somethingChanged=1;
                             $result->prepaid=1;
                         }
                     }
 
-                	if (!in_array($key,$this->groups) && $val) {
-                    	$this->setPreference('last_sip_quota',strval($this->quota));
+                    if (!in_array($key,$this->groups) && $val) {
+                        $this->setPreference('last_sip_quota',strval($this->quota));
 
                         $last_sip_quota=$this->Preferences['last_sip_quota'];
                         if ($last_sip_quota) {
@@ -4235,7 +4242,7 @@ class SipSettings {
 
         foreach ($extra_groups as $_grp) {
             if (!in_array($_grp,array_keys($this->availableGroups))) {
-            	$newACLarray[]=$_grp;
+                $newACLarray[]=$_grp;
             }
         }
 
@@ -4276,8 +4283,8 @@ class SipSettings {
 
         if ($this->login_type == 'subscriber' && in_array("deny-password-change",$this->groups)) {
         } else if ($sip_password) {
-        	if ($this->store_clear_text_passwords) {
-            	$result->password=$sip_password;
+            if ($this->store_clear_text_passwords) {
+                $result->password=$sip_password;
             } else {
                 $md1=strtolower($this->username).':'.strtolower($this->domain).':'.$sip_password;
                 $md2=strtolower($this->username).'@'.strtolower($this->domain).':'.strtolower($this->domain).':'.$sip_password;
@@ -4311,7 +4318,7 @@ class SipSettings {
             $this->setPreference('yubikey',$yubikey);
             $this->somethingChanged=1;
         }
-        
+
         if (is_array($result->acl) and count($result->acl)) {
             foreach (array_keys($result->acl) as $key) {
                 if (isset($result->acl[$key]->tag) && $result->acl[$key]->tag == '') {
@@ -4403,10 +4410,9 @@ class SipSettings {
         }
 
         if ($this->somethingChanged) {
+            $result->properties=$this->properties;
 
-        	$result->properties=$this->properties;
-
-        	if (!$result->quota) $result->quota=0;
+            if (!$result->quota) $result->quota=0;
 
             //dprint_r($result);
 
@@ -4576,7 +4582,7 @@ class SipSettings {
                 printf ("<p><font color=red>Error2 (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                 return false;
             } else {
-            	$this->diversions=$diversions;
+                $this->diversions=$diversions;
             }
         }
     }
@@ -4706,24 +4712,29 @@ class SipSettings {
                 $diversions_have_changed=true;
             } else {
                 if ($this->diversions[$key]) {
-            		$diversions[$key]=$this->diversions[$key];
+            	    $diversions[$key]=$this->diversions[$key];
                 }
             }
         }
 
         if (!count($diversions)) {
-        	$diversions['nocondition']='empty';
+            $diversions['nocondition']='empty';
         }
 
         if ($diversions_have_changed) {
             $this->SipPort->addHeader($this->SoapAuth);
-            $result     = $this->SipPort->setCallDiversions($this->sipId,$diversions);
+            $result = $this->SipPort->setCallDiversions($this->sipId,$diversions);
 
             if ((new PEAR)->isError($result)) {
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                printf(
+                    "<p><font color=red>Error (SipPort): %s (%s): %s</font>",
+                    $error_msg,
+                    $error_fault->detail->exception->errorcode,
+                    $error_fault->detail->exception->errorstring
+                );
                 return false;
             }
         } else {
@@ -4761,18 +4772,18 @@ class SipSettings {
     function addVoicemail() {
         dprint("addVoicemail()");
 
-        $password=$this->RandomPassword();
+        $password = $this->RandomPassword();
 
-        $_account      = array("sipId"    => $this->sipId,
-                               "name"     => $this->fullName,
-                               "password" => $password,
-                               "email"    => $this->email,
-                               "options"  => array("delete"=>1)
-
+        $_account = array(
+            "sipId"    => $this->sipId,
+            "name"     => $this->fullName,
+            "password" => $password,
+            "email"    => $this->email,
+            "options"  => array("delete" => 1)
         );
 
         $this->VoicemailPort->addHeader($this->SoapAuthVoicemail);
-        $result     = $this->VoicemailPort->addAccount($_account);
+        $result = $this->VoicemailPort->addAccount($_account);
 
         if ((new PEAR)->isError($result)) {
             $error_msg=$result->getMessage();
@@ -7498,8 +7509,6 @@ class SipSettings {
         print "
         </form>
         ";
-
-
     }
 
     private function includeSmarty()
@@ -7514,7 +7523,7 @@ class SipSettings {
     }
 
     function deleteAccount($skip_html=False) {
-        dprint ("SipSettings->deleteAccount($this->account, $this->email)");
+        dprint("SipSettings->deleteAccount($this->account, $this->email)");
 
         $this->getBalanceHistory();
 
@@ -7529,10 +7538,10 @@ class SipSettings {
             return false;
         }
 
-        $subject = sprintf("Removal of SIP account %s",$this->account);
+        $subject = sprintf("Removal of SIP account %s", $this->account);
         //$this->expire_date = new DateTime('now');
 
-        $this->expire_date = date("Y-m-d H:i:s",strtotime("+2 days"));
+        $this->expire_date = date("Y-m-d H:i:s", strtotime("+2 days"));
         $this->ip = $_SERVER['REMOTE_ADDR'];
 
         $tpl_html = $this->getEmailDeleteTemplateHTML($this->reseller, $this->Preferences['language']);
@@ -7570,7 +7579,7 @@ class SipSettings {
         $mime = new Mail_mime($crlf);
 
         if ($tpl_html) {
-          $mime->setHTMLBody($bodyhtml);
+            $mime->setHTMLBody($bodyhtml);
         }
 
         $body = $mime->get();
@@ -7580,18 +7589,18 @@ class SipSettings {
 
         if ($mail->send($this->email, $hdrs, $body)) {
             if (!$skip_html) {
-                $this->Preferences['account_delete_request']=1;
+                $this->Preferences['account_delete_request'] = 1;
                 $this->saveSettings();
                 $this->getAccount($this->account);
                 print "<p>";
-                printf (_("Removal email has been sent to %s"), $this->email);
+                printf(_("Removal email has been sent to %s"), $this->email);
             }
             return 1;
         }
     }
 
     function sendEmail($skip_html=False) {
-        dprint ("SipSettings->sendEmail($this->email)");
+        dprint("SipSettings->sendEmail($this->email)");
 
         $this->getVoicemail();
         $this->getEnumMappings();
@@ -7606,7 +7615,7 @@ class SipSettings {
             return false;
         }
 
-        $subject = sprintf("SIP Account settings %s",$this->account);
+        $subject = sprintf("SIP Account settings %s", $this->account);
 
         //if ($_REQUEST['sip_filter'] == '1') {
         //    $identifier = $this->RandomIdentifier();
@@ -7632,7 +7641,7 @@ class SipSettings {
         if (!$this->store_clear_text_password) {
                     $web_password = '';
         }
-        if (in_array("free-pstn",$this->groups)) $this->allowPSTN=1; // used by smarty
+        if (in_array("free-pstn", $this->groups)) $this->allowPSTN=1; // used by smarty
 
         $this->includeSmarty();
 
@@ -7663,7 +7672,7 @@ class SipSettings {
         $mime->setTXTBody($bodyt);
 
         if ($tpl_html) {
-          $mime->setHTMLBody($bodyhtml);
+            $mime->setHTMLBody($bodyhtml);
         }
 
         $body = $mime->get();
@@ -7686,7 +7695,7 @@ class SipSettings {
     }
 
     function sendChangedEmail($skip_html=False, $fields=array()) {
-        dprint ("SipSettings->sendChangedEmail($this->email)");
+        dprint("SipSettings->sendChangedEmail($this->email)");
         //dprint_r($fields);
         $this->ip = $_SERVER['REMOTE_ADDR'];
         if (!$this->email && !$skip_html) {
@@ -7744,7 +7753,7 @@ class SipSettings {
         $mime->setTXTBody($bodyt);
 
         if ($tpl_html) {
-          $mime->setHTMLBody($bodyhtml);
+            $mime->setHTMLBody($bodyhtml);
         }
 
         $body = $mime->get();
@@ -7760,16 +7769,14 @@ class SipSettings {
     }
 
     function sendRemoveAccount() {
-
         $this->ip = $_SERVER['REMOTE_ADDR'];
-        $subject=sprintf ("The account %s was removed from IP Address: %s",$this->account, $this->ip);
+        $subject = sprintf("The account %s was removed from IP Address: %s",$this->account, $this->ip);
 
         syslog(LOG_NOTICE, $subject);
-
     }
 
     function sendPasswordReset($skip_html=False) {
-        dprint ("SipSettings->sendPasswordEmail($this->email)");
+        dprint("SipSettings->sendPasswordEmail($this->email)");
 
         $identifier = RandomIdentifier();
         $this->db = new DB_CDRTool();
@@ -7781,11 +7788,13 @@ class SipSettings {
             'ip'            => $this->ip
         );
 
-        $this->expire=date("Y-m-d H:i:s",strtotime("+30 minutes"));
-        $query=sprintf("insert into memcache set `key`='email_%s', `value`='%s', `expire`='%s'",
-        $identifier,
-        json_encode($insert_data),
-        $this->expire );
+        $this->expire = date("Y-m-d H:i:s",strtotime("+30 minutes"));
+        $query = sprintf(
+            "insert into memcache set `key`='email_%s', `value`='%s', `expire`='%s'",
+            $identifier,
+            json_encode($insert_data),
+            $this->expire
+        );
 
         $this->db->query($query);
         $this->identifier = $identifier;
@@ -7799,7 +7808,7 @@ class SipSettings {
             return false;
         }
 
-        $subject = sprintf("Password reset for %s",$this->account);
+        $subject = sprintf("Password reset for %s", $this->account);
 
         $tpl_html = $this->getEmailPasswordTemplateHTML($this->reseller, $this->Preferences['language']);
 
@@ -7844,41 +7853,41 @@ class SipSettings {
     }
 
     function checkSettings() {
-        dprint ("checkSettings()");
+        dprint("checkSettings()");
 
         foreach ($this->form_elements as $el) {
-            ${$el}=trim($_REQUEST[$el]);
+            ${$el} = trim($_REQUEST[$el]);
         }
 
         if ($accept_temporary_remain && !is_numeric($accept_temporary_remain)) {
-            $this->error=_("Invalid Expiration Period");
+            $this->error = _("Invalid Expiration Period");
             return false;
         }
 
         if ($quota && !is_numeric($quota) && !is_float($quota)) {
-            $this->error=_("Invalid Quota");
+            $this->error = _("Invalid Quota");
             return false;
         }
 
         if (!$timezone && !$this->timezone) {
-            $this->error=_("Missing Timezone");
+            $this->error = _("Missing Timezone");
             return false;
         }
 
         if (!$this->checkEmail($mailto)) {
-            $this->error=_("Invalid E-mail Address");
+            $this->error = _("Invalid E-mail Address");
             return false;
         }
 
-        $rpid=preg_replace("/[^0-9\x]/","",$rpid);
+        $rpid = preg_replace("/[^0-9\x]/", "", $rpid);
 
-        if (preg_match("/^0+([1-9]\d*)$/",$rpid,$m)) $rpid=$m[1];
+        if (preg_match("/^0+([1-9]\d*)$/", $rpid, $m)) $rpid=$m[1];
 
-        $quickdial=preg_replace("/[^0-9]/","",$quickdial);
+        $quickdial = preg_replace("/[^0-9]/", "", $quickdial);
 
-        if (!strlen($accept_temporary_group)) $accept_temporary_remain=0;
-        if (!$accept_temporary_remain) $accept_temporary_group="";
-        if (!$anonymous) $anonymous="0";
+        if (!strlen($accept_temporary_group)) $accept_temporary_remain = 0;
+        if (!$accept_temporary_remain) $accept_temporary_group = "";
+        if (!$anonymous) $anonymous = "0";
 
         return true;
     }
