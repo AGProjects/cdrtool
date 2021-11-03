@@ -313,6 +313,7 @@ CREATE PROCEDURE `insert_radacct_record`(
 	IN var_SipToTag VARCHAR(128),
 	IN var_SipFromTag VARCHAR(128),
 	IN var_SipRPID VARCHAR(255),
+	IN var_SipRPIDHeader VARCHAR(255),
 	IN var_SourceIP VARCHAR(255),
 	IN var_SourcePort VARCHAR(255),
 	IN var_CanonicalURI VARCHAR(255),
@@ -371,6 +372,7 @@ BEGIN
         @v_SipToTag = var_SipToTag,
         @v_SipFromTag = var_SipFromTag,
         @v_SipRPID = var_SipRPID,
+        @v_SipRPIDHeader = var_SipRPIDHeader,
         @v_SourceIP = var_SourceIP,
         @v_SourcePort = var_SourcePort,
         @v_CanonicalURI = var_CanonicalURI,
@@ -418,7 +420,7 @@ BEGIN
 		ENUMtld, FramedIPAddress, AcctStartDelay,
 		AcctStopDelay, SipResponseCode,
 		SipMethod, SipTranslatedRequestURI, SipToTag,
-		SipFromTag, SipRPID, SourceIP, SourcePort, CanonicalURI,
+		SipFromTag, SipRPID, SipRPIDHeader, SourceIP, SourcePort, CanonicalURI,
 		Rate, RTPStatistics, SipApplicationType, UserAgent, FromHeader)
 		VALUES
 		(NULL, ?, ?, ?, SUBSTRING_INDEX(?, '@',-1),
@@ -428,7 +430,7 @@ BEGIN
                 ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), trim(leading 'sip:' from trim(leading 'sips:' from ?)),
 		?, ?, ?, ?, ?, ?, ?, ?,
 		trim(leading 'sip:' from trim(leading 'sips:' from ?)),
-		?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?, ?, ?
+		?, ?, ?, ?, ?, ?, trim(leading 'sip:' from trim(leading 'sips:' from ?)), ?, ?, ?, ?, ?
 	)");
 
 	PREPARE add_rad FROM @instmt;
@@ -441,7 +443,7 @@ BEGIN
 		@v_ENUMtld, @v_FramedIPAddress, @v_AcctStartDelay,
 		@v_AcctStopDelay, @v_SipResponseCode, @v_SipMethod,
 		@v_SipTranslatedRequestURI, @v_SipToTag, @v_SipFromTag,
-		@v_SipRPID, @v_SourceIP, @v_SourcePort, @v_CanonicalURI,
+		@v_SipRPID, @v_SipRPIDHeader, @v_SourceIP, @v_SourcePort, @v_CanonicalURI,
 		@v_Rate, @v_RTPStatistics, @v_SipApplicationType, @v_UserAgent, @v_FromHeader;
 	DEALLOCATE PREPARE add_rad;
 
@@ -473,6 +475,7 @@ BEGIN
         @v_SipToTag = null,
         @v_SipFromTag = null,
         @v_SipRPID = null,
+        @v_SipRPIDHeader = null,
         @v_SourceIP = null,
         @v_SourcePort = null,
         @v_CanonicalURI = null,
