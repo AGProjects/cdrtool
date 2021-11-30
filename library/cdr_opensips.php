@@ -193,13 +193,14 @@ class CDRS_opensips extends CDRS
 
     function showExportHeader()
     {
+        global $perm;
+
         $fields = array(
             "id",
             "StartTime",
             "StopTime",
             "BillingParty",
             "BillingDomain",
-            "PSTNCallerId",
             "CallerParty",
             "CalledParty",
             "DestinationId",
@@ -218,7 +219,11 @@ class CDRS_opensips extends CDRS
             "Codec",
             "MediaProxy",
             "TLSCN"
-        );
+            );
+
+        if ($perm->have_perm("showCallerId")) {
+            array_push($fields, 'PAssertedIdentity');
+        } 
         printf("%s\n", implode(',', $fields));
     }
 
@@ -243,7 +248,7 @@ class CDRS_opensips extends CDRS
                 </thead>
             ";
         } else {
-            print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,RemotePartyId,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Applications,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
+            print "id,StartTime,StopTime,SIPBillingParty,SIPBillingDomain,CallerParty,CalledParty,DestinationId,DestinationName,RemoteAddress,CanonicalURI,Duration,Price,SIPProxy,Applications,Caller KBIn,Called KBIn,CallingUserAgent,CalledUserAgent,StatusCode,StatusName,Codec,Application\n";
         }
     }
 
@@ -3240,6 +3245,18 @@ class CDR_opensips extends CDR
         </div>
         ";
 
+        if ($perm->have_perm("showCallerId") && $this->SipRPID) {
+            $this->cdr_details .= sprintf(
+                "
+                <div class=\"row-fluid\">
+                    <div class=\"span3\">PAI Header: </div>
+                    <div class=\"span9\">%s</div>
+                </div>
+                ",
+                htmlentities($this->SipRPID)
+            );
+        }
+
         if ($this->tlscn) {
             $this->cdr_details .= sprintf(
                 "
@@ -3633,6 +3650,7 @@ class CDR_opensips extends CDR
     function export()
     {
         global $found;
+        global $perm;
 
         $disconnectName   = $this->CDRS->disconnectCodesDescription[$this->disconnect];
         $UserAgents       = explode("+", $this->SipUserAgents);
@@ -3644,7 +3662,6 @@ class CDR_opensips extends CDR
         print ",$this->stopTime";
         print ",$this->BillingPartyIdPrint";
         print ",$this->domain";
-        print ",$this->SipRPIDPrint";
         print ",$this->aNumberPrint";
         print ",$this->destinationPrint";
         print ",$this->DestinationId";
@@ -3664,6 +3681,10 @@ class CDR_opensips extends CDR
         print ",$this->application";
         print ",$this->MediaProxy";
         print ",$this->tlscn";
+
+        if ($perm->have_perm("showCallerId")) {
+            print ",$this->SipRPIDPrint";
+        }
         print "\n";
     }
 
@@ -3721,7 +3742,27 @@ class CDR_opensips extends CDR
             $UserAgents = explode("+", $this->SipUserAgents);
             $CallingUserAgent = trim($UserAgents[0]);
             $CalledUserAgent = trim($UserAgents[1]);
-            print "$found,$this->startTime,$this->stopTime,$this->BillingPartyId,$this->domain,$this->aNumberPrint,$this->cNumberPrint,$this->DestinationId,$this->destinationName,$this->RemoteAddressPrint,$this->duration,$this->price,$this->SipProxyServer,$this->inputTraffic,$this->outputTraffic,$CallingUserAgent,$CalledUserAgent,$this->disconnect,$disconnectName,$this->SipCodec,$this->application\n";
+            print "$found";
+            print ",$this->startTime";
+            print ",$this->stopTime";
+            print ",$this->BillingPartyId";
+            print ",$this->domain";
+            print ",$this->aNumberPrint";
+            print ",$this->cNumberPrint";
+            print ",$this->DestinationId";
+            print ",$this->destinationName";
+            print ",$this->RemoteAddressPrint";
+            print ",$this->duration";
+            print ",$this->price";
+            print ",$this->SipProxyServer";
+            print ",$this->inputTraffic";
+            print ",$this->outputTraffic";
+            print ",$CallingUserAgent";
+            print ",$CalledUserAgent";
+            print ",$this->disconnect";
+            print ",$disconnectName";
+            print ",$this->SipCodec";
+            print ",$this->application\n";
         }
     }
 
@@ -3741,9 +3782,9 @@ class CDR_opensips extends CDR
         if (isset($this->CDRS->localDomains[$this->aNumberDomain])) {
             $this->CallerIsLocal = true;
             $this->SipRPID = $this->CDRS->getCallerId($this->BillingPartyId);
-            $this->SipRPIDPrint = $this->SipRPID;
             #$this->SipRPIDPrint = quoted_printable_decode($this->SipRPID);
         }
+        $this->SipRPIDPrint = $this->SipRPID;
     }
 
     function isCalleeLocal()
