@@ -3291,7 +3291,7 @@ class CDR_opensips extends CDR
                     <div class=\"span9\">%s</div>
                 </div>
                 ",
-                htmlentities($this->SipRPID)
+                htmlentities($this->SipRPIDPrint)
             );
         }
 
@@ -3343,15 +3343,6 @@ class CDR_opensips extends CDR
                 <div class=\"row-fluid\">
                     <div class=\"span3\">ENUM TLD: </div>
                     <div class=\"span9\">$this->ENUMtld</div>
-                </div>
-            ";
-        }
-
-        if ($this->SipRPID) {
-            $this->cdr_details .= "
-                <div class=\"row-fluid\">
-                    <div class=\"span3\">Caller ID:  </div>
-                    <div class=\"span9\">$this->SipRPIDPrint</div>
                 </div>
             ";
         }
