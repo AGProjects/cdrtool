@@ -223,7 +223,7 @@ class CDRS_opensips extends CDRS
 
         if ($perm->have_perm("showCallerId")) {
             array_push($fields, 'PAssertedIdentity');
-        } 
+        }
         printf("%s\n", implode(',', $fields));
     }
 
@@ -291,7 +291,7 @@ class CDRS_opensips extends CDRS
             ${$_el} = trim($_REQUEST[$_el]);
         }
 
-        $action         = "search";
+        $action = "search";
 
         if ($this->CDRTool['filter']['gateway']) {
             $gateway = $this->CDRTool["filter"]["gateway"];
@@ -521,7 +521,7 @@ class CDRS_opensips extends CDRS
                 array("label"=>"Un-normalized calls > 0s","value"=>"unnormalized_duration"),
                 array("label"=>"One way media","value"=>"onewaymedia"),
                 array("label"=>"No media","value"=>"nomedia")
-                );
+            );
         } else {
             $durations_els = array(
                 array("label"=>"All calls","value"=>""),
@@ -531,19 +531,18 @@ class CDRS_opensips extends CDRS
                 array("label"=>"greater than 1 hour","value"=>"> 3600")
                 );
             $this->GROUPBY = array(
-                           'UserName'             => 'SIP Billing Party',
-                           'CallingStationId'     => 'SIP Caller Party',
-                           'DestinationId'        => 'SIP Destination Id',
-                           'SipApplicationType'   => 'Application',
-                               ' '                => '-------------',
-                           'hour'                 => 'Hour of day',
-                           'DAYOFWEEK'            => 'Day of Week',
-                           'DAYOFMONTH'           => 'Day of Month',
-                           'DAYOFYEAR'            => 'Day of Year',
-                           'BYMONTH'              => 'Month',
-                           'BYYEAR'               => 'Year'
-
-                           );
+                'UserName'             => 'SIP Billing Party',
+                'CallingStationId'     => 'SIP Caller Party',
+                'DestinationId'        => 'SIP Destination Id',
+                'SipApplicationType'   => 'Application',
+                ' '                => '-------------',
+                'hour'                 => 'Hour of day',
+                'DAYOFWEEK'            => 'Day of Week',
+                'DAYOFMONTH'           => 'Day of Month',
+                'DAYOFYEAR'            => 'Day of Year',
+                'BYMONTH'              => 'Month',
+                'BYYEAR'               => 'Year'
+            );
         }
 
         $flow_els = array(
@@ -680,30 +679,56 @@ class CDRS_opensips extends CDRS
 
         $this->f->add_element(
             array(
-                "name"=>"order_by",
-                "type"=>"select",
-                "options"=>$order_by_els,
-                "value"=>$order_by,
-                "size"=>"1",
-                "extrahtml"=>"class=span3"
+                "name" => "order_by",
+                "type" => "select",
+                "options" => $order_by_els,
+                "value" => $order_by,
+                "size" => "1",
+                "extrahtml" => "class=span3"
             )
         );
-        $this->f->add_element(array("name"=>"group_by",
-                                    "type"=>"select",
-                                    "options"=>$group_by_els,
-                                    "value"=>$group_by,
-                                    "size"=>"1",
-                                    "extrahtml"=>"class=span3"
-                                ));
+
+        $this->f->add_element(
+            array(
+                "name"=> "group_by",
+                "type" => "select",
+                "options" => $group_by_els,
+                "value" => $group_by,
+                "size" => "1",
+                "extrahtml" => "class=span3"
+            )
+        );
+
         $application_els = array(
-                               array("label"=>"Any Application",          "value"=>""),
-                               array("label"=>"Audio",        "value"=>"audio"),
-                               array("label"=>"Video",        "value"=>"video"),
-                               array("label"=>"Message" ,         "value"=>"message"),
-                               array("label"=>"IM Chat" ,     "value"=>"chat"),
-                               array("label"=>"Audio + Chat" ,     "value"=>"audio=2C chat"),
-                               array("label"=>"File Transfer","value"=>"file-transfer")
-                               );
+            array(
+                "label" => "Any Application",
+                "value" => ""
+            ),
+            array(
+                "label" => "Audio",
+                "value" => "audio"
+            ),
+            array(
+                "label" => "Video",
+                "value"=>"video"
+            ),
+            array(
+                "label" => "Message",
+                "value" => "message"
+            ),
+            array(
+                "label" => "IM Chat" ,
+                "value" => "chat"
+            ),
+            array(
+                "label" => "Audio + Chat" ,
+                "value" => "audio=2C chat"
+            ),
+            array(
+                "label" => "File Transfer",
+                "value" => "file-transfer"
+            )
+        );
 
         $this->f->add_element(array("name"=>"application",
                                     "type"=>"select",
@@ -803,7 +828,7 @@ class CDRS_opensips extends CDRS
                     ));
     }
 
-    function searchForm()
+    public function searchForm()
     {
         global $perm;
 
@@ -946,9 +971,7 @@ class CDRS_opensips extends CDRS
 
         print "
         <tr>
-            <td align=left>
-            <b>Application / Call Flow</b>
-            </td>
+            <td align=left><b>Application / Call Flow</b></td>
             <td valign=top>   ";
         $this->f->show_element("flow", "");
         print "&nbsp;";
@@ -962,9 +985,7 @@ class CDRS_opensips extends CDRS
 
         print "
         <tr>
-            <td align=left>
-            <b>Duration / Status</b>
-            </td>
+            <td align=left><b>Duration / Status</b></td>
             <td valign=top>   ";
         $this->f->show_element("duration", "");
         print "&nbsp;";
@@ -3097,7 +3118,12 @@ class CDR_opensips extends CDR
                         $this->durationPrint      = sec2hms($this->duration);
                     }
                 } else {
-                    $log = sprintf("Database error for query %s: %s (%s)", $query, $this->CDRS->cdrtool->Error, $this->CDRS->cdrtool->Errno);
+                    $log = sprintf(
+                        "Database error for query %s: %s (%s)",
+                        $query,
+                        $this->CDRS->cdrtool->Error,
+                        $this->CDRS->cdrtool->Errno
+                    );
                     syslog(LOG_NOTICE, $log);
                 }
             } else {
@@ -3114,7 +3140,7 @@ class CDR_opensips extends CDR
         if ($this->disconnectOrig != $this->disconnect
             && $this->disconnect
             && $this->CDRS->rating_settings['rate_on_net_diverted_calls']) {
-            $this->disconnectOrigPrint =$this->CDRS->disconnectCodesDescription[$this->disconnectOrig]." (".$this->disconnectOrig.")";
+            $this->disconnectOrigPrint = $this->CDRS->disconnectCodesDescription[$this->disconnectOrig]." (".$this->disconnectOrig.")";
         }
 
         $this->traceIn();
@@ -3132,7 +3158,7 @@ class CDR_opensips extends CDR
         }
     }
 
-    function buildCDRdetail()
+    private function buildCDRdetail()
     {
         global $perm;
         global $found;
@@ -3530,7 +3556,7 @@ class CDR_opensips extends CDR
                         "</a>";
     }
 
-    function show()
+    public function show()
     {
         $this->buildCDRdetail();
 
