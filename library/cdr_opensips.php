@@ -671,9 +671,21 @@ class CDRS_opensips extends CDRS
                             array("label"=>"Group by","value"=>"group_by")
         );
 
-        $group_by_els[]=array("label"=>"","value"=>"");
+        $group_by_els[] = array("label"=>"", "value"=>"");
 
-        while (list($k,$v)=each($this->GROUPBY)) {
+        global $perm;
+
+        if (!$perm->have_perm("showCallerId")) {
+            $order_by_els = array_filter(
+                $order_by_els,
+                function ($element) {
+                    return $element['label'] != "Remote Party Id";
+                }
+            );
+            unset($this->GROUPBY['SipRPID']);
+        }
+
+        while (list($k,$v) = each($this->GROUPBY)) {
             $group_by_els[]=array("label"=>$v,"value"=>$k);
         }
 
