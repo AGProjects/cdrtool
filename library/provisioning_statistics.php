@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2015-2020 AG Projects
+ * Copyright (c) 2015-2022 AG Projects
  * https://ag-projects.com
  * Author Tijmen de Mes
 */
