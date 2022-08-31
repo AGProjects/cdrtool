@@ -34,7 +34,7 @@ require '/etc/cdrtool/global.inc';
 // }
 
 $proxyIP     = $_REQUEST['proxyIP'];
-$callid      = $_REQUEST['callid'];
+$callid      = htmlspecialchars($_REQUEST['callid']);
 $fromtag     = $_REQUEST['fromtag'];
 $totag       = $_REQUEST['totag'];
 $cdr_source  = $_REQUEST['cdr_source'];

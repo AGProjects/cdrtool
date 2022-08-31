@@ -169,11 +169,12 @@ if ($_REQUEST['id']) {
 
     print "<p class='grey_footer clearfix'><a href=sip_settings.phtml><u>Back</u></a> to login page";
 } else {
+    $email_filter = htmlspecialchars($_REQUEST['email_filter']);
     if ($_REQUEST['email_filter'] && $_REQUEST['sip_filter']) {
         sleep(2);
-        $accounts=$RECORDS->getAccountsForPasswordReminderEncrypted(5);
+        $accounts = $RECORDS->getAccountsForPasswordReminderEncrypted(5);
     } elseif ($_REQUEST['email_filter']) {
-        $accounts=$RECORDS->getAccountsForPasswordReminderEncrypted(5);
+        $accounts = $RECORDS->getAccountsForPasswordReminderEncrypted(5);
     }
 
     $RECORDS->showPasswordReminderFormEncrypted($accounts);
@@ -181,9 +182,9 @@ if ($_REQUEST['id']) {
     if ($_REQUEST['email_filter'] || $_REQUEST['sip_filter']) {
         if ($count=count($accounts)) {
             if ($count == "1") {
-                printf("<div class='alert alert-success'><p>Found a SIP account having email address set to <strong>'%s'</strong>:</p>", trim($_REQUEST['email_filter']));
+                printf("<div class='alert alert-success'><p>Found a SIP account having email address set to <strong>'%s'</strong>:</p>", trim($email_filter));
             } else {
-                printf("<div class='alert alert-success'><p>Found multiple SIP accounts having email address set to <strong>'%s'</strong>:</p>", trim($_REQUEST['email_filter']));
+                printf("<div class='alert alert-success'><p>Found multiple SIP accounts having email address set to <strong>'%s'</strong>:</p>", trim($email_filter));
             }
             //printf ("<p>Found a SIP account having email address set to '%s'",trim($_REQUEST['email_filter']));
             print "<script type=\"text/javascript\">
@@ -210,7 +211,7 @@ if ($_REQUEST['id']) {
                 } else {
                     print "Login reminder and password reset have been sent to ";
                 }
-                print $_REQUEST['email_filter'];
+                print $email_filter;
                 print "</li>";
                 print "<script type=\"text/javascript\">
                     $('[name=sip_filter]').attr('disabled', 'disabled');
