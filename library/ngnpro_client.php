@@ -3557,24 +3557,23 @@ class SipAccounts extends Records {
         }
     }
 
-    function showPasswordReminderForm($accounts=array()) {
-
-        printf ("
-        <div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>");
+    function showPasswordReminderForm($accounts = array())
+    {
+        print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
 
         print _("Login account reminder");
         print "</h2></div>
             <form class=form-inline method=post>";
 
         print _("<p>Fill in the e-mail address used during the registration of the SIP account:</p>");
-        printf ("
-        <input type=text size=35 name='email_filter' value='%s' placeholder='",
-        $this->filters['email']);
+        printf(
+            "<input type=text size=35 name='email_filter' value='%s' placeholder='",
+            $this->filters['email']
+        );
         print _("Email address");
         print "'>";
         if (count($accounts) > 1 || $_REQUEST['sip_filter']) {
-            printf ("<br /><br />
-                <div class=\"alert alert-warning\"><strong>");
+            print "<br /><br /><div class=\"alert alert-warning\"><strong>";
             print _("Warning");
             print "</strong> ";
             print _("More than one account uses this email address. If you wish to receive the password for a particular account fill in the SIP account below, default it has been send it to the first 5 accounts found");
@@ -3586,18 +3585,13 @@ class SipAccounts extends Records {
             );
         }
 
-        printf ("
-            <input class='btn btn-primary' type=submit value='Submit'>
-        </form>
-        ");
-
+        print "<input class='btn btn-primary' type=submit value='Submit'></form>";
     }
 
-    function showPasswordReminderUpdateFormEncrypted($id, $account) {
-
+    function showPasswordReminderUpdateFormEncrypted($id, $account)
+    {
         if ($account) {
-            printf ("
-            <div class=row-fluid><div id='wrapper2'><div class=\"page-header\"><h2>");
+            print "<div class=row-fluid><div id='wrapper2'><div class=\"page-header\"><h2>";
 
             print _("Update passwords");
             print "<small>";
@@ -3629,16 +3623,16 @@ class SipAccounts extends Records {
             print "'type=text size=35 name='web_password' type='password' value=''>";
             print "</div></div></div>";
             print "  <div class=\"control-group\"><div class=\"controls\">";
-            printf ("
+            print "
                 <button class='btn btn-primary' type=submit>Submit</button></div></div>
             </form></div>
-            ");
+            ";
         }
     }
 
-    function showPasswordReminderFormEncrypted($accounts=array()) {
-        printf ("
-        <div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>");
+    function showPasswordReminderFormEncrypted($accounts = array())
+    {
+        print "<div class=row-fluid><div id=wrapper2><div class=\"page-header\"><h2>";
 
         print _("Sip Account Reminder/Password Reset");
         print "</h2></div><div class=row-fluid>
@@ -3647,17 +3641,15 @@ class SipAccounts extends Records {
         //print _("<p>Please fill in the SIP account and e-mail address used during the registration of the SIP account to receive a login reminder and a possiblity to reset your passwords.</p>");
 
         if (count($accounts) < 1 && $_REQUEST['sip_filter'] && $_REQUEST['email_filter']) {
-            printf ("
-                <div class=\"alert alert-error\"><strong>");
+            print "<div class=\"alert alert-error\"><strong>";
             print _("Error");
             print "</strong><br /> ";
             print _("The email adress does not match email address in the SIP account, or the SIP account does not exist.");
             print "<br/>";
             print _("An email has not been sent.");
             print "</div>";
-        } else if(count($accounts) < 1 && $_REQUEST['email_filter']) {
-            printf ("
-                <div class=\"alert alert-error\"><strong>");
+        } elseif (count($accounts) < 1 && $_REQUEST['email_filter']) {
+            print "<div class=\"alert alert-error\"><strong>";
             print _("Error");
             print "</strong>: ";
             print _("The email adress does not match the email address in any SIP account.");
@@ -3676,15 +3668,14 @@ class SipAccounts extends Records {
         print "'>";
         print "<input rel='popover' title='' data-original-title='Email address' data-trigger='focus' data-toggle='popover' data-content='";
         print _("Please fill in the e-mail address used during the registration of the SIP account ");
-        printf ("' type=text size=35 name='email_filter' class='input-block-level' value='%s' placeholder='",
-        $this->filters['email']);
+        printf(
+            "' type=text size=35 name='email_filter' class='input-block-level' value='%s' placeholder='",
+            $this->filters['email']
+        );
         print _("Email Address");
         print "'>";
         print "<input type='hidden' name='password_reset' value='on'>";
-        printf ("<center>
-            <button id='submit' class='btn btn-primary' type=submit>Send Reminder</button></center>
-        </form></div>
-        ");
+        print "<center><button id='submit' class='btn btn-primary' type=submit>Send Reminder</button></center></form></div>";
 
         if(count($accounts) < 1 && $_REQUEST['sip_filter']) {
             print "<script type=\"text/javascript\">
@@ -3695,40 +3686,46 @@ class SipAccounts extends Records {
             //}
             </script>";
         }
-
     }
 
-    function getAccountsForPasswordReminderEncrypted($maximum_accounts=5) {
-
+    function getAccountsForPasswordReminderEncrypted($maximum_accounts = 5)
+    {
         $accounts=array();
 
         //$filter  = array('email' => $this->filters['email']);
 
         if ($_REQUEST['sip_filter']) {
-            list($username,$domain)=explode('@',trim($_REQUEST['sip_filter']));
+            list($username, $domain) = explode('@', trim($_REQUEST['sip_filter']));
             if ($username && $domain) {
-                $filter  = array('username' => $username,
-                                 'domain'   => $domain,
-                                 'email' => $this->filters['email']
-                                 );
+                $filter = array(
+                    'username' => $username,
+                    'domain' => $domain,
+                    'email' => $this->filters['email']
+                );
             }
         } else {
-            $filter  = array('email' => $this->filters['email']);
+            $filter = array('email' => $this->filters['email']);
         }
 
-        $range   = array('start' => 0,
-                         'count' => $maximum_accounts);
+        $range = array(
+            'start' => 0,
+            'count' => $maximum_accounts
+        );
 
-        $orderBy = array('attribute' => 'changeDate',
-                         'direction' => 'DESC');
+        $orderBy = array(
+            'attribute' => 'changeDate',
+            'direction' => 'DESC'
+        );
 
-        $Query   = array('filter'  => $filter,
-                         'orderBy' => $orderBy,
-                         'range'   => $range);
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getAccounts');
-        $result  = $this->SoapEngine->soapclient->getAccounts($Query);
+        $result = $this->SoapEngine->soapclient->getAccounts($Query);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -3737,7 +3734,7 @@ class SipAccounts extends Records {
             $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
         } else {
-            $i=0;
+            $i = 0;
 
             while ($i < $result->total)  {
                 if (!$result->accounts[$i]) break;
@@ -3752,14 +3749,14 @@ class SipAccounts extends Records {
         return $accounts;
     }
 
-    function getAccountsForPasswordReminder($maximum_accounts=5) {
-
-        $accounts=array();
+    function getAccountsForPasswordReminder($maximum_accounts = 5)
+    {
+        $accounts = array();
 
         $filter  = array('email' => $this->filters['email']);
 
         if ($_REQUEST['sip_filter']) {
-            list($username,$domain)=explode('@',trim($_REQUEST['sip_filter']));
+            list($username, $domain) = explode('@', trim($_REQUEST['sip_filter']));
             if ($username && $domain) {
                 $filter  = array( 'username' => $username,
                                   'domain'   => $domain
