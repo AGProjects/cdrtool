@@ -3580,10 +3580,10 @@ class SipAccounts extends Records {
             print _("More than one account uses this email address. If you wish to receive the password for a particular account fill in the SIP account below, default it has been send it to the first 5 accounts found");
             print "</div>";
 
-            printf ("
-            <input type=text size=35 name='sip_filter' value='%s'>
-            ",
-            $_REQUEST['sip_filter']);
+            printf(
+                "<input type=text size=35 name='sip_filter' value='%s'>",
+                htmlspecialchars($_REQUEST['sip_filter'])
+            );
         }
 
         printf ("
@@ -3668,8 +3668,10 @@ class SipAccounts extends Records {
         print "
             <input rel='popover' title='' data-original-title='SIP Account' data-trigger='focus' data-toggle='popover' data-content='";
         print _("If known, please fill in the SIP account name to receive a password reminder");
-        printf ("' type=text size=35 class='input-block-level' name='sip_filter' value='%s' placeholder='",
-            $_REQUEST['sip_filter']);
+        printf(
+            "' type=text size=35 class='input-block-level' name='sip_filter' value='%s' placeholder='",
+            htmlspecialchars($_REQUEST['sip_filter'])
+        );
         print _("SIP Account");
         print "'>";
         print "<input rel='popover' title='' data-original-title='Email address' data-trigger='focus' data-toggle='popover' data-content='";
