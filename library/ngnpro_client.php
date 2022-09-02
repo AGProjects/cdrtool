@@ -726,7 +726,8 @@ class SoapEngine
     }
 }
 
-class Records {
+class Records
+{
     public $maxrowsperpage     = '20';
     public $sip_settings_page  = 'sip_settings.phtml';
     public $allowedDomains     = array();
@@ -883,7 +884,8 @@ class Records {
     {
     }
 
-    function showCustomerSelection() {
+    function showCustomerSelection()
+    {
         $this->showCustomerForm();
     }
 
@@ -1375,7 +1377,7 @@ class Records {
     function showCustomerForm($name = 'customer_filter')
     {
         if ($this->login_credentials['customer'] != $this->login_credentials['reseller']) {
-            printf(" %s ",$this->login_credentials['customer']);
+            printf(" %s ", $this->login_credentials['customer']);
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
@@ -1405,11 +1407,11 @@ class Records {
     {
         if (!$this->adminonly) return;
         if ($this->login_credentials['reseller']) {
-            printf(" %s ",$this->login_credentials['reseller']);
+            printf(" %s ", $this->login_credentials['reseller']);
         } else {
             if (count($this->resellers)) {
-                $select_reseller[$this->filters['reseller']]='selected';
-                printf("<select class=span1 name=%s>",$name);
+                $select_reseller[$this->filters['reseller']] = 'selected';
+                printf("<select class=span1 name=%s>", $name);
                 print("<option>");
                 foreach (array_keys($this->resellers) as $_res) {
                     printf(
@@ -1436,7 +1438,8 @@ class Records {
         print _("Owner");
     }
 
-    function addFiltersToURL() {
+    function addFiltersToURL()
+    {
         $url = '';
         $j=0;
         foreach(array_keys($this->filters) as $filter) {
@@ -1450,7 +1453,8 @@ class Records {
         return $url;
     }
 
-    function printFiltersToForm() {
+    function printFiltersToForm()
+    {
         foreach(array_keys($this->filters) as $filter) {
             if (strlen(trim($this->filters[$filter]))) {
                 printf("<input type=hidden name=%s_filter value='%s'>",$filter,trim($this->filters[$filter]));
@@ -1458,56 +1462,63 @@ class Records {
         }
     }
 
-    function getRecord($domain) {
+    function getRecord($domain)
+    {
     }
 
-    function updateRecord () {
+    function updateRecord() 
+    {
     }
 
-    function copyRecord () {
+    function copyRecord()
+    {
     }
 
     function showRecord($record) {
     }
 
-    function RandomString($len=11) {
-        $alf=array("a","b","c","d","e","f",
+    function RandomString($len = 11)
+    {
+        $alf = array("a","b","c","d","e","f",
                "h","i","j","k","l","m",
                "n","p","r","s","t","w",
                "x","y","1","2","3","4",
                "5","6","7","8","9");
-        $i=0;
-        while($i < $len) {
+        $i = 0;
+        while ($i < $len) {
             srand((double)microtime()*1000000);
-            $randval = rand(0,28);
-            $string="$string"."$alf[$randval]";
+            $randval = rand(0, 28);
+            $string = "$string"."$alf[$randval]";
             $i++;
         }
         return $string;
     }
 
-    function RandomNumber($len=5) {
-        $alf=array("0","1","2","3","4","5",
-                   "9","8","7","6");
-        $i=0;
-        while($i < $len) {
-            srand((double)microtime()*1000000);
+    function RandomNumber($len = 5)
+    {
+        $alf = array("0","1","2","3","4","5",
+                     "9","8","7","6");
+        $i = 0;
+        while ($i < $len) {
+            srand((double)microtime() * 1000000);
             $randval = rand(0,9);
-            $string="$string"."$alf[$randval]";
+            $string = "$string"."$alf[$randval]";
             $i++;
         }
         return $string;
     }
 
-    function validDomain($domain) {
-           if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/",$domain)) {
+    function validDomain($domain)
+    {
+        if (!preg_match ("/^[A-Za-z0-9-.]{1,}\.[A-Za-z]{2,}$/", $domain)) {
             return false;
         }
 
         return true;
     }
 
-    function getCarriers () {
+    function getCarriers()
+    {
         if (count($this->carriers)) return true;
 
         $Query=array('filter'  => array('name'=>''),
@@ -1536,7 +1547,8 @@ class Records {
         }
     }
 
-    function getGateways () {
+    function getGateways()
+    {
         if (count($this->gateways)) return true;
 
         $Query=array('filter'  => array('name'=>''),
@@ -1549,7 +1561,7 @@ class Records {
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getGateways');
-        $result     = $this->SoapEngine->soapclient->getGateways($Query);
+        $result = $this->SoapEngine->soapclient->getGateways($Query);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1560,20 +1572,23 @@ class Records {
             return false;
         } else {
             foreach ($result->gateways as $_gateway) {
-                $this->gateways[$_gateway->id]=sprintf("%s, Carrier %s",$_gateway->name,$_gateway->carrier);
+                $this->gateways[$_gateway->id] = sprintf("%s, Carrier %s", $_gateway->name, $_gateway->carrier);
             }
         }
     }
 
-    function updateBefore () {
+    function updateBefore()
+    {
         return true;
     }
 
-    function updateAfter () {
+    function updateAfter()
+    {
         return true;
     }
 
-    function showCustomerTextBox () {
+    function showCustomerTextBox()
+    {
         print "<div class='input-prepend'><span class='add-on'>Owner</span>";
         if ($this->adminonly) {
             $this->showCustomerForm('customer');
@@ -1585,7 +1600,8 @@ class Records {
         }
     }
 
-    function makebar($w) {
+    function makebar($w)
+    {
         $return = "<div style='width:150px' class=\"progress\">";
         if ($w < 0) $w = 0;
         if ($w > 100) $w = 100;
@@ -1594,7 +1610,7 @@ class Records {
         if ($width < 50) {
             $color = "black";
             $return .= "<div style='width:150px' class=\"progress progress-info progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
-        } else if ($width < 70) {
+        } elseif ($width < 70) {
             $return .= "<div style='width:150px' class=\"progress progress-warning progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
         } else {
             $return .= "<div style='width:150px' class=\"progress progress-danger progress-striped\"><div class=\"bar\" style=\"width: $width%\"></div>";
@@ -1603,19 +1619,18 @@ class Records {
         return $return;
     }
 
-    function customerFromLogin($dictionary=array()) {
-
+    function customerFromLogin($dictionary = array())
+    {
         if ($this->login_credentials['reseller']) {
             $reseller = $this->login_credentials['reseller'];
 
             if ($dictionary['customer']) {
                 $customer = $dictionary['customer'];
-            } else if ($_REQUEST['customer']) {
+            } elseif ($_REQUEST['customer']) {
                 $customer = $_REQUEST['customer'];
             } else {
                 $customer = $this->login_credentials['customer'];
             }
-
         } else {
             if ($dictionary['reseller']) {
                 $reseller = $dictionary['reseller'];
@@ -1633,10 +1648,10 @@ class Records {
         if (!$customer) $customer = $reseller;
 
         return array(intval($customer),intval($reseller));
-
     }
 
-    function getCustomerProperties($customer='') {
+    function getCustomerProperties($customer = '')
+    {
         if (!$customer) $customer=$this->customer;
 
         $log=sprintf("getCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
@@ -1675,7 +1690,8 @@ class Records {
         return true;
     }
 
-    function setCustomerProperties($properties,$customer='') {
+    function setCustomerProperties($properties, $customer = '')
+    {
         if (!$customer) $customer=$this->customer;
 
         $log=sprintf("setCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
@@ -1690,7 +1706,7 @@ class Records {
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
         $this->log_action('setProperties');
-        $result     = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer),$properties);
+        $result = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer), $properties);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1704,7 +1720,8 @@ class Records {
         return true;
     }
 
-    function getCustomerProperty($name='') {
+    function getCustomerProperty($name = '')
+    {
         if (!count($this->loginProperties)) return false;
 
         foreach ($this->loginProperties as $_property) {
@@ -1716,7 +1733,8 @@ class Records {
         return false;
     }
 
-    function getResellerProperty($name='') {
+    function getResellerProperty($name = '')
+    {
         if (!count($this->resellerProperties)) return false;
 
         foreach ($this->resellerProperties as $_property) {
@@ -1728,86 +1746,94 @@ class Records {
         return false;
     }
 
-    function checkRecord() {
+    function checkRecord()
+    {
         return true;
     }
 
-    function showWelcomeMessage() {
+    function showWelcomeMessage()
+    {
         if (!strlen($this->SoapEngine->welcome_message)) return ;
         printf ("%s",$this->SoapEngine->welcome_message);
     }
 
-    function print_w($obj) {
+    function print_w($obj)
+    {
         print "<pre>\n";
         print_r($obj);
         print "</pre>\n";
     }
 
-    function hide_html() {
+    function hide_html()
+    {
         return false;
     }
 }
 
-class SipDomains extends Records {
+class SipDomains extends Records
+{
     var $FieldsAdminOnly=array(
-                              'reseller' => array('type'=>'integer'),
-                              );
+        'reseller' => array('type'=>'integer'),
+    );
 
     var $Fields=array(
-                              'customer'    => array('type'=>'integer'),
-                              'certificate' =>  array('type'=>'text'),
-                              'private_key' =>  array('type'=>'text'),
-                              'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
-                              'verify_cert' => array('type'=>'boolean'),   
-                              'require_cert' => array('type'=>'boolean')
-                              );
+        'customer'    => array('type'=>'integer'),
+        'certificate' =>  array('type'=>'text'),
+        'private_key' =>  array('type'=>'text'),
+        'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
+        'verify_cert' => array('type'=>'boolean'),   
+        'require_cert' => array('type'=>'boolean')
+    );
 
-    function SipDomains($SoapEngine) {
+    function SipDomains($SoapEngine)
+    {
         dprint("init Domains");
 
-        $this->filters   = array(
-                               'domain'       => strtolower(trim($_REQUEST['domain_filter']))
-                               );
+        $this->filters = array(
+            'domain'       => strtolower(trim($_REQUEST['domain_filter']))
+        );
 
         $this->Records($SoapEngine);
 
         // keep default maxrowsperpage
-        $this->sortElements=array('changeDate' => 'Change date',
-                                    'domain'     => 'Domain'
-                                 );
-
-
+        $this->sortElements = array(
+            'changeDate' => 'Change date',
+            'domain'     => 'Domain'
+        );
     }
 
-    function listRecords() {
-
+    function listRecords()
+    {
         $this->showSeachForm();
 
         // Filter
-        $filter=array(
-                      'domain'    => $this->filters['domain'],
-                      'customer'  => intval($this->filters['customer']),
-                      'reseller'  => intval($this->filters['reseller'])
-                      );
+        $filter = array(
+            'domain'    => $this->filters['domain'],
+            'customer'  => intval($this->filters['customer']),
+            'reseller'  => intval($this->filters['reseller'])
+        );
 
         // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
         dprint_r($Query);
 
         // Insert credetials
@@ -1815,7 +1841,7 @@ class SipDomains extends Records {
         $this->log_action('getDomains');
 
         // Call function
-        $result     = $this->SoapEngine->soapclient->getDomains($Query);
+        $result = $this->SoapEngine->soapclient->getDomains($Query);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -1854,7 +1880,7 @@ class SipDomains extends Records {
 
             if (!$this->next)  $this->next=0;
 
-            if ($this->rows > $this->maxrowsperpage)  {
+            if ($this->rows > $this->maxrowsperpage) {
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
@@ -1865,104 +1891,111 @@ class SipDomains extends Records {
 
             if ($this->rows) {
                 while ($i < $maxrows)  {
-
                     if (!$result->domains[$i]) break;
                     $domain = $result->domains[$i];
 
                     $index = $this->next+$i+1;
 
-                    $delete_url = $this->url.sprintf("&service=%s&action=Delete&domain_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($domain->domain)
-                    );
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain->domain) {
-                        $delete_url .= "&confirm=1";
-                        $deleteText = "<font color=red>Confirm</font>";
-                    } else {
-                        $deleteText = "Delete";
-                    }
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['domain_filter'] == $domain->domain) {
-                        $delete_url .= "&confirm=1";
-                        $deleteText = "<font color=red>Confirm</font>";
-                    } else {
-                        $deleteText = "Delete";
-                    }
-
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($domain->customer)
-                    );
-
-                    $_sip_domains_url = $this->url.sprintf("&service=sip_domains@%s&domain_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($domain->domain)
-                    );
-
-                    $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&domain_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($domain->domain)
-                    );
-
-                    $_sip_aliases_url = $this->url.sprintf("&service=sip_aliases@%s&alias_domain_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($domain->domain)
-                    );
-                    if ($this->adminonly) {
-                        $export_url = $this->url.sprintf("&service=%s&action=Export&domain_filter=%s",
+                    $delete_url = $this->url.sprintf(
+                        "&service=%s&action=Delete&domain_filter=%s",
                         urlencode($this->SoapEngine->service),
                         urlencode($domain->domain)
+                    );
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                        $delete_url .= "&confirm=1";
+                        $deleteText = "<font color=red>Confirm</font>";
+                    } else {
+                        $deleteText = "Delete";
+                    }
+
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['domain_filter'] == $domain->domain) {
+                        $delete_url .= "&confirm=1";
+                        $deleteText = "<font color=red>Confirm</font>";
+                    } else {
+                        $deleteText = "Delete";
+                    }
+
+                    $_customer_url = $this->url.sprintf(
+                        "&service=customers@%s&customer_filter=%s",
+                        urlencode($this->SoapEngine->customer_engine),
+                        urlencode($domain->customer)
+                    );
+
+                    $_sip_domains_url = $this->url.sprintf(
+                        "&service=sip_domains@%s&domain_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($domain->domain)
+                    );
+
+                    $_sip_accounts_url = $this->url.sprintf(
+                        "&service=sip_accounts@%s&domain_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($domain->domain)
+                    );
+
+                    $_sip_aliases_url = $this->url.sprintf(
+                        "&service=sip_aliases@%s&alias_domain_filter=%s",
+                        urlencode($this->SoapEngine->soapEngine),
+                        urlencode($domain->domain)
+                    );
+                    if ($this->adminonly) {
+                        $export_url = $this->url.sprintf(
+                            "&service=%s&action=Export&domain_filter=%s",
+                            urlencode($this->SoapEngine->service),
+                            urlencode($domain->domain)
                         );
 
-                        printf("
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>Sip accounts</a></td>
-                        <td><a href=%s>Sip aliases</a></td>
-                        <td>%s</td>
-                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                        <td><a class='btn-small btn-danger' href=%s>Export</a></td>
-                        </tr>",
-                        $index,
-                        $_customer_url,
-                        $domain->customer,
-                        $domain->reseller,
-                        $_sip_domains_url,
-                        $domain->domain,
-                        $_sip_accounts_url,
-                        $_sip_aliases_url,
-                        $domain->changeDate,
-                        $delete_url,
-                        $deleteText,
-                        $export_url
+                        printf(
+                            "
+                            <tr>
+                            <td>%s</td>
+                            <td><a href=%s>%s.%s</a></td>
+                            <td><a href=%s>%s</a></td>
+                            <td><a href=%s>Sip accounts</a></td>
+                            <td><a href=%s>Sip aliases</a></td>
+                            <td>%s</td>
+                            <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                            <td><a class='btn-small btn-danger' href=%s>Export</a></td>
+                            </tr>",
+                            $index,
+                            $_customer_url,
+                            $domain->customer,
+                            $domain->reseller,
+                            $_sip_domains_url,
+                            $domain->domain,
+                            $_sip_accounts_url,
+                            $_sip_aliases_url,
+                            $domain->changeDate,
+                            $delete_url,
+                            $deleteText,
+                            $export_url
                         );
                     } else {
-                        printf("
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>Sip accounts</a></td>
-                        <td><a href=%s>Sip aliases</a></td>
-                        <td>%s</td>
-                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                        </tr>",
-                        $index,
-                        $_customer_url,
-                        $domain->customer,
-                        $domain->reseller,
-                        $_sip_domains_url,
-                        $domain->domain,
-                        $_sip_accounts_url,
-                        $_sip_aliases_url,
-                        $domain->changeDate,
-                        $delete_url,
-                        $deleteText
+                        printf(
+                            "
+                            <tr>
+                            <td>%s</td>
+                            <td><a href=%s>%s.%s</a></td>
+                            <td><a href=%s>%s</a></td>
+                            <td><a href=%s>Sip accounts</a></td>
+                            <td><a href=%s>Sip aliases</a></td>
+                            <td>%s</td>
+                            <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                            </tr>",
+                            $index,
+                            $_customer_url,
+                            $domain->customer,
+                            $domain->reseller,
+                            $_sip_domains_url,
+                            $domain->domain,
+                            $_sip_accounts_url,
+                            $_sip_aliases_url,
+                            $domain->changeDate,
+                            $delete_url,
+                            $deleteText
                         );
                     }
 
@@ -1982,14 +2015,17 @@ class SipDomains extends Records {
         }
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
         printf (" <div class='input-prepend'><span class=add-on>SIP domain</span><input class=span2 type=text size=20 name=domain_filter value='%s'></div>",$this->filters['domain']);
     }
 
-    function exportRecord($dictionary=array()) {
+    function exportRecord($dictionary = array())
+    {
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary = array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
