@@ -251,6 +251,9 @@ $DATASOURCES = array(
         "domainTranslationDestination"  => array(
             "gw02.domain.com"      => "pstn.domain.com" // translate destination
         ),
+        "proxyTranslation_IP"  => array(
+            "10.0.0.1"      => "10.0.0.2"               // translate proxy ip for trace links
+        ),
         "purgeCDRsAfter"        => 120,                     // how many days to keep old CDRs, valid only when Radius tables are not atomatically rotated
         "db_registrar"          => "DB_opensips",           // opensips location database
         "enableThor"            => false,                   // set to true if using SIP Thor
