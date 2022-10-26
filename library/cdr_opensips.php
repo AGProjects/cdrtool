@@ -2083,7 +2083,10 @@ class CDRS_opensips extends CDRS
     {
 
         if (!$this->db_subscribers) {
-            $log=printf("Error: Cannot load trusted peers because db_subscribers is not defined in datasource %s", $this->cdr_source);
+            $log = printf(
+                "Error: Cannot load trusted peers because db_subscribers is not defined in datasource %s",
+                $this->cdr_source
+            );
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -2147,7 +2150,12 @@ class CDRS_opensips extends CDRS
             $query = sprintf("select * from sip_accounts where username = '%s' and domain = '%s'", addslashes($username), addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
-                $log = sprintf("Database error for query 1 %s: %s (%s)", $query, $this->AccountsDB->Error, $this->AccountsDB->Errno);
+                $log = sprintf(
+                    "Database error for query 1 %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
@@ -2163,7 +2171,12 @@ class CDRS_opensips extends CDRS
             $query=sprintf("select quota from subscriber where username = '%s' and domain = '%s'", addslashes($username), addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf("Database error for query %s: %s (%s)", $query, $this->AccountsDB->Error, $this->AccountsDB->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
@@ -2188,7 +2201,7 @@ class CDRS_opensips extends CDRS
         }
 
         if (!is_object($this->AccountsDB)) {
-            $log=printf("Error: AccountsDB is not a valid database object");
+            $log = printf("Error: AccountsDB is not a valid database object");
             print $log;
             syslog(LOG_NOTICE, $log);
             return false;
@@ -2197,10 +2210,15 @@ class CDRS_opensips extends CDRS
         list($username, $domain) = explode("@", $account);
 
         if ($this->enableThor) {
-            $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'", addslashes($username), addslashes($domain));
+            $query = sprintf("select * from sip_accounts where username = '%s' and domain = '%s'", addslashes($username), addslashes($domain));
 
             if (!$this->AccountsDB->query($query)) {
-                $log = sprintf("Database error for query2 %s: %s (%s)", $query, $this->AccountsDB->Error, $this->AccountsDB->Errno);
+                $log = sprintf(
+                    "Database error for query2 %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
@@ -2278,7 +2296,12 @@ class CDRS_opensips extends CDRS
             }
 
             if (!$this->AccountsDB->query($query)) {
-                $log=sprintf("Database error for query %s: %s (%s)", $query, $this->AccountsDB->Error, $this->AccountsDB->Errno);
+                $log = sprintf(
+                    "Database error for query %s: %s (%s)",
+                    $query,
+                    $this->AccountsDB->Error,
+                    $this->AccountsDB->Errno
+                );
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
