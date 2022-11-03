@@ -3217,19 +3217,12 @@ class CDR_opensips extends CDR
         );
 
         if ($this->CDRS->sipTrace) {
-            $proxy_server = $this->SipProxyServer;
-            if (is_array($this->CDRS->DATASOURCES[$this->cdr_source]['proxyTranslation_IP'])
-                && isset($this->CDRS->DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$this->SipProxyServer])
-                && strlen($this->CDRS->DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$this->SipProxyServer])
-            ) {
-                $proxy_server = $this->CDRS->DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$this->SipProxyServer];
-            }
             $trace_query = array(
                 'cdr_source'    => $this->CDRS->sipTrace,
                 'callid'        => quoted_printable_decode($this->callId),
                 'fromtag'       => quoted_printable_decode($this->SipFromTag),
                 'totag'         => quoted_printable_decode($this->SipToTag),
-                'proxyIP'       => $proxy_server
+                'proxyIP'       => $this->SipProxyServer
             );
 
             $this->traceLink = sprintf(
@@ -4075,6 +4068,13 @@ class SIP_trace
                 return false;
             }
 
+            global $DATASOURCES;
+            if (is_array($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'])
+                && isset($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP])
+                && strlen($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP])
+            ) {
+                $proxyIP = $DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP];
+            }
             if (!is_object($this->soapclient)) {
                 print "Error: soap client is not defined.";
                 return false;
@@ -5059,6 +5059,14 @@ class Media_trace
                     </div>
                 ";
                 return false;
+            }
+
+            global $DATASOURCES;
+            if (is_array($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'])
+                && isset($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP])
+                && strlen($DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP])
+            ) {
+                $proxyIP = $DATASOURCES[$this->cdr_source]['proxyTranslation_IP'][$proxyIP];
             }
 
             if (!is_object($this->soapclient)) {
