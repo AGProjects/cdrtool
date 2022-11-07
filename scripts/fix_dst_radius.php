@@ -50,7 +50,7 @@ function sql_logger()
 
 $filename = basename(__FILE__);
 $log_dir = "/var/spool/cdrtool/dst-updater";
-$log_file = $log_dir.'/undo-dst_updater'.date('dMYHi').'.sql';
+$log_file = $log_dir.'/undo-dst_updater'.date('dmYHis').'.sql';
 
 $use_syslog = false;
 $verbose = 0;
@@ -245,7 +245,7 @@ foreach ($DATASOURCES as $key => $value) {
                         'start_time' => $start_time,
                         'stop_time' => $stop_time,
                         'fixed_duration' => $fixed_duration,
-                        'fixed_stop_time' => $stop_datetime->format("Y-m-d H:i:s"),
+                        'fixed_stop_time' => $stop_time,
                         'duration' => $duration
                     ];
 
