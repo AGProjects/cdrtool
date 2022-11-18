@@ -5868,15 +5868,15 @@ class SipSettings {
         }
     }
 
-    function showCallsTab() {
-
+    public function showCallsTab()
+    {
         $this->getHistory();
 
         if ($this->calls) {
-            $chapter=sprintf(_("Call Statistics"));
+            $chapter = sprintf(_("Call Statistics"));
             $this->showChapter($chapter);
 
-            $calltime=normalizeTime($this->duration);
+            $calltime = normalizeTime($this->duration);
 
             print "
             <tr>
@@ -5912,27 +5912,24 @@ class SipSettings {
         }
 
         if ($this->enable_thor) {
-            $cdr_source   = 'sipthor';
+            $cdr_source = 'sipthor';
         } else {
-            $cdr_source   = 'sip_trace';
+            $cdr_source = 'sip_trace';
         }
 
         if (count($this->calls_received)) {
-            $chapter=sprintf(_("Incoming"));
+            $chapter = sprintf(_("Incoming"));
             $this->showChapter($chapter);
 
-            $j=0;
             print "<table class='table table-striped table-condensed'>";
-            foreach (array_keys($this->calls_received) as $call) {
-                $j++;
-
-                $uri         = $this->calls_received[$call]['remoteParty'];
-                $media="";
-                foreach ($this->calls_received[$call]['media'] as $m) {
-                     $media.="$m,";
+            foreach ($this->calls_received as $item => $call) {
+                $uri = $call['remoteParty'];
+                $media = "";
+                foreach ($call['media'] as $m) {
+                     $media .= "$m,";
                 }
-                $media=quoted_printable_decode($media);
-                $media=rtrim($media,",");
+                $media = quoted_printable_decode($media);
+                $media = rtrim($media, ",");
 
                 $duration    = normalizeTime($this->calls_received[$call]['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
@@ -5940,117 +5937,161 @@ class SipSettings {
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
-                $sessionId    = urlencode($this->calls_received[$call]['sessionId']);
-                $fromTag      = urlencode($this->calls_received[$call]['fromTag']);
-                $toTag        = urlencode($this->calls_received[$call]['toTag']);
-                $proxyIP      = urlencode($this->calls_received[$call]['proxyIP']);
-                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'siptrace',
-                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Server Logs</a>";
+                $phonebookQuery = array(
+                    'tab' => 'contacts',
+                    'task' => 'add',
+                    'uri'  => $urlURI,
+                    'search_text' => $urlURI,
+                );
 
-                if (!$this->calls_received[$call]['duration']) {
+                $traceQuery = array(
+                    'cdr_source'    => $cdr_source,
+                    'callid'        => $call['sessionId'],
+                    'fromtag'       => $call['fromTag'],
+                    'totag'         => $call['toTag'],
+                    'proxyIP'       => $call['proxyIP']
+                );
+
+                $traceLink = sprintf(
+                    "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?%s', '_blank','toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1300px,height=600')\">
+                    Server Logs</a>",
+                    http_build_query($traceQuery)
+                );
+
+                if (!$call['duration']) {
                     $htmlURI = "<font color=red>$htmlURI</font>";
                 }
 
-                $rr=floor($j/2);
-                $mod=$j-$rr*2;
+                $rr = floor($item / 2);
+                $mod = $item - $rr * 2;
 
                 if ($mod ==0) {
-                    $_class='odd';
+                    $_class = 'odd';
                 } else {
-                    $_class='even';
+                    $_class = 'even';
                 }
-
-                print "
-                <tr class=$_class>
-                <td width=175>$htmlDate</td>
-                <td width=12><nobr>$dialURI</nobr></td>
-                <td style='text-align:right' width=60>$duration</td>
-                <td><nobr>$htmlURI ($media)</nobr></td>
-                ";
-                print "<td width=40><nobr>$trace_link</nobr></td>";
-                print "<td width=19><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                print "</td>
-                </tr>
-                ";
+                printf(
+                    "
+                    <tr class=%s>
+                        <td width=175>%s</td>
+                        <td width=12><nobr>%s</nobr></td>
+                        <td style='text-align:right' width=60>%s</td>
+                        <td><nobr>%s (%s)</nobr></td>
+                        <td width=40><nobr>%s</nobr></td>
+                        <td width=19><a href=%s%s>%s</a></td>
+                    </tr>
+                    ",
+                    $_class,
+                    $htmlDate,
+                    $dialURI,
+                    $duration,
+                    $htmlURI,
+                    $media,
+                    $traceLink,
+                    $this->url,
+                    $phonebookQuery,
+                    $this->phonebook_img
+                );
             }
-            print "</table>";
+            print("</table>");
         }
 
         if (count($this->calls_placed)) {
-            $chapter=sprintf(_("Outgoing"));
+            $chapter = sprintf(_("Outgoing"));
             $this->showChapter($chapter);
 
-            $j=0;
-
             print "<table class='table table-striped table-condensed'>";
-            foreach (array_keys($this->calls_placed) as $call) {
-                $j++;
-
-                if ($this->calls_placed[$call]['to'] == "sip:".$this->voicemail['Account'] ) {
+            foreach ($this->calls_placed as $item => $call) {
+                if ($call['to'] == "sip:".$this->voicemail['Account']) {
                     continue;
                 }
 
-                $uri = $this->calls_placed[$call]['remoteParty'];
+                $uri = $call['remoteParty'];
                 $media = "";
-                foreach ($this->calls_placed[$call]['media'] as $m) {
-                     $media.="$m,";
+                foreach ($call['media'] as $m) {
+                     $media .= "$m,";
                 }
-                $media=rtrim($media,",");
-                $price       = $this->calls_placed[$call]['price'];
-                $status      = $this->calls_placed[$call]['status'];
-                $rateinfo    = $this->calls_placed[$call]['rateInfo'];
-                $duration    = normalizeTime($this->calls_placed[$call]['duration']);
+                $media = rtrim($media, ",");
+
+                $price       = $call['price'];
+                $status      = $call['status'];
+                $rateinfo    = $call['rateInfo'];
+                $duration    = normalizeTime($call['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
-                $htmlDate    = $this->colorizeDate($this->calls_placed[$call]['startTime']);
-                $stopTime    = $this->calls_placed[$call]['stopTime'];
+                $htmlDate    = $this->colorizeDate($call['startTime']);
+                $stopTime    = $call['stopTime'];
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
-                $sessionId    = urlencode($this->calls_placed[$call]['sessionId']);
-                $fromTag      = urlencode($this->calls_placed[$call]['fromTag']);
-                $toTag        = urlencode($this->calls_placed[$call]['toTag']);
-                $proxyIP      = urlencode($this->calls_placed[$call]['proxyIP']);
-                $trace_link   = "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?cdr_source=$cdr_source&callid=$sessionId&fromtag=$fromTag&totag=$toTag&proxyIP=$proxyIP', 'siptrace',
-                'toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000,height=600')\">Server Logs</a>";
+                $phonebookQuery = array(
+                    'tab' => 'contacts',
+                    'task' => 'add',
+                    'uri'  => $urlURI,
+                    'search_text' => $urlURI,
+                );
+
+                $traceQuery = array(
+                    'cdr_source'    => $cdr_source,
+                    'callid'        => $call['sessionId'],
+                    'fromtag'       => $call['fromTag'],
+                    'totag'         => $call['toTag'],
+                    'proxyIP'       => $call['proxyIP']
+                );
+
+                $traceLink = sprintf(
+                    "<a href=\"javascript:void(null);\" onClick=\"return window.open('sip_trace.phtml?%s', '_blank','toolbar=0,status=0,menubar=0,scrollbars=1,resizable=1,width=1000px,height=600')\">
+                    Server Logs</a>",
+                    http_build_query($traceQuery)
+                );
 
                 if ($price) {
-                    $price_print =sprintf(" (%s %s)",$price,$this->currency);
+                    $pricePrint = sprintf(" (%s %s)", $price, $this->currency);
                 } else {
-                    $price_print = '';
+                    $pricePrint = '';
                 }
 
-                $rr=floor($j/2);
-                $mod=$j-$rr*2;
+                $rr = floor($item / 2);
+                $mod = $item - $rr * 2;
 
-                if ($mod ==0) {
-                    $_class='odd';
+                if ($mod == 0) {
+                    $_class = 'odd';
                 } else {
-                    $_class='even';
+                    $_class = 'even';
                 }
+
                 if (!$stopTime) {
                     $duration = _('In progress');
                 }
 
-                print "
-                <tr class=$_class>
-                <td width=175>$htmlDate</td>
-                <td width=12><nobr>$dialURI<nobr></td>
-                <td style='text-align:right' width=75>$duration</td>
-                <td ><nobr>$htmlURI ($media) $price_print</nobr></td>
-                ";
-
-                print "<td width=40><nobr>$trace_link</nobr></td>";
-                print "<td width=19><a href=$this->url&tab=contacts&task=add&uri=$urlURI&search_text=$urlURI>$this->phonebook_img</a></td>";
-                print "</td>
-                </tr>
-                ";
+                printf(
+                    "
+                    <tr class=%s>
+                        <td width=175>%s</td>
+                        <td width=12><nobr>%s<nobr></td>
+                        <td style='text-align:right' width=75>%s</td>
+                        <td ><nobr>%s (%s) %s</nobr></td>
+                        <td width=40><nobr>%s</nobr></td>
+                        <td width=19><a href=%s%s>%s</a></td>
+                    </tr>
+                    ",
+                    $_class,
+                    $htmlDate,
+                    $dialURI,
+                    $duration,
+                    $htmlURI,
+                    $media,
+                    $pricePrint,
+                    $traceLink,
+                    $this->url,
+                    $phonebookQuery,
+                    $this->phonebook_img
+                );
             }
             print "</table>";
         }
-
     }
 
-    function getHistory($status = 'all')
+    private function getHistory($status = 'all')
     {
         dprint("getHistory()");
 
@@ -6151,7 +6192,7 @@ class SipSettings {
         );
     }
 
-    function getCallStatistics()
+    private function getCallStatistics()
     {
         dprint("getCallStatistics()");
 
