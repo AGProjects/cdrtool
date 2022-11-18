@@ -5931,9 +5931,9 @@ class SipSettings {
                 $media = quoted_printable_decode($media);
                 $media = rtrim($media, ",");
 
-                $duration    = normalizeTime($this->calls_received[$call]['duration']);
+                $duration    = normalizeTime($call['duration']);
                 $dialURI     = $this->PhoneDialURL($uri) ;
-                $htmlDate    = $this->colorizeDate($this->calls_received[$call]['startTime']);
+                $htmlDate    = $this->colorizeDate($call['startTime']);
                 $htmlURI     = $this->htmlURI($uri);
                 $urlURI      = urlencode($this->normalizeURI($uri));
 
