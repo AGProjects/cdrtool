@@ -5,8 +5,8 @@
  *
  */
 
-require("/etc/cdrtool/global.inc");
-require('sip_settings.php');
+require '/etc/cdrtool/global.inc';
+require 'sip_settings.php';
 
 /*if (is_readable("/etc/cdrtool/local/header.phtml")) {
     include("/etc/cdrtool/local/header.phtml");
@@ -14,10 +14,10 @@ require('sip_settings.php');
     include("header.phtml");
 }
 */
-include("sip_header.phtml");
+include 'sip_header.phtml';
 
-if (file_exists("/etc/cdrtool/ngnpro_engines.inc")) {
-    require("/etc/cdrtool/ngnpro_engines.inc");
+if (file_exists('/etc/cdrtool/ngnpro_engines.inc')) {
+    require '/etc/cdrtool/ngnpro_engines.inc';
 } else {
     page_close();
     echo "Error: you must copy setup/ngnpro_engines.inc.sample to /etc/cdrtool/ngnpro_engines.inc and edit it before trying again";
@@ -229,5 +229,3 @@ if ($_REQUEST['id']) {
 }
 
 echo "</body></html>";
-
-?>
