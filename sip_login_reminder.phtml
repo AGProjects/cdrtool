@@ -67,7 +67,7 @@ if ($_REQUEST['id']) {
                 if ($SipSettings->store_clear_text_passwords) {
                     $SipSettings->result->password = $_REQUEST['sip_password'];
                 } else {
-                    $md1 = strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$sip_password;
+                    $md1 = strtolower($SipSettings->result->id->username).':'.strtolower($SipSettings->result->id->domain).':'.$REQUEST['sip_password'];
                     dprint($md1);
                     dprint(md5($md1));
                     $md2 = strtolower($SipSettings->result->id->username).'@'.strtolower($SipSettings->result->id->domain).':'.strtolower($SipSettings->result->id->domain).':'.$_REQUEST['sip_password'];
