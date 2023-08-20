@@ -317,6 +317,16 @@ slave stop;",
             $text = "unlock tables;";
             $this->printStep($this->repair['master_server'], $text);
         } else {
+
+        $text = sprintf(
+            "
+Initial copy of the mysql files in bulk, this will 
+lower the downtime at next step.");
+        $this->printStep($this->repair['master_server'], $text);
+
+        $text = sprintf("rsync -avzP --progress --delete /var/lib/mysql %s:/var/lib/", $this->repair['server_to_repair']);
+        $this->printStep($this->repair['snapshot_server'], $text);
+
             $text = sprintf(
                 "
 mysql -u root -p
@@ -331,11 +341,14 @@ show master status;
             $this->printStep($this->repair['snapshot_server'], $text);
         }
 
-
         $text = "
 /etc/init.d/monit stop
 
 /etc/init.d/mysql stop";
+        $this->printStep($this->repair['snapshot_server'], $text);
+
+        $text = "
+<font color=red><b>OUTAGE starts here.</b></font>";
         $this->printStep($this->repair['snapshot_server'], $text);
 
         $text = "
@@ -344,13 +357,17 @@ show master status;
 /etc/init.d/mysql stop";
         $this->printStep($this->repair['server_to_repair'], $text);
 
-        $text = sprintf("rsync -avzP --delete /var/lib/mysql %s:/var/lib/", $this->repair['server_to_repair']);
+        $text = sprintf("rsync -avzP --delete --progress /var/lib/mysql %s:/var/lib/", $this->repair['server_to_repair']);
         $this->printStep($this->repair['snapshot_server'], $text);
 
         $text = "
 /etc/init.d/mysql start
 
 /etc/init.d/monit start";
+        $this->printStep($this->repair['snapshot_server'], $text);
+
+        $text = "
+<font color=green><b>OUTAGE ends here.</b></font>";
         $this->printStep($this->repair['snapshot_server'], $text);
 
         $text = sprintf(
