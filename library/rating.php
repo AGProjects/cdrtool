@@ -2429,7 +2429,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_rates
@@ -2492,6 +2491,19 @@ class RatingTables
 
                     $deleted++;
                 }
+            } elseif ($ops == "2") {
+                $query = sprintf(
+                    "select * from billing_rates
+                    where name       = '%s'
+                    and destination  = '%s'
+                    and reseller_id  = '%s'
+                    and application  = '%s'
+                    ",
+                    addslashes($name),
+                    addslashes($destination),
+                    addslashes($reseller_id),
+                    addslashes($application)
+                );
 
                 // mysql backend
                 if (!$this->db->query($query)) {
@@ -2582,7 +2594,6 @@ class RatingTables
                         }
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into billing_rates
