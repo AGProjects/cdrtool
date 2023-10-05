@@ -3959,13 +3959,15 @@ class SIP_trace
     public function SIP_trace($cdr_source)
     {
         global $DATASOURCES, $auth;
+        require_once 'errors.php';
 
         $this->cdr_source = $cdr_source;
         $this->cdrtool    = new DB_CDRTool();
 
         if (!is_array($DATASOURCES[$this->cdr_source])) {
-            $log = sprintf("Error: datasource '%s' is not defined", $this->cdr_source);
+            $log = sprintf("Error: datasource '%s' is not defined\n", $this->cdr_source);
             print $log;
+            throw new DataSourceUndefinedError($log);
             return 0;
         }
 
@@ -3978,8 +3980,8 @@ class SIP_trace
         }
 
         if ($this->enableThor) {
-            require("/etc/cdrtool/ngnpro_engines.inc");
-            require_once("ngnpro_soap_library.php");
+            require '/etc/cdrtool/ngnpro_engines.inc';
+            require_once 'ngnpro_soap_library.php';
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 
@@ -4027,7 +4029,6 @@ class SIP_trace
         if (is_array($DATASOURCES[$this->cdr_source]['SIPProxies'])) {
             $this->SIPProxies = $DATASOURCES[$this->cdr_source]['SIPProxies'];
         }
-        
     }
 
     private function isProxy($ip, $sip_proxy = '')
@@ -4991,12 +4992,15 @@ class Media_trace
     {
         global $DATASOURCES;
 
+        require_once 'errors.php';
+
         $this->cdr_source = $cdr_source;
         $this->cdrtool  = new DB_CDRTool();
 
         if (!is_array($DATASOURCES[$this->cdr_source])) {
             $log = sprintf("Error: datasource '%s' is not defined", $this->cdr_source);
             print $log;
+            throw new DataSourceUndefinedError($log);
             return 0;
         }
 
@@ -5005,8 +5009,8 @@ class Media_trace
         }
 
         if ($this->enableThor) {
-            require("/etc/cdrtool/ngnpro_engines.inc");
-            require_once("ngnpro_soap_library.php");
+            require '/etc/cdrtool/ngnpro_engines.inc';
+            require_once 'ngnpro_soap_library.php';
 
             if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
