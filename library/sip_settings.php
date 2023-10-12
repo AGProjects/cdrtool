@@ -6091,7 +6091,7 @@ class SipSettings {
         }
     }
 
-    private function getHistory($status = 'all')
+    public function getHistory($status = 'all')
     {
         dprint("getHistory()");
 
