@@ -130,7 +130,7 @@ if ($options['time'] == 'winter') {
     logger("\033[1mPlease note that only calls with a negative duration can/will be fixed\033[0m\n\n");
 }
 
-logger("DST transition ithat will be fixed: %s\n", $transition_datetime);
+logger("DST transition that will be fixed: %s\n", $transition_datetime);
 
 
 foreach ($DATASOURCES as $key => $value) {
