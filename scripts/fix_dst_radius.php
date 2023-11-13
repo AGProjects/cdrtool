@@ -15,7 +15,7 @@ function logger()
     } else {
         $msg = array_shift($argv);
     }
-    $uncolored_msg = preg_replace('#\\033\[\d\d?m#', '', $msg);
+    $uncolored_msg = preg_replace('#\\033\[\d\d?;?\d?m#', '', $msg);
     if (array_key_exists('no-color', $options)) {
         print($uncolored_msg);
     } else {
@@ -41,8 +41,8 @@ function sql_logger()
     } else {
         $msg = array_shift($argv);
     }
-   
-    $uncolored_msg = preg_replace('#\\033\[\d\d?m#', '', $msg);
+
+    $uncolored_msg = preg_replace('#\\033\[\d\d?;?\d?m#', '', $msg);
     $uncolored_msg = str_replace(array("\r", "\n"), '', $msg);
     $uncolored_msg = preg_replace('/\s+/', ' ', $msg);
     file_put_contents($log_file, $uncolored_msg.";\n", FILE_APPEND);
@@ -107,7 +107,7 @@ if ($dry_run) {
 
 if (!is_dir($log_dir)) {
     if (!mkdir($log_dir)) {
-        logger("\nUndo directory cannot be created: %s", $log_dir);
+        logger("\n\033[31;1mUndo directory cannot be created: %s\033[0m\n", $log_dir);
     }
     chmod($log_dir, 0775);
 }
@@ -127,7 +127,7 @@ if ($options['time'] == 'winter') {
     $transition_offset = $transitions[2]['offset'] - $transitions[1]['offset'];
     $transition->setTimestamp($transitions[2]['ts']);
     $transition_datetime = $transition->format('Y-m-d H:i:s');
-    logger("\033[1mPlease note that only calls with a negative duration can/will be fixed\033[0m\n\n");
+    logger("\033[1mPlease note that calls with a negative duration and calls that are 1 hour too long can/will be fixed.\nCalls that are too short can't be fixed.\033[0m\n\n");
 }
 
 logger("DST transition that will be fixed: %s\n", $transition_datetime);
@@ -177,10 +177,41 @@ foreach ($DATASOURCES as $key => $value) {
             $transition_datetime
         );
 
+        $extra_query_excess_duration = sprintf(
+            "
+                SELECT
+                   *
+                FROM (
+                    SELECT
+                        *,
+                        TIME_TO_SEC(TIMEDIFF(%s, %s)) AS diff
+                    FROM
+                        %s
+                    WHERE
+                        %s > '%s'
+                        AND %s < '%s'
+                    ORDER BY
+                        %s
+            ) AS innerTable
+                WHERE
+                    %s > diff
+            ",
+            addslashes($CDRS->stopTimeField),
+            addslashes($CDRS->startTimeField),
+            addslashes($CDRS->table),
+            addslashes($CDRS->stopTimeField),
+            $transition_datetime,
+            addslashes($CDRS->startTimeField),
+            $transition_datetime,
+            addslashes($CDRS->startTimeField),
+            addslashes($CDRS->durationField)
+        );
+
         $query_negative_duration = sprintf(
             "
             SELECT
-                *
+                *,
+                ''
             FROM
                 %s
             WHERE
@@ -188,6 +219,8 @@ foreach ($DATASOURCES as $key => $value) {
                 AND %s > '%s'
                 AND %s > '%s'
                 AND %s < '0'
+            UNION
+                %s
             ",
             addslashes($CDRS->table),
             addslashes($CDRS->startTimeField),
@@ -196,7 +229,8 @@ foreach ($DATASOURCES as $key => $value) {
             $transition_datetime,
             addslashes($CDRS->stopTimeField),
             $transition_datetime,
-            addslashes($CDRS->durationField)
+            addslashes($CDRS->durationField),
+            $extra_query_excess_duration
         );
 
         $query = $query_negative_duration;
@@ -215,6 +249,9 @@ foreach ($DATASOURCES as $key => $value) {
                     $stop_time = $CDRS->CDRdb->f($CDRS->stopTimeField);
                     $fixed_duration = $CDRS->CDRdb->f($CDRS->durationField) - $transition_offset;
                     $duration = $CDRS->CDRdb->f($CDRS->durationField);
+                    if ($duration > 0) {
+                        $fixed_duration = $CDRS->CDRdb->f($CDRS->durationField) + $transition_offset;
+                    }
                     if ($transition_offset > 0) {
                         $stop_datetime = new DateTime($stop_time);
                         $start_datetime = new DateTime($start_time);
