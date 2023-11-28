@@ -37,6 +37,7 @@ class MySQLReplicationStatus {
         $this->slave_seconds_behind = '';
         $this->using_gtid           = '';
         $this->gtid_io_pos          = '';
+        $this->replicate_wild_table = '';
 
         $this->master_position = '';
         $this->master_log_file = '';
@@ -68,6 +69,7 @@ class MySQLReplicationStatus {
         $this->slave_seconds_behind = $db->f('Seconds_Behind_Master');
         $this->using_gtid           = $db->f('Using_Gtid');
         $this->gtid_io_pos          = $db->f('Gtid_IO_Pos');
+        $this->replicate_wild_table = $db->f('Replicate_Wild_Do_Table');
 
         if (!$db->query($this->master_status_query)) {
             printf(
@@ -89,7 +91,7 @@ class MySQLReplicationStatus {
 class ReplicationOverview {
     private $status = array();
 
-    public function ReplicationOverview($clusters = array())
+    public function __construct($clusters = array())
     {
         $this->clusters = $clusters;
 
@@ -191,8 +193,7 @@ class ReplicationOverview {
         <td></td>";
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            print "<td>";
-
+            print '<td style="vertical-align: top">';
             print "<table class='table table-bordered table-condensed'>";
 
             if ($this->status[$key]->slave_sql_running == 'No') {
@@ -209,22 +210,45 @@ class ReplicationOverview {
 
             if (array_key_exists($key, $this->is_master)) {
                 printf("<tr><td colspan=2 bgcolor=lightgrey><b>Master status</b></td></tr>");
-                printf("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>", $this->status[$key]->color, $this->status[$key]->master_log_file);
+                printf(
+                    "<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",
+                    $this->status[$key]->color,
+                    $this->status[$key]->master_log_file
+                );
                 printf("<tr><td class=border>Position</td><td>%s</td></tr>", $this->status[$key]->master_position);
             } else {
-                printf("<tr><td colspan=2><font color=lightgrey>Master status</font></td></tr>");
-                printf("<tr><td class=border><font color=lightgrey>Log file</font></td><td><font color=lightgrey>%s</font></td></tr>", $this->status[$key]->master_log_file);
-                printf("<tr><td class=border><font color=lightgrey>Position</font></td><td><font color=lightgrey>%s</font></td></tr>", $this->status[$key]->master_position);
+                if (!$this->isPartialSlave($key)) {
+                    printf("<tr><td colspan=2><font color=lightgrey>Master status</font></td></tr>");
+                    printf(
+                        "<tr><td class=border><font color=lightgrey>Log file</font></td><td><font color=lightgrey>%s</font></td></tr>",
+                        $this->status[$key]->master_log_file
+                    );
+                    printf(
+                        "<tr><td class=border><font color=lightgrey>Position</font></td><td><font color=lightgrey>%s</font></td></tr>",
+                        $this->status[$key]->master_position
+                    );
+                }
             }
 
-            printf("<tr><td colspan=2 bgcolor=lightgrey><b>Slave of %s status</b></td></tr>", $this->status[$key]->slave_of);
+            if (!$this->isPartialSlave($key)) {
+                printf("<tr><td colspan=2 bgcolor=lightgrey><b>Slave of %s status</b></td></tr>", $this->status[$key]->slave_of);
+            } else {
+                printf("<tr><td colspan=2 bgcolor=lightgrey><b>Partial slave of %s status</b></td></tr>", $this->status[$key]->slave_of);
+            }
 
             printf("<tr><td class=border>Master host</td><td>%s</td></tr>", $this->status[$key]->slave_master);
             printf("<tr><td class=border>Master port</td><td>%s</td></tr>", $this->status[$key]->slave_master_port);
-            printf("<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>", $this->status[$this->status[$key]->slave_of]->color, $this->status[$key]->slave_log_file);
+            printf(
+                "<tr><td class=border>Log file</td><td><font color=%s>%s</font></td></tr>",
+                $this->status[$this->status[$key]->slave_of]->color,
+                $this->status[$key]->slave_log_file
+            );
             if ($this->status[$key]->using_gtid != '') {
                 printf("<tr><td class=border>Using GTID</td><td>%s</td></tr>", $this->status[$key]->using_gtid);
                 printf("<tr><td class=border>GTID IO Pos</td><td>%s</td></tr>", $this->status[$key]->gtid_io_pos);
+            }
+            if ($this->isPartialSlave($key)) {
+                printf("<tr><td class=border>Replicate Wild Do Table</td><td>%s</td></tr>", $this->status[$key]->replicate_wild_table);
             }
             printf("<tr><td class=border>Position</td><td>%s</td></tr>", $this->status[$key]->slave_position);
             printf("<tr><td class=border>SQL thread</td><td bgcolor=%s>%s</td></tr>", $sql_color, $this->status[$key]->slave_sql_running);
@@ -242,6 +266,12 @@ class ReplicationOverview {
 
         print "</table>";
     }
+
+    private function isPartialSlave($key)
+    {
+        return $this->status[$key]->replicate_wild_table != '';
+    }
+
 
     private function printStep($hostname, $instructions = '', $downtime = false)
     {
@@ -317,8 +347,7 @@ slave stop;",
             $text = "unlock tables;";
             $this->printStep($this->repair['master_server'], $text);
         } else {
-
-        $text = sprintf(
+            $text = sprintf(
             "
 Initial copy of the mysql files in bulk, this will 
 lower the downtime at next step.");
