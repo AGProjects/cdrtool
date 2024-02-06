@@ -1582,7 +1582,7 @@ class Records
         return true;
     }
 
-    function updateAfter()
+    function updateAfter($customer, $customer_old)
     {
         return true;
     }
@@ -1746,7 +1746,7 @@ class Records
         return false;
     }
 
-    function checkRecord()
+    function checkRecord($dictionary)
     {
         return true;
     }
