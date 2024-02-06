@@ -531,8 +531,8 @@ class SoapEngine
 
             $this->soapclient = new $this->soap_class($this->SOAPurl);
 
-            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-            $this->soapclient->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+            $this->soapclient->setOpt('curl', 'CURLOPT_SSL_VERIFYPEER', 0);
+            $this->soapclient->setOpt('curl', 'CURLOPT_SSL_VERIFYHOST', 0);
 
             // set the timeout
             $this->soapclient->_options['timeout'] = $this->timeout;
@@ -550,8 +550,8 @@ class SoapEngine
                 $this->SOAPurlCustomers    = $this->soapEngines[$this->customer_engine]['url'];
                 $this->soapclientCustomers = new WebService_NGNPro_CustomerPort($this->SOAPurlCustomers);
 
-                $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                $this->soapclientCustomers->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+                $this->soapclientCustomers->setOpt('curl', 'CURLOPT_SSL_VERIFYPEER', 0);
+                $this->soapclientCustomers->setOpt('curl', 'CURLOPT_SSL_VERIFYHOST', 0);
 
                 if (strlen($this->soapEngines[$this->customer_engine]['timeout'])) {
                     $this->soapclientCustomers->_options['timeout'] = intval($this->soapEngines[$this->customer_engine]['timeout']);
@@ -573,8 +573,8 @@ class SoapEngine
                 $this->SOAPurlVoicemail    = $this->soapEngines[$this->voicemail_engine]['url'];
                 $this->soapclientVoicemail = new WebService_NGNPro_VoicemailPort($this->SOAPurlVoicemail);
 
-                $this->soapclientVoicemail->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
-                $this->soapclientVoicemail->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
+                $this->soapclientVoicemail->setOpt('curl', 'CURLOPT_SSL_VERIFYPEER', 0);
+                $this->soapclientVoicemail->setOpt('curl', 'CURLOPT_SSL_VERIFYHOST', 0);
 
                 if (strlen($this->soapEngines[$this->voicemail_engine]['timeout'])) {
                     $this->soapclientVoicemail->_options['timeout'] = intval($this->soapEngines[$this->voicemail_engine]['timeout']);
