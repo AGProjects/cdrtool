@@ -765,7 +765,7 @@ class Records
         syslog(LOG_NOTICE, $log);
     }
 
-    function Records($SoapEngine)
+    function __construct($SoapEngine)
     {
         $this->SoapEngine          = $SoapEngine;
 
@@ -1785,7 +1785,7 @@ class SipDomains extends Records
         'require_cert' => array('type'=>'boolean')
     );
 
-    function SipDomains($SoapEngine)
+    function __construct($SoapEngine)
     {
         dprint("init Domains");
 
@@ -2734,7 +2734,7 @@ class SipAccounts extends Records {
                                    'trunking'         => 'Trunking'
                                    );
 
-    function SipAccounts($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init SipAccounts");
 
 
@@ -2748,8 +2748,8 @@ class SipAccounts extends Records {
                                'reseller' => trim($_REQUEST['reseller_filter']),
                                'group'    => trim($_REQUEST['group_filter'])
                               );
-
-        $this->Records($SoapEngine);
+	parent::__construct($SoapEngine);	
+        //$this->Records($SoapEngine);
 
         if (strlen($this->SoapEngine->call_limit)) {
             $this->platform_call_limit    = $this->SoapEngine->call_limit;
@@ -3566,7 +3566,7 @@ class SipAccounts extends Records {
             'filter'  => $filter,
             'orderBy' => $orderBy,
             'range'   => $range
-        );
+	);
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getDomains');
@@ -3980,7 +3980,7 @@ class SipAccounts extends Records {
 class SipAliases extends Records {
     var $selectionActiveExceptions=array('alias_domain');
 
-    function SipAliases($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init SipAliases");
 
         $target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
@@ -4537,7 +4537,7 @@ class EnumRanges extends Records {
                                                               )
                               );
 
-    function EnumRanges($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init EnumRanges");
 
         $this->filters   = array('prefix'       => trim(ltrim($_REQUEST['prefix_filter']),'+'),
@@ -5339,7 +5339,7 @@ class EnumMappings extends Records {
                               "schemas"=>array("https://"))
         );
 
-    function EnumMappings($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init EnumMappings");
 
         if ($_REQUEST['range_filter']) {
@@ -6624,15 +6624,15 @@ class DnsZones extends Records {
                                                      )
                               );
 
-    function DnsZones($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init DnsZones");
 
         $this->filters   = array(
                                  'name' => trim($_REQUEST['name_filter']),
                                  'info' => trim($_REQUEST['info_filter'])
                                  );
-
-        $this->Records($SoapEngine);
+	parent::__construct($SoapEngine);
+        //$this->Records($SoapEngine);
 
         $this->sortElements=array('changeDate' => 'Change date',
                                    'name'     => 'Name'
@@ -7807,7 +7807,7 @@ class DnsRecords extends Records {
     );
 
 
-    function DnsRecords($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init DnsRecords");
 
         $_name = trim($_REQUEST['name_filter']);
@@ -9024,7 +9024,7 @@ class TrustedPeers extends Records {
                               'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
                               );
 
-    function TrustedPeers($SoapEngine) {
+    function __construct($SoapEngine) {
 
         $this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
                                  'tenant'   => trim($_REQUEST['tenant_filter']),                     
@@ -9519,7 +9519,7 @@ class Carriers extends Records {
                             'name'       => 'Carrier'
                             );
 
-    function Carriers($SoapEngine) {
+    function __construct($SoapEngine) {
         $this->filters   = array('id'   => trim($_REQUEST['id_filter']),
                                  'name' => trim($_REQUEST['name_filter'])
                                  );
@@ -9939,7 +9939,7 @@ class Gateways extends Records {
     //var $transports=array('udp','tcp','tls');
     var $transports=array('udp');
 
-    function Gateways($SoapEngine) {
+    function __construct($SoapEngine) {
         $this->filters   = array(
                                  'id'         => trim($_REQUEST['id_filter']),
                                  'name'       => trim($_REQUEST['name_filter']),
@@ -12041,7 +12041,7 @@ class Customers extends Records {
 
         var $hide_html = false;
 
-    function Customers($SoapEngine) {
+    function __construct($SoapEngine) {
         dprint("init Customers");
 
         $this->filters   = array(
@@ -12057,7 +12057,7 @@ class Customers extends Records {
                            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
                            );
 
-        $this->Records($SoapEngine);
+	parent::__construct($SoapEngine);
 
         $this->showAddForm = $_REQUEST['showAddForm'];
 
@@ -14741,7 +14741,7 @@ class Actions {
     var $sub_action_parameter_size = 35;
     var $html = true;
 
-    function Actions($SoapEngine, $login_credentials) {
+    function __construct($SoapEngine, $login_credentials) {
         $this->SoapEngine = $SoapEngine;
         $this->login_credentials = $login_credentials;
         $this->version    = $this->SoapEngine->version;
@@ -16065,11 +16065,11 @@ class DnsZonesActions extends Actions {
 
 class CustomersActions extends Actions {
     var $actions=array(
-                       'delete'         => 'Delete customers'
-                       );
+	    'delete'         => 'Delete customers'
+    );
 
-    function CustomerActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
+    function __construct($SoapEngine, $login_credentials) {
+	    parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
