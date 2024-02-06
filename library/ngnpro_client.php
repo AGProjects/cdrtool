@@ -2738,7 +2738,6 @@ class SipAccounts extends Records {
     {
         dprint("init SipAccounts");
 
-
         $this->filters = array('username' => strtolower(trim($_REQUEST['username_filter'])),
                                'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
                                'firstname'=> trim($_REQUEST['firstname_filter']),
@@ -3978,7 +3977,8 @@ class SipAccounts extends Records {
 
 }
 
-class SipAliases extends Records {
+class SipAliases extends Records
+{
     var $selectionActiveExceptions=array('alias_domain');
 
     public function __construct($SoapEngine)
@@ -4501,7 +4501,8 @@ class SipAliases extends Records {
 
 }
 
-class EnumRanges extends Records {
+class EnumRanges extends Records
+{
     var $selectionActiveExceptions=array('tld');
 	var $record_generator='';
 
@@ -5236,7 +5237,8 @@ class EnumRanges extends Records {
     }
 }
 
-class EnumMappings extends Records {
+class EnumMappings extends Records
+{
     var $default_ttl = 3600;
     var $default_priority = 5;
 
@@ -5368,7 +5370,6 @@ class EnumMappings extends Records {
         );
         parent::__construct($SoapEngine);
         $this->getAllowedDomains();
-
     }
 
     function listRecords() {
@@ -6593,7 +6594,8 @@ class EnumMappings extends Records {
 
 }
 
-class DnsZones extends Records {
+class DnsZones extends Records
+{
     var $FieldsAdminOnly=array(
                               'reseller'      => array('type'=>'integer',
                                                    'help' => 'Zone owner')
@@ -7440,7 +7442,8 @@ class DnsZones extends Records {
     }
 }
 
-class DnsRecords extends Records {
+class DnsRecords extends Records
+{
     var $max_zones_selection = 50;
     var $typeFilter          = false;
     var $default_ttl         = 3600;
@@ -8986,7 +8989,8 @@ class DnsRecords extends Records {
 
 }
 
-class FancyRecords extends DnsRecords {
+class FancyRecords extends DnsRecords
+{
     var $fancy = true;
 
     var $addRecordFunction    = 'addFancyRecord';
@@ -9005,17 +9009,20 @@ class FancyRecords extends DnsRecords {
 
 }
 
-class EmailAliases extends FancyRecords {
+class EmailAliases extends FancyRecords
+{
     var $recordTypes=array('MBOXFW'  => 'Email alias');
     var $typeFilter='MBOXFW';
 }
 
-class UrlRedirect extends FancyRecords {
+class UrlRedirect extends FancyRecords
+{
     var $recordTypes=array('URL'   => 'URL forwarding');
     var $typeFilter='URL';
 }
 
-class TrustedPeers extends Records {
+class TrustedPeers extends Records
+{
     var $FieldsAdminOnly=array(
 
                               'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
@@ -9093,10 +9100,9 @@ class TrustedPeers extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             $this->rows = $result->total;
 
-             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
+            if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
 
@@ -9123,7 +9129,7 @@ class TrustedPeers extends Records {
 
             if (!$this->next)  $this->next=0;
 
-            if ($this->rows > $this->maxrowsperpage)  {
+            if ($this->rows > $this->maxrowsperpage) {
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
@@ -9212,7 +9218,7 @@ class TrustedPeers extends Records {
             }
 
             print "</table>";
-            
+
             if ($result->total == 1) {
                 $this->showRecord($peer);
             }
@@ -9337,30 +9343,30 @@ class TrustedPeers extends Records {
     function showAddForm() {
         //if ($this->selectionActive) return;
 
-            printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
-            print "
-            <div class='well well-small'>
-            ";
+        printf ("<form class=form-inline method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        print "
+        <div class='well well-small'>
+        ";
 
-            print "
-            <input class='btn btn-warning' type=submit name=action value=Add>
-            ";
-            $this->showCustomerTextBox();
-            if ($this->filters['msteams']) {
-                $checked = 'checked';
-            } else {
-                $checked = '';
-            }
+        print "
+        <input class='btn btn-warning' type=submit name=action value=Add>
+        ";
+        $this->showCustomerTextBox();
+        if ($this->filters['msteams']) {
+            $checked = 'checked';
+        } else {
+            $checked = '';
+        }
 
-            printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ipaddress></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span1 type=text size=4 name=callLimit value=30></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Tenant</span><input class=span1 type=text size=20 name=tenant value=%s></div>", $this->filters['tenant']);
-            printf (" <div class='input-prepend'><span class='add-on'>MS Teams<input type=checkbox class=span1 name=msteams value=1 %s></span></div>", $checked);
+        printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ipaddress></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Call limit</span><input class=span1 type=text size=4 name=callLimit value=30></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Description</span><input class=span2 type=text size=30 name=description></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Tenant</span><input class=span1 type=text size=20 name=tenant value=%s></div>", $this->filters['tenant']);
+        printf (" <div class='input-prepend'><span class='add-on'>MS Teams<input type=checkbox class=span1 name=msteams value=1 %s></span></div>", $checked);
 
-            $this->printHiddenFormElements();
+        $this->printHiddenFormElements();
 
-            print "</div>
+        print "</div>
             </form>
         </tr>
         </table>
@@ -9488,7 +9494,7 @@ class TrustedPeers extends Records {
         } else {
             $checked_msteams = '';
         }
-                                                
+
         printf (" <div class='input-prepend'><span class='add-on'>Address</span><input class=span2 type=text size=20 name=ip_filter value='%s'></div>",$this->filters['ip']);
         printf (" <div class='input-prepend'><span class='add-on'>Description</span><input type=text class=span2 size=20 name=description_filter value='%s'></div>",$this->filters['description']);
         printf (" <div class='input-prepend'><span class='add-on'>Tenant</span><input type=text class=span1 size=10 name=tenant_filter value='%s'></div>",$this->filters['tenant']);
@@ -9509,9 +9515,10 @@ class TrustedPeers extends Records {
 
     function showCustomerForm($name='customer_filter') {
     }
-
 }
-class Carriers extends Records {
+
+class Carriers extends Records
+{
     var $carriers=array();
 
     var $Fields=array(
@@ -9622,7 +9629,6 @@ class Carriers extends Records {
 
             if ($this->rows) {
                 while ($i < $maxrows)  {
-
                     if (!$result->carriers[$i]) break;
 
                     $carrier = $result->carriers[$i];
@@ -9925,7 +9931,8 @@ class Carriers extends Records {
     }
 }
 
-class Gateways extends Records {
+class Gateways extends Records
+{
     var $carriers=array();
     var $FieldsReadOnly=array(
                               'reseller',
@@ -10466,7 +10473,8 @@ class Gateways extends Records {
     }
 }
 
-class GatewayRules extends Records {
+class GatewayRules extends Records
+{
     var $carriers=array();
     var $FieldsReadOnly=array(
                               'reseller',
@@ -10883,8 +10891,6 @@ class GatewayRules extends Records {
             }
             print "
             </div>";
-
-
         }
 
         printf ("<input type=hidden name=reseller_filter value='%s'>",$rule->reseller);
@@ -10985,7 +10991,6 @@ class GatewayRules extends Records {
             }
         }
     }
-
 }
 
 class Routes extends Records {
@@ -11176,9 +11181,7 @@ class Routes extends Records {
                     </tr>
                     ");
                     $i++;
-
                 }
-
             }
 
             print "</table>";
@@ -11439,7 +11442,6 @@ class Routes extends Records {
         </div>
         ";
         print "</form>";
-
     }
 
     function updateRecord () {
@@ -11481,247 +11483,285 @@ class Routes extends Records {
     }
 }
 
-class Customers extends Records {
+class Customers extends Records
+{
     var $children     = array();
     var $showAddForm  = false;
 
     var $sortElements = array(
-                            'changeDate'   => 'Change date',
-                            'username'     => 'Username',
-                            'firstName'    => 'First name',
-                            'lastName'     => 'Last name',
-                            'organization' => 'Organization',
-                            'customer'     => 'Customer'
-                            );
+        'changeDate'   => 'Change date',
+        'username'     => 'Username',
+        'firstName'    => 'First name',
+        'lastName'     => 'Last name',
+        'organization' => 'Organization',
+        'customer'     => 'Customer'
+    );
 
-    var $propertiesItems = array('sip_credit'          => array('name'      => 'Credit for SIP accounts',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'sip_alias_credit'    => array('name'      => 'Credit for SIP aliases',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'enum_range_credit'   => array('name'      => 'Credit for ENUM ranges',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'enum_number_credit'  => array('name'      => 'Credit for ENUM numbers',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'dns_zone_credit'     => array('name'      => 'Credit for DNS zones',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-	                         'email_credit'        => array('name'      => 'Credit for E-mail aliases',
-                                                               'category'   => 'credit',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'pstn_access'         => array('name'      => 'Access to PSTN',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'prepaid_changes'      => array('name'      => 'Prepaid Changes',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'pstn_changes'      => array('name'        => 'Pstn Changes',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'admin',
-                                                               'resellerMayManageForChildAccounts' => true
-                                                               ),
-                                 'payment_processor_class'      => array('name'      => 'Payment Processor Class',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'admin'
-                                                               ),
-                                 'voicemail_server'      => array('name'      => 'Voicemail Server Address',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'voicemail_access_number'    => array('name'      => 'Voicemail Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'FUNC_access_number'    => array('name'      => 'Forwarding Unconditional Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'FNOL_access_number'    => array('name'      => 'Forwarding Not-Online Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'FNOA_access_number'    => array('name'      => 'Forwarding Not-Available Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'FBUS_access_number'    => array('name'      => 'Forwarding On Busy Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'change_privacy_access_number' => array('name'      => 'Change privacy Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'check_privacy_access_number' => array('name'      => 'Check privacy Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'reject_anonymous_access_number' => array('name'      => 'Reject anonymous Access Number',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'sip_proxy'           => array('name'      => 'SIP Proxy Address',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'sip_outbound_proxy'   => array('name'      => 'SIP Client Outbound proxy',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'store_clear_text_passwords' => array('name'      => 'Store clear text passwords',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'xcap_root'           => array('name'      => 'XCAP Root URL',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'absolute_voicemail_uri'=> array('name'    => 'Use Absolute Voicemail Uri',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'dns_admin_email'     => array('name'     => 'DNS zones Administrator Email',
-                                                               'category' => 'dns',
-                                                               'permission'  => 'customer'),
-                                 'support_web'         => array('name'      => 'Support Web Site',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'support_email'       => array('name'      => 'Support Email Address',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'billing_email'       => array('name'      => 'Billing Email Address',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'support_company'     => array('name'      => 'Support Organization',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'cdrtool_address'     => array('name'      => 'CDRTool Address',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'sip_settings_page'   => array('name'      => 'SIP Settings Page',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'customer'
-                                                               ),
-                                 'digest_settings_page' => array('name'     => 'Settings Page (Digest Auth)',
-                                                               'category'   => 'sip',
-                                                               'permission' => 'reseller'
-                                                               ),
-                                 'records_per_page'    => array('name'     => 'Records per page',
-                                                               'category'  => 'web',
-                                                               'permission'  => 'customer'
-                                                                ),
-                                 'push_notifications_server' => array('name'=>'Push server public interface',
-                                                                'category' =>'sip',
-                                                                'permission' => 'customer'
-                                                               ),
-                                 'push_notifications_server_private' => array('name'=>'Push server private interface',
-                                                                'category' =>'sip',
-                                                                'permission' => 'customer'
-                                                               )
-                                 );
+    var $propertiesItems = array(
+        'sip_credit'          => array(
+            'name'      => 'Credit for SIP accounts',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'sip_alias_credit'    => array(
+            'name'      => 'Credit for SIP aliases',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'enum_range_credit'   => array(
+            'name'      => 'Credit for ENUM ranges',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'enum_number_credit'  => array(
+            'name'      => 'Credit for ENUM numbers',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'dns_zone_credit'     => array(
+            'name'      => 'Credit for DNS zones',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'email_credit'        => array(
+            'name'      => 'Credit for E-mail aliases',
+            'category'   => 'credit',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'pstn_access'         => array(
+            'name'      => 'Access to PSTN',
+            'category'   => 'sip',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'prepaid_changes'      => array(
+            'name'      => 'Prepaid Changes',
+            'category'   => 'sip',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'pstn_changes'      => array(
+            'name'       => 'Pstn Changes',
+            'category'   => 'sip',
+            'permission' => 'admin',
+            'resellerMayManageForChildAccounts' => true
+        ),
+        'payment_processor_class'      => array(
+            'name'       => 'Payment Processor Class',
+            'category'   => 'sip',
+            'permission' => 'admin'
+        ),
+        'voicemail_server'      => array(
+            'name'       => 'Voicemail Server Address',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'voicemail_access_number'    => array(
+            'name'       => 'Voicemail Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'FUNC_access_number'    => array(
+            'name'      => 'Forwarding Unconditional Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'FNOL_access_number'    => array(
+            'name'      => 'Forwarding Not-Online Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'FNOA_access_number'    => array(
+            'name'      => 'Forwarding Not-Available Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'FBUS_access_number'    => array(
+            'name'      => 'Forwarding On Busy Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'change_privacy_access_number' => array(
+            'name'      => 'Change privacy Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'check_privacy_access_number' => array(
+            'name'      => 'Check privacy Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'reject_anonymous_access_number' => array(
+            'name'      => 'Reject anonymous Access Number',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'sip_proxy'           => array(
+            'name'      => 'SIP Proxy Address',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'sip_outbound_proxy'   => array(
+            'name'      => 'SIP Client Outbound proxy',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'store_clear_text_passwords' => array(
+            'name'      => 'Store clear text passwords',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'xcap_root'           => array(
+            'name'      => 'XCAP Root URL',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'absolute_voicemail_uri'=> array(
+            'name'    => 'Use Absolute Voicemail Uri',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'dns_admin_email'     => array('name'     => 'DNS zones Administrator Email',
+            'category' => 'dns',
+            'permission'  => 'customer'),
+        'support_web'         => array('name'      => 'Support Web Site',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'support_email'       => array('name'      => 'Support Email Address',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'billing_email'       => array('name'      => 'Billing Email Address',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'support_company'     => array('name'      => 'Support Organization',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'cdrtool_address'     => array('name'      => 'CDRTool Address',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'sip_settings_page'   => array('name'      => 'SIP Settings Page',
+            'category'   => 'sip',
+            'permission' => 'customer'
+        ),
+        'digest_settings_page' => array('name'     => 'Settings Page (Digest Auth)',
+            'category'   => 'sip',
+            'permission' => 'reseller'
+        ),
+        'records_per_page'    => array('name'     => 'Records per page',
+            'category'  => 'web',
+            'permission'  => 'customer'
+        ),
+        'push_notifications_server' => array('name'=>'Push server public interface',
+            'category' =>'sip',
+            'permission' => 'customer'
+        ),
+        'push_notifications_server_private' => array('name'=>'Push server private interface',
+            'category' =>'sip',
+            'permission' => 'customer'
+        )
+    );
 
     var $FieldsReadOnly=array(
-                              'id'          => array('type'=>'integer'),
-                              'reseller'    => array('type'=>'integer')
-                              );
+        'id'          => array('type'=>'integer'),
+        'reseller'    => array('type'=>'integer')
+    );
     var $Fields=array(
-                              'resellerActive' => array ('type'      => 'boolean',
-                                                      'name'      => 'Reseller active',
-                                                      'adminonly' => true
-                                                     ),
-                              'impersonate'     => array('type'       =>'integer',
-                                                     'name'       =>'Impersonate'),
-                              'companyCode' => array('type'       =>'text',
-                                                     'name'       =>'Company code',
-                                                     'adminonly'  => true
-                                                     ),
-                              'balance'     => array('type'       => 'float',
-                                                     'adminonly'  => true
-                                                     ),
-                              'credit'      => array('type'       => 'float',
-                                                     'adminonly'  => true
-                                                     ),
-                              'username'    => array('type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
-                                                     ),
-                              'password'    => array('type'=>'text',
-                                                     'name'=>'Password'),
-                              'firstName'   => array('type'=>'text',
-                                                     'name'=>'First name'),
-                              'lastName'    => array('type'=>'text',
-                                                     'name'=>'Last name'),
-                              'organization'=> array('type'=>'text'),
-                              'tel'         => array('type'=>'text'),
-                              'fax'         => array('type'=>'text'),
-                              'sip'         => array('type'=>'text'),
-                              'enum'        => array('type'=>'text'),
-                              'mobile'      => array('type'=>'text'),
-                              'email'       => array('type'=>'text'),
-                              'web'         => array('type'=>'text'),
-                              'address'     => array('type'=>'textarea'),
-                              'postcode'    => array('type'=>'text'),
-                              'city'        => array('type'=>'text'),
-                              'state'       => array('type'=>'text'),
-                              'country'     => array('type'=>'text'),
-                              'timezone'    => array('type'=>'text'),
-                              'language'    => array('type'=>'text'),
-                              'vatNumber'   => array('type'=>'text',
-                                                     'name'=>'VAT number'),
-                              'bankAccount' => array('type'=>'text',
-                                                     'name'=>'Bank account'
-                                                     ),
-                             'billingEmail' => array('type'=>'text',
-                                                     'name'=>'Billing email'
-                                                     ),
-                           'billingAddress' => array('type'=>'textarea',
-                                                     'name'=>'Billing address'
-                                                 ),
-                              );
+        'resellerActive' => array ('type'      => 'boolean',
+            'name'      => 'Reseller active',
+            'adminonly' => true
+        ),
+        'impersonate'     => array('type'       =>'integer',
+            'name'       =>'Impersonate'),
+        'companyCode' => array('type'       =>'text',
+            'name'       =>'Company code',
+            'adminonly'  => true
+        ),
+        'balance'     => array('type'       => 'float',
+            'adminonly'  => true
+        ),
+        'credit'      => array('type'       => 'float',
+            'adminonly'  => true
+        ),
+        'username'    => array('type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
+        ),
+        'password'    => array('type'=>'text',
+            'name'=>'Password'),
+        'firstName'   => array('type'=>'text',
+            'name'=>'First name'),
+        'lastName'    => array('type'=>'text',
+            'name'=>'Last name'),
+        'organization'=> array('type'=>'text'),
+        'tel'         => array('type'=>'text'),
+        'fax'         => array('type'=>'text'),
+        'sip'         => array('type'=>'text'),
+        'enum'        => array('type'=>'text'),
+        'mobile'      => array('type'=>'text'),
+        'email'       => array('type'=>'text'),
+        'web'         => array('type'=>'text'),
+        'address'     => array('type'=>'textarea'),
+        'postcode'    => array('type'=>'text'),
+        'city'        => array('type'=>'text'),
+        'state'       => array('type'=>'text'),
+        'country'     => array('type'=>'text'),
+        'timezone'    => array('type'=>'text'),
+        'language'    => array('type'=>'text'),
+        'vatNumber'   => array(
+            'type'=>'text',
+            'name'=>'VAT number'
+        ),
+        'bankAccount' => array(
+            'type'=>'text',
+            'name'=>'Bank account'
+        ),
+        'billingEmail' => array(
+            'type'=>'text',
+            'name'=>'Billing email'
+        ),
+        'billingAddress' => array(
+            'type'=>'textarea',
+            'name'=>'Billing address'
+        ),
+    );
 
     var $addFields=array(
-                              'username'    => array('type'       =>'text'
-                                                     ),
-                              'password'    => array('type'=>'text',
-                                                     'name'=>'Password'),
-                              'firstName'   => array('type'=>'text',
-                                                     'name'=>'First name'),
-                              'lastName'    => array('type'=>'text',
-                                                     'name'=>'Last name'),
-                              'organization'=> array('type'=>'text'),
-                              'tel'         => array('type'=>'text'),
-                              'email'       => array('type'=>'text'),
-                              'address'     => array('type'=>'textarea'),
-                              'postcode'    => array('type'=>'text'),
-                              'city'        => array('type'=>'text'),
-                              'state'       => array('type'=>'text'),
-                              'country'     => array('type'=>'text'),
-                              'timezone'    => array('type'=>'text')
-                              );
+        'username'    => array(
+            'type'       =>'text'
+        ),
+        'password'    => array(
+            'type'=>'text',
+            'name'=>'Password'
+        ),
+        'firstName'   => array(
+            'type'=>'text',
+            'name'=>'First name'
+        ),
+        'lastName'    => array(
+            'type'=>'text',
+            'name'=>'Last name'
+        ),
+        'organization'=> array('type'=>'text'),
+        'tel'         => array('type'=>'text'),
+        'email'       => array('type'=>'text'),
+        'address'     => array('type'=>'textarea'),
+        'postcode'    => array('type'=>'text'),
+        'city'        => array('type'=>'text'),
+        'state'       => array('type'=>'text'),
+        'country'     => array('type'=>'text'),
+        'timezone'    => array('type'=>'text')
+    );
 
-        var $states=array(
+    var $states=array(
         array("label"=>"", "value"=>"N/A"),
         array("label"=>"-- CANADA --", "value"=>"-"),
         array("label"=>"Alberta", "value"=>"AB"),
@@ -11799,9 +11839,9 @@ class Customers extends Records {
         array("label"=>"AEO", "value"=>"AE"),
         array("label"=>"AAO", "value"=>"AA"),
         array("label"=>"FPO", "value"=>"FP")
-        );
+    );
 
-        var $countries=array(
+    var $countries=array(
         array("label"=>"Ascension Island",    "value"=>"AC"),
         array("label"=>"Afghanistan",        "value"=>"AF"),
         array("label"=>"Albania",        "value"=>"AL"),
@@ -12529,14 +12569,11 @@ class Customers extends Records {
                 </td>
                 </tr>
                 ";
-
             } else if ($item=='resellerActive' && ($customer->reseller != $customer->id)) {
                 printf ("<input name=%s_form type=hidden value='%s'>",
                         $item,
                         $customer->$item);
-
             } else if ($item=='impersonate') {
-
                 if ($customer->reseller != $customer->id) {
                     if ($this->adminonly || $this->customer == $customer->reseller) {
                         printf ("<tr>
@@ -12590,7 +12627,6 @@ class Customers extends Records {
                     $customer->$item
                     );
                 }
-
             } else {
                 if ($this->Fields[$item]['type'] == 'textarea') {
                     printf ("
@@ -12923,7 +12959,6 @@ class Customers extends Records {
                                 $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
                             }
                         }
-
                     } else if ($_property->permission == 'reseller') {
                         if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
                             $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
@@ -12958,7 +12993,6 @@ class Customers extends Records {
                             $var_value   =  trim($_REQUEST[$var_name]);
                         }
                     }
-
                 } else if ($this->allProperties[$item]['permission'] == 'reseller') {
                     $_permission = 'reseller';
 
@@ -12980,11 +13014,8 @@ class Customers extends Records {
                                                     'permission' => $this->allProperties[$item]['permission']
                                                      );
                 }
-
             }
-
         }
-
         /*
         print "<pre>";
         print_r($customer->properties);
@@ -13466,7 +13497,6 @@ class Customers extends Records {
             if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
 
             return $result;
-
         } else {
             return false;
         }
@@ -13485,7 +13515,6 @@ class Customers extends Records {
 
         if ($this->support_web) {
             $url=$this->support_web;
-
         } else {
             if ($_SERVER['HTTPS']=="on") {
                 $protocolURL="https://";
@@ -14675,7 +14704,6 @@ class recordGenerator extends SoapEngine {
                 		$sipAccount['rpid']=$number;
                     }
                 }
-
             } else {
                 unset($sipAccount);
             }
