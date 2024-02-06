@@ -765,7 +765,7 @@ class Records
         syslog(LOG_NOTICE, $log);
     }
 
-    function __construct($SoapEngine)
+    public function __construct($SoapEngine)
     {
         $this->SoapEngine          = $SoapEngine;
 
@@ -1785,7 +1785,7 @@ class SipDomains extends Records
         'require_cert' => array('type'=>'boolean')
     );
 
-    function __construct($SoapEngine)
+    public function __construct($SoapEngine)
     {
         dprint("init Domains");
 
@@ -1793,7 +1793,7 @@ class SipDomains extends Records
             'domain'       => strtolower(trim($_REQUEST['domain_filter']))
         );
 
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
 
         // keep default maxrowsperpage
         $this->sortElements = array(
@@ -2734,7 +2734,8 @@ class SipAccounts extends Records {
                                    'trunking'         => 'Trunking'
                                    );
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init SipAccounts");
 
 
@@ -2747,9 +2748,9 @@ class SipAccounts extends Records {
                                'customer' => trim($_REQUEST['customer_filter']),
                                'reseller' => trim($_REQUEST['reseller_filter']),
                                'group'    => trim($_REQUEST['group_filter'])
-                              );
-	parent::__construct($SoapEngine);	
-        //$this->Records($SoapEngine);
+        );
+
+        parent::__construct($SoapEngine);
 
         if (strlen($this->SoapEngine->call_limit)) {
             $this->platform_call_limit    = $this->SoapEngine->call_limit;
@@ -3980,7 +3981,8 @@ class SipAccounts extends Records {
 class SipAliases extends Records {
     var $selectionActiveExceptions=array('alias_domain');
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init SipAliases");
 
         $target_filters_els=explode("@",trim($_REQUEST['target_username_filter']));
@@ -3996,8 +3998,7 @@ class SipAliases extends Records {
                                  'target_domain'      => strtolower($target_domain)
                                  );
 
-
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
 
         $this->sortElements=array(
                         'changeDate'     => 'Change date',
@@ -4537,7 +4538,8 @@ class EnumRanges extends Records {
                                                               )
                               );
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init EnumRanges");
 
         $this->filters   = array('prefix'       => trim(ltrim($_REQUEST['prefix_filter']),'+'),
@@ -4545,7 +4547,7 @@ class EnumRanges extends Records {
                                  'info'         => trim($_REQUEST['info_filter'])
                                  );
 
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
 
         $this->sortElements=array('changeDate' => 'Change date',
                                     'prefix'     => 'Prefix',
@@ -5339,7 +5341,8 @@ class EnumMappings extends Records {
                               "schemas"=>array("https://"))
         );
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init EnumMappings");
 
         if ($_REQUEST['range_filter']) {
@@ -5362,8 +5365,8 @@ class EnumMappings extends Records {
                                  'type'         => trim($_REQUEST['type_filter']),
                                  'mapto'        => trim($_REQUEST['mapto_filter']),
                                  'owner'        => trim($_REQUEST['owner_filter'])
-                                );
-        $this->Records($SoapEngine);
+        );
+        parent::__construct($SoapEngine);
         $this->getAllowedDomains();
 
     }
@@ -6624,15 +6627,16 @@ class DnsZones extends Records {
                                                      )
                               );
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init DnsZones");
 
         $this->filters   = array(
                                  'name' => trim($_REQUEST['name_filter']),
                                  'info' => trim($_REQUEST['info_filter'])
-                                 );
-	parent::__construct($SoapEngine);
-        //$this->Records($SoapEngine);
+);
+
+        parent::__construct($SoapEngine);
 
         $this->sortElements=array('changeDate' => 'Change date',
                                    'name'     => 'Name'
@@ -7807,7 +7811,8 @@ class DnsRecords extends Records {
     );
 
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init DnsRecords");
 
         $_name = trim($_REQUEST['name_filter']);
@@ -7836,7 +7841,7 @@ class DnsRecords extends Records {
             );
         }
 
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
         $this->getAllowedDomains();
     }
 
@@ -9024,7 +9029,8 @@ class TrustedPeers extends Records {
                               'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
                               );
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
 
         $this->filters   = array('ip'     => trim($_REQUEST['ip_filter']),
                                  'tenant'   => trim($_REQUEST['tenant_filter']),                     
@@ -9032,7 +9038,7 @@ class TrustedPeers extends Records {
                                  'msteams'  => trim($_REQUEST['msteams_filter'])
                                  );
 
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
 
         $this->sortElements=array(
                         'changeDate'  => 'Change date',
@@ -9519,12 +9525,13 @@ class Carriers extends Records {
                             'name'       => 'Carrier'
                             );
 
-    function __construct($SoapEngine) {
-        $this->filters   = array('id'   => trim($_REQUEST['id_filter']),
-                                 'name' => trim($_REQUEST['name_filter'])
-                                 );
-
-        $this->Records($SoapEngine);
+    public function __construct($SoapEngine)
+    {
+        $this->filters   = array(
+            'id'   => trim($_REQUEST['id_filter']),
+            'name' => trim($_REQUEST['name_filter'])
+        );
+        parent::__construct($SoapEngine);
     }
 
     function showCustomerTextBox () {
@@ -9939,7 +9946,8 @@ class Gateways extends Records {
     //var $transports=array('udp','tcp','tls');
     var $transports=array('udp');
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         $this->filters   = array(
                                  'id'         => trim($_REQUEST['id_filter']),
                                  'name'       => trim($_REQUEST['name_filter']),
@@ -9953,7 +9961,7 @@ class Gateways extends Records {
                             'ip'          => 'Address'
                             );
 
-        $this->Records($SoapEngine);
+        parent::__construct($SoapEngine);
     }
 
     function listRecords() {
@@ -10475,20 +10483,22 @@ class GatewayRules extends Records {
                               'maxLength'  => array('type'=>'integer')
                               );
 
-    function GatewayRules($SoapEngine) {
-        $this->filters   = array('id'         => trim($_REQUEST['id_filter']),
-                                 'gateway_id' => trim($_REQUEST['gateway_id_filter']),
-                                 'carrier_id' => trim($_REQUEST['carrier_id_filter']),
-                                 'prefix'     => trim($_REQUEST['prefix_filter']),
-                                 );
+    public function GatewayRules($SoapEngine)
+    {
+        $this->filters   = array(
+            'id'         => trim($_REQUEST['id_filter']),
+            'gateway_id' => trim($_REQUEST['gateway_id_filter']),
+            'carrier_id' => trim($_REQUEST['carrier_id_filter']),
+            'prefix'     => trim($_REQUEST['prefix_filter']),
+        );
 
         $this->sortElements=array(
-                            'changeDate' => 'Change date',
-                            'gateway'    => 'Gateway',
-                            'carrier'    => 'Carrier',
-                            'prefix'     => 'Prefix'
-                            );
-        $this->Records($SoapEngine);
+            'changeDate' => 'Change date',
+            'gateway'    => 'Gateway',
+            'carrier'    => 'Carrier',
+            'prefix'     => 'Prefix'
+        );
+        parent::__construct($SoapEngine);
     }
 
     function listRecords() {
@@ -10995,15 +11005,16 @@ class Routes extends Records {
                             'priority'     => 'Priority'
                             );
 
-    function Routes($SoapEngine) {
-        $this->filters   = array('prefix'    => trim($_REQUEST['prefix_filter']),
-                                 'priority'  => trim($_REQUEST['priority_filter']),
-                                 'carrier_id'=> trim($_REQUEST['carrier_id_filter']),
-                                 'reseller'  => trim($_REQUEST['reseller_filter']),
-                                 'id'        => trim($_REQUEST['id_filter'])
-                                 );
-
-        $this->Records($SoapEngine);
+    public function __construct($SoapEngine)
+    {
+        $this->filters   = array(
+            'prefix'    => trim($_REQUEST['prefix_filter']),
+            'priority'  => trim($_REQUEST['priority_filter']),
+            'carrier_id'=> trim($_REQUEST['carrier_id_filter']),
+            'reseller'  => trim($_REQUEST['reseller_filter']),
+            'id'        => trim($_REQUEST['id_filter'])
+        );
+        parent::__construct($SoapEngine);
     }
 
     function listRecords() {
@@ -12037,34 +12048,35 @@ class Customers extends Records {
         array("label"=>"Zambia",    "value"=>"ZM"),
         array("label"=>"Zimbabwe",    "value"=>"ZW"),
         array("label"=>"Undefined",    "value"=>"N/A")
-        );
+    );
 
-        var $hide_html = false;
+    var $hide_html = false;
 
-    function __construct($SoapEngine) {
+    public function __construct($SoapEngine)
+    {
         dprint("init Customers");
 
         $this->filters   = array(
-                           'username'       => trim($_REQUEST['username_filter']),
-                           'firstName'      => trim($_REQUEST['firstName_filter']),
-                           'lastName'       => trim($_REQUEST['lastName_filter']),
-                           'organization'   => trim($_REQUEST['organization_filter']),
-                           'tel'            => trim($_REQUEST['tel_filter']),
-                           'email'          => htmlspecialchars(trim($_REQUEST['email_filter'])),
-                           'web'            => trim($_REQUEST['web_filter']),
-                           'country'        => trim($_REQUEST['country_filter']),
-                           'city'           => trim($_REQUEST['city_filter']),
-                           'only_resellers' => trim($_REQUEST['only_resellers_filter'])
-                           );
+            'username'       => trim($_REQUEST['username_filter']),
+            'firstName'      => trim($_REQUEST['firstName_filter']),
+            'lastName'       => trim($_REQUEST['lastName_filter']),
+            'organization'   => trim($_REQUEST['organization_filter']),
+            'tel'            => trim($_REQUEST['tel_filter']),
+            'email'          => htmlspecialchars(trim($_REQUEST['email_filter'])),
+            'web'            => trim($_REQUEST['web_filter']),
+            'country'        => trim($_REQUEST['country_filter']),
+            'city'           => trim($_REQUEST['city_filter']),
+            'only_resellers' => trim($_REQUEST['only_resellers_filter'])
+        );
 
-	parent::__construct($SoapEngine);
+        parent::__construct($SoapEngine);
 
         $this->showAddForm = $_REQUEST['showAddForm'];
 
         if (is_array($this->SoapEngine->customer_properties)) {
-        	$this->customer_properties = $this->SoapEngine->customer_properties;
+            $this->customer_properties = $this->SoapEngine->customer_properties;
         } else {
-        	$this->customer_properties = array();
+            $this->customer_properties = array();
         }
 
         $this->allProperties=array_merge($this->propertiesItems,$this->customer_properties);
@@ -13874,7 +13886,7 @@ class Customers extends Records {
 }
 
 class Presence {
-    function Presence($SoapEngine) {
+    function __construct($SoapEngine) {
         $this->SoapEngine         = $SoapEngine;
     }
 
