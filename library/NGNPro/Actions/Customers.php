@@ -1,8 +1,9 @@
 <?php
 
-class CustomersActions extends Actions {
-    var $actions=array(
-	    'delete'         => 'Delete customers'
+class CustomersActions extends Actions
+{
+    public $actions = array(
+        'delete'  => 'Delete customers'
     );
 
     public function execute($selectionKeys, $action, $sub_action_parameter)
@@ -14,21 +15,25 @@ class CustomersActions extends Actions {
 
         print "<ol>";
 
-        foreach($selectionKeys as $key) {
+        foreach ($selectionKeys as $key) {
             flush();
             print "<li>";
 
-            if ($action=='delete') {
+            if ($action == 'delete') {
                 $this->log_action('deleteAccount');
-                $function=array('commit'  => array('name'       => 'deleteAccount',
-                                                    'parameters' => array(intval($key)),
-                                                   'logs'       => array('success' => sprintf('Customer id %s has been deleted',$key)))
-                                );
-                $this->SoapEngine->execute($function,$this->html);
+                $function = array(
+                    'commit'  => array(
+                        'name'       => 'deleteAccount',
+                        'parameters' => array(intval($key)),
+                        'logs'       => array(
+                            'success' => sprintf('Customer id %s has been deleted', $key)
+                        )
+                    )
+                );
+                $this->SoapEngine->execute($function, $this->html);
             }
         }
 
         print "</ol>";
     }
 }
-

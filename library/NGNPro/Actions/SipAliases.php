@@ -2,7 +2,7 @@
 
 class SipAliasesActions extends Actions
 {
-    var $actions  = array(
+    public $actions  = array(
         'delete' => 'Delete SIP aliases'
     );
 
@@ -14,28 +14,30 @@ class SipAliasesActions extends Actions
         }
 
         print "<ol>";
-        foreach($selectionKeys as $key) {
+        foreach ($selectionKeys as $key) {
             print "<li>";
             flush();
 
             //printf ("Performing action=%s on key=%s",$action,$key);
             $alias=array('username' => $key['username'],
-                         'domain'   => $key['domain']
-                        );
+                'domain'   => $key['domain']
+            );
 
             if ($action=='delete') {
                 $this->log_action('deleteAlias');
 
-                $function=array('commit'   => array('name'       => 'deleteAlias',
-                                                    'parameters' => array($alias),
-                                                    'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$key['username'],$key['domain'])
-                                                                          )
-                                                   )
-                                );
-                $this->SoapEngine->execute($function,$this->html);
+                $function=array(
+                    'commit'   => array(
+                        'name'       => 'deleteAlias',
+                        'parameters' => array($alias),
+                        'logs'       => array(
+                            'success' => sprintf('SIP alias %s@%s has been deleted', $key['username'], $key['domain'])
+                        )
+                    )
+                );
+                $this->SoapEngine->execute($function, $this->html);
             }
         }
         print "</ol>";
-
     }
 }
