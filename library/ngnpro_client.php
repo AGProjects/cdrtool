@@ -15410,13 +15410,15 @@ class SipAccountsActions extends Actions {
     }
 }
 
-class SipAliasesActions extends Actions {
-    var $actions=array(
-                       'delete'         => 'Delete SIP aliases'
-                       );
+class SipAliasesActions extends Actions
+{
+    var $actions  = array(
+        'delete' => 'Delete SIP aliases'
+    );
 
-    function SipAliasesActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
+    public function __construct($SoapEngine, $login_credentials)
+    {
+        parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys, $action, $sub_action_parameter)
@@ -15468,8 +15470,9 @@ class EnumMappingsActions extends Actions {
                               'ttl'      => 'integer'
                               );
 
-    function EnumMappingsActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
+    public function __construct($SoapEngine, $login_credentials)
+    {
+        parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -15626,8 +15629,9 @@ class DnsRecordsActions extends Actions {
         'delete'         => 'Delete records'
     );
 
-    function DnsRecordsActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
+    public function __construct($SoapEngine, $login_credentials)
+    {
+        parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys, $action, $sub_action_parameter) {
@@ -15758,8 +15762,9 @@ class DnsZonesActions extends Actions {
                        'export'         => 'Export zones'
                        );
 
-    function DnsZonesActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
+    public function __construct($SoapEngine, $login_credentials)
+    {
+        parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
@@ -16080,8 +16085,9 @@ class CustomersActions extends Actions {
 	    'delete'         => 'Delete customers'
     );
 
-    function __construct($SoapEngine, $login_credentials) {
-	    parent::__construct($SoapEngine, $login_credentials);
+    public function __construct($SoapEngine, $login_credentials)
+    {
+        parent::__construct($SoapEngine, $login_credentials);
     }
 
     function execute($selectionKeys,$action,$sub_action_parameter) {
