@@ -5782,7 +5782,7 @@ class EnumMappings extends Records
         ";
         reset($this->NAPTR_services);
         $selected_naptr_service[$this->filters['type']]='selected';
-        while (list($k,$v) = each($this->NAPTR_services)) {
+        foreach ($this->NAPTR_services as $k => $v) {
             printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
         }
 
@@ -5792,7 +5792,6 @@ class EnumMappings extends Records
 
         printf ("<input class=span3 type=text size=30 name=mapto_filter value='%s'></nobr></div>",$this->filters['mapto']);
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
-
     }
 
     function deleteRecord($dictionary=array()) {
