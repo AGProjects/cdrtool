@@ -5755,7 +5755,6 @@ class EnumMappings extends Records
 
                 return $number;
             }
-
         }
 
         return false;
@@ -5961,7 +5960,7 @@ class EnumMappings extends Records
 
         reset($this->NAPTR_services);
 
-        while (list($k,$v) = each($this->NAPTR_services)) {
+        foreach ($this->NAPTR_services as $k => $v) {
             printf ("<option value='%s' %s>%s",$k,$selected_naptr_service[$k],$this->NAPTR_services[$k]['webname']);
         }
 
@@ -6402,8 +6401,7 @@ class EnumMappings extends Records
             $selected_type[$_mapping->type]='selected';
             printf ("
             <td class=border><select class=span2 name=mapping_type[]>");
-            reset($this->NAPTR_services);
-            while (list($k,$v) = each($this->NAPTR_services)) {
+            foreach ($this->NAPTR_services as $k => $v) {
                 printf ("<option value='%s' %s>%s",$k,$selected_type[$k],$this->NAPTR_services[$k]['webname']);
             }
 
@@ -6428,8 +6426,7 @@ class EnumMappings extends Records
 
         printf ("
         <td class=border><select class=span2 name=mapping_type[]>");
-        reset($this->NAPTR_services);
-        while (list($k,$v) = each($this->NAPTR_services)) {
+        foreach ($this->NAPTR_services as $k => $v) {
             printf ("<option value='%s'>%s",$k,$this->NAPTR_services[$k]['webname']);
         }
 
