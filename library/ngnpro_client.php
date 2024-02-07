@@ -55,7 +55,7 @@ require_once 'ngnpro_soap_library.php';
     ////////////////////////////////
 
     $sip_engine          = 'sip_accounts@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $this->SipSoapEngine = new SoapEngine($sip_engine, $soapEngines, $login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
 
@@ -76,7 +76,7 @@ require_once 'ngnpro_soap_library.php';
     ////////////////////////////////
 
     $sip_engine          = 'sip_accounts@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $this->SipSoapEngine = new SoapEngine($sip_engine, $soapEngines, $login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
 
@@ -92,7 +92,7 @@ require_once 'ngnpro_soap_library.php';
     ///////////////////////////////
 
     $sip_engine          = 'sip_aliases@engine';
-    $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+    $this->SipSoapEngine = new SoapEngine($sip_engine, $soapEngines, $login_credentials);
     $_sip_class          = $this->SipSoapEngine->records_class;
     $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
 
@@ -110,7 +110,7 @@ require_once 'ngnpro_soap_library.php';
     ///////////////////////////////////
 
     $enum_engine          = 'enum_numbers@engine';
-    $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$login_credentials);
+    $this->EnumSoapEngine = new SoapEngine($enum_engine, $soapEngines, $login_credentials);
     $_enum_class          = $this->EnumSoapEngine->records_class;
     $this->enumRecords    = new $_enum_class($this->EnumSoapEngine);
 
@@ -422,7 +422,7 @@ class SoapEngine
 
             if (strlen($this->login_credentials['customer_engine'])) {
                 $this->customer_engine = $this->login_credentials['customer_engine'];
-            } else if (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
+            } elseif (strlen($this->soapEngines[$this->soapEngine]['customer_engine'])) {
                 $this->customer_engine = $this->soapEngines[$this->soapEngine]['customer_engine'];
             } else {
                 $this->customer_engine = $this->soapEngine;
@@ -457,25 +457,25 @@ class SoapEngine
             }
             if (strlen($this->login_credentials['record_generator'])) {
                 $this->record_generator = $this->login_credentials['record_generator'];
-            } else if (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
+            } elseif (strlen($this->soapEngines[$this->soapEngine]['record_generator'])) {
                 $this->record_generator = $this->soapEngines[$this->soapEngine]['record_generator'];
             }
 
             if (strlen($this->login_credentials['name_servers'])) {
                 $this->name_servers = $this->login_credentials['name_servers'];
-            } else if (strlen($this->soapEngines[$this->soapEngine]['name_servers'])) {
+            } elseif (strlen($this->soapEngines[$this->soapEngine]['name_servers'])) {
                 $this->name_servers = $this->soapEngines[$this->soapEngine]['name_servers'];
             }
 
             if (strlen($login_credentials['reseller'])) {
                 $this->reseller = $login_credentials['reseller'];
-            } else if ($this->adminonly && $_REQUEST['reseller_filter']) {
+            } elseif ($this->adminonly && $_REQUEST['reseller_filter']) {
                 $this->reseller = $_REQUEST['reseller_filter'];
             }
 
             if (strlen($login_credentials['customer'])) {
                 $this->customer = $login_credentials['customer'];
-            } else if ($this->adminonly && $_REQUEST['customer_filter']) {
+            } elseif ($this->adminonly && $_REQUEST['customer_filter']) {
                 $this->customer = $_REQUEST['customer_filter'];
             }
 
@@ -743,7 +743,7 @@ class Records
     public $filters            = array();
     public $selectionActiveExceptions    = array();
 
-    function log_action($action = 'Unknown')
+    private function log_action($action = 'Unknown')
     {
         global $CDRTool;
         $location = "Unknown";
@@ -1200,7 +1200,7 @@ class Records
             }
 
             $i = 0;
-            while ($i < $max)  {
+            while ($i < $max) {
                 $customer = $result->accounts[$i];
                 $this->customers[$customer->id] = $customer->firstName.' '.$customer->lastName;
                 $i++;
@@ -1501,7 +1501,7 @@ class Records
         $i = 0;
         while ($i < $len) {
             srand((double)microtime() * 1000000);
-            $randval = rand(0,9);
+            $randval = rand(0, 9);
             $string = "$string"."$alf[$randval]";
             $i++;
         }
@@ -1537,7 +1537,7 @@ class Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -1567,7 +1567,7 @@ class Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -1654,7 +1654,7 @@ class Records
     {
         if (!$customer) $customer=$this->customer;
 
-        $log=sprintf("getCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
+        $log=sprintf("getCustomerProperties(%s,engine=%s)",$customer, $this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1674,7 +1674,7 @@ class Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -1694,7 +1694,7 @@ class Records
     {
         if (!$customer) $customer=$this->customer;
 
-        $log=sprintf("setCustomerProperties(%s,engine=%s)",$customer,$this->SoapEngine->customer_engine);
+        $log=sprintf("setCustomerProperties(%s,engine=%s)",$customer, $this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1712,7 +1712,7 @@ class Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -1847,7 +1847,7 @@ class SipDomains extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -2049,7 +2049,7 @@ class SipDomains extends Records
                                            );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
     function showAddForm() {
@@ -2090,7 +2090,8 @@ class SipDomains extends Records
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary = array())
+    {
         if ($this->adminonly && $_FILES['import_file']['tmp_name']) {
             $content=fread(fopen($_FILES['import_file']['tmp_name'], "r"), $_FILES['import_file']['size']);
             //print_r($content);
@@ -2131,13 +2132,13 @@ class SipDomains extends Records
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
-                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                             printf ("<p><font color=red>Error: $log</font>");
                         } else {
                             printf('<p>Customer %s has been updated',$customer['id']);
                         }
                     } else {
-                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                         printf ("<p><font color=red>Error: $log</font>");
                     }
                 } else {
@@ -2162,13 +2163,13 @@ class SipDomains extends Records
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
-                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                             printf ("<p><font color=red>Error: $log</font>");
                          } else {
                              printf('<p>SIP domain %s has been updated',$domain['domain']);
                          }
                     } else {
-                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                         printf ("<p><font color=red>Error: $log</font>");
                     }
                 } else {
@@ -2204,15 +2205,15 @@ class SipDomains extends Records
                             $error_msg  = $result->getMessage();
                             $error_fault= $result->getFault();
                             $error_code = $result->getCode();
-                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                             printf ("<p><font color=red>Error: $log</font>");
                             $failed += 1;
                         } else {
-                            printf('<p>%d SIP account %s@%s has been updated',$i,$account['id']['username'], $account['id']['domain']);
+                            printf('<p>%d SIP account %s@%s has been updated',$i, $account['id']['username'], $account['id']['domain']);
                             $updated += 1;
                         }
                     } else {
-                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                         printf ("<p><font color=red>Error: $log</font>");
                         $failed += 1;
                     }
@@ -2243,7 +2244,7 @@ class SipDomains extends Records
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                     printf ("<p><font color=red>Error: $log</font>");
                 } else {
                    $added += 1;
@@ -2262,7 +2263,7 @@ class SipDomains extends Records
                 $domain = trim($_REQUEST['domain']);
             }
 
-            list($customer,$reseller)=$this->customerFromLogin($dictionary);
+            list($customer, $reseller)=$this->customerFromLogin($dictionary);
 
             if (!$this->validDomain($domain)) {
                 print "<font color=red>Error: invalid domain name</font>";
@@ -2278,12 +2279,12 @@ class SipDomains extends Records
                                                 'logs'       => array('success' => sprintf('SIP domain %s has been added',$domain)))
                                                );
 
-            return $this->SoapEngine->execute($function,$this->html);
+            return $this->SoapEngine->execute($function, $this->html);
         }
     }
 
-    function getRecordKeys() {
-
+    function getRecordKeys()
+    {
         // Filter
         $filter=array(
                       'domain'    => $this->filters['domain'],
@@ -2318,7 +2319,7 @@ class SipDomains extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            printf ("<p><font color=red>Error in getAllowedDomains from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             //return false;
         } else {
             foreach ($result->domains as $_domain) {
@@ -2327,8 +2328,8 @@ class SipDomains extends Records
         }
     }
 
-    function getRecord($domain) {
-
+    function getRecord($domain)
+    {
         // Filter
         $filter=array(
                       'domain'    => $domain
@@ -2361,11 +2362,11 @@ class SipDomains extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-            if ($result->domains[0]){
+            if ($result->domains[0]) {
                 return $result->domains[0];
             } else {
                 return false;
@@ -2373,7 +2374,8 @@ class SipDomains extends Records
         }
     }
 
-    function showRecord($domain) {
+    function showRecord($domain)
+    {
         if ($domain->certificate and $domain->private_key) {
             $pemdata = sprintf("%s\n%s", $domain->certificate,  $domain->private_key);
             $cert = openssl_x509_read( $pemdata );
@@ -2410,7 +2412,6 @@ class SipDomains extends Records
                 printf("<tr><td>Expire date</td><td>%s</td></tr>", $expire->format('Y-m-d'));
         }
         if ($this->adminonly) {
-
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
                 if ($this->FieldsAdminOnly[$item]['name']) {
                     $item_name=$this->FieldsAdminOnly[$item]['name'];
@@ -2463,53 +2464,55 @@ class SipDomains extends Records
             }
 
             if ($this->Fields[$item]['type'] == 'text') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
-                </tr>",
-                $item_name,
-                $item,
-                $domain->$item
+                printf(
+                    "<tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $domain->$item
                 );
-            } else if ($this->Fields[$item]['type'] == 'boolean') {
+            } elseif ($this->Fields[$item]['type'] == 'boolean') {
                 if ($domain->$item == 1) {
-                    $checked = "checked";   
+                    $checked = "checked";
                 } else {
                     $checked = "";
                 }
-            
-                printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><input type=checkbox name=%s_form %s value=1></td>
-                </tr>",
-                $item_name,
-                $item,
-                $checked
+
+                printf(
+                    "<tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $checked
                 );
-        } else {
-            printf ("<tr>
-                <td class=border valign=top>%s</td>
-                <td class=border><input name=%s_form size=30 type=text value='%s'></td>
-                </tr>",
-                $item_name,
-                $item,
-                $domain->$item
+            } else {
+                printf(
+                    "<tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                    </tr>",
+                    $item_name,
+                    $item,
+                    $domain->$item
                 );
             }
         }
 
-        printf ("<input type=hidden name=domain_filter value='%s'>",$domain->domain);
+        printf("<input type=hidden name=domain_filter value='%s'>", $domain->domain);
         $this->printFiltersToForm();
 
         $this->printHiddenFormElements();
 
         print "</form>";
-        print "
-        </table>
-        ";
+        print "</table>";
     }
 
-    function updateRecord () {
+    function updateRecord()
+    {
         //print "<p>Updating domain ...";
 
         if (!$_REQUEST['domain_filter']) return false;
@@ -2551,7 +2554,7 @@ class SipDomains extends Records
                                             'logs'       => array('success' => sprintf('Domain %s has been updated',$domain->domain)))
                         );
 
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
     function hide_html() {
@@ -2588,13 +2591,13 @@ class SipDomains extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
             $i = 0 ;
 
-            while ($i < $result->total)  {
+            while ($i < $result->total) {
                 $domain = $result->domains[$i];
                 if (!in_array($domain->customer, $export_customers)) {
                     $export_customers[]=$domain->customer;
@@ -2616,7 +2619,7 @@ class SipDomains extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -2637,7 +2640,7 @@ class SipDomains extends Records
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
                     if ($error_fault->detail->exception->errorcode != "2000" && $error_fault->detail->exception->errorcode != "1010") {
-                        printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                        printf ("<p><font color=red>Error (VoicemailPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                     }
                 } else {
                     $exported_data['voicemail_accounts'][] = $result;
@@ -2666,7 +2669,7 @@ class SipDomains extends Records
                     $error_msg  = $result->getMessage();
                     $error_fault= $result->getFault();
                     $error_code = $result->getCode();
-                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                    printf ("<p><font color=red>Error (SipPort): %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                 } else {
                     foreach ($result->aliases as $alias) {
                         $exported_data['sip_aliases'][] = objectToArray($alias);
@@ -2697,7 +2700,7 @@ class SipDomains extends Records
                 $error_msg  = $result->getMessage();
                 $error_fault= $result->getFault();
                 $error_code = $result->getCode();
-                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+                $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
                 syslog(LOG_NOTICE, $log);
                 return false;
             } else {
@@ -2710,7 +2713,8 @@ class SipDomains extends Records
     }
 }
 
-class SipAccounts extends Records {
+class SipAccounts extends Records
+{
     var $selectionActiveExceptions=array('domain');
 
     var $sortElements=array('changeDate' => 'Change date',
@@ -2759,7 +2763,7 @@ class SipAccounts extends Records {
 
     function getRecordKeys() {
 
-        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
+        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'], $m)) {
             $this->filters['username'] = $m[1];
             $this->filters['domain']   = $m[2];
         }
@@ -2790,10 +2794,11 @@ class SipAccounts extends Records {
                          );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query=array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -2806,7 +2811,7 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -2822,10 +2827,11 @@ class SipAccounts extends Records {
         return false;
     }
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->getAllowedDomains();
 
-        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'],$m)) {
+        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'], $m)) {
             $this->filters['username'] = $m[1];
             $this->filters['domain']   = $m[2];
         }
@@ -2875,7 +2881,7 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -2952,7 +2958,7 @@ class SipAccounts extends Records {
                         $j=0;
 
                         foreach ($result1 as $_account) {
-                            $_sip_account=sprintf("%s@%s",$_prepaid_accounts[$j]['username'],$_prepaid_accounts[$j]['domain']);
+                            $_sip_account=sprintf("%s@%s",$_prepaid_accounts[$j]['username'], $_prepaid_accounts[$j]['domain']);
                             $_prepaid_balance[$_sip_account]=$_account->balance;
                             $j++;
                         }
@@ -2961,8 +2967,7 @@ class SipAccounts extends Records {
 
                 $i=0;
 
-                while ($i < $maxrows)  {
-
+                while ($i < $maxrows) {
                     if (!$result->accounts[$i]) break;
 
                     $account = $result->accounts[$i];
@@ -3004,7 +3009,7 @@ class SipAccounts extends Records {
 
                     if ($this->sip_settings_page) {
                         $url=sprintf('%s?account=%s@%s&sip_engine=%s',
-                        $this->sip_settings_page,urlencode($account->id->username),$account->id->domain,$this->SoapEngine->sip_engine);
+                        $this->sip_settings_page,urlencode($account->id->username),$account->id->domain, $this->SoapEngine->sip_engine);
 
                         if ($this->adminonly) {
                         	$url  .= sprintf('&reseller=%s',$reseller_sip_settings_page);
@@ -3021,9 +3026,9 @@ class SipAccounts extends Records {
                         $sip_account=sprintf("
                         <a href=\"javascript:void(null);\" onClick=\"return window.open('%s', 'SIP_Settings',
                         'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
-                        %s@%s</a>",$url,$account->id->username,$account->id->domain);
+                        %s@%s</a>",$url, $account->id->username, $account->id->domain);
                     } else {
-                        $sip_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+                        $sip_account=sprintf("%s@%s",$account->id->username, $account->id->domain);
                     }
 
                     /*
@@ -3043,7 +3048,7 @@ class SipAccounts extends Records {
                     } else {
                         $_owner_url='';
                     }
-                    $prepaid_account=sprintf("%s@%s",$account->id->username,$account->id->domain);
+                    $prepaid_account=sprintf("%s@%s",$account->id->username, $account->id->domain);
 
                     if ($account->callLimit) {
                         $callLimit = $account->callLimit;
@@ -3096,13 +3101,14 @@ class SipAccounts extends Records {
         }
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
         printf ("
             <div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text name=username_filter value='%s'></div>",$this->filters['username']);
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
-            if ($this->filters['domain'] && !in_array($this->filters['domain'],$this->allowedDomains)) {
+            if ($this->filters['domain'] && !in_array($this->filters['domain'], $this->allowedDomains)) {
                 printf ("<input class=span2 type=text name=domain_filter value='%s'>",$this->filters['domain']);
             } else {
                 $selected_domain[$this->filters['domain']]='selected';
@@ -3131,7 +3137,7 @@ class SipAccounts extends Records {
                     continue;
                 }
             }
-            printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
+            printf("<option  value=%s %s>%s",$key, $selected_group[$key], $this->group_filter_list[$key]);
         }
         print "</select>";
     }
@@ -3166,7 +3172,7 @@ class SipAccounts extends Records {
 
         $function=array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$_REQUEST['key'],$this->filters['domain'])
+                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$_REQUEST['key'], $this->filters['domain'])
                                                                   )
                                            )
 
@@ -3179,7 +3185,7 @@ class SipAccounts extends Records {
 
         $this->filters=$new_filters;
 
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
     function showAddForm()
@@ -3221,23 +3227,22 @@ class SipAccounts extends Records {
         if (count($this->allowedDomains) > 0) {
             print "@<select class=span2 name=domain>";
             foreach ($this->allowedDomains as $_domain) {
-                printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
+                printf("<option value='%s' %s>%s\n", $_domain, $selected_domain[$_domain], $_domain);
             }
             print "</select>";
-
         } else {
-            printf (" <input type=text name=domain class=span2value='%s'>",$_domain);
+            printf("<input type=text name=domain class=span2value='%s'>", $_domain);
         }
 
         if ($_REQUEST['quota']) {
-            $_quota=$_REQUEST['quota'];
+            $_quota = $_REQUEST['quota'];
         } else {
-            $_quota=$this->getCustomerProperty('sip_accounts_last_quota');
+            $_quota = $this->getCustomerProperty('sip_accounts_last_quota');
         }
 
         if (!$_quota) $_quota='';
 
-        if ($_prepaid=$this->getCustomerProperty('sip_accounts_last_prepaid')) {
+        if ($_prepaid = $this->getCustomerProperty('sip_accounts_last_prepaid')) {
             $checked_prepaid='checked';
         } else {
             $checked_prepaid='';
@@ -3265,12 +3270,13 @@ class SipAccounts extends Records {
 
         $this->printHiddenFormElements();
 
-    print "</div>
-            </form>
+        print "</div>
+        </form>
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary = array())
+    {
         dprint_r($dictionary);
 
         if ($dictionary['account']) {
@@ -3280,7 +3286,7 @@ class SipAccounts extends Records {
             $account_els  = explode("@", trim($_REQUEST['account']));
         }
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+        list($customer, $reseller) = $this->customerFromLogin($dictionary);
 
         $username=$account_els[0];
 
@@ -3338,7 +3344,7 @@ class SipAccounts extends Records {
             $timezone='Europe/Amsterdam';
         }
 
-        if (!in_array($timezone,$this->timezones)) {
+        if (!in_array($timezone, $this->timezones)) {
             $timezone='Europe/Amsterdam';
         }
 
@@ -3462,10 +3468,10 @@ class SipAccounts extends Records {
             $this->setCustomerProperties($_p);
         }
 
-	if (is_array($dictionary['properties'])) {
-        	$properties=$dictionary['properties'];
+        if (is_array($dictionary['properties'])) {
+            $properties=$dictionary['properties'];
         } else {
-        	$properties=array();
+            $properties=array();
         }
 
         if ($this->SoapEngine->login_credentials['reseller']) {
@@ -3474,15 +3480,14 @@ class SipAccounts extends Records {
             if (strlen($reseller_properties['store_clear_text_passwords'])) {
                 $this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
             }
-
         } else {
             $_reseller=$this->getResellerForDomain(strtolower($domain));
 
             if ($_reseller) {
-    	        $reseller_properties=$this->getResellerProperties($_reseller,'store_clear_text_passwords');
+                $reseller_properties = $this->getResellerProperties($_reseller, 'store_clear_text_passwords');
 
-            	if (strlen($reseller_properties['store_clear_text_passwords'])) {
-                    $this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
+                if (strlen($reseller_properties['store_clear_text_passwords'])) {
+                    $this->store_clear_text_passwords = $reseller_properties['store_clear_text_passwords'];
                 }
             }
         }
@@ -3526,7 +3531,7 @@ class SipAccounts extends Records {
             if ($username == '<autoincrement>') {
                 $success_log=sprintf('SIP account has been generated in domain %s',$domain);
             } else {
-                $success_log=sprintf('SIP account %s@%s has been added',$username,$domain);
+                $success_log=sprintf('SIP account %s@%s has been added',$username, $domain);
             }
         }
 
@@ -3536,7 +3541,7 @@ class SipAccounts extends Records {
                         );
 
 
-		return $this->SoapEngine->execute($function,$this->html);
+		return $this->SoapEngine->execute($function, $this->html);
     }
 
     function getAllowedDomains()
@@ -3763,7 +3768,7 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
         } else {
             $i = 0;
@@ -3814,7 +3819,7 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
         } else {
             $i=0;
@@ -3832,7 +3837,8 @@ class SipAccounts extends Records {
         return $accounts;
     }
 
-    function getResellerForDomain($domain='') {
+    function getResellerForDomain($domain='')
+    {
         // Filter
         $filter=array(
                       'domain'    => $domain
@@ -3864,11 +3870,11 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-            if ($result->domains[0]){
+            if ($result->domains[0]) {
                 return $result->domains[0]->reseller;
             } else {
                 return false;
@@ -3876,8 +3882,8 @@ class SipAccounts extends Records {
         }
     }
 
-    function getResellerProperties($reseller='',$property='') {
-
+    function getResellerProperties($reseller='',$property='')
+    {
         $properties=array();
 
         if (!$this->SoapEngine->customer_engine) {
@@ -3904,7 +3910,7 @@ class SipAccounts extends Records {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         }
@@ -4048,7 +4054,7 @@ class SipAliases extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4062,7 +4068,8 @@ class SipAliases extends Records
     }
 
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->getAllowedDomains();
 
         // Make sure we apply the domain filter from the login credetials
@@ -4110,7 +4117,7 @@ class SipAliases extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4278,14 +4285,14 @@ class SipAliases extends Records
 
         $function=array('commit'   => array('name'       => 'deleteAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$this->filters['alias_username'],$this->filters['alias_domain'])
+                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$this->filters['alias_username'], $this->filters['alias_domain'])
                                                                   )
                                            )
 
                         );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
     function showSeachFormCustom()
@@ -4294,7 +4301,7 @@ class SipAliases extends Records
         printf ("@");
 
         if (count($this->allowedDomains) > 0) {
-            if ($this->filters['alias_domain'] && !in_array($this->filters['alias_domain'],$this->allowedDomains)) {
+            if ($this->filters['alias_domain'] && !in_array($this->filters['alias_domain'], $this->allowedDomains)) {
                 printf ("<input type=text size=15 name=alias_domain_filter value='%s'>",$this->filters['alias_domain']);
             } else {
                 $selected_domain[$this->filters['alias_domain']]='selected';
@@ -4342,7 +4349,7 @@ class SipAliases extends Records
         if (count($this->allowedDomains) > 0) {
             print "@<select name=domain>";
             foreach ($this->allowedDomains as $_domain) {
-                printf ("<option value='%s' %s>%s\n",$_domain,$selected_domain[$_domain],$_domain);
+                printf ("<option value='%s' %s>%s\n",$_domain, $selected_domain[$_domain], $_domain);
             }
             print "</select>";
 
@@ -4381,13 +4388,13 @@ class SipAliases extends Records
             $owner = $_REQUEST['owner'];
         }
 
-        if (preg_match("/:(.*)$/",$target_els[0],$m)) {
+        if (preg_match("/:(.*)$/",$target_els[0], $m)) {
             $target_username=$m[1];
         } else {
             $target_username=$target_els[0];
         }
 
-        if (preg_match("/:(.*)$/",$alias_els[0],$m)) {
+        if (preg_match("/:(.*)$/",$alias_els[0], $m)) {
             $username=$m[1];
         } else {
             $username=$alias_els[0];
@@ -4411,7 +4418,7 @@ class SipAliases extends Records
             return false;
         }
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+        list($customer, $reseller)=$this->customerFromLogin($dictionary);
 
         if (!$this->skipSaveProperties=true) {
             $_p=array(
@@ -4441,10 +4448,10 @@ class SipAliases extends Records
 
         $function=array('commit'   => array('name'       => 'addAlias',
                                             'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been added',$username,$domain)))
+                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been added',$username, $domain)))
                         );
 
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
     function getAllowedDomains()
@@ -4477,7 +4484,7 @@ class SipAliases extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4610,7 +4617,7 @@ class EnumRanges extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4680,14 +4687,13 @@ class EnumRanges extends Records
                     }
 
                     if ($this->adminonly) {
-                        $range_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$range->reseller,$range->id->prefix,$range->id->tld,$range->id->prefix);
-
+                        $range_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url, $this->SoapEngine->service, $range->reseller, $range->id->prefix, $range->id->tld, $range->id->prefix);
                     } else {
-                        $range_url=sprintf('<a href=%s&&service=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url,$this->SoapEngine->service,$range->id->prefix,$range->id->tld,$range->id->prefix);
+                        $range_url=sprintf('<a href=%s&&service=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url, $this->SoapEngine->service, $range->id->prefix, $range->id->tld, $range->id->prefix);
                     }
 
                     if ($this->record_generator) {
-                        $generator_url=sprintf('<a class="btn-small btn-primary" href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url,$this->record_generator,$range->id->prefix,$range->id->tld,$range->maxDigits,$range->reseller);
+                        $generator_url=sprintf('<a class="btn-small btn-primary" href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url, $this->record_generator, $range->id->prefix, $range->id->tld, $range->maxDigits, $range->reseller);
                     } else {
                         $generator_url='';
                     }
@@ -4760,7 +4766,7 @@ class EnumRanges extends Records
         }
     }
 
-    function deleteRecord($dictionary=array())
+    function deleteRecord($dictionary = array())
     {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
@@ -4777,20 +4783,20 @@ class EnumRanges extends Records
 
         $function=array('commit'   => array('name'       => 'deleteRange',
                                             'parameters' => array($rangeId),
-                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been deleted',$this->filters['prefix'],$this->filters['tld'])
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been deleted',$this->filters['prefix'], $this->filters['tld'])
                                                                   )
                                             )
                         );
 
   		unset($this->filters);
 
-        $result = $this->SoapEngine->execute($function,$this->html);
+        $result = $this->SoapEngine->execute($function, $this->html);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4804,64 +4810,65 @@ class EnumRanges extends Records
 
         printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
 
-            print "
-            <div class='well well-small'>
-            ";
+        print "
+        <div class='well well-small'>
+        ";
 
-            print "
-            <input type=submit class='btn btn-warning' name=action value=Add>
-            ";
-            $this->showCustomerTextBox();
+        print "
+        <input type=submit class='btn btn-warning' name=action value=Add>
+        ";
+        $this->showCustomerTextBox();
 
-            printf ("</div> <div class='input-prepend'><span class='add-on'>Prefix +</span><input type=text class=input-medium size=15 name=prefix value='%s'></div>",$_REQUEST['prefix']);
-            printf (" <div class='input-prepend'><span class='add-on'>TLD</span>");
+        printf ("</div> <div class='input-prepend'><span class='add-on'>Prefix +</span><input type=text class=input-medium size=15 name=prefix value='%s'></div>",$_REQUEST['prefix']);
+        printf (" <div class='input-prepend'><span class='add-on'>TLD</span>");
 
-            if ($_REQUEST['tld']) {
-                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_REQUEST['tld']);
-            } else if ($this->filters['tld']) {
-                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$this->filters['tld']);
-            } else if ($_tld=$this->getCustomerProperty('enum_ranges_last_tld')) {
-                printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_tld);
-            } else {
-                printf ("<input class=span2 type=text size=15 name=tld></div>");
-            }
+        if ($_REQUEST['tld']) {
+            printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_REQUEST['tld']);
+        } else if ($this->filters['tld']) {
+            printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$this->filters['tld']);
+        } else if ($_tld=$this->getCustomerProperty('enum_ranges_last_tld')) {
+            printf ("<input class=span2 type=text size=15 name=tld value='%s'></div>",$_tld);
+        } else {
+            printf ("<input class=span2 type=text size=15 name=tld></div>");
+        }
 
-            printf (" <div class='input-prepend'><span class='add-on'>TTL</span><input class=span1 type=text size=5 name=ttl value=3600></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Min Digits</span><input class=span1 type=text size=3 name=minDigits value=11></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Max Digits</span><input class=span1 type=text size=3 name=maxDigits value=11></div>");
-            printf (" <div class='input-prepend'><span class='add-on'>Info</span><input type=text size=15 name=info class=span2 value='%s'></div>",$_REQUEST['info']);
+        printf (" <div class='input-prepend'><span class='add-on'>TTL</span><input class=span1 type=text size=5 name=ttl value=3600></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Min Digits</span><input class=span1 type=text size=3 name=minDigits value=11></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Max Digits</span><input class=span1 type=text size=3 name=maxDigits value=11></div>");
+        printf (" <div class='input-prepend'><span class='add-on'>Info</span><input type=text size=15 name=info class=span2 value='%s'></div>",$_REQUEST['info']);
 
-            $this->printHiddenFormElements();
+        $this->printHiddenFormElements();
 
-            print "
-                </div>
-            </form>
+        print "
+        </div>
+        </form>
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary=array())
+    {
         $tld    = trim($_REQUEST['tld']);
         $prefix = trim($_REQUEST['prefix']);
         $size   = trim($_REQUEST['size']);
         $info   = trim($_REQUEST['info']);
 
         if (!strlen($tld)) {
-        	$tld=$this->SoapEngine->default_enum_tld;
+            $tld=$this->SoapEngine->default_enum_tld;
         }
 
         if (!strlen($tld) || !strlen($prefix) || !is_numeric($prefix)) {
-            printf ("<p><font color=red>Error: Missing TLD or prefix. </font>");
+            printf("<p><font color=red>Error: Missing TLD or prefix. </font>");
             return false;
         }
 
         if (!$this->adminonly) {
-            if (in_array($prefix,$this->deniedPrefixes)) {
+            if (in_array($prefix, $this->deniedPrefixes)) {
                 print "<p><font color=red>Error: Only an administrator account can create the prefix coresponding to a country code.</font>";
                 return false;
             }
         }
 
-        list($customer,$reseller)=$this->customerFromLogin($dictionary);
+        list($customer, $reseller)=$this->customerFromLogin($dictionary);
 
         if (!trim($_REQUEST['ttl'])) {
             $ttl = 3600;
@@ -4903,18 +4910,18 @@ class EnumRanges extends Records
             'commit'   => array(
                 'name'       => 'addRange',
                 'parameters' => array($range),
-                'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix,$tld))
+                'logs'       => array('success' => sprintf('ENUM range +%s under %s has been added',$prefix, $tld))
             )
         );
 
-        $result = $this->SoapEngine->execute($function,$this->html);
+        $result = $this->SoapEngine->execute($function, $this->html);
 
         dprint_r($result);
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4933,7 +4940,7 @@ class EnumRanges extends Records
             <option>");
 
             foreach ($this->allowedDomains as $_tld) {
-                printf ("<option value='%s' %s>%s",$_tld,$selected_tld[$_tld],$_tld);
+                printf ("<option value='%s' %s>%s",$_tld, $selected_tld[$_tld], $_tld);
             }
 
             printf ("</select></div>");
@@ -4974,7 +4981,7 @@ class EnumRanges extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -4984,7 +4991,7 @@ class EnumRanges extends Records
                                       'minDigits' => $range->minDigits,
                                       'maxDigits' => $range->maxDigits
                                       );
-                if (in_array($range->id->tld,$this->allowedDomains)) continue;
+                if (in_array($range->id->tld, $this->allowedDomains)) continue;
                 $this->allowedDomains[]=$range->id->tld;
                 $seen[$range->id->tld]++;
             }
@@ -5010,7 +5017,7 @@ class EnumRanges extends Records
         </td></tr>";
 
         printf ("<tr><td class=border>DNS zone</td><td class=border>%s</td></td>",
-        $this->tel2enum($range->id->prefix,$range->id->tld));
+        $this->tel2enum($range->id->prefix, $range->id->tld));
 
         if ($this->adminonly) {
 
@@ -5118,7 +5125,7 @@ class EnumRanges extends Records
         ";
     }
 
-    function updateRecord ()
+    function updateRecord()
     {
         //print "<p>Updating range ...";
 
@@ -5136,7 +5143,7 @@ class EnumRanges extends Records
 
         foreach (array_keys($this->Fields) as $item) {
             $var_name=$item.'_form';
-            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            //printf ("<br>%s=%s",$var_name, $_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
                 $range->$item = intval($_REQUEST[$var_name]);
             } else if ($item == 'nameservers') {
@@ -5170,17 +5177,17 @@ class EnumRanges extends Records
 
         $function=array('commit'   => array('name'       => 'updateRange',
                                             'parameters' => array($range),
-                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been updated',$rangeid['prefix'],$rangeid['tld'])))
+                                            'logs'       => array('success' => sprintf('ENUM range +%s under %s has been updated',$rangeid['prefix'], $rangeid['tld'])))
                         );
 
-        $result = $this->SoapEngine->execute($function,$this->html);
+        $result = $this->SoapEngine->execute($function, $this->html);
         dprint_r($result);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -5224,7 +5231,7 @@ class EnumRanges extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -5348,7 +5355,7 @@ class EnumMappings extends Records
         dprint("init EnumMappings");
 
         if ($_REQUEST['range_filter']) {
-            list($_prefix,$_tld_filter)= explode("@",$_REQUEST['range_filter']);
+            list($_prefix, $_tld_filter)= explode("@",$_REQUEST['range_filter']);
             if ($_prefix && !$_REQUEST['number_filter']) {
                 $_number_filter=$_prefix.'%';
             } else {
@@ -5414,7 +5421,7 @@ class EnumMappings extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
+            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -5487,7 +5494,7 @@ class EnumMappings extends Records
                             }
                         }
 
-                        if (preg_match("/^sip:(.*)$/",$_mapping->mapto,$m) && $this->sip_settings_page) {
+                        if (preg_match("/^sip:(.*)$/",$_mapping->mapto, $m) && $this->sip_settings_page) {
                             $url=sprintf('%s?account=%s&reseller=%s&sip_engine=%s',
                             $this->sip_settings_page,urlencode($m[1]), $number->reseller,$sip_engine);
 
