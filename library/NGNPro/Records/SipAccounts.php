@@ -309,7 +309,7 @@ class SipAccounts extends Records
 
                         foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
                             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
-                            $settingsUrl[$element] = $this->SoapEngine->extraFormElements[$elememt];
+                            $settingsUrl[$element] = $this->SoapEngine->extraFormElements[$element];
                         }
 
                         $sip_account = sprintf(
