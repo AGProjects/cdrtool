@@ -15,13 +15,9 @@ class DnsZonesActions extends Actions {
                        'export'         => 'Export zones'
                        );
 
-    public function __construct($SoapEngine, $login_credentials)
+    public function execute($selectionKeys, $action, $sub_action_parameter)
     {
-        parent::__construct($SoapEngine, $login_credentials);
-    }
-
-    function execute($selectionKeys,$action,$sub_action_parameter) {
-        if (!in_array($action,array_keys($this->actions))) {
+        if (!in_array($action, array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
             return false;
         }

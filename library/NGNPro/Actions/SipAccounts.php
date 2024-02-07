@@ -22,12 +22,9 @@ class SipAccountsActions extends Actions {
                        'changepassword' => 'Change password to:'
                        );
 
-    function SipAccountsActions($SoapEngine, $login_credentials) {
-        $this->Actions($SoapEngine, $login_credentials);
-    }
-
-    function execute($selectionKeys,$action,$sub_action_parameter) {
-        if (!in_array($action,array_keys($this->actions))) {
+    public function execute($selectionKeys, $action, $sub_action_parameter)
+    {
+        if (!in_array($action, array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
             return false;
         }
