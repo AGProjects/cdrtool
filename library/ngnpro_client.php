@@ -1132,7 +1132,7 @@ class Records
         $class_name=get_class($this).'Actions';
 
         if (class_exists($class_name)) {
-            $actions=new $class_name($this->SoapEngine, $this->login_credentials);
+            $actions = new $class_name($this->SoapEngine, $this->login_credentials);
             $actions->execute(
                 $this->selectionKeys,
                 $_REQUEST['sub_action'],
@@ -14785,7 +14785,8 @@ class Actions {
     var $sub_action_parameter_size = 35;
     var $html = true;
 
-    function __construct($SoapEngine, $login_credentials) {
+    function __construct($SoapEngine, $login_credentials)
+    {
         $this->SoapEngine = $SoapEngine;
         $this->login_credentials = $login_credentials;
         $this->version    = $this->SoapEngine->version;
@@ -14810,6 +14811,34 @@ class Actions {
        $_SERVER['PHP_SELF']
        );
        syslog(LOG_NOTICE, $log);
+    }
+
+    function checkLogSoapError($result, $syslog = false)
+    {
+        if (!(new PEAR)->isError($result)) {
+            return false;
+        }
+        $error_msg  = $result->getMessage();
+        $error_fault= $result->getFault();
+        $error_code = $result->getCode();
+        if ($syslog) {
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
+            syslog(LOG_NOTICE, $log);
+        } else {
+            printf(
+                "<font color=red>Error: %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
+        }
+        return true;
     }
 
     function execute($selectionKeys, $action, $sub_action_parameter) {
