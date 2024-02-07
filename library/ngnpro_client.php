@@ -743,7 +743,7 @@ class Records
     public $filters            = array();
     public $selectionActiveExceptions    = array();
 
-    private function log_action($action = 'Unknown')
+    public function log_action($action = 'Unknown')
     {
         global $CDRTool;
         $location = "Unknown";
