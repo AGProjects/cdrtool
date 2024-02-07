@@ -261,24 +261,24 @@ class SipAccounts extends Records
 
                     $index=$this->next+$i+1;
 
-			        $_url = $this->url.'&'.$this->addFiltersToURL().sprintf("&service=%s&action=Delete",
-                    urlencode($this->SoapEngine->service)
+                    $deleteUrl = array(
+                        'service' => $this->SoapEngine->service,
+                        'action' => 'Delete',
+                        'key' => $account->id->username
                     );
 
                     if (!$this->filters['domain']) {
-			        	$_url .= sprintf("&domain_filter=%s",urlencode($account->id->domain));
+                        $deleteUrl['domain_filter'] = $account->id->domain;
                     }
 
                     if (!$this->filters['username']) {
-                    	$_url .= sprintf("&username_filter=%s",urlencode($account->id->username));
+                        $deleteUrl['username_filter'] = $account->id->username;
                     }
-
-                    $_url.= sprintf("&key=%s",urlencode($account->id->username));
 
                     if ($action == 'Delete' &&
                         $_REQUEST['key'] == $account->id->username &&
                         $_REQUEST['domain_filter'] == $account->id->domain) {
-                        $_url .= "&confirm=1";
+                        $deleteUrl['confirm'] = 1;
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
@@ -295,27 +295,34 @@ class SipAccounts extends Records
                     }
 
                     if ($this->sip_settings_page) {
-                        $url=sprintf('%s?account=%s@%s&sip_engine=%s',
-                        $this->sip_settings_page,urlencode($account->id->username),$account->id->domain, $this->SoapEngine->sip_engine);
+                        $settingsUrl = array(
+                            'account' => sprintf('%s@%s', $account->id->username, $account->id->domain),
+                            'sip_engine' => $this->SoapEngine->sip_engine
+                        );
 
                         if ($this->adminonly) {
-                        	$url  .= sprintf('&reseller=%s',$reseller_sip_settings_page);
-                        	$url  .= sprintf('&adminonly=%s',$this->adminonly);
+                            $settingsUrl['reseller'] = $reseller_sip_settings_page;
+                            $settingsUrl['adminonly'] = $this->adminonly;
                         } else {
-                        	if ($account->reseller == $this->reseller) $url .= sprintf('&reseller=%s',$reseller_sip_settings_page);
+                        	if ($account->reseller == $this->reseller) $settingsUrl['reseller'] = $reseller_sip_settings_page;
                         }
 
                         foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
                             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
-                            $url  .= sprintf('&%s=%s',$element,urlencode($this->SoapEngine->extraFormElements[$element]));
+                            $settingsUrl[$element] = $this->SoapEngine->extraFormElements[$elememt];
                         }
 
-                        $sip_account=sprintf("
-                        <a href=\"javascript:void(null);\" onClick=\"return window.open('%s', 'SIP_Settings',
-                        'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
-                        %s@%s</a>",$url, $account->id->username, $account->id->domain);
+                        $sip_account = sprintf(
+                            "<a href=\"javascript:void(null);\" onClick=\"return window.open('%s%s', 'SIP_Settings',
+                            'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
+                            %s@%s</a>",
+                            $this->sip_settings_page,
+                            http_build_query($settingsUrl),
+                            $account->id->username,
+                            $account->id->domain
+                        );
                     } else {
-                        $sip_account=sprintf("%s@%s",$account->id->username, $account->id->domain);
+                        $sip_account = sprintf("%s@%s",$account->id->username, $account->id->domain);
                     }
 
                     /*
@@ -325,17 +332,20 @@ class SipAccounts extends Records
                     */
 
                     if ($account->owner) {
-                        $_owner_url = sprintf
-                        ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                        $this->url,
-                        urlencode($this->SoapEngine->soapEngine),
-                        urlencode($account->owner),
-                        $account->owner
+                        $ownersUrlData = array(
+                            'service' => sprintf('customers@%s', $this->SoapEngine->soapEngine),
+                            'customer_filter' => $account->owner
+                        );
+                        $_owner_url = sprintf(
+                            '<a href="%s&%s">%s</a>',
+                            $this->url,
+                            http_build_query($ownersUrlData),
+                            $account->owner
                         );
                     } else {
                         $_owner_url='';
                     }
-                    $prepaid_account=sprintf("%s@%s",$account->id->username, $account->id->domain);
+                    $prepaid_account = sprintf("%s@%s", $account->id->username, $account->id->domain);
 
                     if ($account->callLimit) {
                         $callLimit = $account->callLimit;
@@ -345,35 +355,36 @@ class SipAccounts extends Records
                         $callLimit = '';
                     }
 
-                    printf("
-                    <tr>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s %s</td>
-                    <td><a href=mailto:%s>%s</a></td>
-                    <td align=right>%s</td>
-                    <td align=right>%s</td>
-                    <td align=right>%s</td>
-                    <td align=right>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                    </tr>
-                    ",
-                    $index,
-                    $sip_account,
-                    $account->firstName,
-                    $account->lastName,
-                    $account->email,
-                    $account->email,
-                    $account->timezone,
-                    $callLimit,
-                    $account->quota,
-                    $_prepaid_balance[$prepaid_account],
-                    $_owner_url,
-                    $account->changeDate,
-                    $_url,
-                    $actionText
+                    printf(
+                        '
+                        <tr>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s %s</td>
+                        <td><a href=mailto:%s>%s</a></td>
+                        <td align=right>%s</td>
+                        <td align=right>%s</td>
+                        <td align=right>%s</td>
+                        <td align=right>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a class="btn-small btn-danger" href="%s">%s</a></td>
+                        </tr>
+                        ',
+                        $index,
+                        $sip_account,
+                        $account->firstName,
+                        $account->lastName,
+                        $account->email,
+                        $account->email,
+                        $account->timezone,
+                        $callLimit,
+                        $account->quota,
+                        $_prepaid_balance[$prepaid_account],
+                        $_owner_url,
+                        $account->changeDate,
+                        $this->url.'&'.$this->addFiltersToURL().'&'.http_build_query($deleteUrl),
+                        $actionText
                     );
 
                     $i++;
