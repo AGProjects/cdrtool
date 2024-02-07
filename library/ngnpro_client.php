@@ -1466,7 +1466,7 @@ class Records
     {
     }
 
-    function updateRecord() 
+    function updateRecord()
     {
     }
 
@@ -1781,7 +1781,7 @@ class SipDomains extends Records
         'certificate' =>  array('type'=>'text'),
         'private_key' =>  array('type'=>'text'),
         'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
-        'verify_cert' => array('type'=>'boolean'),   
+        'verify_cert' => array('type'=>'boolean'),
         'require_cert' => array('type'=>'boolean')
     );
 
@@ -2143,7 +2143,6 @@ class SipDomains extends Records
                 } else {
                     printf('<p>Customer %s has been added',$customer['id']);
                 }
-
             }
 
             foreach($imported_data['sip_domains'] as $domain) {
@@ -2225,7 +2224,7 @@ class SipDomains extends Records
             if ($added) {
                 printf('<p>%d SIP accounts added',$added);
             }
-            if ($updated ) {
+            if ($updated) {
                 printf('<p>%d SIP accounts updated',$updated);
             }
             if ($failed) {
@@ -2385,7 +2384,6 @@ class SipDomains extends Records
             } else {
                 $cert_data = "";
             }
-            
         }
 
         #print("<pre>");
@@ -2554,7 +2552,6 @@ class SipDomains extends Records
                         );
 
         return $this->SoapEngine->execute($function,$this->html);
-
     }
 
     function hide_html() {
@@ -2874,7 +2871,7 @@ class SipAccounts extends Records {
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
-         if ((new PEAR)->isError($result)) {
+        if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
@@ -2882,7 +2879,6 @@ class SipAccounts extends Records {
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             $this->rows = $result->total;
 
             if ($this->rows && $action != 'PerformActions' && $action != 'Delete') {
@@ -3090,7 +3086,6 @@ class SipAccounts extends Records {
 
                     $i++;
                 }
-
             }
 
             print "</table>";
@@ -3135,13 +3130,14 @@ class SipAccounts extends Records {
                 if ($key == 'free-pstn' or $key == 'prepaid' or $key == 'quota') {
                     continue;
                 }
-            }  
+            }
             printf("<option  value=%s %s>%s",$key,$selected_group[$key], $this->group_filter_list[$key]);
         }
         print "</select>";
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary=array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -3186,7 +3182,8 @@ class SipAccounts extends Records {
         return $this->SoapEngine->execute($function,$this->html);
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         if ($this->filters['username']) return;
 
         if (!count($this->allowedDomains)) {
@@ -3540,7 +3537,6 @@ class SipAccounts extends Records {
 
 
 		return $this->SoapEngine->execute($function,$this->html);
-
     }
 
     function getAllowedDomains()
@@ -3566,7 +3562,7 @@ class SipAccounts extends Records {
             'filter'  => $filter,
             'orderBy' => $orderBy,
             'range'   => $range
-	);
+        );
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getDomains');
@@ -3914,17 +3910,16 @@ class SipAccounts extends Records {
         }
 
         foreach ($result as $_property) {
-           $properties[$_property->name]=$_property->value;
+            $properties[$_property->name]=$_property->value;
         }
 
         return $properties;
-
     }
 
-    function pstnChangesAllowed() {
-
+    function pstnChangesAllowed()
+    {
         //dprint_r($this->loginProperties);
-	$_customer_pstn_changes=$this->getCustomerProperty('pstn_changes');
+        $_customer_pstn_changes=$this->getCustomerProperty('pstn_changes');
         $_reseller_pstn_changes=$this->getCustomerProperty('pstn_changes');
 
         if ($this->adminonly) {
@@ -3940,10 +3935,10 @@ class SipAccounts extends Records {
         return false;
     }
 
-    function prepaidChangesAllowed() {
-
+    function prepaidChangesAllowed()
+    {
         //dprint_r($this->loginProperties);
-	$_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
+        $_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
         $_reseller_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
 
         if ($this->adminonly) {
@@ -3959,7 +3954,8 @@ class SipAccounts extends Records {
         return false;
     }
 
-    function getTimezones () {
+    function getTimezones ()
+    {
     	$this->timezones=array();
         if (!$fp = fopen("timezones", "r")) {
             print _("Failed to open timezone file.");
@@ -3971,10 +3967,10 @@ class SipAccounts extends Records {
         fclose($fp);
     }
 
-    function showTextBeforeCustomerSelection() {
+    function showTextBeforeCustomerSelection()
+    {
         print _("Domain owner");
     }
-
 }
 
 class SipAliases extends Records
@@ -3992,25 +3988,26 @@ class SipAliases extends Records
             $target_domain=$target_filters_els[1];
         }
 
-        $this->filters   = array('alias_username'    => strtolower(trim($_REQUEST['alias_username_filter'])),
-                                 'alias_domain'      => strtolower(trim($_REQUEST['alias_domain_filter'])),
-                                 'target_username'   => strtolower($target_username),
-                                 'target_domain'      => strtolower($target_domain)
-                                 );
+        $this->filters   = array(
+            'alias_username'    => strtolower(trim($_REQUEST['alias_username_filter'])),
+            'alias_domain'      => strtolower(trim($_REQUEST['alias_domain_filter'])),
+            'target_username'   => strtolower($target_username),
+            'target_domain'      => strtolower($target_domain)
+        );
 
         parent::__construct($SoapEngine);
 
         $this->sortElements=array(
-                        'changeDate'     => 'Change date',
-                        'aliasUsername'  => 'Alias user',
-                        'aliasDomain'    => 'Alias domain',
-                        'targetUsername' => 'Target user',
-                        'targetDomain'   => 'Target domain',
-                        );
+            'changeDate'     => 'Change date',
+            'aliasUsername'  => 'Alias user',
+            'aliasDomain'    => 'Alias domain',
+            'targetUsername' => 'Target user',
+            'targetDomain'   => 'Target domain',
+        );
     }
 
-    function getRecordKeys() {
-
+    function getRecordKeys()
+    {
         // Filter
         $filter=array('aliasUsername'  => $this->filters['alias_username'],
                       'aliasDomain'    => $this->filters['alias_domain'],
@@ -4117,7 +4114,6 @@ class SipAliases extends Records
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
-
             $this->rows = $result->total;
 
             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
@@ -4223,9 +4219,7 @@ class SipAliases extends Records
                     $actionText
                     );
                     $i++;
-
                 }
-
             }
 
             print "</table>";
@@ -4254,7 +4248,8 @@ class SipAliases extends Records
         }
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary=array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -4293,7 +4288,8 @@ class SipAliases extends Records
         return $this->SoapEngine->execute($function,$this->html);
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
         printf (" <div class='input-prepend'><span class='add-on'>SIP alias</span><input type=text class=span1 name=alias_username_filter value='%s'></div>",$this->filters['alias_username']);
         printf ("@");
 
@@ -4317,10 +4313,10 @@ class SipAliases extends Records
 
         printf (" <div class='input-prepend'><span class='add-on'>Redirect target</span><input type=text class=span2 name=target_username_filter value='%s'></div>",trim($_REQUEST['target_username_filter']));
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
-
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         if ($this->selectionActive) return;
 
         if (!count($this->allowedDomains)) {
@@ -4364,8 +4360,8 @@ class SipAliases extends Records
         </form>";
     }
 
-    function addRecord($dictionary=array()) {
-
+    function addRecord($dictionary=array())
+    {
         if ($dictionary['alias']) {
             $alias_els  = explode("@", $dictionary['alias']);
             $this->skipSaveProperties=true;
@@ -4399,10 +4395,8 @@ class SipAliases extends Records
 
         if (strlen($alias_els[1])) {
             $domain=$alias_els[1];
-
         } else if (trim($_REQUEST['domain'])) {
             $domain=trim($_REQUEST['domain']);
-
         } else {
             if ($this->html) {
             	printf ("<p><font color=red>Error: Missing SIP domain</font>");
@@ -4453,7 +4447,8 @@ class SipAliases extends Records
         return $this->SoapEngine->execute($function,$this->html);
     }
 
-    function getAllowedDomains() {
+    function getAllowedDomains()
+    {
         // Filter
         $filter=array(
                       'domain'    => ''
@@ -4494,11 +4489,10 @@ class SipAliases extends Records
         }
     }
 
-    function showTextBeforeCustomerSelection() {
+    function showTextBeforeCustomerSelection()
+    {
         print _("Domain owner");
     }
-
-
 }
 
 class EnumRanges extends Records
@@ -4576,7 +4570,8 @@ class EnumRanges extends Records
         }
     }
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->getAllowedDomains();
         $this->showSeachForm();
 
@@ -4765,7 +4760,8 @@ class EnumRanges extends Records
         }
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary=array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -4802,7 +4798,8 @@ class EnumRanges extends Records
         }
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         if ($this->selectionActive) return;
 
         printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
@@ -4925,7 +4922,8 @@ class EnumRanges extends Records
         }
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
         printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input class=span2 type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
         printf (" <div class='input-prepend'><span class='add-on'>TLD</span>");
 
@@ -4945,7 +4943,8 @@ class EnumRanges extends Records
         printf (" <div class='input-prepend'><span class='add-on'>Info</span><input class=span2 type=text size=10 name=info_filter value='%s'></div>",$this->filters['info']);
     }
 
-    function getAllowedDomains() {
+    function getAllowedDomains()
+    {
         // Filter
         $filter=array('prefix'   => '');
         // Range
@@ -4996,8 +4995,8 @@ class EnumRanges extends Records
         }
     }
 
-    function showRecord($range) {
-
+    function showRecord($range)
+    {
         print "<table border=0 cellpadding=10>";
         print "
         <tr>
@@ -5119,7 +5118,8 @@ class EnumRanges extends Records
         ";
     }
 
-    function updateRecord () {
+    function updateRecord ()
+    {
         //print "<p>Updating range ...";
 
         if (!$_REQUEST['prefix_filter'] || !$_REQUEST['tld_filter']) return;
@@ -5186,10 +5186,10 @@ class EnumRanges extends Records
         } else {
             return true;
         }
-
     }
 
-    function getRecord($rangeid) {
+    function getRecord($rangeid)
+    {
         // Filter
         if (!$rangeid['prefix'] || !$rangeid['tld']) {
             print "Error in getRecord(): Missing prefix or tld";
@@ -5372,7 +5372,8 @@ class EnumMappings extends Records
         $this->getAllowedDomains();
     }
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->showSeachForm();
 
         $filter=array('number'   => $this->filters['number'],
@@ -5760,7 +5761,8 @@ class EnumMappings extends Records
         return false;
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
 
         /*
         print " <select name=range_filter><option>";
@@ -5793,7 +5795,8 @@ class EnumMappings extends Records
         printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input type=text size=7 class=span1 name=owner_filter value='%s'></div>",$this->filters['owner']);
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary=array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
@@ -5889,15 +5892,13 @@ class EnumMappings extends Records
             }
 
             unset($this->filters);
-
-
         } else {
             return false;
         }
-
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         if ($this->selectionActive) return;
 
         //if ($this->adminonly && !$this->filters['reseller']) return;
@@ -5997,7 +5998,8 @@ class EnumMappings extends Records
         ";
     }
 
-    function getAllowedDomains() {
+    function getAllowedDomains()
+    {
         // Filter
         $filter=array('prefix'   => '',
                       'customer' => intval($this->filters['customer']),
@@ -6264,12 +6266,11 @@ class EnumMappings extends Records
             } else {
                 return true;
             }
-
         }
     }
 
-    function getRecordKeys() {
-
+    function getRecordKeys()
+    {
         // Filter
         $filter=array('number'   => $this->filters['number'],
                       'tld'      => $this->filters['tld'],
@@ -14922,7 +14923,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='deblock') {
                 $this->log_action('removeFromGroup');
 
@@ -14935,7 +14935,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='removefromgroup') {
                 if (!strlen($sub_action_parameter)) {
                     printf ("<font color=red>Error: you must enter a group name</font>");
@@ -14952,7 +14951,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='addtogroup') {
                 $this->log_action('addToGroup');
                 if (!strlen($sub_action_parameter)) {
@@ -14969,7 +14967,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='deblock_quota') {
                 $this->log_action('removeFromGroup');
 
@@ -14982,7 +14979,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='disable_pstn') {
                 $this->log_action('removeFromGroup');
 
@@ -14995,7 +14991,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='enable_pstn') {
                 $this->log_action('addToGroup');
 
@@ -15008,7 +15003,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='delete') {
                 $this->log_action('deleteAccount');
                 $function=array('commit'   => array('name'       => 'deleteAccount',
@@ -15020,7 +15014,6 @@ class SipAccountsActions extends Actions {
                                 );
 
                 $this->SoapEngine->execute($function,$this->html);
-
             } else if ($action=='prepaid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $this->log_action('getAccount');
@@ -15064,7 +15057,6 @@ class SipAccountsActions extends Actions {
                     printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     break;
                 } else {
-
                     if (!is_array($result->properties))   $result->properties=array();
                     if (!is_array($result->groups))       $result->groups=array();
                     $result->quota         = intval($result->quota);
@@ -15081,7 +15073,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='setquota') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15112,9 +15103,7 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
-
             } else if ($action=='rmdsfromrpid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
                 $this->log_action('getAccount');
@@ -15153,7 +15142,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='rpidasusername') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15186,7 +15174,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='prefixtorpid') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15223,7 +15210,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='changecustomer') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15260,7 +15246,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='changeowner') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15297,7 +15282,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='changefirstname') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15328,7 +15312,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='changelastname') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15359,7 +15342,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='changepassword') {
                 $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -15390,7 +15372,6 @@ class SipAccountsActions extends Actions {
 
                                     );
                     $this->SoapEngine->execute($function,$this->html);
-
                 }
             } else if ($action=='addbalance') {
                 if (!is_numeric($sub_action_parameter)) {
@@ -15423,13 +15404,10 @@ class SipAccountsActions extends Actions {
 
                                 );
                 $this->SoapEngine->execute($function,$this->html);
-
             }
         }
         print "</ol>";
-
     }
-
 }
 
 class SipAliasesActions extends Actions {
@@ -15441,7 +15419,8 @@ class SipAliasesActions extends Actions {
         $this->Actions($SoapEngine, $login_credentials);
     }
 
-    function execute($selectionKeys,$action,$sub_action_parameter) {
+    function execute($selectionKeys, $action, $sub_action_parameter)
+    {
         if (!in_array($action,array_keys($this->actions))) {
             print "<font color=red>Error: Invalid action $action</font>";
             return false;
@@ -15472,7 +15451,6 @@ class SipAliasesActions extends Actions {
         print "</ol>";
 
     }
-
 }
 
 class EnumMappingsActions extends Actions {
@@ -15532,7 +15510,6 @@ class EnumMappingsActions extends Actions {
                     printf ("<font color=red>Error: %s (%s): %s</font>",$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
                     break;
                 } else {
-
                     if (!is_numeric($sub_action_parameter)) {
                         printf ("<font color=red>Error: TTL '%s' must be numeric</font>",$sub_action_parameter);
                         continue;
@@ -15550,7 +15527,6 @@ class EnumMappingsActions extends Actions {
                                     $new_mapping[$field]=$_mapping->$field;
                                 }
                             }
-
                         }
 
                         $new_mappings[]=$new_mapping;
