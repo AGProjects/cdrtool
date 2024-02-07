@@ -2,39 +2,42 @@
 
 class SipAccounts extends Records
 {
-    var $selectionActiveExceptions=array('domain');
+    var $selectionActiveExceptions = array('domain');
 
-    var $sortElements=array('changeDate' => 'Change date',
-                            'username'   => 'Username',
-                            'domain'     => 'Domain'
-                            );
+    var $sortElements = array(
+        'changeDate' => 'Change date',
+        'username'   => 'Username',
+        'domain'     => 'Domain'
+    );
 
-    var $store_clear_text_passwords=true;
+    var $store_clear_text_passwords = true;
     var $default_account_type = 'postpaid';
-    var $group_filter_list = array('blocked'          => 'Blocked',
-                                   'quota'            => 'Quota Exceeded',
-                                   'prepaid'          => 'Prepaid',
-                                   'free-pstn'        => 'PSTN Access',
-                                   'anonymous'        => 'Anonymous',
-                                   'anonymous-reject' => 'Reject Anonymous',
-                                   'voicemail'        => 'Has Voicemail',
-                                   'missed-calls'     => 'Missed Calls',
-                                   'trunking'         => 'Trunking'
-                                   );
+    var $group_filter_list = array(
+        'blocked'          => 'Blocked',
+        'quota'            => 'Quota Exceeded',
+        'prepaid'          => 'Prepaid',
+        'free-pstn'        => 'PSTN Access',
+        'anonymous'        => 'Anonymous',
+        'anonymous-reject' => 'Reject Anonymous',
+        'voicemail'        => 'Has Voicemail',
+        'missed-calls'     => 'Missed Calls',
+        'trunking'         => 'Trunking'
+    );
 
     public function __construct($SoapEngine)
     {
         dprint("init SipAccounts");
 
-        $this->filters = array('username' => strtolower(trim($_REQUEST['username_filter'])),
-                               'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
-                               'firstname'=> trim($_REQUEST['firstname_filter']),
-                               'lastname' => trim($_REQUEST['lastname_filter']),
-                               'email'    => htmlspecialchars(trim($_REQUEST['email_filter'])),
-                               'owner'    => trim($_REQUEST['owner_filter']),
-                               'customer' => trim($_REQUEST['customer_filter']),
-                               'reseller' => trim($_REQUEST['reseller_filter']),
-                               'group'    => trim($_REQUEST['group_filter'])
+        $this->filters = array(
+            'username' => strtolower(trim($_REQUEST['username_filter'])),
+            'domain'   => strtolower(trim($_REQUEST['domain_filter'])),
+            'firstname'=> trim($_REQUEST['firstname_filter']),
+            'lastname' => trim($_REQUEST['lastname_filter']),
+            'email'    => htmlspecialchars(trim($_REQUEST['email_filter'])),
+            'owner'    => trim($_REQUEST['owner_filter']),
+            'customer' => trim($_REQUEST['customer_filter']),
+            'reseller' => trim($_REQUEST['reseller_filter']),
+            'group'    => trim($_REQUEST['group_filter'])
         );
 
         parent::__construct($SoapEngine);
@@ -48,40 +51,43 @@ class SipAccounts extends Records
         $this->getTimezones();
     }
 
-    function getRecordKeys() {
-
-        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'], $m)) {
+    function getRecordKeys()
+    {
+        if (preg_match("/^(.*)@(.*)$/", $this->filters['username'], $m)) {
             $this->filters['username'] = $m[1];
             $this->filters['domain']   = $m[2];
         }
 
         // Filter
-        $filter=array('username' => $this->filters['username'],
-                      'domain'   => $this->filters['domain'],
-                      'firstName'=> $this->filters['firstname'],
-                      'lastName' => $this->filters['lastname'],
-                      'email'    => $this->filters['email'],
-                      'owner'    => intval($this->filters['owner']),
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller']),
-                      'groups'   => array($this->filters['group'])
-                      );
+        $filter = array(
+            'username' => $this->filters['username'],
+            'domain'   => $this->filters['domain'],
+            'firstName'=> $this->filters['firstname'],
+            'lastName' => $this->filters['lastname'],
+            'email'    => $this->filters['email'],
+            'owner'    => intval($this->filters['owner']),
+            'customer' => intval($this->filters['customer']),
+            'reseller' => intval($this->filters['reseller']),
+            'groups'   => array($this->filters['group'])
+        );
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 500
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 500
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array(
+        $Query = array(
             'filter'  => $filter,
             'orderBy' => $orderBy,
             'range'   => $range
@@ -98,14 +104,15 @@ class SipAccounts extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
             foreach ($result->accounts as $account) {
-                $this->selectionKeys[]=array('username' => $account->id->username,
-                                             'domain'   => $account->id->domain
-                                             );
+                $this->selectionKeys[] = array(
+                    'username' => $account->id->username,
+                    'domain'   => $account->id->domain
+                );
             }
 
             return true;
@@ -118,7 +125,7 @@ class SipAccounts extends Records
     {
         $this->getAllowedDomains();
 
-        if (preg_match("/^(.*)@(.*)$/",$this->filters['username'], $m)) {
+        if (preg_match("/^(.*)@(.*)$/", $this->filters['username'], $m)) {
             $this->filters['username'] = $m[1];
             $this->filters['domain']   = $m[2];
         }
@@ -126,49 +133,54 @@ class SipAccounts extends Records
         $this->showSeachForm();
 
         // Filter
-        $filter=array('username' => $this->filters['username'],
-                      'domain'   => $this->filters['domain'],
-                      'firstName'=> $this->filters['firstname'],
-                      'lastName' => $this->filters['lastname'],
-                      'email'    => $this->filters['email'],
-                      'owner'    => intval($this->filters['owner']),
-                      'customer' => intval($this->filters['customer']),
-                      'reseller' => intval($this->filters['reseller']),
-                      'groups'   => array($this->filters['group'])
-                      );
+        $filter = array(
+            'username' => $this->filters['username'],
+            'domain'   => $this->filters['domain'],
+            'firstName'=> $this->filters['firstname'],
+            'lastName' => $this->filters['lastname'],
+            'email'    => $this->filters['email'],
+            'owner'    => intval($this->filters['owner']),
+            'customer' => intval($this->filters['customer']),
+            'reseller' => intval($this->filters['reseller']),
+            'groups'   => array($this->filters['group'])
+        );
 
         $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
         // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credentials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getAccounts');
 
         // Call function
-        $result     = $this->SoapEngine->soapclient->getAccounts($Query);
+        $result = $this->SoapEngine->soapclient->getAccounts($Query);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -188,7 +200,7 @@ class SipAccounts extends Records
                 <th>Id</th>
                 <th>SIP account";
             $this->showSortCaret('username');
-            if ($this->sorting['sortBy'] == 'domain' ) {
+            if ($this->sorting['sortBy'] == 'domain') {
                 print " (domain ";
                 $this->showSortCaret('domain');
                 print ")";
@@ -211,25 +223,26 @@ class SipAccounts extends Records
 
             if (!$this->next)  $this->next=0;
 
-            if ($this->rows > $this->maxrowsperpage)  {
+            if ($this->rows > $this->maxrowsperpage) {
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
-                $maxrows=$this->rows;
+                $maxrows = $this->rows;
             }
 
 
             if ($this->rows) {
                 $i=0;
 
-                $_prepaid_accounts=array();
-                while ($i < $maxrows)  {
+                $_prepaid_accounts = array();
+                while ($i < $maxrows) {
                     if (!$result->accounts[$i]) break;
                     $account = $result->accounts[$i];
                     if ($account->prepaid) {
-                        $_prepaid_accounts[]=array("username" => $account->id->username,
-                                                   "domain" => $account->id->domain
-                                                  );
+                        $_prepaid_accounts[] = array(
+                            "username" => $account->id->username,
+                            "domain" => $account->id->domain
+                        );
                     }
                     $i++;
                 }
@@ -240,13 +253,17 @@ class SipAccounts extends Records
                     $this->log_action('getPrepaidStatus');
 
                     // Call function
-                    $result1     = $this->SoapEngine->soapclient->getPrepaidStatus($_prepaid_accounts);
+                    $result1 = $this->SoapEngine->soapclient->getPrepaidStatus($_prepaid_accounts);
                     if (!(new PEAR)->isError($result1)) {
                         $j=0;
 
                         foreach ($result1 as $_account) {
-                            $_sip_account=sprintf("%s@%s",$_prepaid_accounts[$j]['username'], $_prepaid_accounts[$j]['domain']);
-                            $_prepaid_balance[$_sip_account]=$_account->balance;
+                            $_sip_account = sprintf(
+                                "%s@%s",
+                                $_prepaid_accounts[$j]['username'],
+                                $_prepaid_accounts[$j]['domain']
+                            );
+                            $_prepaid_balance[$_sip_account] = $_account->balance;
                             $j++;
                         }
                     }
@@ -259,7 +276,7 @@ class SipAccounts extends Records
 
                     $account = $result->accounts[$i];
 
-                    $index=$this->next+$i+1;
+                    $index = $this->next+$i+1;
 
                     $deleteUrl = array(
                         'service' => $this->SoapEngine->service,
@@ -285,13 +302,13 @@ class SipAccounts extends Records
                     }
 
                     if ($account->reseller) {
-                        $reseller_sip_settings_page=$account->reseller;
+                        $reseller_sip_settings_page = $account->reseller;
                     } else if ($this->SoapEngine->impersonate) {
                         // use the reseller from the soap engine
-                        $reseller_sip_settings_page=$this->SoapEngine->impersonate;
+                        $reseller_sip_settings_page = $this->SoapEngine->impersonate;
                     } else {
                         // use the reseller from the login
-                        $reseller_sip_settings_page=$this->reseller;
+                        $reseller_sip_settings_page = $this->reseller;
                     }
 
                     if ($this->sip_settings_page) {
@@ -322,7 +339,7 @@ class SipAccounts extends Records
                             $account->id->domain
                         );
                     } else {
-                        $sip_account = sprintf("%s@%s",$account->id->username, $account->id->domain);
+                        $sip_account = sprintf("%s@%s", $account->id->username, $account->id->domain);
                     }
 
                     /*
@@ -349,7 +366,7 @@ class SipAccounts extends Records
 
                     if ($account->callLimit) {
                         $callLimit = $account->callLimit;
-                    } else if ($this->platform_call_limit) {
+                    } elseif ($this->platform_call_limit) {
                         $callLimit = $this->platform_call_limit;
                     } else {
                         $callLimit = '';
@@ -401,33 +418,35 @@ class SipAccounts extends Records
 
     function showSeachFormCustom()
     {
-        printf ("
-            <div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text name=username_filter value='%s'></div>",$this->filters['username']);
-        printf ("@");
+        printf(
+            "<div class='input-prepend'><span class='add-on'>Account</span><input class=span2 type=text name=username_filter value='%s'></div>",
+            $this->filters['username']
+        );
+        print "@";
 
         if (count($this->allowedDomains) > 0) {
             if ($this->filters['domain'] && !in_array($this->filters['domain'], $this->allowedDomains)) {
-                printf ("<input class=span2 type=text name=domain_filter value='%s'>",$this->filters['domain']);
+                printf("<input class=span2 type=text name=domain_filter value='%s'>", $this->filters['domain']);
             } else {
                 $selected_domain[$this->filters['domain']]='selected';
-                printf ("<select class=span2 name=domain_filter>
+                printf("<select class=span2 name=domain_filter>
                     <option>
                  ");
                 foreach ($this->allowedDomains as $_domain) {
-                    printf ("<option value='$_domain' %s>$_domain\n",$selected_domain[$_domain]);
+                    printf("<option value='$_domain' %s>$_domain\n", $selected_domain[$_domain]);
                 }
-                printf ("</select>\n");
+                printf("</select>\n");
             }
         } else {
-            printf ("<input class=span1 type=text size=15 name=domain_filter value='%s'>",$this->filters['domain']);
+            printf("<input class=span1 type=text size=15 name=domain_filter value='%s'>", $this->filters['domain']);
         }
 
-        printf (" <div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text name=firstname_filter value='%s'></div>\n",$this->filters['firstname']);
-        printf (" <div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text name=lastname_filter value='%s'></div>\n",$this->filters['lastname']);
-        printf (" <div class='input-prepend'><span class='add-on'>Email</span><input class=span2 type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
-        printf (" <div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner_filter value='%s'></div>\n",$this->filters['owner']);
+        printf("<div class='input-prepend'><span class='add-on'>FN</span><input class=span1 type=text name=firstname_filter value='%s'></div>\n", $this->filters['firstname']);
+        printf("<div class='input-prepend'><span class='add-on'>LN</span><input class=span1 type=text name=lastname_filter value='%s'></div>\n", $this->filters['lastname']);
+        printf("<div class='input-prepend'><span class='add-on'>Email</span><input class=span2 type=text name=email_filter value='%s'></div>\n", $this->filters['email']);
+        printf("<div class='input-prepend'><span class='add-on'>Owner</span><input class=span1 type=text name=owner_filter value='%s'></div>\n", $this->filters['owner']);
 
-        $selected_group[$this->filters['group']]='selected';
+        $selected_group[$this->filters['group']] = 'selected';
         print "<select class=span2 name=group_filter><option value=''>Feature...";
         foreach (array_keys($this->group_filter_list) as $key) {
             if (!$this->getResellerProperty('pstn_access')) {
@@ -435,12 +454,12 @@ class SipAccounts extends Records
                     continue;
                 }
             }
-            printf("<option  value=%s %s>%s",$key, $selected_group[$key], $this->group_filter_list[$key]);
+            printf("<option  value=%s %s>%s", $key, $selected_group[$key], $this->group_filter_list[$key]);
         }
         print "</select>";
     }
 
-    function deleteRecord($dictionary=array())
+    function deleteRecord($dictionary = array())
     {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
@@ -448,15 +467,15 @@ class SipAccounts extends Records
         }
 
         if ($dictionary['username']) {
-            $username=$dictionary['username'];
+            $username = $dictionary['username'];
         } else {
-            $username=$_REQUEST['key'];
+            $username = $_REQUEST['key'];
         }
 
         if ($dictionary['domain']) {
-            $domain=$dictionary['domain'];
+            $domain = $dictionary['domain'];
         } else {
-            $domain=$this->filters['domain'];
+            $domain = $this->filters['domain'];
         }
 
         if (!strlen($username) || !strlen($domain)) {
@@ -464,24 +483,26 @@ class SipAccounts extends Records
             return false;
         }
 
-        $account=array('username' => $username,
-                       'domain'   => $domain
-                      );
+        $account = array(
+            'username' => $username,
+            'domain'   => $domain
+        );
 
-        $function=array('commit'   => array('name'       => 'deleteAccount',
-                                            'parameters' => array($account),
-                                            'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$_REQUEST['key'], $this->filters['domain'])
-                                                                  )
-                                           )
-
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'deleteAccount',
+                'parameters' => array($account),
+                'logs'       => array('success' => sprintf('SIP account %s@%s has been deleted',$_REQUEST['key'], $this->filters['domain'])
+                )
+            )
+        );
 
         foreach (array_keys($this->filters) as $_filter) {
             if ($_filter == 'username' || $_filter == 'domain') continue;
-            $new_filters[$_filter]=$this->filters[$_filter];
+            $new_filters[$_filter] = $this->filters[$_filter];
         }
 
-        $this->filters=$new_filters;
+        $this->filters = $new_filters;
 
         return $this->SoapEngine->execute($function, $this->html);
     }
@@ -495,7 +516,7 @@ class SipAccounts extends Records
             return false;
         }
 
-        printf ("<form class='form-inline' method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form class='form-inline' method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
 
         print "
         <div class='well well-small'>
@@ -505,20 +526,20 @@ class SipAccounts extends Records
         ";
 
         if ($_REQUEST['account']) {
-            $_account=$_REQUEST['account'];
+            $_account = $_REQUEST['account'];
         } else {
-            $_account=$this->getCustomerProperty('sip_accounts_last_username');
+            $_account = $this->getCustomerProperty('sip_accounts_last_username');
         }
 
-        printf ("<div class=input-prepend><span class='add-on'>Account</span><input class=span2 type=text size=15 name=account value='%s'></div>",$_account);
+        printf("<div class=input-prepend><span class='add-on'>Account</span><input class=span2 type=text size=15 name=account value='%s'></div>",$_account);
 
         if ($_REQUEST['domain']) {
-            $_domain=$_REQUEST['domain'];
+            $_domain = $_REQUEST['domain'];
             $selected_domain[$_REQUEST['domain']]='selected';
         } else if ($this->filters['domain']) {
-            $_domain=$this->filters['domain'];
+            $_domain = $this->filters['domain'];
             $selected_domain[$this->filters['domain']]='selected';
-        } else if ($_domain=$this->getCustomerProperty('sip_accounts_last_domain')) {
+        } else if ($_domain = $this->getCustomerProperty('sip_accounts_last_domain')) {
             $selected_domain[$_domain]='selected';
         }
 
@@ -546,23 +567,23 @@ class SipAccounts extends Records
             $checked_prepaid='';
         }
 
-        if ($_pstn=$this->getCustomerProperty('sip_accounts_last_pstn')) {
+        if ($_pstn = $this->getCustomerProperty('sip_accounts_last_pstn')) {
             $checked_pstn='checked';
         } else {
             $checked_pstn='';
         }
 
-        printf (" <div class=input-prepend><span class='add-on'>Password</span><input class=span1 type=password size=10 name=password value='%s' autocomplete='off'></div>",$_REQUEST['password']);
-        printf (" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s' autocomplete='off'></div>",$_REQUEST['fullname']);
-        printf (" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s' autocomplete='off'></div>",$_REQUEST['email']);
-        printf (" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
+        printf(" <div class=input-prepend><span class='add-on'>Password</span><input class=span1 type=password size=10 name=password value='%s' autocomplete='off'></div>",$_REQUEST['password']);
+        printf(" <div class=input-prepend><span class='add-on'>Name</span><input class=span2 type=text size=15 name=fullname value='%s' autocomplete='off'></div>",$_REQUEST['fullname']);
+        printf(" <div class=input-prepend><span class='add-on'>Email</span><input class=span2 type=text size=20 name=email value='%s' autocomplete='off'></div>",$_REQUEST['email']);
+        printf(" <div class=input-prepend><span class='add-on'><nobr>Owner</span><input class=span1 type=text size=7 name=owner value='%s'></nobr></div> ",$_REQUEST['owner']);
         if ($this->getResellerProperty('pstn_access')) {
-            printf (" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>",$checked_pstn);
-            printf (" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
+            printf(" PSTN <input type=checkbox class=checkbox name=pstn value=1 %s></nobr>", $checked_pstn);
+            printf(" <div class=input-prepend><span class='add-on'><nobr>Quota</span><input class=span1  type=text size=5 name=quota value='%s'></nobr></div>",$_quota);
             if ($this->prepaidChangesAllowed()) {
-                printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
+                printf(" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 %s></nobr> ",$checked_prepaid);
             } else {
-                printf (" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
+                printf(" <nobr>Prepaid <input class=checkbox type=checkbox name=prepaid value=1 checked disabled=true></nobr> ");
             }
         }
 
@@ -579,23 +600,23 @@ class SipAccounts extends Records
 
         if ($dictionary['account']) {
             $account_els  = explode("@", $dictionary['account']);
-            $this->skipSaveProperties=true;
+            $this->skipSaveProperties = true;
         } else {
             $account_els  = explode("@", trim($_REQUEST['account']));
         }
 
         list($customer, $reseller) = $this->customerFromLogin($dictionary);
 
-        $username=$account_els[0];
+        $username = $account_els[0];
 
         if (strlen($account_els[1])) {
-            $domain=$account_els[1];
+            $domain = $account_els[1];
         } else if ($dictionary['domain']) {
-            $domain=$dictionary['domain'];
+            $domain = $dictionary['domain'];
         } else if ($_REQUEST['domain']) {
-            $domain=trim($_REQUEST['domain']);
+            $domain = trim($_REQUEST['domain']);
         } else {
-            printf ("<p><font color=red>Error: Missing SIP domain</font>");
+            printf("<p><font color=red>Error: Missing SIP domain</font>");
             return false;
         }
 
@@ -611,7 +632,7 @@ class SipAccounts extends Records
         }
 
         if (strlen($name_els[0])) {
-            $firstName=$name_els[0];
+            $firstName = $name_els[0];
         } else {
             $firstName='Account';
         }
@@ -626,18 +647,18 @@ class SipAccounts extends Records
             if ($username=="<autoincrement>") {
                 $lastName="Unknown";
             } else {
-            	$lastName=$username;
+                $lastName = $username;
             }
         }
 
-        $lastName=trim($lastName);
+        $lastName = trim($lastName);
 
         if (strlen($dictionary['timezone'])) {
-            $timezone=$dictionary['timezone'];
-        } else if (strlen(trim($_REQUEST['timezone']))) {
-            $timezone=trim($_REQUEST['timezone']);
-        } else if ($this->SoapEngine->default_timezone) {
-            $timezone=$this->SoapEngine->default_timezone;
+            $timezone = $dictionary['timezone'];
+        } elseif (strlen(trim($_REQUEST['timezone']))) {
+            $timezone = trim($_REQUEST['timezone']);
+        } elseif ($this->SoapEngine->default_timezone) {
+            $timezone = $this->SoapEngine->default_timezone;
         } else {
             $timezone='Europe/Amsterdam';
         }
@@ -647,32 +668,32 @@ class SipAccounts extends Records
         }
 
         if (strlen($dictionary['password'])) {
-            $password=$dictionary['password'];
-        } else if (strlen(trim($_REQUEST['password']))) {
-            $password=trim($_REQUEST['password']);
+            $password = $dictionary['password'];
+        } elseif (strlen(trim($_REQUEST['password']))) {
+            $password = trim($_REQUEST['password']);
         } else {
-            $password=$this->RandomString(10);
+            $password = $this->RandomString(10);
         }
 
         if (is_array($dictionary['groups'])) {
-            $groups=$dictionary['groups'];
+            $groups = $dictionary['groups'];
         } else {
-            $groups=array();
+            $groups = array();
         }
 
         if (is_array($dictionary['ip_access_list'])) {
-            $ip_access_list=$dictionary['ip_access_list'];
+            $ip_access_list = $dictionary['ip_access_list'];
         } else {
-        	$ip_access_list=array();
+            $ip_access_list = array();
         }
 
         if (strlen($dictionary['call_limit'])) {
-            $call_limit=$dictionary['call_limit'];
+            $call_limit = $dictionary['call_limit'];
         } else {
-            $call_limit=$_REQUEST['call_limit'];
+            $call_limit = $_REQUEST['call_limit'];
         }
 
-        if($dictionary['pstn'] || $_REQUEST['pstn']) {
+        if ($dictionary['pstn'] || $_REQUEST['pstn']) {
             $_pstn=1;
             $groups[]='free-pstn';
         } else {
@@ -680,21 +701,21 @@ class SipAccounts extends Records
         }
 
         if (strlen($dictionary['email'])) {
-            $email=$dictionary['email'];
+            $email = $dictionary['email'];
         } else {
-            $email=trim($_REQUEST['email']);
+            $email = trim($_REQUEST['email']);
         }
 
         if (strlen($dictionary['rpid'])) {
-            $rpid=$dictionary['rpid'];
+            $rpid = $dictionary['rpid'];
         } else {
-            $rpid=trim($_REQUEST['rpid']);
+            $rpid = trim($_REQUEST['rpid']);
         }
 
         if (strlen($dictionary['owner'])) {
-            $owner=intval($dictionary['owner']);
+            $owner = intval($dictionary['owner']);
         } else {
-            $owner=intval($_REQUEST['owner']);
+            $owner = intval($_REQUEST['owner']);
         }
 
         if (!$owner) {
@@ -702,16 +723,16 @@ class SipAccounts extends Records
         }
 
         if (strlen($dictionary['quota'])) {
-            $quota=intval($dictionary['quota']);
+            $quota = intval($dictionary['quota']);
         } else {
-            $quota=intval($_REQUEST['quota']);
+            $quota = intval($_REQUEST['quota']);
         }
 
         if ($this->prepaidChangesAllowed()) {
             if (strlen($dictionary['prepaid'])) {
-                $prepaid=intval($dictionary['prepaid']);
+                $prepaid = intval($dictionary['prepaid']);
             } else {
-                $prepaid=intval($_REQUEST['prepaid']);
+                $prepaid = intval($_REQUEST['prepaid']);
             }
         } else {
             $prepaid = 1;
@@ -725,12 +746,12 @@ class SipAccounts extends Records
             if ($username=="<autoincrement>") {
                 $email='unknown@'.strtolower($domain);
             } else {
-                $email=strtolower($username).'@'.strtolower($domain);
+                $email = strtolower($username).'@'.strtolower($domain);
             }
         }
 
         if (!$this->skipSaveProperties) {
-            $_p=array(
+            $_p = array(
                       array('name'       => 'sip_accounts_last_domain',
                             'category'   => 'web',
                             'value'      => "$domain",
@@ -767,19 +788,19 @@ class SipAccounts extends Records
         }
 
         if (is_array($dictionary['properties'])) {
-            $properties=$dictionary['properties'];
+            $properties = $dictionary['properties'];
         } else {
-            $properties=array();
+            $properties = array();
         }
 
         if ($this->SoapEngine->login_credentials['reseller']) {
-            $reseller_properties=$this->getResellerProperties($this->SoapEngine->login_credentials['reseller'],'store_clear_text_passwords');
+            $reseller_properties = $this->getResellerProperties($this->SoapEngine->login_credentials['reseller'],'store_clear_text_passwords');
 
             if (strlen($reseller_properties['store_clear_text_passwords'])) {
-                $this->store_clear_text_passwords=$reseller_properties['store_clear_text_passwords'];
+                $this->store_clear_text_passwords = $reseller_properties['store_clear_text_passwords'];
             }
         } else {
-            $_reseller=$this->getResellerForDomain(strtolower($domain));
+            $_reseller = $this->getResellerForDomain(strtolower($domain));
 
             if ($_reseller) {
                 $reseller_properties = $this->getResellerProperties($_reseller, 'store_clear_text_passwords');
@@ -791,14 +812,14 @@ class SipAccounts extends Records
         }
 
         if ($this->store_clear_text_passwords || $username == '<autoincrement>') {
-            $password_final=$password;
+            $password_final = $password;
         } else {
             $md1=strtolower($username).':'.strtolower($domain).':'.$password;
             $md2=strtolower($username).'@'.strtolower($domain).':'.strtolower($domain).':'.$password;
-            $password_final=md5($md1).':'.md5($md2);
+            $password_final = md5($md1).':'.md5($md2);
         }
 
-        $account=array(
+        $account = array(
                      'id'     => array('username' => strtolower($username),
                                        'domain'   => strtolower($domain)
                                        ),
@@ -821,25 +842,25 @@ class SipAccounts extends Records
         }
 
         //print_r($account);
-        $deleteAccount=array('username' => $username,
+        $deleteAccount = array('username' => $username,
                              'domain'   => $domain);
 
 
         if ($this->html) {
             if ($username == '<autoincrement>') {
-                $success_log=sprintf('SIP account has been generated in domain %s',$domain);
+                $success_log = sprintf('SIP account has been generated in domain %s', $domain);
             } else {
-                $success_log=sprintf('SIP account %s@%s has been added',$username, $domain);
+                $success_log = sprintf('SIP account %s@%s has been added', $username, $domain);
             }
         }
 
-        $function=array('commit'   => array('name'       => 'addAccount',
+        $function = array('commit'   => array('name'       => 'addAccount',
                                             'parameters' => array($account),
                                             'logs'       => array('success' => $success_log))
                         );
 
 
-		return $this->SoapEngine->execute($function, $this->html);
+            return $this->SoapEngine->execute($function, $this->html);
     }
 
     function getAllowedDomains()
@@ -1012,7 +1033,7 @@ class SipAccounts extends Records
         print "<input type='hidden' name='password_reset' value='on'>";
         print "<center><button id='submit' class='btn btn-primary' type=submit>Send Reminder</button></center></form></div>";
 
-        if(count($accounts) < 1 && $_REQUEST['sip_filter']) {
+        if (count($accounts) < 1 && $_REQUEST['sip_filter']) {
             print "<script type=\"text/javascript\">
             //$(document).ready(function () {
                 $('[name=email_filter]').focus();
@@ -1025,7 +1046,7 @@ class SipAccounts extends Records
 
     function getAccountsForPasswordReminderEncrypted($maximum_accounts = 5)
     {
-        $accounts=array();
+        $accounts = array();
 
         //$filter  = array('email' => $this->filters['email']);
 
@@ -1066,15 +1087,15 @@ class SipAccounts extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
         } else {
             $i = 0;
 
-            while ($i < $result->total)  {
+            while ($i < $result->total) {
                 if (!$result->accounts[$i]) break;
                 $account = $result->accounts[$i];
-                $accounts[]=array('username'=> $account->id->username,
+                $accounts[] = array('username'=> $account->id->username,
                                   'domain'  => $account->id->domain
                                   );
                 $i++;
@@ -1117,18 +1138,19 @@ class SipAccounts extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
         } else {
             $i=0;
 
-            while ($i < $result->total)  {
+            while ($i < $result->total) {
             	if (!$result->accounts[$i]) break;
                 $account = $result->accounts[$i];
-                $accounts[]=array('username'=> $account->id->username,
-                                  'domain'  => $account->id->domain
-                                  );
-            	$i++;
+                $accounts[] = array(
+                    'username'=> $account->id->username,
+                    'domain'  => $account->id->domain
+                );
+                $i++;
             }
         }
 
@@ -1138,12 +1160,12 @@ class SipAccounts extends Records
     function getResellerForDomain($domain='')
     {
         // Filter
-        $filter=array(
+        $filter = array(
                       'domain'    => $domain
                       );
 
         // Range
-        $range=array('start' => 0,
+        $range = array('start' => 0,
                      'count' => 1
                      );
 
@@ -1152,7 +1174,7 @@ class SipAccounts extends Records
                          );
 
         // Compose query
-        $Query=array('filter'     => $filter,
+        $Query = array('filter'     => $filter,
                         'orderBy' => $orderBy,
                         'range'   => $range
                         );
@@ -1168,7 +1190,7 @@ class SipAccounts extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         } else {
@@ -1182,25 +1204,25 @@ class SipAccounts extends Records
 
     function getResellerProperties($reseller='',$property='')
     {
-        $properties=array();
+        $properties = array();
 
         if (!$this->SoapEngine->customer_engine) {
-            dprint ("No customer_engine available");
+            dprint("No customer_engine available");
             return true;
         }
 
         if (!$reseller) {
-            dprint ("No customer provided");
+            dprint("No customer provided");
             return true;
         }
 
         if (!$property) {
-            dprint ("No property provided");
+            dprint("No property provided");
             return true;
         }
 
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
-        $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($reseller));
+        $result = $this->SoapEngine->soapclientCustomers->getProperties(intval($reseller));
 
         dprint_r($result);
 
@@ -1208,13 +1230,13 @@ class SipAccounts extends Records
             $error_msg  = $result->getMessage();
             $error_fault= $result->getFault();
             $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             syslog(LOG_NOTICE, $log);
             return false;
         }
 
         foreach ($result as $_property) {
-            $properties[$_property->name]=$_property->value;
+            $properties[$_property->name] = $_property->value;
         }
 
         return $properties;
@@ -1223,16 +1245,16 @@ class SipAccounts extends Records
     function pstnChangesAllowed()
     {
         //dprint_r($this->loginProperties);
-        $_customer_pstn_changes=$this->getCustomerProperty('pstn_changes');
-        $_reseller_pstn_changes=$this->getCustomerProperty('pstn_changes');
+        $_customer_pstn_changes = $this->getCustomerProperty('pstn_changes');
+        $_reseller_pstn_changes = $this->getCustomerProperty('pstn_changes');
 
         if ($this->adminonly) {
             return true;
-        } else if ($this->customer == $this->reseller && $_reseller_pstn_changes) {
+        } elseif ($this->customer == $this->reseller && $_reseller_pstn_changes) {
             return true;
-        } else if ($this->loginImpersonate == $this->reseller && $_reseller_pstn_changes) {
+        } elseif ($this->loginImpersonate == $this->reseller && $_reseller_pstn_changes) {
             return true;
-        } else if ($_reseller_pstn_changes && $_customer_pstn_changes) {
+        } elseif ($_reseller_pstn_changes && $_customer_pstn_changes) {
             return true;
         }
 
@@ -1242,31 +1264,31 @@ class SipAccounts extends Records
     function prepaidChangesAllowed()
     {
         //dprint_r($this->loginProperties);
-        $_customer_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
-        $_reseller_prepaid_changes=$this->getCustomerProperty('prepaid_changes');
+        $_customer_prepaid_changes = $this->getCustomerProperty('prepaid_changes');
+        $_reseller_prepaid_changes = $this->getCustomerProperty('prepaid_changes');
 
         if ($this->adminonly) {
             return true;
-        } else if ($this->customer == $this->reseller && $_reseller_prepaid_changes) {
+        } elseif ($this->customer == $this->reseller && $_reseller_prepaid_changes) {
             return true;
-        } else if ($this->loginImpersonate == $this->reseller && $_reseller_prepaid_changes) {
+        } elseif ($this->loginImpersonate == $this->reseller && $_reseller_prepaid_changes) {
             return true;
-        } else if ($_reseller_prepaid_changes && $_customer_prepaid_changes) {
+        } elseif ($_reseller_prepaid_changes && $_customer_prepaid_changes) {
             return true;
         }
 
         return false;
     }
 
-    function getTimezones ()
+    function getTimezones()
     {
-    	$this->timezones=array();
+        $this->timezones = array();
         if (!$fp = fopen("timezones", "r")) {
             print _("Failed to open timezone file.");
             return false;
         }
-        while ($buffer = fgets($fp,1024)) {
-            $this->timezones[]=trim($buffer);
+        while ($buffer = fgets($fp, 1024)) {
+            $this->timezones[] = trim($buffer);
         }
         fclose($fp);
     }
