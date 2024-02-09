@@ -320,7 +320,7 @@ class SipAccounts extends Records
                         }
 
                         $sip_account = sprintf(
-                            "<a href=\"javascript:void(null);\" onClick=\"return window.open('%s&%s', 'SIP_Settings',
+                            "<a href=\"javascript:void(null);\" onClick=\"return window.open('%s?%s', 'SIP_Settings',
                             'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
                             %s@%s</a>",
                             $this->sip_settings_page,
