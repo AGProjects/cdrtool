@@ -2,7 +2,7 @@
 
 class SipAccounts extends Records
 {
-    var $selectionActiveExceptions = array('domain');
+    public $selectionActiveExceptions = array('domain');
 
     var $sortElements = array(
         'changeDate' => 'Change date',
@@ -1078,10 +1078,11 @@ class SipAccounts extends Records
 
             while ($i < $result->total) {
                 if (!$result->accounts[$i]) break;
+
                 $account = $result->accounts[$i];
                 $accounts[] = array('username'=> $account->id->username,
-                                  'domain'  => $account->id->domain
-                                  );
+                    'domain'  => $account->id->domain
+                );
                 $i++;
             }
         }
@@ -1175,7 +1176,7 @@ class SipAccounts extends Records
         }
     }
 
-    function getResellerProperties($reseller='',$property='')
+    function getResellerProperties($reseller = '', $property = '')
     {
         $properties = array();
 

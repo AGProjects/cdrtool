@@ -3485,7 +3485,6 @@ class EnumRanges extends Records
         }
     }
 }
-
 class EnumMappings extends Records
 {
     var $default_ttl = 3600;
