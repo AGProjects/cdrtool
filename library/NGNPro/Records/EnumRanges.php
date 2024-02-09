@@ -188,33 +188,62 @@ END;
                     if (!$result->ranges[$i]) break;
                     $range = $result->ranges[$i];
 
-                    $index=$this->next+$i+1;
+                    $index = $this->next + $i +1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&prefix_filter=%s&tld_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($range->id->prefix),
-                    urlencode($range->id->tld)
+                    $delete_url = array(
+                        'service' => $this->SoapEngine->service,
+                        'action' => 'Delete',
+                        'prefix_filter' => $range->id->prefix,
+                        'tld_filter' => $range->id->tld
                     );
 
-                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$range->reseller);
+                    if ($this->adminonly) $delete_url['reseller_filter'] = $range->reseller;
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['prefix_filter'] == $range->id->prefix &&
                         $_REQUEST['tld_filter'] == $range->id->tld) {
-                        $_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
+                        $delete_url['confirm'] = 1;
+                        $actionText = "<font color = red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
+                    $_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($delete_url)
+                    );
+
+                    $range_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'prefix_filter' => $range->id->prefix,
+                        'tld_filter' => $range->id->tld
+                    );
+
                     if ($this->adminonly) {
-                        $range_url=sprintf('<a href=%s&service=%s&reseller_filter=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url, $this->SoapEngine->service, $range->reseller, $range->id->prefix, $range->id->tld, $range->id->prefix);
-                    } else {
-                        $range_url=sprintf('<a href=%s&&service=%s&prefix_filter=%s&tld_filter=%s>%s</a>',$this->url, $this->SoapEngine->service, $range->id->prefix, $range->id->tld, $range->id->prefix);
+                        $range_url_data['reseller_filter'] = $range->reseller;
                     }
 
+                    $range_url = sprintf(
+                        '<a href=%s%s>%s</a>',
+                        $this->url,
+                        http_build_query($range_url_data),
+                        $range->id->prefix
+                    );
+
                     if ($this->record_generator) {
-                        $generator_url=sprintf('<a class="btn-small btn-primary" href=%s&generatorId=%s&range=%s@%s&number_length=%s&reseller_filter=%s target=generator>+Numbers</a>',$this->url, $this->record_generator, $range->id->prefix, $range->id->tld, $range->maxDigits, $range->reseller);
+                        $generator_url = sprintf(
+                            '<a class="btn-small btn-primary" href="%s&%s" target="generator">+Numbers</a>',
+                            $this->url,
+                            http_build_query(
+                                array(
+                                    'generatorId' => $this->record_generator,
+                                    'range' => sprintf('%s@%s', $range->id->prefix, $range->id->tld),
+                                    'number_length' => $range->maxDigits,
+                                    'reseller_filter' => $range->reseller
+                                )
+                            )
+                        );
                     } else {
                         $generator_url='';
                     }
@@ -226,9 +255,15 @@ END;
                         $bar="";
                     }
 
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($range->customer)
+                    $_customer_url = sprintf(
+                        's&%s',
+                        $this->url,
+                        http_build_query(
+                            array(
+                                'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                                'customer_filter' => $range->customer
+                            )
+                        )
                     );
 
                     $_nameservers='';
