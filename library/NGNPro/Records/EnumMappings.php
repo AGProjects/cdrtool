@@ -226,6 +226,12 @@ class EnumMappings extends Records
 
                     $j=1;
 
+                    $base_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'number_filter' => $number->id->number,
+                        'tld_filter' => $number->id->tld
+                    );
+
                     foreach ($number->mappings as $_mapping) {
                         unset($sip_engine);
                         foreach (array_keys($this->login_credentials['reseller_filters']) as $_res) {
@@ -245,72 +251,225 @@ class EnumMappings extends Records
                             }
                         }
 
-                        if (preg_match("/^sip:(.*)$/",$_mapping->mapto, $m) && $this->sip_settings_page) {
-                            $url=sprintf('%s?account=%s&reseller=%s&sip_engine=%s',
-                            $this->sip_settings_page,urlencode($m[1]), $number->reseller,$sip_engine);
+                        if (preg_match("/^sip:(.*)$/", $_mapping->mapto, $m) && $this->sip_settings_page) {
+                            $mapto_url_data = array(
+                                'account' => $m[1],
+                                'reseller' => $number->reseller,
+                                'sip_engine' => $sip_engine
+                            );
 
-                            if ($this->adminonly) $url  .= sprintf('&adminonly=%s',$this->adminonly);
+                            if ($this->adminonly) {
+                                $mapto_url_data['adminonly'] = $this->adminonly;
+                            }
 
                             foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
                                 if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
-                                $url  .= sprintf('&%s=%s',$element,urlencode($this->SoapEngine->extraFormElements[$element]));
+
+                                $mapto_url_data[$element] = $this->SoapEngine->extraFormElements[$element];
                             }
 
-                            $mapto=sprintf("
-                            <a href=\"javascript:void(null);\" onClick=\"return window.open('%s', 'SIP_Settings',
-                            'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
-                            sip:%s</a>",$url,$m[1]);
+                            $mapto = sprintf(
+                                "<a href=\"javascript:void(null);\" onClick=\"return window.open('%s?%s', 'SIP_Settings',
+                                'toolbar=1,status=1,menubar=1,scrollbars=1,resizable=1,width=800,height=720')\">
+                                sip:%s</a>",
+                                $this->sip_settings_page,
+                                http_build_query($mapto_url_data),
+                                $m[1]
+                            );
                         } else {
                             $mapto=sprintf("%s",$_mapping->mapto);
                         }
 
-                        $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s&mapto_filter=%s",
-                        urlencode($this->SoapEngine->service),
-                        urlencode($number->id->number),
-                        urlencode($number->id->tld),
-                        urlencode($_mapping->mapto)
+                        $delete_url_data = array_merge(
+                            $base_url_data,
+                            array(
+                                'action' => 'Delete',
+                                'mapto_filter' => $_mapping->mapto
+                            )
                         );
 
-                        if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$number->reseller);
-
-                        if ($_REQUEST['action'] == 'Delete' &&
-                            $_REQUEST['number_filter'] == $number->id->number &&
-                            $_REQUEST['tld_filter'] == $number->id->tld &&
-                            $_REQUEST['mapto_filter'] == $_mapping->mapto) {
-                            $_url .= "&confirm=1";
+                        if ($_REQUEST['action'] == 'Delete'
+                            && $_REQUEST['number_filter'] == $number->id->number
+                            && $_REQUEST['tld_filter'] == $number->id->tld
+                            && $_REQUEST['mapto_filter'] == $_mapping->mapto
+                        ) {
+                            $delete_url_data['confirm'] = 1;
                             $actionText = "<font color=red>Confirm</font>";
                         } else {
                             $actionText = "Delete";
                         }
 
+                        $_url = sprintf(
+                            "%s&%s",
+                            $this->url,
+                            http_build_query($delete_url_data)
+                        );
                         if ($j==1) {
+                            $number_url_data = $base_url_data;
 
-                            $_number_url = $this->url.sprintf("&service=%s&number_filter=%s&tld_filter=%s",
-                            urlencode($this->SoapEngine->service),
-                            urlencode($number->id->number),
-                            urlencode($number->id->tld)
+ 		                   	if ($this->adminonly) $_number_url_data['reseller_filter'] = $number->reseller;
+
+                            $_number_url = sprintf(
+                                "%s&%s",
+                                $this->url,
+                                http_build_query($number_url_data)
                             );
 
- 		                   	if ($this->adminonly) $_number_url.= sprintf ("&reseller_filter=%s",$number->reseller);
-
-                            $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                            urlencode($this->SoapEngine->customer_engine),
-                            urlencode($number->customer)
+                            $_customer_url = sprintf(
+                                's&%s',
+                                $this->url,
+                                http_build_query(
+                                    array(
+                                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                                        'customer_filter' => $number->customer
+                                    )
+                                )
                             );
 
                             if ($number->owner) {
-                                $_owner_url = sprintf
-                                ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                                $this->url,
-                                urlencode($this->SoapEngine->soapEngine),
-                                urlencode($number->owner),
-                                $number->owner
+                                $_owner_url = sprintf(
+                                    '<a href="s&%s">%s</a>',
+                                    $this->url,
+                                    http_build_query(
+                                        array(
+                                            'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                                            'customer_filter' => $number->owner
+                                        )
+                                    ),
+                                    $number->owner
                                 );
                             } else {
                                 $_owner_url='';
                             }
 
-                            printf("
+                            printf(
+                                "
+                                <tr>
+                                <td>%s</td>
+                                <td><a href=%s>%s.%s</a></td>
+                                <td><a href=%s>+%s</a></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>
+                                ",
+                                $index,
+                                $_customer_url,
+                                $number->customer,
+                                $number->reseller,
+                                $_number_url,
+                                $number->id->number,
+                                $number->id->tld,
+                                $number->info,
+                                $_owner_url,
+                                ucfirst($_mapping->type),
+                                $_mapping->id,
+                                $mapto,
+                                $_mapping->ttl,
+                                $number->changeDate,
+                                $_url,
+                                $actionText
+                            );
+                        } else {
+                            printf(
+                                "
+                                <tr>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td>%s</td>
+                                <td><a href=%s>%s</a></td>
+                                </tr>",
+                                ucfirst($_mapping->type),
+                                $_mapping->id,
+                                $mapto,
+                                $_mapping->ttl,
+                                $number->changeDate,
+                                $_url,
+                                $actionText
+                            );
+                        }
+                        $j++;
+                    }
+
+                    if (!is_array($number->mappings) || !count($number->mappings)) {
+                        $delete_url_data = array_merge(
+                            $base_url_data,
+                            array(
+                                'action' => 'Delete',
+                                'mapto_filter' => $_mapping->mapto
+                            )
+                        );
+
+                        if ($_REQUEST['action'] == 'Delete'
+                            && $_REQUEST['number_filter'] == $number->id->number
+                            && $_REQUEST['tld_filter'] == $number->id->tld
+                            && $_REQUEST['mapto_filter'] == $_mapping->mapto
+                        ) {
+                            $delete_url_data['confirm'] = 1;
+                            $actionText = "<font color=red>Confirm</font>";
+                        } else {
+                            $actionText = "Delete";
+                        }
+
+                        $_url = sprintf(
+                            "%s&%s",
+                            $this->url,
+                            http_build_query($delete_url_data)
+                        );
+
+                        $number_url_data = $base_url_data;
+
+                        if ($this->adminonly) $_number_url_data['reseller_filter'] = $number->reseller;
+
+                        $_number_url = sprintf(
+                            "%s&%s",
+                            $this->url,
+                            http_build_query($number_url_data)
+                        );
+
+                        $_customer_url = sprintf(
+                            's&%s',
+                            $this->url,
+                            http_build_query(
+                                array(
+                                    'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                                    'customer_filter' => $number->customer
+                                )
+                            )
+                        );
+
+                        if ($number->owner) {
+                            $_owner_url = sprintf(
+                                '<a href="s&%s">%s</a>',
+                                $this->url,
+                                http_build_query(
+                                    array(
+                                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                                        'customer_filter' => $number->owner
+                                    )
+                                ),
+                                $number->owner
+                            );
+                        } else {
+                            $_owner_url='';
+                        }
+
+                        printf(
+                            "
                             <tr>
                             <td>%s</td>
                             <td><a href=%s>%s.%s</a></td>
@@ -318,13 +477,13 @@ class EnumMappings extends Records
                             <td>%s</td>
                             <td>%s</td>
                             <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                             <td>%s</td>
                             <td><a href=%s>%s</a></td>
-                            </tr>",
+                            </tr>
+                            ",
                             $index,
                             $_customer_url,
                             $number->customer,
@@ -334,113 +493,9 @@ class EnumMappings extends Records
                             $number->id->tld,
                             $number->info,
                             $_owner_url,
-                            ucfirst($_mapping->type),
-                            $_mapping->id,
-                            $mapto,
-                            $_mapping->ttl,
                             $number->changeDate,
                             $_url,
                             $actionText
-                            );
-                        } else {
-                            printf("
-                            <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td>%s</td>
-                            <td><a href=%s>%s</a></td>
-                            </tr>",
-                            ucfirst($_mapping->type),
-                            $_mapping->id,
-                            $mapto,
-                            $_mapping->ttl,
-                            $number->changeDate,
-                            $_url,
-                            $actionText
-                            );
-                        }
-                        $j++;
-                    }
-
-                    if (!is_array($number->mappings) || !count($number->mappings)) {
-                        $_url = $this->url.sprintf("&service=%s&action=Delete&number_filter=%s&tld_filter=%s",
-                        urlencode($this->SoapEngine->service),
-                        urlencode($number->id->number),
-                        urlencode($number->id->tld),
-                        urlencode($_mapping->mapto)
-                        );
-
- 		                if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$number->reseller);
-
-                        if ($_REQUEST['action'] == 'Delete' &&
-                            $_REQUEST['number_filter'] == $number->id->number &&
-                            $_REQUEST['tld_filter'] == $number->id->tld &&
-                            $_REQUEST['mapto_filter'] == $_mapping->mapto) {
-                            $_url .= "&confirm=1";
-                            $actionText = "<font color=red>Confirm</font>";
-                        } else {
-                            $actionText = "Delete";
-                        }
-
-                        $_number_url = $this->url.sprintf("&service=%s&number_filter=%s&tld_filter=%s",
-                        urlencode($this->SoapEngine->service),
-                        urlencode($number->id->number),
-                        urlencode($number->id->tld)
-                        );
-
- 		                if ($this->adminonly) $_number_url.= sprintf ("&reseller_filter=%s",$number->reseller);
-
-                        $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SoapEngine->customer_engine),
-                        urlencode($number->customer)
-                        );
-
-                        if ($number->owner) {
-                            $_owner_url = sprintf
-                            ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                            $this->url,
-                            urlencode($this->SoapEngine->soapEngine),
-                            urlencode($number->owner),
-                            $number->owner
-                            );
-                        } else {
-                            $_owner_url='';
-                        }
-
-                        printf("
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s.%s</a></td>
-                        <td><a href=%s>+%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>",
-                        $index,
-                        $_customer_url,
-                        $number->customer,
-                        $number->reseller,
-                        $_number_url,
-                        $number->id->number,
-                        $number->id->tld,
-                        $number->info,
-                        $_owner_url,
-                        $number->changeDate,
-                        $_url,
-                        $actionText
                         );
                     }
 
@@ -449,9 +504,7 @@ class EnumMappings extends Records
                     ");
 
                     $i++;
-
                 }
-
             }
 
             print "</table>";
