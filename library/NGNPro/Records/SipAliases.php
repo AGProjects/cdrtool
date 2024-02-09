@@ -314,13 +314,19 @@ class SipAliases extends Records
                      'domain'   => $alias_domain
                     );
 
-        $function = array('commit'   => array('name'       => 'deleteAlias',
-                                            'parameters' => array($alias),
-                                            'logs'       => array('success' => sprintf('SIP alias %s@%s has been deleted',$this->filters['alias_username'], $this->filters['alias_domain'])
-                                                                  )
-                                           )
-
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'deleteAlias',
+                'parameters' => array($alias),
+                'logs'       => array(
+                    'success' => sprintf(
+                        'SIP alias %s@%s has been deleted',
+                        $this->filters['alias_username'],
+                        $this->filters['alias_domain']
+                    )
+                )
+            )
+        );
 
         unset($this->filters);
         return $this->SoapEngine->execute($function, $this->html);
