@@ -765,6 +765,34 @@ class Records
         syslog(LOG_NOTICE, $log);
     }
 
+    public function checkLogSoapError($result, $syslog = false)
+    {
+        if (!(new PEAR)->isError($result)) {
+            return false;
+        }
+        $error_msg  = $result->getMessage();
+        $error_fault= $result->getFault();
+        $error_code = $result->getCode();
+        if ($syslog) {
+            $log = sprintf(
+                "SOAP request error from %s: %s (%s): %s",
+                $this->SoapEngine->SOAPurl,
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
+            syslog(LOG_NOTICE, $log);
+        } else {
+            printf(
+                "<font color=red>Error: %s (%s): %s</font>",
+                $error_msg,
+                $error_fault->detail->exception->errorcode,
+                $error_fault->detail->exception->errorstring
+            );
+        }
+        return true;
+    }
+
     public function __construct($SoapEngine)
     {
         $this->SoapEngine          = $SoapEngine;

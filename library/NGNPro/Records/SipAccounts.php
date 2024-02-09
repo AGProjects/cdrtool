@@ -100,12 +100,7 @@ class SipAccounts extends Records
         // Call function
         $result     = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach ($result->accounts as $account) {
@@ -176,12 +171,7 @@ class SipAccounts extends Records
         // Call function
         $result = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             $this->rows = $result->total;
@@ -1083,13 +1073,7 @@ class SipAccounts extends Records
         $this->log_action('getAccounts');
         $result = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
-        } else {
+        if (!$this->checkLogSoapError($result, true)) {
             $i = 0;
 
             while ($i < $result->total) {
@@ -1134,13 +1118,7 @@ class SipAccounts extends Records
         $this->log_action('getAccounts');
         $result  = $this->SoapEngine->soapclient->getAccounts($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
-        } else {
+        if (!$this->checkLogSoapError($result, true)) {
             $i=0;
 
             while ($i < $result->total) {
@@ -1186,12 +1164,7 @@ class SipAccounts extends Records
         // Call function
         $result     = $this->SoapEngine->soapclient->getDomains($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if ($result->domains[0]) {
@@ -1226,12 +1199,7 @@ class SipAccounts extends Records
 
         dprint_r($result);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         }
 
