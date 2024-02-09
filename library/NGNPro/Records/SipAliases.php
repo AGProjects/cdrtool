@@ -173,23 +173,29 @@ class SipAliases extends Records
 
                     $alias = $result->aliases[$i];
 
-                    $index=$this->next+$i+1;
+                    $index = $this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&alias_username_filter=%s&alias_domain_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($alias->id->username),
-                    urlencode($alias->id->domain)
+                    $deleteUrl = array(
+                        'service' => $this->SoapEngine->service,
+                        'action' => 'Delete',
+                        'alias_username_filter' => $alias->id->username,
+                        'alias_domain_filter' => $alias->id->domain
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['alias_username_filter'] == $alias->id->username &&
                         $_REQUEST['alias_domain_filter'] == $alias->id->domain) {
-                        $_url .= "&confirm=1";
+                        $deleteUrl['confirm'] = 1;
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
+                    $_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($deleteUrl)
+                    );
                     /*
                     $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
                     urlencode($this->SoapEngine->customer_engine),
@@ -197,19 +203,29 @@ class SipAliases extends Records
                     );
                     */
 
-                    $_sip_accounts_url = $this->url.sprintf("&service=sip_accounts@%s&username_filter=%s&domain_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($alias->target->username),
-                    urlencode($alias->target->domain)
+                    $_sip_accounts_url = sprintf(
+                        '%s&%s',
+                        $this->url,
+                        http_build_query(
+                            array(
+                                'service' => sprintf('sip_accounts@%s', $this->SoapEngine->soapEngine),
+                                'username_filter' => $alias->target->username,
+                                'domain_filter' => $alias->target->domain
+                            )
+                        )
                     );
 
                     if ($alias->owner) {
-                        $_owner_url = sprintf
-                        ("<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                        $this->url,
-                        urlencode($this->SoapEngine->soapEngine),
-                        urlencode($alias->owner),
-                        $alias->owner
+                        $_owner_url = sprintf(
+                            '<a href="%s&%s">%s</a>',
+                            $this->url,
+                            http_build_query(
+                                array(
+                                    'service' => sprintf('customers@%s', $this->SoapEngine->soapEngine),
+                                    'customer_filter' => $alias->owner
+                                )
+                            ),
+                            $alias->owner
                         );
                     } else {
                         $_owner_url='';
