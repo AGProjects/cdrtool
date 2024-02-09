@@ -328,7 +328,7 @@ class EnumMappings extends Records
 
                             if ($number->owner) {
                                 $_owner_url = sprintf(
-                                    '<a href="s&%s">%s</a>',
+                                    '<a href="%s&%s">%s</a>',
                                     $this->url,
                                     http_build_query(
                                         array(
@@ -454,7 +454,7 @@ class EnumMappings extends Records
 
                         if ($number->owner) {
                             $_owner_url = sprintf(
-                                '<a href="s&%s">%s</a>',
+                                '<a href="%s&%s">%s</a>',
                                 $this->url,
                                 http_build_query(
                                     array(
