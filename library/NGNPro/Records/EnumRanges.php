@@ -111,12 +111,7 @@ class EnumRanges extends Records
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
 
@@ -290,12 +285,7 @@ class EnumRanges extends Records
 
         $result = $this->SoapEngine->execute($function, $this->html);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return true;
@@ -415,12 +405,7 @@ class EnumRanges extends Records
         $result = $this->SoapEngine->execute($function, $this->html);
 
         dprint_r($result);
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return true;
@@ -475,12 +460,7 @@ class EnumRanges extends Records
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach($result->ranges as $range) {
@@ -681,12 +661,7 @@ class EnumRanges extends Records
         $result = $this->SoapEngine->execute($function, $this->html);
         dprint_r($result);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return true;
@@ -725,12 +700,7 @@ class EnumRanges extends Records
         $this->log_action('getRanges');
         $result     = $this->SoapEngine->soapclient->getRanges($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if ($result->ranges[0]){
