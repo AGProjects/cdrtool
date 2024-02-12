@@ -178,9 +178,10 @@ class EnumMappings extends Records
         );
 
         // Range
-        $range = array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
@@ -1377,6 +1378,4 @@ END;
     {
         print _("Range owner");
     }
-
 }
-
