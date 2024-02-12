@@ -169,12 +169,12 @@ END;
                     );
                     $zone_url_data = $base_url_data;
                     $records_url_data = array(
-                        'service' => sprintf('dns_records@%s', $this->SoapEngine->service),
+                        'service' => sprintf('dns_records@%s', $this->SoapEngine),
                         'zone_filter' => $zone->name
                     );
 
                     $customer_url_data = array(
-                        'service' => sprintf('customers@%s', $this->SoapEngine->service),
+                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
                         'customer_filter' => $zone->customer
                     );
 

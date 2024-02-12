@@ -133,12 +133,12 @@ END;
                     );
 
                     $customer_url_data = array(
-                        'service' => sprintf('customers@%s', $this->SoapEngine->service),
+                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
                         'customer_filter' => $carrier->reseller
                     );
 
                     $gateway_url_data = array(
-                        'service' => sprintf('pstn_gateways@%s', $this->SoapEngine->service),
+                        'service' => sprintf('pstn_gateways@%s', $this->SoapEngine),
                         'carrier_id_filter' => $carrier->id,
                         'reseller_filter' => $carrier->reseller
                     );
