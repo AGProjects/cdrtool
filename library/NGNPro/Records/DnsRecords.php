@@ -378,7 +378,7 @@ class DnsRecords extends Records
 
         $_name = trim($_REQUEST['name_filter']);
 
-        if (strlen($_name) && !strstr($_name,'.') && !strstr($_name,'%')) {
+        if (strlen($_name) && !strstr($_name, '.') && !strstr($_name, '%')) {
             $_name .= '%';
         }
 
@@ -406,7 +406,8 @@ class DnsRecords extends Records
         $this->getAllowedDomains();
     }
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->showSeachForm();
 
         if ($this->typeFilter) {
@@ -431,7 +432,7 @@ class DnsRecords extends Records
                 'customer' => intval($this->filters['customer']),
                 'reseller' => intval($this->filters['reseller'])
             );
-         }
+        }
         // Range
         $range = array(
             'start' => intval($this->next),
@@ -459,7 +460,7 @@ class DnsRecords extends Records
         $this->log_action($this->getRecordsFunction);
 
         // Call function
-        $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
+        $result = call_user_func_array(array($this->SoapEngine->soapclient, $this->getRecordsFunction), array($Query));
 
         if ($this->checkLogSoapError($result, true)) {
             return false;
@@ -470,66 +471,69 @@ class DnsRecords extends Records
                 $this->showActionsForm();
             }
 
-            print "
-            <div class=\"alert alert-success\"><center>$this->rows records found. Click on record id to edit the values.</center></div>
-            <p>
-            <table class='table table-striped table-condensed' width=100%>
-            ";
+            print <<< END
+<div class="alert alert-success">
+    <center>$this->rows records found. Click on record id to edit the values.</center>
+</div>
+<p>
+<table class='table table-striped table-condensed' width=100%>
+END;
             if ($this->fancy) {
-                print "
-                <thead>
-                <tr>
-                    <th></th>
-                    <th>Zone owner</th>
-                    <th>Zone</th>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Value</th>
-                    <th>Owner</th>
-                    <th>Change date</th>
-                    <th>Actions</th>
-                </tr>
-                </thead>
-                ";
+                print <<< END
+    <thead>
+    <tr>
+        <th></th>
+        <th>Zone owner</th>
+        <th>Zone</th>
+        <th>Id</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Value</th>
+        <th>Owner</th>
+        <th>Change date</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+END;
             } else {
-                print "
-                <thead>
-                <tr>
-                    <th></th>
-                    <th><b>Zone owner</b></th>
-                    <th><b>Zone</b></th>
-                    <th><b>Id</b></th>
-                    <th><b>Name</b></th>
-                    <th><b>Type</b></th>
-                    <th align=right><b>Priority</b></th>
-                    <th><b>Value</b></th>
-                    <th><b>TTL</b></th>
-                    <th><b>Change date</b></th>
-                    <th><b>Actions</b></th>
-                </tr>
-                </thead>";
+                print <<< END
+    <thead>
+    <tr>
+        <th></th>
+        <th><b>Zone owner</b></th>
+        <th><b>Zone</b></th>
+        <th><b>Id</b></th>
+        <th><b>Name</b></th>
+        <th><b>Type</b></th>
+        <th align=right><b>Priority</b></th>
+        <th><b>Value</b></th>
+        <th><b>TTL</b></th>
+        <th><b>Change date</b></th>
+        <th><b>Actions</b></th>
+    </tr>
+    </thead>
+END;
             }
 
             if (!$this->next)  $this->next=0;
 
-            if ($this->rows > $this->maxrowsperpage)  {
+            if ($this->rows > $this->maxrowsperpage) {
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
-                $maxrows=$this->rows;
+                $maxrows = $this->rows;
             }
 
             $i=0;
 
             if ($this->rows) {
-                while ($i < $maxrows)  {
+                while ($i < $maxrows) {
                     if (!$result->records[$i]) {
                         break;
                     }
 
                     $record = $result->records[$i];
-                    $index=$this->next+$i+1;
+                    $index = $this->next+$i+1;
 
                     $_url = $this->url.sprintf(
                         "&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
@@ -539,7 +543,7 @@ class DnsRecords extends Records
                         urlencode($record->id)
                     );
 
-                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s",$record->reseller);
+                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s", $record->reseller);
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['id_filter'] == $record->id) {
@@ -573,7 +577,7 @@ class DnsRecords extends Records
                         urlencode($record->id)
                     );
 
-                    if ($this->adminonly) $_record_url.= sprintf ("&reseller_filter=%s",$record->reseller);
+                    if ($this->adminonly) $_record_url.= sprintf ("&reseller_filter=%s", $record->reseller);
 
                     if ($record->owner) {
                         $_owner_url = sprintf(
@@ -601,7 +605,8 @@ class DnsRecords extends Records
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                            </tr>",
+                            </tr>
+                            ",
                             $index,
                             $_customer_url,
                             $record->customer,
@@ -619,7 +624,8 @@ class DnsRecords extends Records
                             $actionText
                         );
                     } else {
-                        printf("
+                        printf(
+                            "
                             <tr>
                                 <td>%s</td>
                                 <td><a href=%s>%s.%s</a></td>
@@ -632,7 +638,8 @@ class DnsRecords extends Records
                                 <td>%s</td>
                                 <td>%s</td>
                                 <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                            </tr>",
+                            </tr>
+                            ",
                             $index,
                             $_customer_url,
                             $record->customer,
@@ -658,7 +665,7 @@ class DnsRecords extends Records
 
             print "</table>";
 
-            if ($this->rows == 1 ) {
+            if ($this->rows == 1) {
                 $this->showRecord($record);
             } else {
                 $this->showPagination($maxrows);
@@ -668,7 +675,8 @@ class DnsRecords extends Records
         }
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
 
         printf(
             "
@@ -732,16 +740,17 @@ class DnsRecords extends Records
         );
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary = array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
         if ($dictionary['id']) {
-            $id=$dictionary['id'];
+            $id = $dictionary['id'];
         } else {
-            $id=$this->filters['id'];
+            $id = $this->filters['id'];
         }
 
         if (!$id) {
@@ -753,25 +762,26 @@ class DnsRecords extends Records
             'commit'   => array(
                 'name'       => $this->deleteRecordFunction,
                 'parameters' => array($id),
-                'logs'       => array('success' => sprintf('DNS record %s has been deleted',$id))
+                'logs'       => array('success' => sprintf('DNS record %s has been deleted', $id))
             )
         );
 
-        $zone=$this->filters['zone'];
-       	unset($this->filters);
-        $this->filters['zone']=$zone;
+        $zone = $this->filters['zone'];
+        unset($this->filters);
+        $this->filters['zone'] = $zone;
 
-        $result = $this->SoapEngine->execute($function,$this->html);
+        $result = $this->SoapEngine->execute($function, $this->html);
 
         return (bool)$result;
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         /*
         if ($this->adminonly) {
-        	if (!$this->filters['reseller']) {
+            if (!$this->filters['reseller']) {
                 print "<p>To add a new record you must search first for a customer";
-            	return;
+                return;
             }
         }
         */
@@ -802,9 +812,9 @@ class DnsRecords extends Records
         if (count($this->allowedDomains) > 0) {
             if ($_REQUEST['zone']) {
                 $selected_zone[$_REQUEST['zone']]='selected';
-            } else if ($this->filters['zone']) {
+            } elseif ($this->filters['zone']) {
                 $selected_zone[$this->filters['zone']]='selected';
-            } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
+            } elseif ($_zone = $this->getCustomerProperty('dns_records_last_zone')) {
                 $selected_zone[$_zone]='selected';
             }
 
@@ -820,37 +830,51 @@ class DnsRecords extends Records
             print "</select>";
         } else {
             if ($_REQUEST['zone']) {
-                $_zone_selected=$_REQUEST['zone'];
-            } else if ($this->filters['zone']) {
-            	$_zone_selected=$this->filters['zone'];
-            } else if ($_zone=$this->getCustomerProperty('dns_records_last_zone')) {
-                $_zone_selected=$_zone;
+                $_zone_selected = $_REQUEST['zone'];
+            } elseif ($this->filters['zone']) {
+                $_zone_selected = $this->filters['zone'];
+            } elseif ($_zone = $this->getCustomerProperty('dns_records_last_zone')) {
+                $_zone_selected = $_zone;
             }
             printf(
                 "
-                <div class='input-prepend'><span class='add-on'>DNS zone</span><input class=span2 type=text size=20 name=zone value='%s'></div>
+                <div class='input-prepend'>
+                <span class='add-on'>DNS zone</span>
+                <input class=span2 type=text size=20 name=zone value='%s'>
+                </div>
                 ",
                 $_zone_selected
             );
         }
 
         if ($this->typeFilter) {
-            printf("Type %s <input type=hidden name=%s>",$this->typeFilter,$this->typeFilter);
+            printf("Type %s <input type=hidden name=%s>", $this->typeFilter, $this->typeFilter);
         } else {
             print "<div class='input-prepend'><span class='add-on'>Type</span><select name=type>";
 
             if ($_REQUEST['type']) {
                 $selected_type[$_REQUEST['type']]='selected';
-            } else if ($_type=$this->getCustomerProperty('dns_records_last_type')) {
+            } elseif ($_type = $this->getCustomerProperty('dns_records_last_type')) {
                 $selected_type[$_type]='selected';
             }
 
-            foreach(array_keys($this->recordTypes) as $_type) {
-                printf("<option value='%s' %s>%s - %s",$_type,$selected_type[$_type],$_type,$this->recordTypes[$_type]);
+            foreach (array_keys($this->recordTypes) as $_type) {
+                printf(
+                    "<option value='%s' %s>%s - %s",
+                    $_type,
+                    $selected_type[$_type],
+                    $_type,
+                    $this->recordTypes[$_type]
+                );
             }
 
-            foreach(array_keys($this->recordTypesTemplate) as $_type) {
-                printf("<option value='%s' %s>%s",$_type,$selected_type[$_type],$this->recordTypesTemplate[$_type]['name']);
+            foreach (array_keys($this->recordTypesTemplate) as $_type) {
+                printf(
+                    "<option value='%s' %s>%s",
+                    $_type,
+                    $selected_type[$_type],
+                    $this->recordTypesTemplate[$_type]['name']
+                );
             }
 
             print "
@@ -860,15 +884,21 @@ class DnsRecords extends Records
 
         printf(
             "
-            <div class='input-prepend'><span class='add-on'>Value</span><input class=span2 type=text size=35 name=value value='%s'></div>
+            <div class='input-prepend'>
+            <span class='add-on'>Value</span>
+            <input class=span2 type=text size=35 name=value value='%s'>
+            </div>
             ",
             trim($_REQUEST['value'])
         );
 
-        if (!$this->fancy)  {
+        if (!$this->fancy) {
             printf(
                 "
-                <div class='input-prepend'><span class='add-on'>Priority</span><input class=span1 type=text size=5 name=priority value='%s'></div>
+                <div class='input-prepend'>
+                <span class='add-on'>Priority</span>
+                <input class=span1 type=text size=5 name=priority value='%s'>
+                </div>
                 ",
                 trim($_REQUEST['priority'])
             );
@@ -881,7 +911,8 @@ class DnsRecords extends Records
         ";
     }
 
-    function getAllowedDomains() {
+    function getAllowedDomains()
+    {
         // Filter
         $filter = array(
             'customer' => intval($this->filters['customer']),
@@ -914,19 +945,19 @@ class DnsRecords extends Records
             return false;
         } else {
             if ($result->total  > $this->max_zones_selection) return false;
-            foreach($result->zones as $zone) {
-                if (in_array($zone->name,$this->allowedDomains)) continue;
-                $this->allowedDomains[]=$zone->name;
+            foreach ($result->zones as $zone) {
+                if (in_array($zone->name, $this->allowedDomains)) continue;
+                $this->allowedDomains[] = $zone->name;
                 $seen[$zone->name]++;
             }
         }
     }
 
-    function addRecord($dictionary=array()) {
-
+    function addRecord($dictionary = array())
+    {
         if ($this->typeFilter) {
             $type = $this->typeFilter;
-        } else if ($dictionary['type']) {
+        } elseif ($dictionary['type']) {
             $type = $dictionary['type'];
         } else {
             $type = trim($_REQUEST['type']);
@@ -938,16 +969,16 @@ class DnsRecords extends Records
             $name = trim($_REQUEST['name']);
         }
 
-        $name = rtrim($name,".");
+        $name = rtrim($name, ".");
 
         if (preg_match("/^(.+)@(.*)$/", $name, $m)) {
             $zone = $m[2];
         } else {
             if ($dictionary['zone']) {
-                $zone=$dictionary['zone'];
-                $this->skipSaveProperties=true;
-            } else if ($_REQUEST['zone']) {
-                $zone=$_REQUEST['zone'];
+                $zone = $dictionary['zone'];
+                $this->skipSaveProperties = true;
+            } elseif ($_REQUEST['zone']) {
+                $zone = $_REQUEST['zone'];
             }
 
             if ($type == 'MBOXFW') {
@@ -957,12 +988,12 @@ class DnsRecords extends Records
 
         if (!strlen($zone)) {
             if ($this->html) {
-            	echo "<div class='alert alert-danger'><strong>Error</strong>: Missing zone name. </div>";
+                echo "<div class='alert alert-danger'><strong>Error</strong>: Missing zone name. </div>";
             }
             return false;
         }
 
-        $this->filters['zone']=$zone;
+        $this->filters['zone'] = $zone;
 
         if (!strlen($type)) {
             if ($this->html) {
@@ -977,14 +1008,18 @@ class DnsRecords extends Records
             $value = trim($_REQUEST['value']);
         }
 
-        $value=rtrim($value,".");
+        $value = rtrim($value, ".");
 
         if ($this->adminonly) {
             if ($dictionary['reseller']) {
-            } else if ($this->filters['reseller']) {
+            } elseif ($this->filters['reseller']) {
             } else {
                 if ($this->html) {
-                    echo "<div class='alert alert-danger'><strong>Error</strong>: Missing reseller, please first search zones for a given reseller</div>";
+                    print <<< END
+<div class="alert alert-danger">
+    <strong>Error</strong>: Missing reseller, please first search zones for a given reseller
+</div>
+END;
                 }
                 return false;
             }
@@ -1010,11 +1045,15 @@ class DnsRecords extends Records
             $priority = trim($_REQUEST['priority']);
         }
 
-        if (in_array($type,array_keys($this->recordTypes))) {
+        if (in_array($type, array_keys($this->recordTypes))) {
             // See RFC 1912 - Section 2.4
             if (trim($name).trim($zone) == trim($zone) && $type == 'CNAME') {
                 printf(
-                    "<div class='alert alert-danger'><strong>Error</strong>: CNAME (%s) equal to zone name (%s) is not allowed</div>",
+                    "
+                    <div class='alert alert-danger'>
+                    <strong>Error</strong>: CNAME (%s) equal to zone name (%s) is not allowed
+                    </div>
+                    ",
                     trim($name).trim($zone),
                     trim($zone)
                 );
@@ -1023,7 +1062,7 @@ class DnsRecords extends Records
 
             if (!strlen($value)) {
                 if ($this->html) {
-                	echo "<div class='alert alert-danger'><strong>Error</strong>: Missing record value.</div>";
+                    echo "<div class='alert alert-danger'><strong>Error</strong>: Missing record value.</div>";
                 }
                 return false;
             }
@@ -1038,7 +1077,7 @@ class DnsRecords extends Records
                 'priority' => intval($priority)
             );
 
-            if (!$this->skipSaveProperties=true) {
+            if (!$this->skipSaveProperties = true) {
                 $_p = array(
                     array(
                         'name'       => 'dns_records_last_zone',
@@ -1061,16 +1100,17 @@ class DnsRecords extends Records
                 'commit'   => array(
                     'name'       => $this->addRecordFunction,
                     'parameters' => array($record),
-                    'logs'       => array('success' => sprintf('DNS record %s under %s has been added',$name,$zone))
+                    'logs'       => array('success' => sprintf('DNS record %s under %s has been added', $name, $zone))
                 )
             );
 
-            $result = $this->SoapEngine->execute($function,$this->html);
+            $result = $this->SoapEngine->execute($function, $this->html);
             dprint_r($result);
 
             return (bool)$result;
-        } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
-            $push_notifications_server = $this->getResellerProperty('push_notifications_server_private') or $this->getResellerProperty('push_notifications_server');
+        } elseif (in_array($type, array_keys($this->recordTypesTemplate))) {
+            $push_notifications_server = $this->getResellerProperty('push_notifications_server_private')
+                or $this->getResellerProperty('push_notifications_server');
             if ($type == "sip2sip" && $push_notifications_server) {
                 if (preg_match("/^(.*):(\d+);transport=(.*)$/", $push_notifications_server, $m)) {
                     $push_hostname = $m[1];
@@ -1079,7 +1119,7 @@ class DnsRecords extends Records
                     if ($push_transport == "tls") {
                         $naptr_type = "_sips._tcp";
                         $naptr_s = "SIPS+D2T";
-                    } else if ($push_transport == "tcp") {
+                    } elseif ($push_transport == "tcp") {
                         $naptr_type = "_sip._tcp";
                         $naptr_s = "SIP+D2T";
                     } else {
@@ -1103,45 +1143,45 @@ class DnsRecords extends Records
                                             'ttl'      => '600',
                                             'value'    => sprintf('100 %d %s', $push_port, $push_hostname)
                                         );
-                 }
+                }
             }
 
             foreach (array_values($this->recordTypesTemplate[$type]['records']) as $_records) {
                 $value_new='';
 
                 if (strlen($_records['value'])) {
-                	if (preg_match("/^_sip/",$_records['name'])) {
+                    if (preg_match("/^_sip/", $_records['name'])) {
                         if (!$value) {
-                            $value=$this->getCustomerProperty('dns_records_last_sip_server');
-                            if (!$value)  {
-                            	$value = $this->getCustomerProperty('sip_proxy');
+                            $value = $this->getCustomerProperty('dns_records_last_sip_server');
+                            if (!$value) {
+                                $value = $this->getCustomerProperty('sip_proxy');
                             }
                             if (!value) {
-            	                $value = $this->SoapEngine->default_sip_proxy;
+                                $value = $this->SoapEngine->default_sip_proxy;
                             }
-                            $save_new_value=false;
+                            $save_new_value = false;
                         } else {
-                            $save_new_value=true;
+                            $save_new_value = true;
                         }
                     }
 
-                    $els=explode("|",$_records['value']);
+                    $els = explode("|", $_records['value']);
 
                     foreach ($els as $el) {
-                        if (preg_match("/#VALUE#/",$el)) {
-                        	if ($value) {
-                            	$value_new=preg_replace("/#VALUE#/",$value,$el);
+                        if (preg_match("/#VALUE#/", $el)) {
+                            if ($value) {
+                                $value_new = preg_replace("/#VALUE#/", $value, $el);
                             } else {
                                 continue;
                             }
                         } else {
-                            $value_new=$el;
+                            $value_new = $el;
                         }
                         break;
                     }
 
                     // save value if type sip server
-                    if ($save_new_value && $_records['name'] && preg_match("/^_sip/",$_records['name'])) {
+                    if ($save_new_value && $_records['name'] && preg_match("/^_sip/", $_records['name'])) {
                         $_p = array(
                             array(
                                 'name'       => 'dns_records_last_sip_server',
@@ -1155,7 +1195,7 @@ class DnsRecords extends Records
                     }
                 }
 
-                if (!in_array($_records['type'],array_keys($this->recordTypes))) {
+                if (!in_array($_records['type'], array_keys($this->recordTypes))) {
                     continue;
                 }
 
@@ -1170,7 +1210,7 @@ class DnsRecords extends Records
                 );
 
                 //print_r($record);
-                $function=array(
+                $function = array(
                     'commit'   => array(
                         'name'       => $this->addRecordFunction,
                         'parameters' => array($record),
@@ -1180,20 +1220,21 @@ class DnsRecords extends Records
                     )
                 );
 
-                $result = $this->SoapEngine->execute($function,$this->html);
+                $result = $this->SoapEngine->execute($function, $this->html);
 
                 return (bool)$result;
             }
         } else {
             if ($this->html) {
-            	printf ("<div class='alert alert-danger'><strong>Error</strong>: Invalid or missing record type.</div>");
+                print "<div class='alert alert-danger'><strong>Error</strong>: Invalid or missing record type.</div>";
             }
             return false;
         }
         return true;
     }
 
-    function getRecordKeys() {
+    function getRecordKeys()
+    {
         // Filter
         $filter = array(
             'id'       => intval($this->filters['id']),
@@ -1239,13 +1280,14 @@ class DnsRecords extends Records
             return false;
         } else {
             foreach ($result->records as $record) {
-                $this->selectionKeys[]=array('id' => $record->id);
+                $this->selectionKeys[] = array('id' => $record->id);
             }
             return true;
         }
     }
 
-    function showRecord($record) {
+    function showRecord($record)
+    {
         echo "<h3>Record</h3>";
         printf("<form class='form-horizontal' method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
         echo "<input type=hidden name=action value=Update>";
@@ -1261,7 +1303,7 @@ class DnsRecords extends Records
         );
 
         foreach (array_keys($this->Fields) as $item) {
-            if (is_array($this->havePriority) && $item == 'priority' && !in_array($record->type,$this->havePriority)) {
+            if (is_array($this->havePriority) && $item == 'priority' && !in_array($record->type, $this->havePriority)) {
                 continue;
             }
 
@@ -1272,10 +1314,10 @@ class DnsRecords extends Records
             }
 
             if ($item == 'type') {
-            	$selected_type[$record->$item]='selected';
+                $selected_type[$record->$item]='selected';
 
-                $select_box=sprintf("<select name=%s_form>",$item);
-                foreach(array_keys($this->recordTypes) as $_type) {
+                $select_box=sprintf("<select name=%s_form>", $item);
+                foreach (array_keys($this->recordTypes) as $_type) {
                     $select_box .= sprintf(
                         "<option value='%s' %s>%s - %s",
                         $_type,
@@ -1285,7 +1327,7 @@ class DnsRecords extends Records
                     );
                 }
 
-                foreach(array_keys($this->recordTypesTemplate) as $_type) {
+                foreach (array_keys($this->recordTypesTemplate) as $_type) {
                     $select_box .= sprintf(
                         "<option value='%s' %s>%s",
                         $_type,
@@ -1305,8 +1347,7 @@ class DnsRecords extends Records
                     $item_name,
                     $select_box
                 );
-
-            } else if ($this->Fields[$item]['type'] == 'text') {
+            } elseif ($this->Fields[$item]['type'] == 'text') {
                 printf(
                     "
                     <div class='control-group'>
@@ -1352,10 +1393,10 @@ class DnsRecords extends Records
             </div>
         ";
         echo "</form>";
-
     }
 
-    function getRecord($id) {
+    function getRecord($id)
+    {
         // Filter
         if (!$id) {
             print "Error in getRecord(): Missing record id";
@@ -1387,12 +1428,12 @@ class DnsRecords extends Records
         $this->log_action($this->getRecordsFunction);
 
         // Call function
-        $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
+        $result = call_user_func_array(array($this->SoapEngine->soapclient, $this->getRecordsFunction), array($Query));
 
         if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
-            if ($result->records[0]){
+            if ($result->records[0]) {
                 return $result->records[0];
             } else {
                 return false;
@@ -1400,7 +1441,8 @@ class DnsRecords extends Records
         }
     }
 
-    function updateRecord () {
+    function updateRecord()
+    {
         //print "<p>Updating record ...";
 
         if (!$_REQUEST['id_filter']) return;
@@ -1409,11 +1451,11 @@ class DnsRecords extends Records
             return false;
         }
 
-        $record_old=$record;
+        $record_old = $record;
 
         foreach (array_keys($this->Fields) as $item) {
-            $var_name=$item.'_form';
-            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            $var_name = $item.'_form';
+            //printf ("<br>%s=%s", $var_name, $_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
                 $record->$item = intval($_REQUEST[$var_name]);
             } else {
@@ -1421,20 +1463,19 @@ class DnsRecords extends Records
             }
         }
 
-        $function=array('commit'   => array('name'       => $this->updateRecordFunction,
+        $function = array('commit'   => array('name'       => $this->updateRecordFunction,
                                             'parameters' => array($record),
-                                            'logs'       => array('success' => sprintf('Record %s has been updated',$_REQUEST['id_filter'])))
+                                            'logs'       => array('success' => sprintf('Record %s has been updated', $_REQUEST['id_filter'])))
                         );
 
-        $result = $this->SoapEngine->execute($function,$this->html);
+        $result = $this->SoapEngine->execute($function, $this->html);
         dprint_r($result);
 
         return (bool)$result;
     }
 
-    function showTextBeforeCustomerSelection() {
+    function showTextBeforeCustomerSelection()
+    {
         print _("Zone owner");
     }
-
 }
-
