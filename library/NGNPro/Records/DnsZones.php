@@ -174,7 +174,7 @@ END;
                     );
 
                     $customer_url_data = array(
-                        'service' => sprintf('dns_records@%s', $this->SoapEngine->service),
+                        'service' => sprintf('customers@%s', $this->SoapEngine->service),
                         'customer_filter' => $zone->customer
                     );
 
