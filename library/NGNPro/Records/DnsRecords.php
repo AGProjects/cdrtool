@@ -763,12 +763,7 @@ class DnsRecords extends Records
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if ($this->checkLogSoapError($result, true)) {
-            return false;
-        } else {
-            return true;
-        }
-
+        return (bool)$result;
     }
 
     function showAddForm() {
@@ -1073,7 +1068,7 @@ class DnsRecords extends Records
             $result = $this->SoapEngine->execute($function,$this->html);
             dprint_r($result);
 
-            return !$this->checkLogSoapError($result, true, false, !$this->html);
+            return (bool)$result;
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
             $push_notifications_server = $this->getResellerProperty('push_notifications_server_private') or $this->getResellerProperty('push_notifications_server');
             if ($type == "sip2sip" && $push_notifications_server) {
@@ -1187,9 +1182,7 @@ class DnsRecords extends Records
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if ($this->checkLogSoapError($result, true, false, !$this->html)) {
-                    return false;
-                }
+                return (bool)$result;
             }
         } else {
             if ($this->html) {
@@ -1436,11 +1429,7 @@ class DnsRecords extends Records
         $result = $this->SoapEngine->execute($function,$this->html);
         dprint_r($result);
 
-        if ($this->checkLogSoapError($result, true)) {
-            return false;
-        } else {
-            return true;
-        }
+        return (bool)$result;
     }
 
     function showTextBeforeCustomerSelection() {

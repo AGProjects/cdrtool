@@ -771,18 +771,16 @@ class Records
     }
 
 
-    public function checkLogSoapError($result, $syslog = false, $print = false, $skip = false)
+    public function checkLogSoapError($result, $syslog = false, $print = false)
     {
         if (!$this->soapHasError($result)) {
             return false;
         }
+
         $error_msg  = $result->getMessage();
         $error_fault= $result->getFault();
         $error_code = $result->getCode();
 
-        if ($skip) {
-            return true;
-        }
         if ($syslog) {
             $log = sprintf(
                 "SOAP request error from %s: %s (%s): %s",
