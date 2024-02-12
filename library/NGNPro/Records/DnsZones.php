@@ -150,6 +150,7 @@ END;
 
             $i=0;
 
+
             if ($this->rows) {
                 while ($i < $maxrows) {
                     if (!$result->zones[$i]) break;
