@@ -461,18 +461,7 @@ class DnsRecords extends Records
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             $this->rows = $result->total;
@@ -661,7 +650,6 @@ class DnsRecords extends Records
                             $_url,
                             $actionText
                         );
-
                     }
                     $i++;
                 }
@@ -775,18 +763,7 @@ class DnsRecords extends Records
 
         $result = $this->SoapEngine->execute($function,$this->html);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return true;
@@ -938,18 +915,7 @@ class DnsRecords extends Records
         $this->log_action('getZones');
         $result = $this->SoapEngine->soapclient->getZones($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if ($result->total  > $this->max_zones_selection) return false;
@@ -1107,24 +1073,7 @@ class DnsRecords extends Records
             $result = $this->SoapEngine->execute($function,$this->html);
             dprint_r($result);
 
-            if ((new PEAR)->isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                if ($this->html) {
-                    $log = sprintf(
-                        "SOAP request error from %s: %s (%s): %s",
-                        $this->SoapEngine->SOAPurl,
-                        $error_msg,
-                        $error_fault->detail->exception->errorcode,
-                        $error_fault->detail->exception->errorstring
-                    );
-                }
-                syslog(LOG_NOTICE, $log);
-                return false;
-            } else {
-                return true;
-            }
+            return !$this->checkLogSoapError($result, true, false, !$this->html);
         } else if (in_array($type,array_keys($this->recordTypesTemplate))) {
             $push_notifications_server = $this->getResellerProperty('push_notifications_server_private') or $this->getResellerProperty('push_notifications_server');
             if ($type == "sip2sip" && $push_notifications_server) {
@@ -1238,21 +1187,7 @@ class DnsRecords extends Records
 
                 $result = $this->SoapEngine->execute($function,$this->html);
 
-                if ((new PEAR)->isError($result)) {
-                    $error_msg  = $result->getMessage();
-                    $error_fault= $result->getFault();
-                    $error_code = $result->getCode();
-
-                    if ($this->html) {
-                        $log = sprintf(
-                            "SOAP request error from %s: %s (%s): %s",
-                            $this->SoapEngine->SOAPurl,
-                            $error_msg,
-                            $error_fault->detail->exception->errorcode,
-                            $error_fault->detail->exception->errorstring
-                        );
-                    }
-                    syslog(LOG_NOTICE, $log);
+                if ($this->checkLogSoapError($result, true, false, !$this->html)) {
                     return false;
                 }
             }
@@ -1307,18 +1242,7 @@ class DnsRecords extends Records
         // Call function
         $result = $this->SoapEngine->soapclient->getRecords($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach ($result->records as $record) {
@@ -1472,18 +1396,7 @@ class DnsRecords extends Records
         // Call function
         $result = call_user_func_array(array($this->SoapEngine->soapclient,$this->getRecordsFunction),array($Query));
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if ($result->records[0]){
@@ -1523,18 +1436,7 @@ class DnsRecords extends Records
         $result = $this->SoapEngine->execute($function,$this->html);
         dprint_r($result);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return true;

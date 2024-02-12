@@ -765,14 +765,24 @@ class Records
         syslog(LOG_NOTICE, $log);
     }
 
-    public function checkLogSoapError($result, $syslog = false, $print = false)
+    public function soapHasError($result)
     {
-        if (!(new PEAR)->isError($result)) {
+        return (new PEAR)->isError($result);
+    }
+
+
+    public function checkLogSoapError($result, $syslog = false, $print = false, $skip = false)
+    {
+        if (!$this->soapHasError($result)) {
             return false;
         }
         $error_msg  = $result->getMessage();
         $error_fault= $result->getFault();
         $error_code = $result->getCode();
+
+        if ($skip) {
+            return true;
+        }
         if ($syslog) {
             $log = sprintf(
                 "SOAP request error from %s: %s (%s): %s",
