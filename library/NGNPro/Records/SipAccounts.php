@@ -293,7 +293,7 @@ class SipAccounts extends Records
 
                     if ($account->reseller) {
                         $reseller_sip_settings_page = $account->reseller;
-                    } else if ($this->SoapEngine->impersonate) {
+                    } elseif ($this->SoapEngine->impersonate) {
                         // use the reseller from the soap engine
                         $reseller_sip_settings_page = $this->SoapEngine->impersonate;
                     } else {
