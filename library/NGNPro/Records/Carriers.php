@@ -138,7 +138,7 @@ END;
                     );
 
                     $gateway_url_data = array(
-                        'service' => sprintf('pstn_gateways@%s', $this->SoapEngine),
+                        'service' => sprintf('pstn_gateways@%s', $this->SoapEngine->soapEngine),
                         'carrier_id_filter' => $carrier->id,
                         'reseller_filter' => $carrier->reseller
                     );
