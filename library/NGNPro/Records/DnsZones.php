@@ -155,45 +155,73 @@ END;
                     if (!$result->zones[$i]) break;
                     $zone = $result->zones[$i];
 
-                    $index = $this->next+$i+1;
-
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&name_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($zone->name)
+                    $base_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'name_filter' => $zone->name
                     );
 
-                    if ($this->adminonly) $_url.= sprintf("&reseller_filter=%s", $zone->reseller);
+                    $delete_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'action' => 'Delete'
+                        )
+                    );
+                    $zone_url_data = $base_url_data;
+                    $records_url_data = array(
+                        'service' => sprintf('dns_records@%s', $this->SoapEngine->service),
+                        'zone_filter' => $zone->name
+                    );
+
+                    $customer_url_data = array(
+                        'service' => sprintf('dns_records@%s', $this->SoapEngine->service),
+                        'customer_filter' => $zone->customer
+                    );
+
+                    $index = $this->next + $i + 1;
+
+                    if ($this->adminonly) {
+                        $delete_url_data['reseller_filter'] = $zone->reseller;
+                        $zone_url_data['reseller_filter'] = $zone->reseller;
+                        $records_url_data['reseller_filter'] = $zone->reseller;
+                    }
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['name_filter'] == $zone->name) {
-                        $_url .= "&confirm=1";
+                        $delete_url_data['confirm'] = 1;
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
-                    $zone_url = sprintf('%s&service=%s&name_filter=%s',
-                    $this->url,
-                    $this->SoapEngine->service,
-                    $zone->name
+
+                    $_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($delete_url_data)
                     );
 
-                    $records_url = $this->url.sprintf("&service=dns_records@%s&zone_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($zone->name)
+                    $zone_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($zone_url_data)
                     );
 
-                    if ($this->adminonly) $zone_url    .= sprintf("&reseller_filter=%s", $zone->reseller);
-                    if ($this->adminonly) $records_url .= sprintf("&reseller_filter=%s", $zone->reseller);
-
-                    $customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($zone->customer)
+                    $records_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($records_url_data)
                     );
+
+                    $customer_url = sprintf(
+                        "%s&%s",
+                        $this->url,
+                        http_build_query($customer_url_data)
+                    );
+
 
                     sort($zone->nameservers);
 
-                    $ns_text='';
+                    $ns_text = '';
 
                     foreach ($zone->nameservers as $ns) {
                         $ns_text.= $ns." ";
@@ -381,7 +409,13 @@ END;
                             printf('<p>Customer %s has been updated', $customer['id']);
                         }
                     } else {
-                        $log = sprintf("SOAP request error from %s: %s (%s): %s</font>", $this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+                        $log = sprintf(
+                            "SOAP request error from %s: %s (%s): %s</font>",
+                            $this->SoapEngine->SOAPurl,
+                            $error_msg,
+                            $error_fault->detail->exception->errorcode,
+                            $error_fault->detail->exception->errorstring
+                        );
                         syslog(LOG_NOTICE, $log);
                         printf("<p><font color=red>Error: $log</font>");
                     }
@@ -409,7 +443,13 @@ END;
                              printf('<p>Zone %s has been updated', $zone['name']);
                         }
                     } else {
-                        $log = sprintf("SOAP request error from %s: %s (%s): %s</font>", $this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
+                        $log = sprintf(
+                            "SOAP request error from %s: %s (%s): %s</font>",
+                            $this->SoapEngine->SOAPurl,
+                            $error_msg,
+                            $error_fault->detail->exception->errorcode,
+                            $error_fault->detail->exception->errorstring
+                        );
                         syslog(LOG_NOTICE, $log);
                         printf("<p><font color=red>Error: $log</font>");
                     }
