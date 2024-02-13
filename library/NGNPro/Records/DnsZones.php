@@ -194,31 +194,10 @@ END;
                         $actionText = "Delete";
                     }
 
-
-                    $_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($delete_url_data)
-                    );
-
-                    $zone_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($zone_url_data)
-                    );
-
-                    $records_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($records_url_data)
-                    );
-
-                    $customer_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($customer_url_data)
-                    );
-
+                    $_url = $this->buildUrl($delete_url_data);
+                    $zone_url = $this->buildUrl($zone_url_data);
+                    $records_url = $this->buildUrl($records_url_data);
+                    $customer_url = $this->buildUrl($customer_url_data);
 
                     sort($zone->nameservers);
 

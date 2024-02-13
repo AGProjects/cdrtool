@@ -190,42 +190,39 @@ END;
 
                     $index = $this->next + $i +1;
 
-                    $delete_url = array(
+                    $base_url_data = array(
                         'service' => $this->SoapEngine->service,
-                        'action' => 'Delete',
                         'prefix_filter' => $range->id->prefix,
                         'tld_filter' => $range->id->tld
                     );
 
-                    if ($this->adminonly) $delete_url['reseller_filter'] = $range->reseller;
+                    $delete_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'action' => 'Delete'
+                        )
+                    );
+
+                    $range_url_data = $base_url_data;
+
+                    if ($this->adminonly) {
+                        $delete_url_data['reseller_filter'] = $range->reseller;
+                        $range_url_data['reseller_filter'] = $range->reseller;
+                    }
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['prefix_filter'] == $range->id->prefix &&
                         $_REQUEST['tld_filter'] == $range->id->tld) {
-                        $delete_url['confirm'] = 1;
+                        $delete_url_data['confirm'] = 1;
                         $actionText = "<font color = red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
-                    $_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($delete_url)
-                    );
-
-                    $range_url_data = array(
-                        'service' => $this->SoapEngine->service,
-                        'prefix_filter' => $range->id->prefix,
-                        'tld_filter' => $range->id->tld
-                    );
-
-                    if ($this->adminonly) {
-                        $range_url_data['reseller_filter'] = $range->reseller;
-                    }
+                    $_url = $this->buildUrl($delete_url_data)
 
                     $range_url = sprintf(
-                        '<a href=%s%s>%s</a>',
+                        '<a href=%s&%s>%s</a>',
                         $this->url,
                         http_build_query($range_url_data),
                         $range->id->prefix
@@ -255,14 +252,10 @@ END;
                         $bar="";
                     }
 
-                    $_customer_url = sprintf(
-                        's&%s',
-                        $this->url,
-                        http_build_query(
-                            array(
-                                'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
-                                'customer_filter' => $range->customer
-                            )
+                    $_customer_url = $this->buildUrl(
+                        array(
+                            'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                            'customer_filter' => $range->customer
                         )
                     );
 

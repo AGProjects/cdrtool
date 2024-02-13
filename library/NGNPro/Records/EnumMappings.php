@@ -328,21 +328,14 @@ class EnumMappings extends Records
                             $actionText = "Delete";
                         }
 
-                        $_url = sprintf(
-                            "%s&%s",
-                            $this->url,
-                            http_build_query($delete_url_data)
-                        );
+                        $_url = $this->buildUrl($delete_url_data);
+
                         if ($j==1) {
                             $number_url_data = $base_url_data;
 
  		                   	if ($this->adminonly) $_number_url_data['reseller_filter'] = $number->reseller;
 
-                            $_number_url = sprintf(
-                                "%s&%s",
-                                $this->url,
-                                http_build_query($number_url_data)
-                            );
+                            $_number_url = $this->buildUrl($number_url_data);
 
                             $_customer_url = sprintf(
                                 's&%s',

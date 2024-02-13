@@ -804,6 +804,15 @@ class Records
         return true;
     }
 
+    public function buildUrl($data)
+    {
+        return sprintf(
+            "%s&%s",
+            $this->url,
+            http_build_query($data)
+        );
+    }
+
     public function __construct($SoapEngine)
     {
         $this->SoapEngine          = $SoapEngine;

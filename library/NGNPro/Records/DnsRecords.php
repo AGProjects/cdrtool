@@ -535,60 +535,57 @@ END;
                     $record = $result->records[$i];
                     $index = $this->next+$i+1;
 
-                    $_url = $this->url.sprintf(
-                        "&service=%s&action=Delete&name_filter=%s&zone_filter=%s&id_filter=%s",
-                        urlencode($this->SoapEngine->service),
-                        urlencode($record->name),
-                        urlencode($record->zone),
-                        urlencode($record->id)
+                    $base_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'zone_filter' => $record->zone,
+                        'id_filter' => $record->id
                     );
 
-                    if ($this->adminonly) $_url.= sprintf ("&reseller_filter=%s", $record->reseller);
-
-                    if ($_REQUEST['action'] == 'Delete' &&
-                        $_REQUEST['id_filter'] == $record->id) {
-                        $_url .= "&confirm=1";
-                        $actionText = "<font color=red>Confirm</font>";
-                    } else {
-                        $actionText = "Delete";
-                    }
-
-                    $_customer_url = $this->url.sprintf(
-                        "&service=customers@%s&customer_filter=%s",
-                        urlencode($this->SoapEngine->customer_engine),
-                        urlencode($record->customer)
+                    $delete_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'action' => 'Delete',
+                            'name_filter' => $record->name
+                        )
                     );
 
-                    $_zone_url = $this->url.sprintf(
-                        "&service=dns_zones@%s&name_filter=%s",
-                        urlencode($this->SoapEngine->soapEngine),
-                        urlencode($record->zone)
+                    $record_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'service' => sprintf(
+                                '%s@%s',
+                                $this->SoapEngine->service,
+                                $this->SoapEngine->soapEngine,
+                            )
+                        )
+                    );
+                    $zone_url_data = array(
+                        'service' => sprintf('dns_zones@%s', $this->SoapEngine->soapEngine),
+                        'zone_filter' => $record->zone
+                    );
+
+                    $customer_url_data = array(
+                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                        'customer_filter' => $record->customer
                     );
 
                     if ($this->adminonly) {
-                        $_zone_url.= sprintf("&reseller_filter=%s", $record->reseller);
+                        $delete_url_data['reseller_filter'] = $record->reseller;
+                        $zone_url_data['reseller_filter'] = $record->reseller;
+                        $record_url_data['reseller_filter'] = $record->reseller;
                     }
 
-                    $_record_url = $this->url.sprintf(
-                        "&service=%s@%s&zone_filter=%s&id_filter=%s",
-                        urlencode($this->SoapEngine->service),
-                        urlencode($this->SoapEngine->soapEngine),
-                        urlencode($record->zone),
-                        urlencode($record->id)
-                    );
+                    $_url = $this->buildUrl($delete_url_data);
+                    $_zone_url = $this->buildUrl($zone_url_data);
+                    $_record_url = $this->buildUrl($record_url_data);
+                    $_customer_url = $this->buildUrl($customer_url_data);
 
-                    if ($this->adminonly) $_record_url.= sprintf ("&reseller_filter=%s", $record->reseller);
-
-                    if ($record->owner) {
-                        $_owner_url = sprintf(
-                            "<a href=%s&service=customers@%s&customer_filter=%s>%s</a>",
-                            $this->url,
-                            urlencode($this->SoapEngine->soapEngine),
-                            urlencode($record->owner),
-                            $record->owner
-                        );
+                    if ($_REQUEST['action'] == 'Delete' &&
+                        $_REQUEST['id_filter'] == $record->id) {
+                        $delete_url_data['confirm'] = 1;
+                        $actionText = "<font color=red>Confirm</font>";
                     } else {
-                        $_owner_url='';
+                        $actionText = "Delete";
                     }
 
                     if ($this->fancy) {
@@ -661,7 +658,6 @@ END;
                     $i++;
                 }
             }
-
 
             print "</table>";
 

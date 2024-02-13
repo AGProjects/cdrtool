@@ -112,6 +112,7 @@ END;
                     if (!$result->carriers[$i]) break;
 
                     $carrier = $result->carriers[$i];
+                    $index = $this->next + $i + 1;
 
                     $base_url_data = array(
                         'service' => $this->SoapEngine->service,
@@ -143,7 +144,6 @@ END;
                         'reseller_filter' => $carrier->reseller
                     );
 
-                    $index = $this->next + $i + 1;
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['id_filter'] == $carrier->id) {
@@ -153,29 +153,10 @@ END;
                         $actionText = "Delete";
                     }
 
-                    $_delete_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($delete_url_data)
-                    );
-
-                    $_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($_url_data)
-                    );
-
-                    $_customer_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($customer_url_data)
-                    );
-
-                    $_gateway_url = sprintf(
-                        "%s&%s",
-                        $this->url,
-                        http_build_query($gateway_url_data)
-                    );
+                    $_delete_url = $this->buildUrl($delete_url_data);
+                    $_url = $this->buildUrl($_url_data);
+                    $_customer_url = $this->buildUrl($customer_url_data);
+                    $_gateway_url = $this->buildUrl($gateway_url_data);
 
                     printf(
                         "
