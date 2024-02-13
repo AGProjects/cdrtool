@@ -1086,7 +1086,7 @@ class Records
 
     function showSortForm()
     {
-        if (!count($this->sortElements)) {
+        if (empty($this->sortElements)) {
             return;
         }
 
