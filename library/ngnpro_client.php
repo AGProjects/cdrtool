@@ -1569,7 +1569,9 @@ class Records
 
     function getCarriers()
     {
-        if (count($this->carriers)) return true;
+        if (!empty($this->carriers)) {
+            return true;
+        }
 
         $Query=array('filter'  => array('name'=>''),
                      'orderBy' => array('attribute' => 'name',
@@ -1599,7 +1601,9 @@ class Records
 
     function getGateways()
     {
-        if (count($this->gateways)) return true;
+        if (!empty($this->gateways)) {
+            return true;
+        }
 
         $Query=array('filter'  => array('name'=>''),
                      'orderBy' => array('attribute' => 'name',
