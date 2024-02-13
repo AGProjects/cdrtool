@@ -575,11 +575,6 @@ END;
                         $record_url_data['reseller_filter'] = $record->reseller;
                     }
 
-                    $_url = $this->buildUrl($delete_url_data);
-                    $_zone_url = $this->buildUrl($zone_url_data);
-                    $_record_url = $this->buildUrl($record_url_data);
-                    $_customer_url = $this->buildUrl($customer_url_data);
-
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['id_filter'] == $record->id) {
                         $delete_url_data['confirm'] = 1;
@@ -587,6 +582,11 @@ END;
                     } else {
                         $actionText = "Delete";
                     }
+
+                    $_url = $this->buildUrl($delete_url_data);
+                    $_zone_url = $this->buildUrl($zone_url_data);
+                    $_record_url = $this->buildUrl($record_url_data);
+                    $_customer_url = $this->buildUrl($customer_url_data);
 
                     if ($this->fancy) {
                         printf(
