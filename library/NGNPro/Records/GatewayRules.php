@@ -151,6 +151,7 @@ class GatewayRules extends Records
                         $base_url_data,
                         array(
                             'service' => sprintf('pstn_carriers@%s', $this->SoapEngine->soapEngine),
+                            'id_filter' => $gateway_rule->carrier_id,
                         )
                     );
 
@@ -158,6 +159,7 @@ class GatewayRules extends Records
                         $base_url_data,
                         array(
                             'service' => sprintf('pstn_gateways@%s', $this->SoapEngine->soapEngine),
+                            'id_filter' => $gateway_rule->gateway_id,
                         )
                     );
 

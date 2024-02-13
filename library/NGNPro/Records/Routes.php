@@ -1,21 +1,24 @@
 <?php
 
-class Routes extends Records {
-    var $carriers=array();
+class Routes extends Records
+{
+    var $carriers = array();
 
-    var $Fields=array(
-                              'id'          => array('type'=>'integer',
-                                                     'readonly' => true),
-                              'carrier_id'  => array('type'=>'integer','name'=>'Carrier'),
-                              'prefix'      => array('type'=>'string'),
-                              'originator'  => array('type'=>'string'),
-                              'priority'    => array('type'=>'integer')
-                              );
+    var $Fields = array(
+        'id'          => array(
+            'type'=>'integer',
+            'readonly' => true
+        ),
+        'carrier_id'  => array('type'=>'integer','name'=>'Carrier'),
+        'prefix'      => array('type'=>'string'),
+        'originator'  => array('type'=>'string'),
+        'priority'    => array('type'=>'integer')
+    );
 
-    var $sortElements=array(
-                            'prefix'       => 'Prefix',
-                            'priority'     => 'Priority'
-                            );
+    var $sortElements = array(
+        'prefix'       => 'Prefix',
+        'priority'     => 'Priority'
+    );
 
     public function __construct($SoapEngine)
     {
@@ -29,7 +32,8 @@ class Routes extends Records {
         parent::__construct($SoapEngine);
     }
 
-    function listRecords() {
+    function listRecords()
+    {
         $this->getCarriers();
 
         $this->showSeachForm();
@@ -38,155 +42,161 @@ class Routes extends Records {
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('prefix'       => $this->filters['prefix'],
-                      'carrier_id'   => intval($this->filters['carrier_id']),
-                      'reseller'     => intval($this->filters['reseller']),
-                      'id'           => intval($this->filters['id'])
-                      );
+        $filter = array(
+            'prefix'       => $this->filters['prefix'],
+            'carrier_id'   => intval($this->filters['carrier_id']),
+            'reseller'     => intval($this->filters['reseller']),
+            'id'           => intval($this->filters['id'])
+        );
 
 
         // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'prefix';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Call function
         $this->log_action('getRoutes');
-        $result     = $this->SoapEngine->soapclient->getRoutes($Query);
+        $result = $this->SoapEngine->soapclient->getRoutes($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
-
             $this->rows = $result->total;
 
-            print "
-            <div class=\"alert alert-success\"><center>$this->rows records found</center></div>
-            <p>
-            <table class='table table-condensed table-striped'width=100%>
-            ";
-
-            print "<thead>
-            <tr>
-                <th><b>Id</b></th>
-                <th><b>Owner</b></th>
-                <th><b>Route</b></th>
-                <th><b>Carrier</b></th>
-                <th><b>Gateways</b></th>
-                <th><b>Prefix</b></th>
-                <th><b>Originator</b></th>
-                <th><b>Priority</b></th>
-                <th><b>Change date</b></th>
-                <th><b>Actions</b></th>
-                </tr>
-            </thead>
-            ";
+            print <<< END
+<div class="alert alert-success"><center>$this->rows records found</center></div>
+    <p>
+    <table class='table table-condensed table-striped'width=100%>
+        <thead>
+        <tr>
+            <th><b>Id</b></th>
+            <th><b>Owner</b></th>
+            <th><b>Route</b></th>
+            <th><b>Carrier</b></th>
+            <th><b>Gateways</b></th>
+            <th><b>Prefix</b></th>
+            <th><b>Originator</b></th>
+            <th><b>Priority</b></th>
+            <th><b>Change date</b></th>
+            <th><b>Actions</b></th>
+        </tr>
+        </thead>
+END;
 
             if (!$this->next)  $this->next=0;
 
-            if ($this->rows > $this->maxrowsperpage)  {
+            if ($this->rows > $this->maxrowsperpage) {
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
-                $maxrows=$this->rows;
+                $maxrows = $this->rows;
             }
 
             $i=0;
 
             if ($this->rows) {
-                while ($i < $maxrows)  {
-
+                while ($i < $maxrows) {
                     if (!$result->routes[$i]) break;
 
                     $route = $result->routes[$i];
 
-                    $index=$this->next+$i+1;
+                    $index = $this->next+$i+1;
 
-                    $_delete_url = $this->url.sprintf("&service=%s&action=Delete&id_filter=%d",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($route->id)
+                    $base_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'id_filter' => $route->id,
+                    );
+
+                    $delete_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'action' => 'Delete',
+                        )
+                    );
+
+                    $customer_url_data = array(
+                        'service' => sprintf('customers@%s', $this->SoapEngine->customer_engine),
+                        'customer_filter' => $route->reseller
+                    );
+
+                    $carrier_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'service' => sprintf('pstn_carriers@%s', $this->SoapEngine->soapEngine),
+                            'id_filter' => $route->carrier_id,
+                        )
+                    );
+
+                    $gateway_url_data = array(
+                        'service' => sprintf('pstn_gateways@%s', $this->SoapEngine->soapEngine),
+                        'carrier_id_filter' => $route->carrier_id,
+                        'reseller_filter' => $route->reseller
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['id_filter'] == $route->id) {
-                        $_delete_url .= "&confirm=1";
+                        $delete_url_data['confirm'] = 1;
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
-                    $_url = $this->url.sprintf("&service=%s&id_filter=%d",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($route->id)
+                    $_delete_url = $this->buildUrl($delete_url_data);
+                    $_url = $this->buildUrl($base_url_data);
+                    $_customer_url = $this->buildUrl($customer_url_data);
+                    $_carrier_url = $this->buildUrl($carrier_url_data);
+                    $_gateway_url = $this->buildUrl($gateway_url_data);
+
+                    printf(
+                        "
+                        <tr>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>Gateways</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $index,
+                        $_customer_url,
+                        $route->reseller,
+                        $_url,
+                        $route->id,
+                        $_carrier_url,
+                        $route->carrier,
+                        $_gateway_url,
+                        $route->prefix,
+                        $route->originator,
+                        $route->priority,
+                        $route->changeDate,
+                        $_delete_url,
+                        $actionText
                     );
 
-                    $_customer_url = $this->url.sprintf("&service=customers@%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->customer_engine),
-                    urlencode($route->reseller)
-                    );
-
-                    $_carrier_url = $this->url.sprintf("&service=pstn_carriers@%s&id_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($route->carrier_id)
-                    );
-
-                    $_gateway_url = $this->url.sprintf("&service=pstn_gateways@%s&carrier_id_filter=%s&reseller_filter=%s",
-                    urlencode($this->SoapEngine->soapEngine),
-                    urlencode($route->carrier_id),
-                    urlencode($route->reseller)
-                    );
-
-                    printf("
-                    <tr>
-                    <td>%s</td>
-                    <td><a href=%s>%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td><a href=%s>%s</a></td>
-                    <td><a href=%s>Gateways</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a class='btn-small btn-danger' href=%s>%s</a></td>
-                    </tr>",
-                    $index,
-                    $_customer_url,
-                    $route->reseller,
-                    $_url,
-                    $route->id,
-                    $_carrier_url,
-                    $route->carrier,
-                    $_gateway_url,
-                    $route->prefix,
-                    $route->originator,
-                    $route->priority,
-                    $route->changeDate,
-                    $_delete_url,
-                    $actionText
-                    );
-
-                    printf("
-                    </tr>
-                    ");
+                    print "</tr>";
                     $i++;
                 }
             }
@@ -203,7 +213,8 @@ class Routes extends Records {
         }
     }
 
-    function showAddForm() {
+    function showAddForm()
+    {
         //if ($this->selectionActive) return;
 
         if (!count($this->carriers)) {
@@ -211,26 +222,28 @@ class Routes extends Records {
             return false;
         }
 
-        printf ("<form class=form-inline method=post name=addform action=%s><div class='well well-small'>",$_SERVER['PHP_SELF']);
+        printf(
+            "<form class=form-inline method=post name=addform action=%s><div class='well well-small'>",
+            $_SERVER['PHP_SELF']
+        );
 
-        print "
-        <input class='btn btn-warning' type=submit name=action value=Add>
-        ";
-
-        print "<div class='input-prepend'><span class='add-on'>";
-        printf (" Carrier ");
-        print "</span>";
-
-        print "<select class=span2 name=carrier_id> ";
+        print <<< END
+<input class='btn btn-warning' type=submit name=action value=Add>
+<div class='input-prepend'>
+    <span class='add-on'>Carrier</span>
+    <select class=span2 name=carrier_id>
+END;
         foreach (array_keys($this->carriers) as $_carrier) {
-            printf ("<option value='%s'>%s",$_carrier,$this->carriers[$_carrier]);
+            printf("<option value='%s'>%s", $_carrier, $this->carriers[$_carrier]);
         }
-        printf (" </select></div>");
+        print <<< END
+    </select>
+</div>
 
-        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input type=text size=20 name=prefix></div>");
-        printf (" <div class='input-prepend'><span class='add-on'>Originator</span><input type=text size=20 name=originator></div>");
-        printf (" <div class='input-prepend'><span class='add-on'>Priority</span><input type=text size=5 name=priority></div>");
-
+<div class='input-prepend'><span class='add-on'>Prefix</span><input type=text size=20 name=prefix></div>
+<div class='input-prepend'><span class='add-on'>Originator</span><input type=text size=20 name=originator></div>
+<div class='input-prepend'><span class='add-on'>Priority</span><input type=text size=5 name=priority></div>
+END;
         $this->printHiddenFormElements();
 
         print "</div>
@@ -238,7 +251,8 @@ class Routes extends Records {
         ";
     }
 
-    function addRecord($dictionary=array()) {
+    function addRecord($dictionary = array())
+    {
         if ($dictionary['prefix']) {
             $prefix   = $dictionary['prefix'];
         } else {
@@ -264,39 +278,42 @@ class Routes extends Records {
         }
 
         if (!strlen($carrier_id)) {
-            printf ("<p><font color=red>Error: Missing carrier id. </font>");
+            printf("<p><font color=red>Error: Missing carrier id. </font>");
             return false;
         }
 
-        $route=array(
-                     'prefix'       => $prefix,
-                     'originator'   => $originator,
-                     'carrier_id'   => intval($carrier_id),
-                     'priority'     => intval($priority)
-                     );
+        $route = array(
+            'prefix'       => $prefix,
+            'originator'   => $originator,
+            'carrier_id'   => intval($carrier_id),
+            'priority'     => intval($priority)
+        );
 
-        $routes=array($route);
+        $routes = array($route);
 
-        $function=array('commit'   => array('name'       => 'addRoutes',
-                                            'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('Route %s has been added',$prefix)))
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'addRoutes',
+                'parameters' => array($routes),
+                'logs'       => array('success' => sprintf('Route %s has been added', $prefix))
+            )
+        );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function,$this->html);
-
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
-    function deleteRecord($dictionary=array()) {
+    function deleteRecord($dictionary = array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
         if ($dictionary['id']) {
-            $id   = $dictionary['id'];
+            $id = $dictionary['id'];
         } else {
-            $id   = trim($this->filters['id']);
+            $id  = trim($this->filters['id']);
         }
 
         if (!strlen($id)) {
@@ -304,88 +321,107 @@ class Routes extends Records {
             return false;
         }
 
-        $route=array('id'=> intval($id));
+        $route = array('id'=> intval($id));
 
-        $routes=array($route);
+        $routes = array($route);
 
-        $function=array('commit'   => array('name'       => 'deleteRoutes',
-                                            'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('Route %s has been deleted',$prefix)))
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'deleteRoutes',
+                'parameters' => array($routes),
+                'logs'       => array('success' => sprintf('Route %s has been deleted', $id))
+            )
+        );
 
         unset($this->filters);
-        return $this->SoapEngine->execute($function,$this->html);
+        return $this->SoapEngine->execute($function, $this->html);
     }
 
-    function showSeachFormCustom() {
+    function showSeachFormCustom()
+    {
 
-        printf (" <div class='input-prepend'><span class='add-on'>Route</span><input type=text size=10 name=id_filter value='%s'></div>",$this->filters['id']);
-        print "
-        <select name=carrier_id_filter>
-        <option value=''>Carrier";
-
+        printf(
+            "
+            <div class='input-prepend'>
+            <span class='add-on'>Route</span><input type=text size=10 name=id_filter value='%s'>
+            </div>
+            ",
+            $this->filters['id']
+        );
+        print <<< END
+    <select name=carrier_id_filter>
+        <option value=''>Carrier
+END;
         $selected_carrier[$this->filters['carrier_id']]='selected';
 
         foreach (array_keys($this->carriers) as $_carrier) {
-            printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
+            printf("<option value='%s' %s>%s", $_carrier, $selected_carrier[$_carrier], $this->carriers[$_carrier]);
         }
 
         print "</select>";
-        printf (" <div class='input-prepend'><span class='add-on'>Prefix</span><input type=text size=15 name=prefix_filter value='%s'></div>",$this->filters['prefix']);
-
+        printf(
+            "
+            <div class='input-prepend'>
+            <span class='add-on'>Prefix</span><input type=text size=15 name=prefix_filter value='%s'>
+            </div>
+            ",
+            $this->filters['prefix']
+        );
     }
 
-    function showCustomerTextBox () {
+    function showCustomerTextBox()
+    {
         print "Owner";
         $this->showResellerForm('reseller');
     }
 
-    function showCustomerForm($name='customer_filter') {
+    function showCustomerForm($name = 'customer_filter')
+    {
     }
 
-    function showTextBeforeCustomerSelection() {
+    function showTextBeforeCustomerSelection()
+    {
         print "Owner";
     }
 
-    function getRecord($id) {
+    function getRecord($id)
+    {
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
 
         // Filter
-        $filter=array('id'  => intval($id));
+        $filter = array('id'  => intval($id));
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 1
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 1
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'prefix';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'ASC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'  => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'  => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Call function
         $this->log_action('getRoutes');
-        $result     = $this->SoapEngine->soapclient->getRoutes($Query);
+        $result = $this->SoapEngine->soapclient->getRoutes($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
-            if ($result->routes[0]){
+            if ($result->routes[0]) {
                 return $result->routes[0];
             } else {
                 return false;
@@ -393,52 +429,60 @@ class Routes extends Records {
         }
     }
 
-    function showRecord($route) {
-
+    function showRecord($route)
+    {
         print "<h3>Route</h3>";
 
-        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form class = form-horizontal method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
-                $item_name=$this->Fields[$item]['name'];
+                $item_name = $this->Fields[$item]['name'];
             } else {
-                $item_name=ucfirst($item);
+                $item_name = ucfirst($item);
             }
 
-            printf ("<div class=control-group>
-            <label class=control-label>%s</label>
-            ",
-            $item_name
+            printf(
+                "
+                <div class=control-group>
+                <label class=control-label>%s</label>
+                ",
+                $item_name
             );
 
             if ($this->Fields[$item]['readonly']) {
-                printf ("<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
-                $item,
-                $route->$item,
-                $route->$item
+                printf(
+                    "<div class=controls style='padding-top:5px'><input name=%s_form type=hidden value='%s'>%s</div>",
+                    $item,
+                    $route->$item,
+                    $route->$item
                 );
             } else {
                 if ($item == 'carrier_id') {
-                    printf ("<div class=controls><select name=%s_form>",$item);
-                    $selected_carrier[$route->$item]='selected';
+                    printf("<div class=controls><select name=%s_form>", $item);
+                    $selected_carrier[$route->$item] = 'selected';
                     foreach (array_keys($this->carriers) as $_carrier) {
-                        printf ("<option value='%s' %s>%s",$_carrier,$selected_carrier[$_carrier],$this->carriers[$_carrier]);
+                        printf(
+                            "<option value='%s' %s>%s",
+                            $_carrier,
+                            $selected_carrier[$_carrier],
+                            $this->carriers[$_carrier]
+                        );
                     }
-                    printf (" </select></div>");
-
+                    print "</select></div>";
                 } else {
-                    printf ("<div class=controls><input name=%s_form type=text value='%s'></div>",
-                    $item,
-                    $route->$item
+                    printf(
+                        "<div class=controls><input name=%s_form type=text value='%s'></div>",
+                        $item,
+                        $route->$item
                     );
                 }
             }
             print "</div>";
         }
 
-        printf ("<input type=hidden name=id_filter value='%s'>",$carier->id);
+        printf("<input type=hidden name=id_filter value='%s'>", $route->id);
 
         $this->printFiltersToForm();
         $this->printHiddenFormElements();
@@ -451,7 +495,8 @@ class Routes extends Records {
         print "</form>";
     }
 
-    function updateRecord () {
+    function updateRecord()
+    {
         //print "<p>Updating route ...";
 
         if (!$_REQUEST['id_filter']) return;
@@ -461,7 +506,7 @@ class Routes extends Records {
         }
 
         foreach (array_keys($this->Fields) as $item) {
-            $var_name=$item.'_form';
+            $var_name = $item.'_form';
             if ($this->Fields[$item]['type'] == 'integer') {
                 $route->$item = intval($_REQUEST[$var_name]);
             } else {
@@ -469,24 +514,15 @@ class Routes extends Records {
             }
         }
 
-        $routes=array($route);
+        $routes = array($route);
 
-        $function=array('commit'   => array('name'       => 'updateRoutes',
-                                            'parameters' => array($routes),
-                                            'logs'       => array('success' => sprintf('Route %d has been updated',$_REQUEST['id_filter'])))
-                        );
-        $result = $this->SoapEngine->execute($function,$this->html);
-
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s</font>",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
-            return false;
-        } else {
-            return true;
-        }
+        $function = array(
+            'commit'   => array(
+                'name'       => 'updateRoutes',
+                'parameters' => array($routes),
+                'logs'       => array('success' => sprintf('Route %d has been updated', $_REQUEST['id_filter']))
+            )
+        );
+        return (bool)$this->SoapEngine->execute($function, $this->html);
     }
 }
-

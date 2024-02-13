@@ -559,6 +559,7 @@ END;
                             )
                         )
                     );
+
                     $zone_url_data = array(
                         'service' => sprintf('dns_zones@%s', $this->SoapEngine->soapEngine),
                         'zone_filter' => $record->zone
