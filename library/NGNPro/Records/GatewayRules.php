@@ -18,7 +18,7 @@ class GatewayRules extends Records
                               'maxLength'  => array('type'=>'integer')
                               );
 
-    public function GatewayRules($SoapEngine)
+    public function __construct($SoapEngine)
     {
         $this->filters   = array(
             'id'         => trim($_REQUEST['id_filter']),
