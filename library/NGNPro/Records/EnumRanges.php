@@ -219,7 +219,7 @@ END;
                         $actionText = "Delete";
                     }
 
-                    $_url = $this->buildUrl($delete_url_data)
+                    $_url = $this->buildUrl($delete_url_data);
 
                     $range_url = sprintf(
                         '<a href=%s&%s>%s</a>',
