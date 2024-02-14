@@ -2777,38 +2777,9 @@ require_once 'NGNPro/Records/EnumRanges.php';
 require_once 'NGNPro/Records/EnumMappings.php';
 require_once 'NGNPro/Records/DnsZones.php';
 require_once 'NGNPro/Records/DnsRecords.php';
-
-class FancyRecords extends DnsRecords
-{
-    var $fancy = true;
-
-    var $addRecordFunction    = 'addFancyRecord';
-    var $deleteRecordFunction = 'deleteFancyRecord';
-    var $updateRecordFunction = 'updateFancyRecord';
-    var $getRecordsFunction   = 'getFancyRecords';
-    var $getRecordFunction    = 'getFancyRecord';
-
-    var $recordTypesTemplate=array();
-
-    var $Fields=array(
-                              'type'     => array('type'=>'string'),
-                              'value'    => array('type'=>'string')
-                              );
-
-
-}
-
-class EmailAliases extends FancyRecords
-{
-    var $recordTypes=array('MBOXFW'  => 'Email alias');
-    var $typeFilter='MBOXFW';
-}
-
-class UrlRedirect extends FancyRecords
-{
-    var $recordTypes=array('URL'   => 'URL forwarding');
-    var $typeFilter='URL';
-}
+require_once 'NGNPro/Records/DnsRecords/FancyRecords.php';
+require_once 'NGNPro/Records/DnsRecords/FancyRecords/EmailAliases.php';
+require_once 'NGNPro/Records/DnsRecords/FancyRecords/UrlRedirect.php';
 
 class TrustedPeers extends Records
 {
