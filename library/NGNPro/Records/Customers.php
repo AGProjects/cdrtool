@@ -189,34 +189,43 @@ class Customers extends Records
         )
     );
 
-    var $FieldsReadOnly=array(
+    var $FieldsReadOnly = array(
         'id'          => array('type'=>'integer'),
         'reseller'    => array('type'=>'integer')
     );
-    var $Fields=array(
-        'resellerActive' => array ('type'      => 'boolean',
+    var $Fields = array(
+        'resellerActive' => array (
+            'type'      => 'boolean',
             'name'      => 'Reseller active',
             'adminonly' => true
         ),
-        'impersonate'     => array('type'       =>'integer',
+        'impersonate'     => array(
+            'type'       =>'integer',
             'name'       =>'Impersonate'),
-        'companyCode' => array('type'       =>'text',
+        'companyCode' => array(
+            'type'       =>'text',
             'name'       =>'Company code',
             'adminonly'  => true
         ),
-        'balance'     => array('type'       => 'float',
+        'balance'     => array(
+            'type'       => 'float',
             'adminonly'  => true
         ),
-        'credit'      => array('type'       => 'float',
+        'credit'      => array(
+            'type'       => 'float',
             'adminonly'  => true
         ),
-        'username'    => array('type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
+        'username'    => array(
+            'type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
         ),
-        'password'    => array('type'=>'text',
+        'password'    => array(
+            'type'=>'text',
             'name'=>'Password'),
-        'firstName'   => array('type'=>'text',
+        'firstName'   => array(
+            'type'=>'text',
             'name'=>'First name'),
-        'lastName'    => array('type'=>'text',
+        'lastName'    => array(
+            'type'=>'text',
             'name'=>'Last name'),
         'organization'=> array('type'=>'text'),
         'tel'         => array('type'=>'text'),
@@ -251,7 +260,7 @@ class Customers extends Records
         ),
     );
 
-    var $addFields=array(
+    var $addFields = array(
         'username'    => array(
             'type'       =>'text'
         ),
@@ -278,7 +287,7 @@ class Customers extends Records
         'timezone'    => array('type'=>'text')
     );
 
-    var $states=array(
+    var $states = array(
         array("label"=>"", "value"=>"N/A"),
         array("label"=>"-- CANADA --", "value"=>"-"),
         array("label"=>"Alberta", "value"=>"AB"),
@@ -358,7 +367,7 @@ class Customers extends Records
         array("label"=>"FPO", "value"=>"FP")
     );
 
-    var $countries=array(
+    var $countries = array(
         array("label"=>"Ascension Island",    "value"=>"AC"),
         array("label"=>"Afghanistan",        "value"=>"AF"),
         array("label"=>"Albania",        "value"=>"AL"),
@@ -386,7 +395,7 @@ class Customers extends Records
         array("label"=>"Bermuda",            "value"=>"BM"),
         array("label"=>"Bhutan",            "value"=>"BT"),
         array("label"=>"Bolivia",            "value"=>"BO"),
-        array("label"=>"Bosnia And Herzegowina","value"=>"BA"),
+        array("label"=>"Bosnia And Herzegowina", "value"=>"BA"),
         array("label"=>"Botswana",        "value"=>"BW"),
         array("label"=>"Bouvet Island",        "value"=>"BV"),
         array("label"=>"Brazil",        "value"=>"BR"),
@@ -416,7 +425,7 @@ class Customers extends Records
         array("label"=>"Croatia (local name: Hrvatska)",    "value"=>"HR"),
         array("label"=>"Cuba",        "value"=>"CU"),
         array("label"=>"Cyprus",    "value"=>"CY"),
-        array("label"=>"Czech Republic","value"=>"CZ"),
+        array("label"=>"Czech Republic", "value"=>"CZ"),
         array("label"=>"Denmark",    "value"=>"DK"),
         array("label"=>"Djibouti",    "value"=>"DJ"),
         array("label"=>"Dominica",    "value"=>"DM"),
@@ -636,17 +645,18 @@ class Customers extends Records
             $this->customer_properties = array();
         }
 
-        $this->allProperties=array_merge($this->propertiesItems,$this->customer_properties);
-
+        $this->allProperties = array_merge($this->propertiesItems, $this->customer_properties);
     }
 
-    function showSeachForm() {
-         printf ("<p><b>%s</b>",
-        $this->SoapEngine->ports[$this->SoapEngine->port]['description'],
-        '%'
+    function showSeachForm()
+    {
+        printf(
+            "<p><b>%s</b>",
+            $this->SoapEngine->ports[$this->SoapEngine->port]['description'],
+            '%'
         );
 
-         printf ("<form class=form-inline method=post name=engines action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form class=form-inline method=post name=engines action=%s>", $_SERVER['PHP_SELF']);
         print "
         <div class='well well-small'>
         ";
@@ -680,43 +690,47 @@ class Customers extends Records
         ";
     }
 
-    function listRecords() {
-
+    function listRecords()
+    {
         // Filter
-        $filter=array('username'     => $this->filters['username'],
-                      'firstName'    => $this->filters['firstName'],
-                      'lastName'     => $this->filters['lastName'],
-                      'organization' => $this->filters['organization'],
-                      'tel'          => $this->filters['tel'],
-                      'email'        => $this->filters['email'],
-                      'web'          => $this->filters['web'],
-                      'city'         => $this->filters['city'],
-                      'country'      => $this->filters['country'],
-                      'only_resellers' => $this->filters['only_resellers'],
-                      'customer'     => intval($this->filters['customer']),
-                      'reseller'     => intval($this->filters['reseller'])
-                      );
+        $filter = array(
+            'username'     => $this->filters['username'],
+            'firstName'    => $this->filters['firstName'],
+            'lastName'     => $this->filters['lastName'],
+            'organization' => $this->filters['organization'],
+            'tel'          => $this->filters['tel'],
+            'email'        => $this->filters['email'],
+            'web'          => $this->filters['web'],
+            'city'         => $this->filters['city'],
+            'country'      => $this->filters['country'],
+            'only_resellers' => $this->filters['only_resellers'],
+            'customer'     => intval($this->filters['customer']),
+            'reseller'     => intval($this->filters['reseller'])
+        );
 
         //print_r($filter);
 
         // Range
-        $range=array('start' => intval($this->next),
-                     'count' => intval($this->maxrowsperpage)
-                     );
+        $range = array(
+            'start' => intval($this->next),
+            'count' => intval($this->maxrowsperpage)
+        );
 
         // Order
         if (!$this->sorting['sortBy'])    $this->sorting['sortBy']    = 'changeDate';
         if (!$this->sorting['sortOrder']) $this->sorting['sortOrder'] = 'DESC';
 
-        $orderBy = array('attribute' => $this->sorting['sortBy'],
-                         'direction' => $this->sorting['sortOrder']
-                         );
+        $orderBy = array(
+            'attribute' => $this->sorting['sortBy'],
+            'direction' => $this->sorting['sortOrder']
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                        'orderBy' => $orderBy,
-                        'range'   => $range
-                        );
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         $this->showSeachForm();
 
@@ -731,26 +745,25 @@ class Customers extends Records
         // Call function
         if ($this->adminonly && $this->filters['only_resellers']) {
             $this->log_action('getResellers');
-            $result     = $this->SoapEngine->soapclient->getResellers($Query);
+            $result = $this->SoapEngine->soapclient->getResellers($Query);
         } else {
             $this->log_action('getCustomers');
-            $result     = $this->SoapEngine->soapclient->getCustomers($Query);
+            $result = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
-
             $this->rows = $result->total;
 
             if ($this->rows && $_REQUEST['action'] != 'PerformActions' && $_REQUEST['action'] != 'Delete') {
                 $this->showActionsForm();
             }
+
+            $url_data = array(
+                'service' => $this->SoapEngine->service,
+                'showAddForm' => 1
+            );
 
             print "
             <div class='alert alert-success'><center>$this->rows records found. Click on the id to edit the account.</center></div>
@@ -760,25 +773,22 @@ class Customers extends Records
                 <div class=\"btn-group\">
             ";
 
-            $_add_url = $this->url.sprintf("&service=%s&showAddForm=1",
-            urlencode($this->SoapEngine->service)
-            );
-
-            printf ("<a class='btn btn-warning' href=%s>Add new account</a> ",$_add_url);
-
+            $_add_url = $this->buildUrl($url_data);
+            printf("<a class='btn btn-warning' href=%s>Add new account</a> ", $_add_url);
 
             if ($this->adminonly) {
                 if ($this->adminonly && $this->filters['reseller']) {
-                	$_add_url = $this->url.sprintf("&service=%s&showAddForm=1&reseller_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($this->filters['reseller'])
+                    $url_data['reseller_filter'] = $this->filters['reseller'];
+                    $_add_url = $this->buildUrl($url_data);
+                    printf(
+                        "<a class='btn btn-warning' href=%s>Add a new account for reseller %s</a>",
+                        $_add_url,
+                        $this->filters['reseller']
                     );
-                    printf (" <a class='btn btn-warning' href=%s>Add a new account for reseller %s</a>",$_add_url,$this->filters['reseller']);
                 }
             }
             print "</div>";
             if ($this->rows > 1) {
-
                 print "
                 <table class='table table-striped table-condensed' border=0 cellpadding=2 width=100%>
                 <thead>
@@ -805,70 +815,74 @@ class Customers extends Records
                 $maxrows = $this->maxrowsperpage + $this->next;
                 if ($maxrows > $this->rows) $maxrows = $this->maxrowsperpage;
             } else {
-                $maxrows=$this->rows;
+                $maxrows = $this->rows;
             }
 
             $i=0;
 
             if ($this->rows > 1) {
-                while ($i < $maxrows)  {
-
+                while ($i < $maxrows) {
                     if (!$result->accounts[$i]) break;
 
                     $customer = $result->accounts[$i];
 
                     $index = $this->next+$i+1;
 
-                    $_url = $this->url.sprintf("&service=%s&action=Delete&reseller_filter=%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($customer->reseller),
-                    urlencode($customer->id)
+                    $base_url_data = array(
+                        'service' => $this->SoapEngine->service,
+                        'reseller_filter' => $customer->reseller,
+                        'customer_filter' => $customer->id,
+                    );
+
+                    $delete_url_data = array_merge(
+                        $base_url_data,
+                        array(
+                            'action' => 'Delete',
+                        )
                     );
 
                     if ($_REQUEST['action'] == 'Delete' &&
                         $_REQUEST['customer_filter'] == $customer->id) {
-                        $_url .= "&confirm=1";
+                        $delete_url_data['confirm'] = 1;
                         $actionText = "<font color=red>Confirm</font>";
                     } else {
                         $actionText = "Delete";
                     }
 
-                    $_customer_url = $this->url.sprintf("&service=%s&reseller_filter=%s&customer_filter=%s",
-                    urlencode($this->SoapEngine->service),
-                    urlencode($customer->reseller),
-                    urlencode($customer->id)
-                    );
+                    $_url = $this->buildUrl($delete_url_data);
+                    $_customer_url = $this->buildUrl($base_url_data);
 
-                    printf("
-                    <tr>
-                    <td>%s</td>
-                    <td><a href=%s>%s.%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td>%s %s</td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a href=mailto:%s>%s</a></td>
-                    <td>%s</td>
-                    <td>%s</td>
-                    <td><a class='btn-small btn-danger' href=%s>%s</a>
-                    ",
-                    $index,
-                    $_customer_url,
-                    $customer->id,
-                    $customer->reseller,
-                    $customer->impersonate,
-                    strip_tags($customer->username),
-                    strip_tags($customer->firstName),
-                    strip_tags($customer->lastName),
-                    strip_tags($customer->organization),
-                    strip_tags($customer->country),
-                    strip_tags($customer->email),
-                    strip_tags($customer->email),
-                    $customer->tel,
-                    $customer->changeDate,
-                    $_url,
-                    $actionText
+                    printf(
+                        "
+                        <tr>
+                        <td>%s</td>
+                        <td><a href=%s>%s.%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s %s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=mailto:%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a class='btn-small btn-danger' href=%s>%s</a>
+                        ",
+                        $index,
+                        $_customer_url,
+                        $customer->id,
+                        $customer->reseller,
+                        $customer->impersonate,
+                        strip_tags($customer->username),
+                        strip_tags($customer->firstName),
+                        strip_tags($customer->lastName),
+                        strip_tags($customer->organization),
+                        strip_tags($customer->country),
+                        strip_tags($customer->email),
+                        strip_tags($customer->email),
+                        $customer->tel,
+                        $customer->changeDate,
+                        $_url,
+                        $actionText
                     );
 
                     $this->showExtraActions($customer);
@@ -882,7 +896,7 @@ class Customers extends Records
 
             print "</table>";
 
-            if ($this->rows == 1 ) {
+            if ($this->rows == 1) {
                 $customer = $result->accounts[0];
                 $this->showRecord($customer);
             }
@@ -894,29 +908,31 @@ class Customers extends Records
         }
     }
 
-    function showSeachFormCustom() {
-        printf (" <div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text name=username_filter value='%s'></div>",$this->filters['username']);
-        printf (" <div class=input-prepend><span class=\"add-on\">FN</span><input class='span2' type=text name=firstName_filter value='%s'></div>\n",$this->filters['firstName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">LN</span><input class='span2' type=text name=lastName_filter value='%s'></div>\n",$this->filters['lastName']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2' type=text name=organization_filter value='%s'></div>\n",$this->filters['organization']);
-        printf (" <div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text name=email_filter value='%s'></div>\n",$this->filters['email']);
+    function showSeachFormCustom()
+    {
+        printf("<div class=input-prepend><span class=\"add-on\">Username</span><input class='span1' type=text name=username_filter value='%s'></div>", $this->filters['username']);
+        printf("<div class=input-prepend><span class=\"add-on\">FN</span><input class='span2' type=text name=firstName_filter value='%s'></div>\n", $this->filters['firstName']);
+        printf("<div class=input-prepend><span class=\"add-on\">LN</span><input class='span2' type=text name=lastName_filter value='%s'></div>\n", $this->filters['lastName']);
+        printf("<div class=input-prepend><span class=\"add-on\">Organization</span><input class='span2' type=text name=organization_filter value='%s'></div>\n", $this->filters['organization']);
+        printf("<div class=input-prepend><span class=\"add-on\">Email</span><input class='span2' type=text name=email_filter value='%s'></div>\n", $this->filters['email']);
 
         if ($this->adminonly) {
             if ($this->filters['only_resellers']) $check_only_resellers_filter='checked';
-            printf (" Resellers <input class=checkbox type=checkbox name=only_resellers_filter value=1 %s>",$check_only_resellers_filter);
+            printf(" Resellers <input class=checkbox type=checkbox name=only_resellers_filter value=1 %s>", $check_only_resellers_filter);
         }
     }
 
-    function deleteRecord($dictionary= Array()) {
+    function deleteRecord($dictionary = array())
+    {
         if (!$dictionary['confirm'] && !$_REQUEST['confirm']) {
             print "<p><font color=red>Please press on Confirm to confirm the delete. </font>";
             return true;
         }
 
         if ($dictionary['customer']) {
-            $customer=$dictionary['customer'];
+            $customer = $dictionary['customer'];
         } else {
-            $customer=$this->filters['customer'];
+            $customer = $this->filters['customer'];
         }
 
         if (!strlen($customer)) {
@@ -924,74 +940,72 @@ class Customers extends Records
             return false;
         }
 
-        $function=array('commit'   => array('name'       => 'deleteAccount',
+        $function = array('commit'   => array('name'       => 'deleteAccount',
                                             'parameters' => array(intval($customer)),
-                                            'logs'       => array('success' => sprintf('Customer id %s has been deleted',$this->filters['customer'])))
+                                            'logs'       => array('success' => sprintf('Customer id %s has been deleted', $this->filters['customer'])))
                         );
-        if ($this->SoapEngine->execute($function,$this->html)) {
+        if ($this->SoapEngine->execute($function, $this->html)) {
             unset($this->filters);
             return true;
-
         } else {
             return false;
         }
-
     }
 
-    function getRecord($id) {
+    function getRecord($id)
+    {
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getAccount');
         $result     = $this->SoapEngine->soapclient->getAccount(intval($id));
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             return $result;
         }
     }
 
-    function showRecordHeader($customer) {
+    function showRecordHeader($customer)
+    {
     }
 
-    function showRecordFooter($customer) {
+    function showRecordFooter($customer)
+    {
     }
 
-    function showExtraActions($customer) {
+    function showExtraActions($customer)
+    {
     }
 
-    function showRecord($customer) {
+    function showRecord($customer)
+    {
         //dprint_r($customer);
 
         $this->showRecordHeader($customer);
 
         print "<table border=0 cellpadding=10>";
 
-        printf ("<form method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
         print "
 
         <tr>
         <td align=left>";
         if ($_REQUEST['action'] != 'Delete' && $_REQUEST['action'] != 'Copy') {
             print "<input class='btn' type=submit name=action value=Update>";
-            printf (" E-mail <input class=checkbox type=checkbox name=notify value='1'> account information");
+            printf(" E-mail <input class=checkbox type=checkbox name=notify value='1'> account information");
         }
 
         print "</td>
         <td align=right>";
 
-        printf ("<input type=hidden name=customer_filter value=%s>",$customer->id);
+        printf("<input type=hidden name=customer_filter value=%s>", $customer->id);
 
         if ($this->adminonly) {
-            printf ("<input type=hidden name=reseller_filter value=%s>",$customer->reseller);
+            printf("<input type=hidden name=reseller_filter value=%s>", $customer->reseller);
         }
 
-          if ($this->adminonly || $this->reseller == $customer->reseller) {
+        if ($this->adminonly || $this->reseller == $customer->reseller) {
             if ($_REQUEST['action'] != 'Delete') {
                 print "<div class='btn-group'><input class='btn' type=submit name=action value=Copy>";
             }
@@ -1015,31 +1029,34 @@ class Customers extends Records
         <table border=0>
         ";
 
-        printf ("<tr bgcolor=lightgrey>
+        printf("<tr bgcolor=lightgrey>
         <td class=border>Property</td>
         <td class=border>Value</td>
         </tr>");
         foreach (array_keys($this->FieldsReadOnly) as $item) {
-            printf ("<tr>
-            <td class=border valign=top>%s</td>
-            <td class=border>%s</td>
-            </tr>",
-            ucfirst($item),
-            $customer->$item
+            printf(
+                "
+                <tr>
+                <td class=border valign=top>%s</td>
+                <td class=border>%s</td>
+                </tr>
+                ",
+                ucfirst($item),
+                $customer->$item
             );
         }
 
         foreach (array_keys($this->Fields) as $item) {
             if ($this->Fields[$item]['name']) {
-                $item_name=$this->Fields[$item]['name'];
+                $item_name = $this->Fields[$item]['name'];
             } else {
-                $item_name=ucfirst($item);
+                $item_name = ucfirst($item);
             }
 
             if ($item=='timezone') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
-                $item_name
+                printf(
+                    "<tr><td class=border valign=top>%s</td>",
+                    $item_name
                 );
                 print "<td class=border>";
 
@@ -1048,10 +1065,10 @@ class Customers extends Records
                 print "</td>
                 </tr>
                 ";
-            } else if ($item=='state') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
-                $item_name
+            } elseif ($item=='state') {
+                printf(
+                    "<tr><td class=border valign=top>%s</td>",
+                    $item_name
                 );
                 print "<td class=border>
                 <select name=state_form>";
@@ -1059,7 +1076,7 @@ class Customers extends Records
                 $selected_state[$customer->state]='selected';
 
                 foreach ($this->states as $_state) {
-                    printf ("<option value='%s' %s>%s",$_state['value'],$selected_state[$_state['value']],$_state['label']);
+                    printf("<option value='%s' %s>%s", $_state['value'], $selected_state[$_state['value']], $_state['label']);
                 }
 
                 print "
@@ -1067,10 +1084,10 @@ class Customers extends Records
                 </td>
                 </tr>
                 ";
-            } else if ($item=='country') {
-                printf ("<tr>
-                <td class=border valign=top>%s</td>",
-                $item_name
+            } elseif ($item=='country') {
+                printf(
+                    "<tr><td class=border valign=top>%s</td>",
+                    $item_name
                 );
                 print "<td class=border>
                 <select name=country_form>";
@@ -1078,7 +1095,7 @@ class Customers extends Records
                 $selected_country[$customer->country]='selected';
 
                 foreach ($this->countries as $_country) {
-                    printf ("<option value='%s' %s>%s",$_country['value'],$selected_country[$_country['value']],$_country['label']);
+                    printf("<option value='%s' %s>%s", $_country['value'], $selected_country[$_country['value']], $_country['label']);
                 }
 
                 print "
@@ -1086,16 +1103,18 @@ class Customers extends Records
                 </td>
                 </tr>
                 ";
-            } else if ($item=='resellerActive' && ($customer->reseller != $customer->id)) {
-                printf ("<input name=%s_form type=hidden value='%s'>",
-                        $item,
-                        $customer->$item);
-            } else if ($item=='impersonate') {
+            } elseif ($item=='resellerActive' && ($customer->reseller != $customer->id)) {
+                printf(
+                    "<input name=%s_form type=hidden value='%s'>",
+                    $item,
+                    $customer->$item
+                );
+            } elseif ($item=='impersonate') {
                 if ($customer->reseller != $customer->id) {
                     if ($this->adminonly || $this->customer == $customer->reseller) {
-                        printf ("<tr>
-                        <td class=border valign=top>%s</td>",
-                        $item_name
+                        printf(
+                            "<tr><td class=border valign=top>%s</td>",
+                            $item_name
                         );
                         print "<td class=border>      ";
                         $this->getChildren($customer->reseller);
@@ -1105,18 +1124,17 @@ class Customers extends Records
                             <option>";
                             $selected_impersonate[$customer->impersonate]='selected';
                             foreach (array_keys($this->children) as $_child) {
-                                printf ("<option value='%s' %s>%s. %s %s",$_child,$selected_impersonate[$_child],$_child,$this->children[$_child]['firstName'],$this->children[$_child]['lastName']);
+                                printf("<option value='%s' %s>%s. %s %s", $_child, $selected_impersonate[$_child], $_child, $this->children[$_child]['firstName'], $this->children[$_child]['lastName']);
                             }
 
                             print "
                             </select>
                             ";
                         } else {
-                            printf ("
-                            <input name=%s_form size=30 type=text value='%s'>
-                            ",
-                            $item,
-                            $customer->$item
+                            printf(
+                                "<input name=%s_form size=30 type=text value='%s'>",
+                                $item,
+                                $customer->$item
                             );
                         }
                         print "
@@ -1124,96 +1142,101 @@ class Customers extends Records
                         </tr>
                         ";
                     } else {
-                        printf ("
-                        <tr>
-                        <td class=border valign=top>%s</td>
-                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
-                        </tr>
-                        ",
-                        $item_name,
-                        $item,
-                        $customer->$item,
-                        $customer->$item
+                        printf(
+                            "
+                            <tr>
+                            <td class=border valign=top>%s</td>
+                            <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                            </tr>
+                            ",
+                            $item_name,
+                            $item,
+                            $customer->$item,
+                            $customer->$item
                         );
                     }
-                    } else {
-                    printf ("
-                    <input name=%s_form type=hidden value='%s'>
-                    ",
-                    $item,
-                    $customer->$item
+                } else {
+                    printf(
+                        "<input name=%s_form type=hidden value='%s'>",
+                        $item,
+                        $customer->$item
                     );
                 }
             } else {
                 if ($this->Fields[$item]['type'] == 'textarea') {
-                    printf ("
-                    <tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
-                    </tr>
-                    ",
-                    $item_name,
-                    $item,
-                    $customer->$item
-                    );
-                } elseif ($this->Fields[$item]['type'] == 'boolean') {
-                    if ($this->Fields[$item]['adminonly'] && !$this->adminonly) {
-                        printf ("
+                    printf(
+                        "
                         <tr>
                         <td class=border valign=top>%s</td>
-                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                        <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
                         </tr>
                         ",
                         $item_name,
                         $item,
-                        $customer->$item,
                         $customer->$item
+                    );
+                } elseif ($this->Fields[$item]['type'] == 'boolean') {
+                    if ($this->Fields[$item]['adminonly'] && !$this->adminonly) {
+                        printf(
+                            "
+                            <tr>
+                            <td class=border valign=top>%s</td>
+                            <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                            </tr>
+                            ",
+                            $item_name,
+                            $item,
+                            $customer->$item,
+                            $customer->$item
                         );
                     } else {
                         $_var='select_'.$item;
                         ${$_var}[$customer->$item]='selected';
 
-                        printf ("
-                        <tr>
-                        <td class=border valign=top>%s</td>
-                        <td class=border>
-                        <select name=%s_form>
-                        <option value='0' %s>False
-                        <option value='1' %s>True
-                        </select>
-                        </td>
-                        </tr>
-                        ",
-                        $item_name,
-                        $item,
-                        ${$_var}[0],
-                        ${$_var}[1]
+                        printf(
+                            "
+                            <tr>
+                            <td class=border valign=top>%s</td>
+                            <td class=border>
+                            <select name=%s_form>
+                            <option value='0' %s>False
+                            <option value='1' %s>True
+                            </select>
+                            </td>
+                            </tr>
+                            ",
+                            $item_name,
+                            $item,
+                            ${$_var}[0],
+                            ${$_var}[1]
                         );
                     }
                 } else {
                     if ($this->Fields[$item]['adminonly'] && !$this->adminonly) {
-                        printf ("
-                        <tr>
-                        <td class=border valign=top>%s</td>
-                        <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
-                        </tr>
-                        ",
-                        $item_name,
-                        $item,
-                        $customer->$item,
-                        $customer->$item
+                        printf(
+                            "
+                            <tr>
+                            <td class=border valign=top>%s</td>
+                            <td class=border><input name=%s_form type=hidden value='%s'>%s</td>
+                            </tr>
+                            ",
+                            $item_name,
+                            $item,
+                            $customer->$item,
+                            $customer->$item
                         );
                     } else {
-                        printf ("
-                        <tr>
-                        <td class=border valign=top>%s</td>
-                        <td class=border><input name=%s_form size=30 type=text value='%s' %s></td>
-                        </tr>
-                        ",
-                        $item_name,
-                        $item,
-                        $customer->$item,
-                        $this->Fields[$item]['extra_html']
+                        printf(
+                            "
+                            <tr>
+                            <td class=border valign=top>%s</td>
+                            <td class=border><input name=%s_form size=30 type=text value='%s' %s></td>
+                            </tr>
+                            ",
+                            $item_name,
+                            $item,
+                            $customer->$item,
+                            $this->Fields[$item]['extra_html']
                         );
                     }
                 }
@@ -1247,143 +1270,166 @@ class Customers extends Records
         <table border=0>";
 
         if ($this->login_credentials['login_type'] == 'admin') {
-            printf ("<tr bgcolor=lightgrey>
-            <td class=border>Category</td>
-            <td class=border>Level</td>
-            <td class=border>Property</td>
-            <td class=border>Value</td>
-            <td class=border>Description</td>
-            </tr>");
-        } else if ($this->login_credentials['login_type'] == 'reseller') {
-            printf ("<tr bgcolor=lightgrey>
-            <td class=border>Level</td>
-            <td class=border>Property</td>
-            <td class=border>Value</td>
-            </tr>"
-            );
+            print <<< END
+<tr bgcolor=lightgrey>
+    <td class=border>Category</td>
+    <td class=border>Level</td>
+    <td class=border>Property</td>
+    <td class=border>Value</td>
+    <td class=border>Description</td>
+</tr>
+END;
+        } elseif ($this->login_credentials['login_type'] == 'reseller') {
+            print <<< END
+<tr bgcolor=lightgrey>
+    <td class=border>Level</td>
+    <td class=border>Property</td>
+    <td class=border>Value</td>
+</tr>
+END;
         } else {
-            printf ("<tr bgcolor=lightgrey>
-            <td class=border>Property</td>
-            <td class=border>Value</td>
-            </tr>"
-            );
+            print <<< END
+<tr bgcolor=lightgrey>
+    <td class=border>Property</td>
+    <td class=border>Value</td>
+</tr>
+END;
         }
 
         foreach ($customer->properties as $_property) {
-            if (in_array($_property->name,array_keys($this->allProperties))) {
-                $this->allProperties[$_property->name]['value']=$_property->value;
+            if (in_array($_property->name, array_keys($this->allProperties))) {
+                $this->allProperties[$_property->name]['value'] = $_property->value;
             }
         }
 
         foreach (array_keys($this->allProperties) as $item) {
-            $item_print=preg_replace("/_/"," ",$item);
+            $item_print = preg_replace("/_/", " ", $item);
 
-            $_permission=$this->allProperties[$item]['permission'];
+            $_permission = $this->allProperties[$item]['permission'];
 
             if ($this->login_credentials['login_type'] == 'admin') {
-                if ($this->allProperties[$item]['permission'] == 'admin' &&
-                        $customer->id != $customer->reseller &&
-                        $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
-
+                if ($this->allProperties[$item]['permission'] == 'admin'
+                    && $customer->id != $customer->reseller
+                    && $this->allProperties[$item]['resellerMayManageForChildAccounts']
+                ) {
                         $_permission='reseller';
                 }
 
-                printf ("<tr>
-                <td class=border>%s</td>
-                <td class=border>%s</td>
-                <td class=border>%s</td>
-                <td class=border><input type=text size=45 name='%s_form' value='%s' autocomplete='no'></td>
-                <td class=border>%s</td>
-                </tr>",
-                $this->allProperties[$item]['category'],
-                ucfirst($_permission),
-                $item_print,
-                $item,
-                $this->allProperties[$item]['value'],
-                $this->allProperties[$item]['name']
+                printf(
+                    "
+                    <tr>
+                    <td class=border>%s</td>
+                    <td class=border>%s</td>
+                    <td class=border>%s</td>
+                    <td class=border><input type=text size=45 name='%s_form' value='%s' autocomplete='no'></td>
+                    <td class=border>%s</td>
+                    </tr>
+                    ",
+                    $this->allProperties[$item]['category'],
+                    ucfirst($_permission),
+                    $item_print,
+                    $item,
+                    $this->allProperties[$item]['value'],
+                    $this->allProperties[$item]['name']
                 );
-            } else if ($this->login_credentials['login_type'] == 'reseller') {
+            } elseif ($this->login_credentials['login_type'] == 'reseller') {
                 // logged in as reseller
 
                 if ($this->allProperties[$item]['permission'] == 'admin') {
-                    if ($customer->id == $customer->reseller ) {
+                    if ($customer->id == $customer->reseller) {
                         // reseller cannot modify himself for items with admin permission
                         if (!$this->allProperties[$item]['invisible']) {
-                            printf ("<tr>
-                            <td class=border>%s</td>
-                            <td class=border>%s</td>
-                            <td class=border>%s</td>
-                            </tr>",
-                            ucfirst($this->allProperties[$item]['permission']),
-                            $this->allProperties[$item]['name'],
-                            $this->allProperties[$item]['value']
+                            printf(
+                                "
+                                <tr>
+                                <td class=border>%s</td>
+                                <td class=border>%s</td>
+                                <td class=border>%s</td>
+                                </tr>
+                                ",
+                                ucfirst($this->allProperties[$item]['permission']),
+                                $this->allProperties[$item]['name'],
+                                $this->allProperties[$item]['value']
                             );
                         }
                     } else {
                         if ($this->allProperties[$item]['resellerMayManageForChildAccounts']) {
                             // reseller can manage these properties for his customers
-                            printf ("<tr>
-                            <td class=border>%s</td>
-                            <td class=border>%s</td>
-                            <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                            </tr>",
-                            'Reseller',
-                            $this->allProperties[$item]['name'],
-                            $item,
-                            $this->allProperties[$item]['value']
+                            printf(
+                                "
+                                <tr>
+                                <td class=border>%s</td>
+                                <td class=border>%s</td>
+                                <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                                </tr>
+                                ",
+                                'Reseller',
+                                $this->allProperties[$item]['name'],
+                                $item,
+                                $this->allProperties[$item]['value']
                             );
                         } else {
                             if (!$this->allProperties[$item]['invisible']) {
                                 // otherwise cannot modify them
-                                printf ("<tr>
-                                <td class=border>%s</td>
-                                <td class=border>%s</td>
-                                <td class=border>%s </td>
-                                </tr>",
-                                ucfirst($this->allProperties[$item]['permission']),
-                                $this->allProperties[$item]['name'],
-                                $this->allProperties[$item]['value']
+                                printf(
+                                    "
+                                    <tr>
+                                    <td class=border>%s</td>
+                                    <td class=border>%s</td>
+                                    <td class=border>%s </td>
+                                    </tr>
+                                    ",
+                                    ucfirst($this->allProperties[$item]['permission']),
+                                    $this->allProperties[$item]['name'],
+                                    $this->allProperties[$item]['value']
                                 );
                             }
                         }
                     }
                 } else {
-                    printf ("<tr>
-                    <td class=border>%s</td>
-                    <td class=border>%s</td>
-                    <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                    </tr>",
-                    ucfirst($this->allProperties[$item]['permission']),
-                    $this->allProperties[$item]['name'],
-                    $item,
-                    $this->allProperties[$item]['value']
+                    printf(
+                        "
+                        <tr>
+                        <td class=border>%s</td>
+                        <td class=border>%s</td>
+                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                        </tr>
+                        ",
+                        ucfirst($this->allProperties[$item]['permission']),
+                        $this->allProperties[$item]['name'],
+                        $item,
+                        $this->allProperties[$item]['value']
                     );
                 }
             } else {
                 // logged in as customer
                 if ($this->allProperties[$item]['permission'] == 'admin' || $this->allProperties[$item]['permission'] == 'reseller' ) {
                     if (!$this->allProperties[$item]['invisible']) {
-                        printf ("<tr>
-                        <td class=border>%s</td>
-                        <td class=border>%s </td>
-                        </tr>",
-                        $this->allProperties[$item]['name'],
-                        $this->allProperties[$item]['value']
+                        printf(
+                            "
+                            <tr>
+                            <td class=border>%s</td>
+                            <td class=border>%s </td>
+                            </tr>
+                            ",
+                            $this->allProperties[$item]['name'],
+                            $this->allProperties[$item]['value']
                         );
                     }
                 } else {
-                    printf ("<tr>
-                    <td class=border>%s</td>
-                    <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
-                    </tr>",
-                    $this->allProperties[$item]['name'],
-                    $item,
-                    $this->allProperties[$item]['value']
+                    printf(
+                        "
+                        <tr>
+                        <td class=border>%s</td>
+                        <td class=border><input type=text size=45 name='%s_form' value='%s'></td>
+                        </tr>
+                        ",
+                        $this->allProperties[$item]['name'],
+                        $item,
+                        $this->allProperties[$item]['value']
                     );
                 }
-
             }
-
         }
 
         print "
@@ -1402,36 +1448,36 @@ class Customers extends Records
         ";
 
         $this->showRecordFooter($customer);
-
     }
 
-    function updateRecord () {
+    function updateRecord()
+    {
         //print "<p>Updating customer ...";
 
         if (!strlen($this->filters['customer'])) {
             return false;
         }
 
-        if (!$customer=$this->getRecord($this->filters['customer'])) {
+        if (!$customer = $this->getRecord($this->filters['customer'])) {
             return false;
         }
 
-		if ($_REQUEST['notify']) {
-
-            $customer_notify=array('firstName'=> $customer->firstName,
-                                   'lastName' => $customer->lastName,
-                                   'email'    => $customer->email,
-                                   'username' => $customer->username,
-                                   'password' => $customer->password
-                                   );
+        if ($_REQUEST['notify']) {
+            $customer_notify = array(
+                'firstName'=> $customer->firstName,
+                'lastName' => $customer->lastName,
+                'email'    => $customer->email,
+                'username' => $customer->username,
+                'password' => $customer->password
+            );
 
             if ($this->notify($customer_notify)) {
                 print "<p>";
-            	printf (_("The login account details have been sent to %s"), $customer->email);
-            	return true;
+                printf(_("The login account details have been sent to %s"), $customer->email);
+                return true;
             } else {
                 print "<p>";
-            	printf (_("Error sending e-mail notification"));
+                printf(_("Error sending e-mail notification"));
                 return false;
             }
         }
@@ -1444,13 +1490,13 @@ class Customers extends Records
         $customer->balance     = floatval($customer->balance);
 
         foreach ($customer->properties as $_property) {
-            $properties[]=$_property;
+            $properties[] = $_property;
         }
 
         if (is_array($properties)) {
-            $customer->properties=$properties;
+            $customer->properties = $properties;
         } else {
-            $customer->properties=array();
+            $customer->properties = array();
         }
 
         $customer_old = $customer;
@@ -1460,33 +1506,36 @@ class Customers extends Records
         foreach (array_keys($this->allProperties) as $item) {
             $var_name   = $item.'_form';
 
-            $updated_property=array();
+            $updated_property = array();
 
             foreach (array_keys($customer->properties) as $_key) {
-                $_property=$customer->properties[$_key];
+                $_property = $customer->properties[$_key];
 
                 if ($_property->name == $item) {
                     // update property
 
                     if ($_property->permission == 'admin') {
                         if ($this->login_credentials['login_type'] == 'admin') {
-                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
-                        } else if ($this->login_credentials['login_type'] == 'reseller' && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                            $customer->properties[$_key]->value = trim($_REQUEST[$var_name]);
+                        } elseif ($this->login_credentials['login_type'] == 'reseller'
+                            && $this->allProperties[$item]['resellerMayManageForChildAccounts']
+                        ) {
                             if ($customer->id != $customer->reseller) {
-                                $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                                $customer->properties[$_key]->value = trim($_REQUEST[$var_name]);
                             }
                         }
-                    } else if ($_property->permission == 'reseller') {
-                        if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
-                            $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                    } elseif ($_property->permission == 'reseller') {
+                        if ($this->login_credentials['login_type'] == 'admin'
+                            || $this->login_credentials['login_type'] == 'reseller'
+                        ) {
+                            $customer->properties[$_key]->value = trim($_REQUEST[$var_name]);
                         }
                     } else {
-                        $customer->properties[$_key]->value=trim($_REQUEST[$var_name]);
+                        $customer->properties[$_key]->value = trim($_REQUEST[$var_name]);
                         if ($_key == 'yubikey' && $_REQUEST[$var_name] != '') {
-                            $customer->properties[$_key]->value = substr($customer->properties[$_key]->value,0,12);
+                            $customer->properties[$_key]->value = substr($customer->properties[$_key]->value, 0, 12);
                         }
                     }
-
 
                     $updated_property[$item]++;
 
@@ -1505,12 +1554,12 @@ class Customers extends Records
 
                     if ($this->login_credentials['login_type'] == 'admin') {
                         $var_value   =  trim($_REQUEST[$var_name]);
-                    } else if ($this->login_credentials['login_type'] == 'reseller' && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
+                    } elseif ($this->login_credentials['login_type'] == 'reseller' && $this->allProperties[$item]['resellerMayManageForChildAccounts']) {
                         if ($customer->id != $customer->reseller) {
                             $var_value   =  trim($_REQUEST[$var_name]);
                         }
                     }
-                } else if ($this->allProperties[$item]['permission'] == 'reseller') {
+                } elseif ($this->allProperties[$item]['permission'] == 'reseller') {
                     $_permission = 'reseller';
 
                     if ($this->login_credentials['login_type'] == 'admin' || $this->login_credentials['login_type'] == 'reseller') {
@@ -1522,14 +1571,15 @@ class Customers extends Records
                 }
 
                 if (strlen($var_value)) {
-                    if ($item == 'yubikey' ) {
-                        $var_value = substr($var_value,0,12);
+                    if ($item == 'yubikey') {
+                        $var_value = substr($var_value, 0, 12);
                     }
-                    $customer->properties[] = array('name'       => $item,
-                                                    'value'      => $var_value,
-                                                    'category'   => $this->allProperties[$item]['category'],
-                                                    'permission' => $this->allProperties[$item]['permission']
-                                                     );
+                    $customer->properties[] = array(
+                        'name'       => $item,
+                        'value'      => $var_value,
+                        'category'   => $this->allProperties[$item]['category'],
+                        'permission' => $this->allProperties[$item]['permission']
+                    );
                 }
             }
         }
@@ -1540,20 +1590,20 @@ class Customers extends Records
         */
 
         foreach (array_keys($this->Fields) as $item) {
-            $var_name=$item.'_form';
-            //printf ("<br>%s=%s",$var_name,$_REQUEST[$var_name]);
+            $var_name = $item.'_form';
+            //printf("<br>%s=%s", $var_name, $_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer' || $this->Fields[$item]['type'] == 'boolean') {
                 $customer->$item = intval($_REQUEST[$var_name]);
-            } else if ($this->Fields[$item]['type'] == 'float') {
+            } elseif ($this->Fields[$item]['type'] == 'float') {
                 $customer->$item = floatval($_REQUEST[$var_name]);
             } else {
                 $customer->$item = strip_tags(trim($_REQUEST[$var_name]));
             }
         }
 
-        $customer->tel  = preg_replace("/[^\+0-9]/","",$customer->tel);
-        $customer->fax  = preg_replace("/[^\+0-9]/","",$customer->fax);
-        $customer->enum = preg_replace("/[^\+0-9]/","",$customer->enum);
+        $customer->tel  = preg_replace("/[^\+0-9]/", "", $customer->tel);
+        $customer->fax  = preg_replace("/[^\+0-9]/", "", $customer->fax);
+        $customer->enum = preg_replace("/[^\+0-9]/", "", $customer->enum);
 
         if (!strlen($_REQUEST['password_form'])) $customer->password = $this->RandomString(6);
 
@@ -1568,27 +1618,31 @@ class Customers extends Records
             // a subaccount cannot change his own impersonate field
             if (!$this->adminonly) {
                 if ($this->customer != $customer->reseller) {
-                    $customer->impersonate=$customer_old->impersonate;
+                    $customer->impersonate = $customer_old->impersonate;
                 }
             }
         }
 
-        $function=array('commit'   => array('name'       => 'updateAccount',
-                                            'parameters' => array($customer),
-                                            'logs'       => array('success' => sprintf('Customer id %s has been updated',$customer->id)))
-                        );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'updateAccount',
+                'parameters' => array($customer),
+                'logs'       => array('success' => sprintf('Customer id %s has been updated', $customer->id))
+            )
+        );
 
         //dprint_r($customer);
 
-        if ($this->SoapEngine->execute($function,$this->html,$this->adminonly)) {
-            $this->updateAfter($customer,$customer_old);
+        if ($this->SoapEngine->execute($function, $this->html, $this->adminonly)) {
+            $this->updateAfter($customer, $customer_old);
             return true;
         } else {
             return false;
         }
     }
 
-    function showTimezones($timezone) {
+    function showTimezones($timezone)
+    {
         if (!$fp = fopen("timezones", "r")) {
             print _("Failed to open timezone file.");
             return false;
@@ -1596,8 +1650,8 @@ class Customers extends Records
 
         print "<select name=timezone_form>";
         print "\n<option>";
-        while ($buffer = fgets($fp,1024)) {
-            $buffer=trim($buffer);
+        while ($buffer = fgets($fp, 1024)) {
+            $buffer = trim($buffer);
             if ($timezone==$buffer) {
                 $selected="selected";
             } else {
@@ -1610,14 +1664,15 @@ class Customers extends Records
         print "</select>";
     }
 
-    function getChildren($reseller) {
+    function getChildren($reseller)
+    {
         return;
         // Filter
 
-        $filter=array('reseller'     => intval($reseller));
+        $filter = array('reseller'     => intval($reseller));
 
         // Range
-        $range=array('start' => 0,
+        $range = array('start' => 0,
                      'count' => 1000
                      );
 
@@ -1627,7 +1682,7 @@ class Customers extends Records
                          );
 
         // Compose query
-        $Query=array('filter'     => $filter,
+        $Query = array('filter'     => $filter,
                         'orderBy' => $orderBy,
                         'range'   => $range
                         );
@@ -1639,12 +1694,7 @@ class Customers extends Records
         // Call function
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             $i=0;
@@ -1652,16 +1702,18 @@ class Customers extends Records
             while ($i < $result->total) {
                 $customer = $result->accounts[$i];
 
-                   $this->children[$customer->id]=array('firstName'    => $customer->firstName,
-                                                     'lastName'     => $customer->lastName,
-                                                     'organization' => $customer->organization
-                                               );
-                   $i++;
+                $this->children[$customer->id] = array(
+                    'firstName'    => $customer->firstName,
+                    'lastName'     => $customer->lastName,
+                    'organization' => $customer->organization
+                );
+                $i++;
             }
         }
     }
 
-    function copyRecord () {
+    function copyRecord()
+    {
         //print "<p>Copy customer ...";
 
         if (!strlen($this->filters['customer'])) {
@@ -1673,7 +1725,7 @@ class Customers extends Records
             return true;
         }
 
-        if (!$customer=$this->getRecord($this->filters['customer'])) {
+        if (!$customer = $this->getRecord($this->filters['customer'])) {
             return false;
         }
 
@@ -1681,33 +1733,35 @@ class Customers extends Records
         $customer->balance     = floatval($customer->balance);
 
         foreach ($customer->properties as $_property) {
-            $properties[]=$_property;
+            $properties[] = $_property;
         }
 
         if (is_array($properties)) {
-            $customer->properties=$properties;
+            $customer->properties = $properties;
         } else {
-            $customer->properties=array();
+            $customer->properties = array();
         }
 
         // change username
-        $customer_new=$customer;
+        $customer_new = $customer;
         unset($customer_new->id);
 
         $j=1;
         while ($j < 9) {
+            $customer_new->username = $customer->username.$j;
 
-            $customer_new->username=$customer->username.$j;
+            $function = array(
+                'commit'   => array('name'       => 'addAccount',
+                    'parameters' => array($customer_new),
+                    'logs'       => array(
+                        'success' => sprintf('Customer id %s has been copied', $customer->id))
+                )
+            );
 
-            $function=array('commit'   => array('name'       => 'addAccount',
-                                                'parameters' => array($customer_new),
-                                                'logs'       => array('success' => sprintf('Customer id %s has been copied',$customer->id)))
-                            );
-
-            if ($this->SoapEngine->execute($function,$this->html)) {
+            if ($this->SoapEngine->execute($function, $this->html)) {
                 // Reset filters to find the copy
-                $this->filters=array();
-                $this->filters['username']=$customer_new->username;
+                $this->filters = array();
+                $this->filters['username'] = $customer_new->username;
 
                 return true;
             } else {
@@ -1720,13 +1774,14 @@ class Customers extends Records
         }
     }
 
-    function showAddForm($confirmPassword=false) {
+    function showAddForm($confirmPassword = false)
+    {
 
         print "<div class='row-fluid'>
         <h1 class=page-header>Add new account</h1>";
         print "<p>";
         print _("Accounts are used for login and to assign ownership to data created in the platform. ");
-        printf ("<form class=form-horizontal method=post name=addform action=%s>",$_SERVER['PHP_SELF']);
+        printf("<form class=form-horizontal method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
 
         print "
         <p>
@@ -1734,56 +1789,57 @@ class Customers extends Records
         ";
 
         if ($this->adminonly && $this->filters['reseller']) {
-            printf ("<tr><td class=border>Reseller</td>
-            <td class=border>%s</td></tr>",$this->filters['reseller']);
+            printf("<tr><td class=border>Reseller</td>
+            <td class=border>%s</td></tr>", $this->filters['reseller']);
 
-            printf ("<input type=hidden name=reseller_filter value='%s'>",$this->filters['reseller']);
-
-        } else if ($this->reseller) {
-            printf ("<tr><td class=border>Reseller</td>
-            <td class=border>%s</td></tr>",$this->reseller);
+            printf("<input type=hidden name=reseller_filter value='%s'>", $this->filters['reseller']);
+        } elseif ($this->reseller) {
+            printf("<tr><td class=border>Reseller</td>
+            <td class=border>%s</td></tr>", $this->reseller);
         }
 
         foreach (array_keys($this->addFields) as $item) {
             if ($this->addFields[$item]['name']) {
-                $item_name=$this->addFields[$item]['name'];
+                $item_name = $this->addFields[$item]['name'];
             } else {
-                $item_name=ucfirst($item);
+                $item_name = ucfirst($item);
             }
 
-            $item_form=$item.'_form';
+            $item_form = $item.'_form';
 
             if ($item=='timezone') {
-                $_value=$_REQUEST['timezone_form'];
+                $_value = $_REQUEST['timezone_form'];
                 if (!$_value) {
                     if ($this->SoapEngine->default_timezone) {
-                        $_value=$this->SoapEngine->default_timezone;
+                        $_value = $this->SoapEngine->default_timezone;
                     } else {
                         $_value='Europe/Amsterdam';
                     }
                 }
 
-                printf ("
-                  <div class=\"control-group\">
-                    <label class=\"control-label\">%s",
-                $item_name
+                printf(
+                    "
+                    <div class=\"control-group\">
+                    <label class=\"control-label\">%s</label>
+                    ",
+                    $item_name
                 );
-                print "</label>
-                  <div class=\"controls\">";
+                print "<div class=\"controls\">";
 
                 $this->showTimezones($_value);
 
                 print "</div>
                 </div>
                 ";
-            } else if ($item=='state') {
-                printf ("
-                  <div class=\"control-group\">
+            } elseif ($item=='state') {
+                printf(
+                    "
+                    <div class=\"control-group\">
                     <label class=\"control-label\">
                     %s
-                  </label>
-                  <div class=\"controls\">",
-                $item_name
+                    </label>
+                    <div class=\"controls\">",
+                    $item_name
                 );
                 print "
                 <select name=state_form>";
@@ -1791,7 +1847,12 @@ class Customers extends Records
                 $selected_state[$_REQUEST[$item_form]]='selected';
 
                 foreach ($this->states as $_state) {
-                    printf ("<option value='%s' %s>%s",$_state['value'],$selected_state[$_state['value']],$_state['label']);
+                    printf(
+                        "<option value='%s' %s>%s",
+                        $_state['value'],
+                        $selected_state[$_state['value']],
+                        $_state['label']
+                    );
                 }
 
                 print "
@@ -1799,31 +1860,39 @@ class Customers extends Records
                 </div>
                 </div>
                 ";
-            } else if ($item=='country') {
-                printf ("<div class=\"control-group\">
+            } elseif ($item=='country') {
+                printf(
+                    "
+                    <div class=\"control-group\">
                     <label class=\"control-label\">
-                  %s
-                  </label>
-                  <div class=\"controls\">",
-                $item_name
+                    %s
+                    </label>
+                    <div class=\"controls\">
+                    ",
+                    $item_name
                 );
                 print "
                 <select name=country_form>";
 
-		        if (!$_REQUEST[$item_form]) {
+                if (!$_REQUEST[$item_form]) {
                     if ($this->SoapEngine->default_country) {
-                        $_value=$this->SoapEngine->default_country;
+                        $_value = $this->SoapEngine->default_country;
                     } else {
                         $_value='NL';
                     }
                 } else {
-                    $_value=$_REQUEST[$item_form];
+                    $_value = $_REQUEST[$item_form];
                 }
 
                 $selected_country[$_value]='selected';
 
                 foreach ($this->countries as $_country) {
-                    printf ("<option value='%s' %s>%s",$_country['value'],$selected_country[$_country['value']],$_country['label']);
+                    printf(
+                        "<option value='%s' %s>%s",
+                        $_country['value'],
+                        $selected_country[$_country['value']],
+                        $_country['label']
+                    );
                 }
 
                 print "
@@ -1831,87 +1900,95 @@ class Customers extends Records
                 </div>
                 </div>
                 ";
-
             } else {
                 if ($this->addFields[$item]['type'] == 'textarea') {
-                    printf ("
-                    <div class=\"control-group\">
-                    <label class=\"control-label\">
-                    %s
-                    </label>
-                    <div class=\"controls\">
-                    <textarea cols=30 name=%s_form rows=4>%s</textarea>
-                    </div>
-                    </div>
-                    ",
-                    $item_name,
-                    $item,
-                    $_REQUEST[$item_form]
+                    printf(
+                        "
+                        <div class=\"control-group\">
+                        <label class=\"control-label\">
+                        %s
+                        </label>
+                        <div class=\"controls\">
+                        <textarea cols=30 name=%s_form rows=4>%s</textarea>
+                        </div>
+                        </div>
+                        ",
+                        $item_name,
+                        $item,
+                        $_REQUEST[$item_form]
                     );
                 } elseif ($this->addFields[$item]['type'] == 'boolean') {
                     $_var='select_'.$item;
                     ${$_var}[$_REQUEST[$item_form]]='selected';
 
-                    printf ("
-                    <tr>
-                    <td class=border valign=top>%s</td>
-                    <td class=border>
-                    <select name=%s_form>
-                    <option value='0' %s>False
-                    <option value='1' %s>True
-                    </select>
-                    </td>
-                    </tr>
-                    ",
-                    $item_name,
-                    $item,
-                    ${$_var}[0],
-                    ${$_var}[1]
+                    printf(
+                        "
+                        <tr>
+                        <td class=border valign=top>%s</td>
+                        <td class=border>
+                        <select name=%s_form>
+                        <option value='0' %s>False
+                        <option value='1' %s>True
+                        </select>
+                        </td>
+                        </tr>
+                        ",
+                        $item_name,
+                        $item,
+                        ${$_var}[0],
+                        ${$_var}[1]
                     );
                 } else {
                     $type='text';
-                    if (strstr($item,'password')) $type='password';
+                    if (strstr($item, 'password')) $type='password';
 
-                    printf ("
-                    <div class=\"control-group\">
-                    <label class=\"control-label\">
-                    %s
-                    </label>
-                    <div class=\"controls\">
-                    <input name=%s_form size=30 type=%s value='%s'>
-                    </div>
-                    </div>
-                    ",
-                    $item_name,
-                    $item,
-                    $type,
-                    $_REQUEST[$item_form]
+                    printf(
+                        "
+                        <div class=\"control-group\">
+                        <label class=\"control-label\">
+                        %s
+                        </label>
+                        <div class=\"controls\">
+                        <input name=%s_form size=30 type=%s value='%s'>
+                        </div>
+                        </div>
+                        ",
+                        $item_name,
+                        $item,
+                        $type,
+                        $_REQUEST[$item_form]
                     );
 
                     if ($item=='password' && $confirmPassword) {
-                        printf ("
-                        <div class=\"control-group error\">
-                        <label class=\"control-label\">
-                        Confirm password
-                        </label>
-                        <div class=\"controls\">
-                        <input name=confirm_password_form size=30 type=password value='%s'>
-                        </div>
-                        </div>
-                        </tr>
-                        ",
-                        $_REQUEST[confirm_password_form]
+                        printf(
+                            "
+                            <div class=\"control-group error\">
+                            <label class=\"control-label\">
+                            Confirm password
+                            </label>
+                            <div class=\"controls\">
+                            <input name=confirm_password_form size=30 type=password value='%s'>
+                            </div>
+                            </div>
+                            </tr>
+                            ",
+                            $_REQUEST['confirm_password_form']
                         );
                     }
                 }
             }
         }
         if ($_REQUEST['notify']) $checked_notify='checked';
-        printf ("
-                            <div class=\"control-group\">
-                    <label class=\"control-label\">Email notification</label>
-                  <div class=\"controls\">
-          <input class=checkbox type=checkbox name=notify value='1' %s></div></div>",$checked_notify);
+
+        printf(
+            "
+            <div class=\"control-group\">
+            <label class=\"control-label\">Email notification</label>
+            <div class=\"controls\">
+            <input class=checkbox type=checkbox name=notify value='1' %s></div></div>
+            ",
+            $checked_notify
+        );
 
         $this->printHiddenFormElements();
         print "<tr><td colspan=2><div class=form-actions><input class='btn' type=submit name=action value=Add></div></td></tr></form>";
@@ -1920,15 +1997,15 @@ class Customers extends Records
         ";
     }
 
-    function addRecord($dictionary=array(),$confirmPassword=false) {
-
+    function addRecord($dictionary = array(), $confirmPassword = false)
+    {
         if (!$this->checkRecord($dictionary)) {
             return false;
         }
 
         foreach (array_keys($this->addFields) as $item) {
 
-        if ($dictionary[$item]) {
+            if ($dictionary[$item]) {
                 $customer[$item] = strip_tags(trim($dictionary[$item]));
             } else {
                 $item_form       = $item.'_form';
@@ -1945,25 +2022,25 @@ class Customers extends Records
         if (!strlen($customer['timezone'])) $customer['timezone'] = 'Europe/Amsterdam';
 
         if ($dictionary['reseller']) {
-            $customer['reseller']=intval($dictionary['reseller']);
-        } else if ($this->adminonly && $this->filters['reseller']) {
-            $customer['reseller']=intval($this->filters['reseller']);
+            $customer['reseller'] = intval($dictionary['reseller']);
+        } elseif ($this->adminonly && $this->filters['reseller']) {
+            $customer['reseller'] = intval($this->filters['reseller']);
         }
 
-        $customer['username'] = strtolower(preg_replace ("/\s+/",".",trim($customer['username'])));
-        $customer['username'] = preg_replace ("/\.{2,}/",".",$customer['username']);
+        $customer['username'] = strtolower(preg_replace("/\s+/", ".", trim($customer['username'])));
+        $customer['username'] = preg_replace("/\.{2,}/", ".", $customer['username']);
 
         if ($customer['state'] != 'N/A') {
-            $_state=$customer['state'].' ';
+            $_state = $customer['state'].' ';
         } else {
             $_state='';
         }
 
-        if (!strlen($customer['tel'])){
+        if (!strlen($customer['tel'])) {
             $customer['tel'] = '+19999999999';
         } else {
-            $customer['tel'] = preg_replace("/[^0-9\+]/","",$customer['tel']);
-            if (preg_match("/^00(\d{1,20})$/",$customer['tel'],$m)) {
+            $customer['tel'] = preg_replace("/[^0-9\+]/", "", $customer['tel']);
+            if (preg_match("/^00(\d{1, 20})$/", $customer['tel'], $m)) {
                 $customer['tel'] = "+".$m[1];
             }
         }
@@ -1980,7 +2057,7 @@ class Customers extends Records
             if (!strlen($customer['password'])) {
                 $this->errorMessage='Password cannot be empty';
                 return false;
-            } else if ($customer['password'] != $_REQUEST['confirm_password_form']) {
+            } elseif ($customer['password'] != $_REQUEST['confirm_password_form']) {
                 $this->errorMessage='Password is not confirmed';
                 return false;
             }
@@ -1989,27 +2066,33 @@ class Customers extends Records
         if (!strlen($customer['password'])) $customer['password'] = $this->RandomString(6);
 
         if (is_array($dictionary['properties'])) {
-            $customer['properties']=$dictionary['properties'];
+            $customer['properties'] = $dictionary['properties'];
         } else {
-            $customer['properties']=array();
+            $customer['properties'] = array();
         }
 
         if ($this->hide_html) {
-           $logs = array();
+            $logs = array();
         } else {
-           $logs = array('success' => sprintf('Customer entry %s %s has been created',$customer['firstName'],$customer['lastName']));
+            $logs = array(
+                'success' => sprintf(
+                    'Customer entry %s %s has been created',
+                    $customer['firstName'],
+                    $customer['lastName'])
+            );
         }
 
-        $function=array('commit'   => array('name'       => 'addAccount',
-                                            'parameters' => array($customer),
-                                            'logs'       => $logs
-                                            )
-                       );
+        $function = array(
+            'commit'   => array(
+                'name'       => 'addAccount',
+                'parameters' => array($customer),
+                'logs'       => $logs
+            )
+        );
 
-        if ($result = $this->SoapEngine->execute($function,$this->html)) {
-
+        if ($result = $this->SoapEngine->execute($function, $this->html)) {
             // We have succesfully added customer entry
-            $this->showAddForm=false;
+            $this->showAddForm = false;
 
             if ($dictionary['notify'] || $_REQUEST['notify']) $this->notify($customer);
 
@@ -2019,10 +2102,11 @@ class Customers extends Records
         }
     }
 
-    function notify($customer) {
+    function notify($customer)
+    {
         /*
         must be supplied with an array:
-        $customer=array('firstName' => ''
+        $customer = array('firstName' => ''
                         'lastName'  => '',
                         'email'     => '',
                         'username'  => '',
@@ -2031,7 +2115,7 @@ class Customers extends Records
         */
 
         if ($this->support_web) {
-            $url=$this->support_web;
+            $url = $this->support_web;
         } else {
             if ($_SERVER['HTTPS']=="on") {
                 $protocolURL="https://";
@@ -2039,17 +2123,17 @@ class Customers extends Records
                 $protocolURL="http://";
             }
 
-            $url=sprintf("%s%s",$protocolURL,$_SERVER['HTTP_HOST']);
+            $url = sprintf("%s%s", $protocolURL, $_SERVER['HTTP_HOST']);
         }
 
-        $body=
-        sprintf("Dear %s,\n\n",$customer['firstName']).
-        sprintf("This e-mail message is for your record. You have registered a login account at %s as follows:\n\n",$url).
-        sprintf("Username: %s\n",$customer['username']).
-        sprintf("Password: %s\n",$customer['password']).
+        $body =
+        sprintf("Dear %s,\n\n", $customer['firstName']).
+        sprintf("This e-mail message is for your record. You have registered a login account at %s as follows:\n\n", $url).
+        sprintf("Username: %s\n", $customer['username']).
+        sprintf("Password: %s\n", $customer['password']).
         "\n".
 
-        sprintf("The registration has been performed from the IP address %s.",$_SERVER['REMOTE_ADDR']).
+        sprintf("The registration has been performed from the IP address %s.", $_SERVER['REMOTE_ADDR']).
         "\n".
         "\n".
 
@@ -2059,43 +2143,48 @@ class Customers extends Records
         "\n".
         "This is an automatic message, do not reply.\n";
 
-        $from    = sprintf("From: %s",$this->support_email);
-        $subject = sprintf("Your account at %s",$url);
+        $from    = sprintf("From: %s", $this->support_email);
+        $subject = sprintf("Your account at %s", $url);
 
         return mail($customer['email'], $subject, $body, $from);
     }
 
-    function getRecordKeys() {
+    function getRecordKeys()
+    {
         // Filter
-        $filter=array('username'       => $this->filters['username'],
-                      'firstName'      => $this->filters['firstName'],
-                      'lastName'       => $this->filters['lastName'],
-                      'organization'   => $this->filters['organization'],
-                      'tel'            => $this->filters['tel'],
-                      'email'          => $this->filters['email'],
-                      'web'            => $this->filters['web'],
-                      'city'           => $this->filters['city'],
-                      'country'        => $this->filters['country'],
-                      'only_resellers' => $this->filters['only_resellers'],
-                      'customer'       => intval($this->filters['customer']),
-                      'reseller'       => intval($this->filters['reseller'])
-                      );
+        $filter = array(
+            'username'       => $this->filters['username'],
+            'firstName'      => $this->filters['firstName'],
+            'lastName'       => $this->filters['lastName'],
+            'organization'   => $this->filters['organization'],
+            'tel'            => $this->filters['tel'],
+            'email'          => $this->filters['email'],
+            'web'            => $this->filters['web'],
+            'city'           => $this->filters['city'],
+            'country'        => $this->filters['country'],
+            'only_resellers' => $this->filters['only_resellers'],
+            'customer'       => intval($this->filters['customer']),
+            'reseller'       => intval($this->filters['reseller'])
+        );
 
         // Range
-        $range=array('start' => 0,
-                     'count' => 1000
-                     );
+        $range = array(
+            'start' => 0,
+            'count' => 1000
+        );
 
         // Order
-        $orderBy = array('attribute' => 'customer',
-                         'direction' => 'ASC'
-                         );
+        $orderBy = array(
+            'attribute' => 'customer',
+            'direction' => 'ASC'
+        );
 
         // Compose query
-        $Query=array('filter'     => $filter,
-                     'orderBy' => $orderBy,
-                     'range'   => $range
-                    );
+        $Query = array(
+            'filter'     => $filter,
+            'orderBy' => $orderBy,
+            'range'   => $range
+        );
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -2103,27 +2192,23 @@ class Customers extends Records
         // Call function
         if ($this->adminonly && $this->filters['only_resellers']) {
             $this->log_action('getResellers');
-            $result     = $this->SoapEngine->soapclient->getResellers($Query);
+            $result = $this->SoapEngine->soapclient->getResellers($Query);
         } else {
             $this->log_action('getCustomers');
-            $result     = $this->SoapEngine->soapclient->getCustomers($Query);
+            $result = $this->SoapEngine->soapclient->getCustomers($Query);
         }
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach ($result->accounts as $customer) {
-                $this->selectionKeys[]=$customer->id;
+                $this->selectionKeys[] = $customer->id;
             }
         }
     }
 
-    function getProperty($customer,$name) {
+    function getProperty($customer, $name)
+    {
         foreach ($customer->properties as $_property) {
             if ($_property->name == $name) {
                 return $_property->value;
@@ -2132,25 +2217,21 @@ class Customers extends Records
         return false;
     }
 
-    function getCustomerId($username) {
+    function getCustomerId($username)
+    {
         if (!strlen($username)) return false;
         $filter  = array('username' => $username);
         $range   = array('start' => 0,'count' => 1);
         $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
-        $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+        $Query = array('filter'     => $filter, 'orderBy' => $orderBy, 'range'   => $range);
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         // Call function
         $this->log_action('getCustomers');
-        $result     = $this->SoapEngine->soapclient->getCustomers($Query);
+        $result = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if (count($result->accounts) == 1) {
@@ -2161,14 +2242,15 @@ class Customers extends Records
         }
     }
 
-    function getCustomer($username) {
+    function getCustomer($username)
+    {
         if (!strlen($username)) {
             return false;
         }
         $filter  = array('username' => $username);
         $range   = array('start' => 0,'count' => 1);
         $orderBy = array('attribute' => 'customer', 'direction' => 'ASC');
-        $Query=array('filter'     => $filter,'orderBy' => $orderBy,'range'   => $range);
+        $Query = array('filter'     => $filter, 'orderBy' => $orderBy, 'range'   => $range);
 
         // Insert credetials
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
@@ -2177,12 +2259,7 @@ class Customers extends Records
         $this->log_action('getCustomers');
         $result     = $this->SoapEngine->soapclient->getCustomers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl,$error_msg, $error_fault->detail->exception->errorcode,$error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if (count($result->accounts) == 1) {
@@ -2193,23 +2270,25 @@ class Customers extends Records
         }
     }
 
-    function setInitialCredits($credits=array()) {
-
-		$properties=array();
+    function setInitialCredits($credits = array())
+    {
+        $properties = array();
 
         foreach (array_keys($credits) as $item) {
             if ($this->allProperties[$item]['category'] != 'credit') continue;
-            $properties[] = array('name'       => $item,
-                                  'value'      => "$credits[$item]",
-                                  'category'   => $this->allProperties[$item]['category'],
-                                  'permission' => $this->allProperties[$item]['permission']
-                                  );
+            $properties[] = array(
+                'name'       => $item,
+                'value'      => "$credits[$item]",
+                'category'   => $this->allProperties[$item]['category'],
+                'permission' => $this->allProperties[$item]['permission']
+            );
         }
 
         return $properties;
     }
 
-    function showVcard($vcardDictionary) {
+    function showVcard($vcardDictionary)
+    {
         #http://www.stab.nu/vcard/
         # This file will return an vCard Version 3.0 Compliant file to the user. Observe that you should set up     #
         # your web-server with the correct MIME-type. The reason to use the \r\n as breakes is because it should be #
@@ -2246,33 +2325,33 @@ class Customers extends Records
         #############################################################################################################
 
         /*
-        $vcardDictionary=array(
-                               "vcard_nickna"	=> $this->username,
-                               "vcard_f_name"	=> $this->lastname,
-                               "vcard_s_name"	=> $this->firstname,
-                               "vcard_compan"	=> $this->organization,
-                               "vcard_w_addr"	=> $this->address,
-                               "vcard_w_zip"	=> $this->postcode,
-                               "vcard_w_city"	=> $this->city,
-                               "vcard_w_state"	=> $this->county,
-                               "vcard_w_coun"	=> $this->country,
-                               "vcard_w_mail"	=> $this->email,
-                               "vcard_w_phon"	=> $this->tel,
-                               "vcard_w_fax"	=> $this->fax,
-                               "vcard_enum"	    => $this->enum,
-                               "vcard_sip"	    => $this->sip,
-                               "vcard_uri"		=> $this->web,
-                               "vcard_cellul"	=> $this->mobile
+        $vcardDictionary = array(
+                               "vcard_nickna"   => $this->username,
+                               "vcard_f_name"   => $this->lastname,
+                               "vcard_s_name"   => $this->firstname,
+                               "vcard_compan"   => $this->organization,
+                               "vcard_w_addr"   => $this->address,
+                               "vcard_w_zip"    => $this->postcode,
+                               "vcard_w_city"   => $this->city,
+                               "vcard_w_state"  => $this->county,
+                               "vcard_w_coun"   => $this->country,
+                               "vcard_w_mail"   => $this->email,
+                               "vcard_w_phon"   => $this->tel,
+                               "vcard_w_fax"    => $this->fax,
+                               "vcard_enum"     => $this->enum,
+                               "vcard_sip"      => $this->sip,
+                               "vcard_uri"      => $this->web,
+                               "vcard_cellul"   => $this->mobile
                                );
         */
 
         foreach (array_keys($vcardDictionary) as $field) {
-            $value=$vcardDictionary[$field];
+            $value = $vcardDictionary[$field];
             ${$field}=$value;
         }
 
         if ($vcard_w_state=="N/A") $vcard_w_state=" ";
-        $vcard_w_addr = preg_replace("/[\n|\r]/"," ",$vcard_w_addr);
+        $vcard_w_addr = preg_replace("/[\n|\r]/", " ", $vcard_w_addr);
 
         $vcard_sortst = $vcard_f_name;
 
@@ -2285,144 +2364,133 @@ class Customers extends Records
         $vcard .= "PRODID:-//PHP vCard Class//NONSGML Version 1//SE\r\n";
         $vcard .= "REV:" . $vcard_rev . "\r\n";
         $vcard .= "TZ:" . $vcard_tz . "\r\n";
-        if ($vcard_f_name != ""){
-            if ($vcard_s_name != ""){
+        if ($vcard_f_name != "") {
+            if ($vcard_s_name != "") {
                 $vcard .= "FN:" . $vcard_s_name . " " . $vcard_f_name . "\r\n";
                 $vcard .= "N:" . $vcard_f_name . ";" . $vcard_s_name . "\r\n";
-            }
-            else {
+            } else {
                 $vcard .= "FN:" . $vcard_f_name . "\r\n";
                 $vcard .= "N:" . $vcard_f_name . "\r\n";
             }
-        }
-        elseif ($vcard_s_name != ""){
+        } elseif ($vcard_s_name != "") {
             $vcard .= "FN:" . $vcard_s_name . "\r\n";
             $vcard .= "N:" . $vcard_s_name . "\r\n";
         }
-        if ($vcard_nickna != ""){
+        if ($vcard_nickna != "") {
             $vcard .= "NICKNAME:" . $vcard_nickna . "\r\n";
         }
-        if ($vcard_compan != ""){
+        if ($vcard_compan != "") {
             $vcard .= "ORG:" . $vcard_compan . "\r\n";
             $vcard .= "SORTSTRING:" . $vcard_compan . "\r\n";
-        }
-        elseif ($vcard_f_name != ""){
+        } elseif ($vcard_f_name != "") {
             $vcard .= "SORTSTRING:" . $vcard_f_name . "\r\n";
         }
-        if ($vcard_birtda != ""){
+        if ($vcard_birtda != "") {
             $vcard .= "BDAY:" . $vcard_birtda . "\r\n";
         }
-        if ($vcard_w_role != ""){
+        if ($vcard_w_role != "") {
             $vcard .= "ROLE:" . $vcard_w_role . "\r\n";
         }
-        if ($vcard_w_titl != ""){
+        if ($vcard_w_titl != "") {
             $vcard .= "TITLE:" . $vcard_w_titl . "\r\n";
         }
-        if ($vcard_note != ""){
+        if ($vcard_note != "") {
             $vcard .= "NOTE:" . $vcard_note . "\r\n";
         }
-        if ($vcard_w_mail != ""){
+        if ($vcard_w_mail != "") {
             $item++;
             $vcard .= "item$item.EMAIL;TYPE=INTERNET;type=PREF:" . $vcard_w_mail . "\r\n";
             $vcard .= "item$item.X-ABLabel:email" . "\r\n";
         }
-        if ($vcard_cellul != ""){
+        if ($vcard_cellul != "") {
             $vcard .= "TEL;TYPE=VOICE,CELL:" . $vcard_cellul . "\r\n";
         }
-        if ($vcard_enum != ""){
+        if ($vcard_enum != "") {
             $item++;
             $vcard .= "item$item.TEL:" . $vcard_enum . "\r\n";
             $vcard .= "item$item.X-ABLabel:ENUM" . "\r\n";
         }
-        if ($vcard_sip != ""){
+        if ($vcard_sip != "") {
             $item++;
             $vcard .= "item$item.TEL;TYPE=INTERNET:" . $vcard_sip . "\r\n";
             $vcard .= "item$item.X-ABLabel:SIP" . "\r\n";
         }
-        if ($vcard_w_fax != ""){
+        if ($vcard_w_fax != "") {
             $vcard .= "TEL;TYPE=FAX,WORK:" . $vcard_w_fax . "\r\n";
         }
-        if ($vcard_w_phon != ""){
-                    $vcard .= "TEL;TYPE=VOICE,WORK:" . $vcard_w_phon . "\r\n";
-            }
-        if ($vcard_uri != ""){
+        if ($vcard_w_phon != "") {
+            $vcard .= "TEL;TYPE=VOICE,WORK:" . $vcard_w_phon . "\r\n";
+        }
+        if ($vcard_uri != "") {
             $vcard .= "URL:" . $vcard_uri . "\r\n";
         }
-        if ($vcard_addr != ""){
+        if ($vcard_addr != "") {
             $vcard .= "ADR;TYPE=HOME,POSTAL,PARCEL:" . $vcard_addr . "\r\n";
         }
-        if ($vcard_labl != ""){
+        if ($vcard_labl != "") {
             $vcard .= "LABEL;TYPE=DOM,HOME,POSTAL,PARCEL:" . $vcard_labl . "\r\n";
         }
         $vcard_addr = "";
         $vcard_labl = "";
-        if ($vcard_w_addr != ""){
-                    $vcard_addr = ";;" . $vcard_w_addr;
-                    $vcard_labl = $vcard_w_addr;
+        if ($vcard_w_addr != "") {
+            $vcard_addr = ";;" . $vcard_w_addr;
+            $vcard_labl = $vcard_w_addr;
+        }
+        if ($vcard_w_city != "") {
+            if ($vcard_addr != "") {
+                $vcard_addr .= ";" . $vcard_w_city;
+            } else {
+                $vcard_addr .= ";;;" . $vcard_w_city;
             }
-        if ($vcard_w_city != ""){
-                    if ($vcard_addr != ""){
-                            $vcard_addr .= ";" . $vcard_w_city;
-                    }
-                    else{
-                            $vcard_addr .= ";;;" . $vcard_w_city;
-                    }
-                    if ($vcard_labl != ""){
-                            $vcard_labl .= "\\r\\n" . $vcard_w_city;
-                    }
-                    else {
-                            $vcard_labl = $vcard_w_city;
-                    }
+            if ($vcard_labl != "") {
+                $vcard_labl .= "\\r\\n" . $vcard_w_city;
+            } else {
+                $vcard_labl = $vcard_w_city;
             }
-        if ($vcard_w_state != ""){
-                    if ($vcard_addr != ""){
-                            $vcard_addr .= ";" . $vcard_w_state;
-                    }
-                    else{
-                            $vcard_addr .= ";;;" . $vcard_w_state;
-                    }
-                    if ($vcard_labl != ""){
-                            $vcard_labl .= "\\r\\n" . $vcard_w_state;
-                    }
-                    else {
-                            $vcard_labl = $vcard_w_state;
-                    }
+        }
+        if ($vcard_w_state != "") {
+            if ($vcard_addr != "") {
+                $vcard_addr .= ";" . $vcard_w_state;
+            } else {
+                $vcard_addr .= ";;;" . $vcard_w_state;
             }
-        if ($vcard_w_zip != ""){
-                    if ($vcard_addr != ""){
-                            $vcard_addr .= ";" . $vcard_w_zip;
-                    }
-                    else{
-                            $vcard_addr .= ";;;;" . $vcard_w_zip;
-                    }
-                    if ($vcard_labl != ""){
-                            $vcard_labl .= "\\r\\n" . $vcard_w_zip;
-                    }
-                    else {
-                            $vcard_labl = $vcard_w_zip;
-                    }
+            if ($vcard_labl != "") {
+                $vcard_labl .= "\\r\\n" . $vcard_w_state;
+            } else {
+                $vcard_labl = $vcard_w_state;
             }
-        if ($vcard_w_coun != ""){
-                    if ($vcard_addr != ""){
-                            $vcard_addr .= ";" . $vcard_w_coun;
-                    }
-                    else{
-                            $vcard_addr .= ";;;;;" . $vcard_w_coun;
-                    }
-                    if ($vcard_labl != ""){
-                            $vcard_labl .= "\\r\\n" . $vcard_w_coun;
-                    }
-                    else {
-                            $vcard_labl = $vcard_w_coun;
-                    }
+        }
+        if ($vcard_w_zip != "") {
+            if ($vcard_addr != "") {
+                $vcard_addr .= ";" . $vcard_w_zip;
+            } else {
+                $vcard_addr .= ";;;;" . $vcard_w_zip;
             }
-        if ($vcard_addr != ""){
-                    $vcard .= "ADR;TYPE=WORK,POSTAL,PARCEL:" . $vcard_addr . "\r\n";
+            if ($vcard_labl != "") {
+                $vcard_labl .= "\\r\\n" . $vcard_w_zip;
+            } else {
+                $vcard_labl = $vcard_w_zip;
             }
-            if ($vcard_labl != ""){
-                    $vcard .= "LABEL;TYPE=DOM,WORK,POSTAL,PARCEL:" . $vcard_labl . "\r\n";
+        }
+        if ($vcard_w_coun != "") {
+            if ($vcard_addr != "") {
+                $vcard_addr .= ";" . $vcard_w_coun;
+            } else {
+                $vcard_addr .= ";;;;;" . $vcard_w_coun;
             }
-        if ($vcard_categ != ""){
+            if ($vcard_labl != "") {
+                $vcard_labl .= "\\r\\n" . $vcard_w_coun;
+            } else {
+                $vcard_labl = $vcard_w_coun;
+            }
+        }
+        if ($vcard_addr != "") {
+            $vcard .= "ADR;TYPE=WORK,POSTAL,PARCEL:" . $vcard_addr . "\r\n";
+        }
+        if ($vcard_labl != "") {
+            $vcard .= "LABEL;TYPE=DOM,WORK,POSTAL,PARCEL:" . $vcard_labl . "\r\n";
+        }
+        if ($vcard_categ != "") {
             $vcard .= "CATEGORY:" . $vcard_categ . "\r\n";
         }
 
