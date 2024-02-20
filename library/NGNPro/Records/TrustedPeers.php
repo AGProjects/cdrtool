@@ -127,7 +127,7 @@ END;
 
                     $base_url_data = array(
                         'service' => $this->SoapEngine->service,
-                        'ip_filter' => $peer->ip
+                        'ip_filter' => $peer->ip,
                         'msteams_filter' => $peer->msteams
                     );
 
