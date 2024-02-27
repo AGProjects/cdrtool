@@ -193,10 +193,10 @@ $f->add_element(
     )
 );
 
-while (list($k,$v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if ($k != "unknown") {
         $cdrSourcesEls[] = array(
-            "label" => $v[name],
+            "label" => $v['name'],
             "value" => $k
         );
     }
