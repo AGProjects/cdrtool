@@ -124,7 +124,7 @@ class DB_Sql
     }
 
     /* public: constructor */
-    public function DB_Sql($query = "")
+    public function __construct($query = "")
     {
         $this->query($query);
     }
@@ -159,14 +159,23 @@ class DB_Sql
 
         /* establish connection, select database */
         if (0 == $this->link_id()) {
-            $this->Link_ID = mysqli_connect("p:".$Host, $User, $Password);
+            mysqli_report(MYSQLI_REPORT_OFF);
+            $link = mysqli_init();
+            if (!$link) {
+                die('mysqli_init failed');
+            }
 
-            if (!$this->Link_ID) {
+            if (!mysqli_options($link, MYSQLI_OPT_CONNECT_TIMEOUT, 2)) {
+                die('Setting MYSQLI_OPT_CONNECT_TIMEOUT failed');
+            }
+
+            if (!mysqli_real_connect($link, "p:".$Host, $User, $Password)) {
                 syslog(LOG_NOTICE, "Error in connect(): connect as $User to $Host failed");
 
                 $this->halt("connect as $User to $Host failed.");
                 return 0;
             }
+            $this->Link_ID = $link;
             syslog(LOG_NOTICE, "Connected to mysql with $User to $Host ".$this->link_id());
             // print "Connected to mysql with $User to $Host ".$this->link_id();
 
@@ -182,8 +191,10 @@ class DB_Sql
     /* public: discard the query result */
     public function free()
     {
-        @mysqli_free_result($this->Query_ID);
-        $this->Query_ID = 0;
+        if (isset($this->Query_ID) && is_resource($this->Query_ID)) { 
+            @mysqli_free_result($this->Query_ID);
+            $this->Query_ID = 0;
+        }
     }
 
     /* public: perform a query */
@@ -261,10 +272,9 @@ class DB_Sql
         }
 
         $this->Record = @mysqli_fetch_assoc($this->Query_ID);
-        $this->Row   += 1;
         $this->Errno  = mysqli_errno($this->Link_ID);
         $this->Error  = mysqli_error($this->Link_ID);
-
+        $this->Row   += 1;
         $stat = is_array($this->Record);
         if (!$stat && $this->Auto_Free) {
             $this->free();
@@ -340,7 +350,10 @@ class DB_Sql
 
     public function num_rows()
     {
-        return @mysqli_num_rows($this->Query_ID);
+        if (isset($this->Query_ID)) {
+            return @mysqli_num_rows($this->Query_ID);
+        }
+        return 0;
     }
 
     public function num_fields()
@@ -540,8 +553,10 @@ class DB_Sql
     /* private: error handling */
     private function halt($msg)
     {
-        $this->Error = @mysqli_error($this->Link_ID);
-        $this->Errno = @mysqli_errno($this->Link_ID);
+        if (!mysqli_connect_errno()) {
+            $this->Error = @mysqli_error($this->Link_ID);
+            $this->Errno = @mysqli_errno($this->Link_ID);
+        }
         if ($this->Halt_On_Error == "no") {
             return;
         }
