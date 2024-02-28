@@ -30,7 +30,7 @@ class Rate
     var $db                     = null;
     var $database_backend       = "mysql";
 
-    public function Rate($settings, $db)
+    public function __construct($settings, $db)
     {
 
         $this->db = $db;
@@ -2191,7 +2191,7 @@ class RatingTables
         )
     );
 
-    public function RatingTables($readonly = false)
+    public function __construct($readonly = false)
     {
         global $CDRTool;
         global $RatingEngine;
@@ -6455,7 +6455,7 @@ class OpenSIPSQuota
     var $timeout       = 5;       // soap connection timeout
     var $daily_quota   = 0;       // by default do not check daily quota
 
-    public function OpenSIPSQuota($parent)
+    public function __construct($parent)
     {
 
         global $DATASOURCES;
@@ -7521,7 +7521,7 @@ class RatingEngine
     var $prepaid_table = "prepaid";
     var $init_ok       = false;
 
-    public function RatingEngine()
+    public function __construct()
     {
 
         global $RatingEngine;   // set in global.inc
