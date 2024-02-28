@@ -22,8 +22,8 @@ class Presence
         $this->SOAPurl       = $this->SoapEngine->soapEngines[$soapEngine]['url'];
         $this->PresencePort  = new WebService_SoapSIMPLEProxy_PresencePort($this->SOAPurl);
 
-        $this->PresencePort->setOpt('curl', 'CURLOPT_SSL_VERIFYPEER', 0);
-        $this->PresencePort->setOpt('curl', 'CURLOPT_SSL_VERIFYHOST', 0);
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYPEER, 0);
+        $this->PresencePort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
 
         $allowed_activities = array(
             'open',
