@@ -8,7 +8,6 @@ page_open(
         "perm" => "CDRTool_Perm"
     )
 );
-
 $loginname = $auth->auth["uname"];
 $perm->check('callsearch');
 
@@ -46,7 +45,7 @@ if (!$export) {
 }
 
 if (isset($CDRTool['dataSourcesAllowed'])) {
-    while (list($k,$v) = each($CDRTool['dataSourcesAllowed'])) {
+	foreach ($CDRTool['dataSourcesAllowed'] as $k => $v) {
         $cdr_source_els[] = array(
             "label" => $DATASOURCES[$v]['name'],
             "value" => $v
@@ -79,7 +78,7 @@ if (is_array($DATASOURCES[$cdr_source])) {
             } else {
                 $CDRS->searchForm();
             }
-        } elseif ($action == search) {
+        } elseif ($action == 'search') {
             $CDRS->show();
         }
 

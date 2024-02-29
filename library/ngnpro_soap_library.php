@@ -154,7 +154,7 @@ class SOAP_Client_Custom extends SOAP_Client {
 
         // handle additional attributes
         $xml_attr = '';
-        if (count($attributes) > 0) {
+        if (is_array($attributes) ? count($attributes) : 0 > 0) {
             foreach ($attributes as $k => $v) {
                 $kqn =new QName($k);
                 $vqn =new QName($v);

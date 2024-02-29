@@ -312,7 +312,7 @@ class CDRS_opensips extends CDRS
         $this->f = new form;
 
         if (isset($this->CDRTool['dataSourcesAllowed'])) {
-            while (list($k, $v)=each($this->CDRTool['dataSourcesAllowed'])) {
+            foreach ($this->CDRTool['dataSourcesAllowed'] as $k => $v) {
                 if ($this->DATASOURCES[$v]['invisible']) continue;
                 $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
@@ -395,7 +395,7 @@ class CDRS_opensips extends CDRS
         $default_year  = Date("Y");
         $default_month = Date("m");
         $default_day   = Date("d");
-        $default_hour  = Date(H, time());
+        $default_hour  = Date("H", time());
 
         if ($default_hour > 1) {
             $default_hour=$default_hour-1;
@@ -685,7 +685,7 @@ class CDRS_opensips extends CDRS
             unset($this->GROUPBY['SipRPID']);
         }
 
-        while (list($k,$v) = each($this->GROUPBY)) {
+        foreach ($this->GROUPBY as $k => $v) {
             $group_by_els[]=array("label"=>$v,"value"=>$k);
         }
 
@@ -851,7 +851,7 @@ class CDRS_opensips extends CDRS
 
         $this->showDataSources($this->f);
         $this->showDateTimeElements($this->f);
-
+        $ff = array();
         // freeze some form els
         if ($this->CDRTool['filter']['aNumber']) {
             $ff[]="a_number";
@@ -1493,7 +1493,7 @@ class CDRS_opensips extends CDRS
             $this->url.=sprintf("&sip_status_class=%s", urlencode($sip_status_class));
         }
 
-        if ($this->CDRTool[filter]["gateway"]) {
+        if ($this->CDRTool['filter']["gateway"]) {
             $gatewayFilter=$this->CDRTool[filter]["gateway"];
             $where .= " and $this->gatewayField = '".addslashes($gatewayFilter)."'";
         } elseif ($gateway) {
@@ -2761,7 +2761,7 @@ class CDRS_opensips extends CDRS
 class CDR_opensips extends CDR
 {
 
-    function CDR_opensips($parent, $CDRfields)
+    function __construct($parent, $CDRfields)
     {
 
         $this->CDRS = $parent;
@@ -3956,7 +3956,7 @@ class SIP_trace
     public $thor_nodes  = array();
     public $hostnames   = array();
 
-    public function SIP_trace($cdr_source)
+    public function __construct($cdr_source)
     {
         global $DATASOURCES, $auth;
         require_once 'errors.php';
@@ -4988,7 +4988,7 @@ class Media_trace
     public $enableThor  = false;
     public $table       = 'media_sessions';
 
-    function Media_trace($cdr_source)
+    function __construct($cdr_source)
     {
         global $DATASOURCES;
 
@@ -5166,7 +5166,7 @@ class Media_trace
             return false;
         }
 
-        if (!count($this->info->streams)) {
+        if (empty($this->info->streams)) {
             echo "
                 <div style='display: flex; align-items: center; justify-content: center;'>
                     <div class='span10' style='padding-top:40px;'>

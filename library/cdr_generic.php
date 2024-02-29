@@ -128,7 +128,7 @@ class CDRS {
         return 1;
     }
 
-    function CDRS($cdr_source)
+    function __construct($cdr_source)
     {
 
         global $CDRTool;
@@ -427,7 +427,7 @@ class CDRS {
         if (is_array($this->destinations)) {
             foreach (array_keys($this->destinations) as $_reseller) {
                 foreach ($this->destinations[$_reseller] as $key => $val) {
-                    $this->destinations_length[$_reseller][$key] = max(array_map(strlen, array_keys($val)));
+                    $this->destinations_length[$_reseller][$key] = max(array_map('strlen', array_keys($val)));
                 }
             }
         }
@@ -1241,7 +1241,7 @@ class CDRS {
             }
         }
 
-        if ($this->ratingEnabled && count($this->brokenRates) > 0) {
+        if ($this->ratingEnabled && is_array($this->brokenRates) && count($this->brokenRates) > 0) {
             if ($this->rating_settings['reportMissingRates']) {
                 if (count($this->brokenRates)) {
                     foreach (array_keys($this->brokenRates) as $dest) {

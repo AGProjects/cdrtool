@@ -6,13 +6,13 @@
  */
 
 class DBx extends DB_Sql {
-    public function DBx($user, $password, $host = 'localhost')
+    public function __construct($user, $password, $host = 'localhost')
     {
         $this->Host = $host;
         $this->User = $user;
         $this->Password = $password;
         $this->Database = 'mysql';
-        parent::DB_Sql();
+        parent::__construct();
     }
 }
 
@@ -20,7 +20,7 @@ class MySQLReplicationStatus {
     private $slave_status_query = "show slave status";
     private $master_status_query = "show master status";
 
-    public function MySQLReplicationStatus($host, $clusters)
+    public function __construct($host, $clusters)
     {
 
         $db = new DBx($clusters[$host]['user'], $clusters[$host]['password'], $clusters[$host]['ip']);
