@@ -169,7 +169,7 @@ class SipSettings {
     var $ip_access_list_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
     var $create_certificate = false;
 
-    function SipSettings($account,$loginCredentials=array(),$soapEngines=array()) {
+    public function __construct($account,$loginCredentials=array(),$soapEngines=array()) {
 
 		//define_syslog_variables();
 
@@ -306,7 +306,8 @@ class SipSettings {
             $_comment = '';
         }
 
-        $this->availableGroups['anonymous-reject']=array("Group"=>$this->anonymous-reject,
+        $this->availableGroups['anonymous-reject']=array(
+                                    "Group" =>'anonymous-reject',
                                     "WEBName" =>sprintf (_("Reject Anonymous")),
                                     "WEBComment"=>$_comment,
                                     "SubscriberMaySeeIt"=>1,
@@ -1843,7 +1844,7 @@ class SipSettings {
 
         $items=0;
 
-        while (list($k,$v)= each($this->tabs)) {
+        foreach ($this->tabs as $k => $v) {
             if ($this->tab==$k) {
                 $_class='active selected_tab';
             } else {
@@ -3817,7 +3818,7 @@ class SipSettings {
     function showDevicesTab() {
         $this->getDeviceLocations();
 
-        if (count($this->locations)) {
+        if (!empty($this->locations)) {
             $chapter=sprintf(_("SIP Devices"));
             $this->showChapter($chapter);
 
@@ -5917,7 +5918,7 @@ class SipSettings {
             $cdr_source = 'sip_trace';
         }
 
-        if (count($this->calls_received)) {
+        if (!empty($this->calls_received)) {
             $chapter = sprintf(_("Incoming"));
             $this->showChapter($chapter);
 
@@ -7244,11 +7245,15 @@ class SipSettings {
 
         if (is_array($this->acceptRules['temporary']['groups']) &&in_array("everybody",$this->acceptRules['temporary']['groups'])) {
             $_checked_everybody="checked";
-        } else if (is_array($this->acceptRules['temporary']['groups']) && in_array("nobody",$this->acceptRules['temporary']['groups'])) {
+        } elseif (is_array($this->acceptRules['temporary']['groups'])
+            && in_array("nobody",$this->acceptRules['temporary']['groups'])
+        ) {
             $_checked_nobody="checked";
-        } else if (!in_array('everybody',$this->acceptRules['temporary']['groups']) &&
-                   !in_array('nobody',$this->acceptRules['temporary']['groups']) &&
-                   count($this->acceptRules['temporary']['groups'])) {
+        } elseif (is_array($this->acceptRules['temporary']['groups'])
+            && !in_array('everybody',$this->acceptRules['temporary']['groups'])
+            && !in_array('nobody',$this->acceptRules['temporary']['groups'])
+            && count($this->acceptRules['temporary']['groups'])
+        ) {
             $_checked_groups="checked";
         }
 
@@ -7403,11 +7408,13 @@ class SipSettings {
 
             if (is_array($this->acceptRules['persistent'][$profile]['groups']) && in_array("everybody",$this->acceptRules['persistent'][$profile]['groups'])) {
                 $_checked_everybody="checked";
-            } else if (is_array($this->acceptRules['persistent'][$profile]['groups']) && in_array("nobody",$this->acceptRules['persistent'][$profile]['groups'])) {
+            } elseif (is_array($this->acceptRules['persistent'][$profile]['groups']) && in_array("nobody",$this->acceptRules['persistent'][$profile]['groups'])) {
                 $_checked_nobody="checked";
-            } else if (!in_array('everybody',$this->acceptRules['persistent'][$profile]['groups']) &&
-                       !in_array('nobody',$this->acceptRules['persistent'][$profile]['groups']) &&
-                       count($this->acceptRules['persistent'][$profile]['groups'])) {
+            } elseif (is_array($this->acceptRules['persistent'][$profile]['groups'])
+                && !in_array('everybody', $this->acceptRules['persistent'][$profile]['groups'])
+                && !in_array('nobody', $this->acceptRules['persistent'][$profile]['groups'])
+                && count($this->acceptRules['persistent'][$profile]['groups'])
+            ) {
                 $_checked_groups="checked";
             } else {
                 $_checked_everybody="checked";
@@ -11797,7 +11804,7 @@ class Enrollment {
         syslog(LOG_NOTICE, $log);
     }
 
-    function Enrollment()
+    public function __construct()
     {
         require($this->configuration_file);
         require("/etc/cdrtool/ngnpro_engines.inc");
@@ -12332,7 +12339,7 @@ class PaypalProcessor {
     var $transaction_results = array('success' => false);
     var $vat                 = 0;
 
-    function PaypalProcessor($account) {
+    function __construct($account) {
         require('cc_processor.php');
         $this->CardProcessor = new CreditCardProcessor();
         $this->account = &$account;
@@ -12678,7 +12685,7 @@ class PaypalProcessor {
 
 class DIDProcessor {
 
-    function DIDProcessor() {
+    public function __construct() {
 
         /*
         http://www.didww.com/support/
