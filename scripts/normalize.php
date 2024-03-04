@@ -35,7 +35,7 @@ if ($f = fopen($lockFile, "w")) {
     exit(2);
 }
 
-while (list($k, $v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["normalizedField"] and !$v["skipNormalize"])) {
         $b = time();
         $class_name = $v["class"];
