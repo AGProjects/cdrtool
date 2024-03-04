@@ -485,8 +485,8 @@ class CDRS {
             $domain      = trim($this->cdrtool->Record['domain']);
             $subscriber  = trim($this->cdrtool->Record['subscriber']);
             $dest_id     = trim($this->cdrtool->Record['dest_id']);
-            $region      = utf8_encode($this->cdrtool->Record['region']);
-            $name        = utf8_encode($this->cdrtool->Record['dest_name']);
+            $region      = iso8859_1_to_utf8($this->cdrtool->Record['region']);
+            $name        = iso8859_1_to_utf8($this->cdrtool->Record['dest_name']);
 
             $name_print  = $this->cdrtool->Record['dest_name']." (".$dest_id.")";
 
@@ -522,9 +522,9 @@ class CDRS {
                 // PSTN destination
                 if (!is_numeric($dest_id)) {
                     $log = sprintf(
-                        "Error: cannot load non-numeric destination '%s' from row id %d"
-                        ,$dest_id
-                        ,$this->cdrtool->Record['id']
+                        "Error: cannot load non-numeric destination '%s' from row id %d",
+                        $dest_id,
+                        $this->cdrtool->Record['id']
                     );
                     syslog(LOG_NOTICE, $log);
                     continue;

@@ -356,11 +356,11 @@ class CDRS_opensips extends CDRS
 
         if ($begin_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$begin_datetime", $parts);
-            $begin_year    = date(Y, $begin_datetime);
-            $begin_month   = date(m, $begin_datetime);
-            $begin_day     = date(d, $begin_datetime);
-            $begin_hour    = date(H, $begin_datetime);
-            $begin_min     = date(i, $begin_datetime);
+            $begin_year    = date("Y", $begin_datetime);
+            $begin_month   = date("m", $begin_datetime);
+            $begin_day     = date("d", $begin_datetime);
+            $begin_hour    = date("H", $begin_datetime);
+            $begin_min     = date("i", $begin_datetime);
         } else {
             $begin_day      = $_REQUEST["begin_day"];
             $begin_month    = $_REQUEST["begin_month"];
@@ -373,11 +373,11 @@ class CDRS_opensips extends CDRS
 
         if ($end_datetime) {
             preg_match("/^(\d\d\d\d)-(\d+)-(\d+)\s+(\d\d):(\d\d)/", "$end_datetime", $parts);
-            $end_year    = date(Y, $end_datetime);
-            $end_month   = date(m, $end_datetime);
-            $end_day     = date(d, $end_datetime);
-            $end_hour    = date(H, $end_datetime);
-            $end_min     = date(i, $end_datetime);
+            $end_year    = date("Y", $end_datetime);
+            $end_month   = date("m", $end_datetime);
+            $end_day     = date("d", $end_datetime);
+            $end_hour    = date("H", $end_datetime);
+            $end_min     = date("i", $end_datetime);
         } else {
             $end_day        = $_REQUEST["end_day"];
             $end_month      = $_REQUEST["end_month"];
