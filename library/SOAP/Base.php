@@ -1075,7 +1075,7 @@ class QName
     var $ns = '';
     var $namespace='';
 
-    function QName($name, $namespace = '')
+    function __construct($name, $namespace = '')
     {
         if ($name && $name[0] == '{') {
             preg_match('/\{(.*?)\}(.*)/', $name, $m);

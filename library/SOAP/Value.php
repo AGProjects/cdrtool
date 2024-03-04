@@ -83,7 +83,7 @@ class SOAP_Value
      * @param mixed $value       Value to set.
      * @param array $attributes  Attributes.
      */
-    function SOAP_Value($name = '', $type = false, $value = null,
+    function __construct($name = '', $type = false, $value = null,
                         $attributes = array())
     {
         // Detect type if not passed.
