@@ -126,17 +126,7 @@ class CDRS_opensips extends CDRS
         "ReNormalize","media_info","cdr_table","maxrowsperpage", "flow"
     );
 
-    function initCDRFields()
-    {
-        // init names of CDR fields
-        foreach (array_keys($this->CDRFields) as $field) {
-            $mysqlField = $this->CDRFields[$field];
-            $_field = $field."Field";
-            $this->$_field = $mysqlField;
-        }
-    }
-
-    function LoadDisconnectCodes()
+    public function LoadDisconnectCodes()
     {
         $query = "select * from sip_status order by code";
         $this->disconnectCodesElements[] = array("label"=>"Any Status","value"=>"");
