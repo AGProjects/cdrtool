@@ -6,7 +6,8 @@
  *
  */
 
-class NetworkStatistics {
+class NetworkStatistics
+{
     // obtain statistics from SIP Thor network
 
     public $statistics        = array();
@@ -29,6 +30,31 @@ class NetworkStatistics {
         'total_accounts'
     );
 
+    private function soapHasError($result)
+    {
+        return (new PEAR)->isError($result);
+    }
+
+
+    private function checkLogSoapError($result, $syslog = false, $print = false)
+    {
+        if (!$this->soapHasError($result)) {
+            return false;
+        }
+
+        $error_msg  = $result->getMessage();
+        $error_fault= $result->getFault();
+        $error_code = $result->getCode();
+
+        $log = sprintf(
+            "Error from %s: %s: %s",
+            $this->SOAPurl,
+            $error_fault->detail->exception->errorcode,
+            $error_fault->detail->exception->errorstring
+        );
+        return true;
+    }
+
     public function __construct($engineId, $allowedDomains = array())
     {
         if (!strlen($engineId)) {
@@ -38,8 +64,8 @@ class NetworkStatistics {
         $this->allowedDomains  = $allowedDomains;
         $this->soapEngineId    = $engineId;
 
-        require("/etc/cdrtool/ngnpro_engines.inc");
-        require_once("ngnpro_soap_library.php");
+        require "/etc/cdrtool/ngnpro_engines.inc";
+        require_once "ngnpro_soap_library.php";
 
         $this->SOAPlogin = array(
             "username"    => $soapEngines[$this->soapEngineId]['username'],
@@ -69,13 +95,7 @@ class NetworkStatistics {
         $this->soapclient->addHeader($this->SoapAuth);
         $result = $this->soapclient->getStatistics();
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg   = $result->getMessage();
-            $error_fault = $result->getFault();
-            $error_code  = $result->getCode();
-
-            $log = sprintf("Error from %s: %s: %s", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result)) {
             return false;
         }
 
@@ -124,13 +144,7 @@ class NetworkStatistics {
         $this->soapclient->addHeader($this->SoapAuth);
         $result = $this->soapclient->getStatus();
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg   = $result->getMessage();
-            $error_fault = $result->getFault();
-            $error_code  = $result->getCode();
-
-            $log=sprintf("Error from %s: %s: %s", $this->SOAPurl, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result)) {
             return false;
         }
 
@@ -262,7 +276,8 @@ class NetworkStatistics {
     }
 }
 
-class SipThorNetworkImage {
+class SipThorNetworkImage
+{
     // plot graphical SIP Thor network status
 
     public $imgsize      = 630;
@@ -453,7 +468,8 @@ class SipThorNetworkImage {
     }
 }
 
-class SIPstatistics {
+class SIPstatistics
+{
     // build graphical statistics with sip registrar and media relay usage
 
     public $domains        = array('total'=>'total');
@@ -727,7 +743,8 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
 /**
  * MRTGGraphs class sets up the dashboard and creates Entity objects.
  */
-class MRTGGraphs {
+class MRTGGraphs
+{
 
     /**
     * MRTG entities
@@ -811,7 +828,8 @@ class MRTGGraphs {
 /**
  * Entity class represents each MRTG entity found in the directory.
  */
-class MRTGEntity {
+class MRTGEntity
+{
 
     /**
     * Entity name.
