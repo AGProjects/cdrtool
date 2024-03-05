@@ -2,7 +2,51 @@
 $tz = $CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
-class CDRS {
+#[AllowDynamicProperties]
+class CDRS
+{
+    public $cdrtool;
+    public $cdr_source;
+    public $CDRTool;
+    public $rating_settings;
+    public $DATASOURCES;
+    public $ratingEnabled;
+    public $rating;
+    public $quota_init_flag;
+    public $quota_reset_flag;
+    public $daily_quota;
+    public $primary_database;
+    public $secondary_database;
+    public $CDRdb;
+    public $CDRdb1;
+    public $db_class;
+    public $AccountsDB;
+    public $db_subscribers;
+    public $enableThor;
+    public $missed_calls;
+    public $traceInURL;
+    public $traceOutURL;
+    public $protocolTraceURL;
+    public $scriptFile;
+    public $next;
+    public $export;
+    public $trace;
+    private $destinations_count;
+    private $destinations_sip_count;
+    private $_destinations;
+    private $_destinations_sip;
+    private $destinations_default_count;
+    private $destinations_gateway_count;
+    private $destinations_domain_count;
+    private $destinations_subscriber_count;
+    private $destinations;
+    private $destinations_sip;
+    private $destinations_length;
+    private $ENUMtlds;
+    public $domain_table;
+    public $trusted_table;
+    public $tables;
+    private $initOK;
 
     var $CDR_class           = 'CDR';
     var $intAccessCode       = '00';
@@ -67,7 +111,7 @@ class CDRS {
         return $CDRStructure;
     }
 
-    function initCDRFields()
+    public function initCDRFields()
     {
         // init names of CDR fields
         foreach (array_keys($this->CDRFields) as $field) {
@@ -77,7 +121,7 @@ class CDRS {
         }
     }
 
-    function initDatabaseConnection()
+    private function initDatabaseConnection()
     {
         // connect to the CDR database(s)
         if(!$this->DATASOURCES[$this->cdr_source]['db_class']) {
@@ -128,9 +172,8 @@ class CDRS {
         return 1;
     }
 
-    function __construct($cdr_source)
+    public function __construct($cdr_source)
     {
-
         global $CDRTool;
         global $DATASOURCES;
         global $RatingEngine;
@@ -303,7 +346,6 @@ class CDRS {
                     $this->db_subscribers
                 );
             }
-
         }
 
         $this->initOK=1;
@@ -319,7 +361,6 @@ class CDRS {
                 if (strlen($defaults_value)) $this->defaults[trim($defaults_key)]=trim($defaults_value);
             }
         }
-
     }
 
     function LoadDomains()
@@ -451,10 +492,10 @@ class CDRS {
         if ($this->CDRTool['filter']['aNumber']) {
             $faNumber=$this->CDRTool['filter']['aNumber'];
             $query .= sprintf(" where subscriber = '%s' or (subscriber = '' and domain = '' and gateway = '') ", addslashes($faNumber));
-        } else if ($this->CDRTool['filter']['domain']) {
+        } elseif ($this->CDRTool['filter']['domain']) {
             $fdomain=$this->CDRTool['filter']['domain'];
             $query .= sprintf(" where domain = '%s' or (subscriber = '' and domain = '' and gateway = '') ", addslashes($fdomain));
-        } else if ($this->CDRTool['filter']['gateway']) {
+        } elseif ($this->CDRTool['filter']['gateway']) {
             $fgateway=$this->CDRTool['filter']['gateway'];
             $query .= sprintf(" where gateway = '%s' or (subscriber = '' and domain = '' and gateway = '') ",addslashes($fgateway));
         }
@@ -716,7 +757,7 @@ class CDRS {
         return count($this->ENUMtlds);
     }
 
-    function LoadDisconnectCodes()
+    public function LoadDisconnectCodes()
     {
     }
 
@@ -724,7 +765,7 @@ class CDRS {
     {
     }
 
-    function searchForm()
+    public function searchForm()
     {
     }
 
@@ -1320,11 +1361,10 @@ class CDRS {
             if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)){
                 $NumberStack['domain'] = $p[1];
             }
-
-        } else if (preg_match("/^([a-z0-9]+:)(.*)$/i", $Number, $m)) {
+        } elseif (preg_match("/^([a-z0-9]+:)(.*)$/i", $Number, $m)) {
             #$oct=preg_split("/\./",$m[2]);
             $oct = explode(",", $m[2]);
-            if(sizeof($oct) == 4) {
+            if (sizeof($oct) == 4) {
             // This is a SIP address without username
                 $NumberStack['username']  = "";
                 $NumberStack['domain']    = $m[2];
@@ -2104,13 +2144,15 @@ class CDRS {
 
 }
 
-class CDRS_unknown extends CDRS {
+class CDRS_unknown extends CDRS
+{
     function searchForm() {
         return;
     }
 }
 
-class E164 {
+class E164
+{
     // Class that helps normalization of a telephone number in E164 format
 
     // Based on this normalization, CDRTool rating engine decides whether
@@ -2124,7 +2166,8 @@ class E164 {
         $this->ENUMtldRegexp        = trim($ENUMtldRegexp);
     }
 
-    function E164Format($Number) {
+    function E164Format($Number)
+    {
         //dprint "E164Format($Number,ENUMtldRegexp=$this->ENUMtldRegexp)";
         // This function returns the full E164 format for a PSTN number without leading zero or +
         // E164 = Country Code + Network Code + Subscriber Number
@@ -2165,8 +2208,8 @@ class E164_US extends E164 {
     }
 }
 
-class CDR {
-
+class CDR
+{
     // we need two db descriptors to update a CDR
     // within same result set
     var $idField              = "RadAcctId";
