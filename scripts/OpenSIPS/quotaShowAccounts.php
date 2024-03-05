@@ -15,7 +15,7 @@ if (!preg_match("/^\d{1,2}$/", $argv[1])) {
     return 0;
 }
 
-while (list($k, $v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["UserQuotaClass"])) {
         unset($CDRS);
         $class_name = $v["class"];

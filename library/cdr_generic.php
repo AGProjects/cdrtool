@@ -2853,7 +2853,7 @@ class SIPonline {
         print "<th>Users</th>";
         print "</tr> ";
 
-        while (list($k,$v) = each($this->countUA)) {
+        foreach ($this->countUA as $k => $v) {
             $users=$users+$v;
             $count++;
             print "<tr> ";

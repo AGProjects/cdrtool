@@ -9,7 +9,7 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
-while (list($k, $v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["UserQuotaClass"])) {
         unset($CDRS);
         $class_name = $v["class"];

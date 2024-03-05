@@ -11,7 +11,7 @@ $PrepaidHistory->purge();
 print "\n";
 
 // purge old CDRs when using a central radius table
-while (list($k,$v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v['purgeCDRsAfter'])) {
         $class_name = $v["class"];
 

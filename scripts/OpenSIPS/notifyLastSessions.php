@@ -10,7 +10,7 @@ set_time_limit(0);
 require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 
-while (list($k, $v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["notifyLastSessions"])) {
         $class_name = $v["class"];
 

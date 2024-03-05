@@ -39,7 +39,7 @@ if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     exit(1);
 }
 
-while (list($k, $v) = each($DATASOURCES)) {
+foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["UserQuotaClass"])) {
         unset($CDRS);
         $class_name = $v["class"];

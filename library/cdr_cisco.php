@@ -200,7 +200,7 @@ class CDRS_cisco extends CDRS {
         $this->f = new form;
 
         if (isset($this->CDRTool['dataSourcesAllowed'])) {
-            while (list($k,$v)=each($this->CDRTool['dataSourcesAllowed'])) {
+            foreach ($this->CDRTool['dataSourcesAllowed'] as $k => $v) {
               	if ($this->DATASOURCES[$v]['invisible']) continue;
                 $cdr_source_els[]=array("label"=>$this->DATASOURCES[$v]['name'],"value"=>$v);
             }
@@ -519,7 +519,7 @@ class CDRS_cisco extends CDRS {
         );
 
         $group_by_els[]=array("label"=>"","value"=>"");
-        while (list($k,$v)=each($this->GROUPBY)) {
+        foreach ($this->GROUPBY as $k => $v) {
             $group_by_els[]=array("label"=>$v,"value"=>$k);
         }
 

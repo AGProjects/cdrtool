@@ -505,7 +505,7 @@ Refresh: 300
 #WriteExpires: Yes
         ");
 
-        while (list($key, $value) = each($this->domains)) {
+        foreach ($this->domains as $key => $value) {
             fwrite($handle, "\n\n
 ## {$key}
 
