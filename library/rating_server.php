@@ -197,7 +197,7 @@ class socketClient extends socketCDR
             $this->on_write();
             return true;
         } catch (socketException $e) {
-            $old_socket         = (int)$this->socket;
+            $old_socket = ($this->socket instanceof \Socket ? spl_object_id($this->socket) : (int)$this->socket);
             $this->close();
             $this->socket       = $old_socket;
             $this->disconnected = true;
@@ -213,7 +213,7 @@ class socketClient extends socketCDR
             $this->read_buffer .= parent::read($length);
             $this->on_read();
         } catch (socketException $e) {
-            $old_socket         = (int)$this->socket;
+            $old_socket = ($this->socket instanceof \Socket ? spl_object_id($this->socket) : (int)$this->socket);
             $this->close();
             $this->socket       = $old_socket;
             $this->disconnected = true;
@@ -304,7 +304,7 @@ class socketDaemon
         if (!is_subclass_of($server, 'socketServer')) {
             throw new socketException("Invalid server class specified! Has to be a subclass of socketServer");
         }
-        $this->servers[(int)$server->socket] = $server;
+        $this->servers[$this->get_socket_id($server->socket)] = $server;
         return $server;
     }
 
@@ -316,8 +316,13 @@ class socketDaemon
         }
         $client->set_non_block(true);
         $client->connect($remote_address, $remote_port);
-        $this->clients[(int)$client->socket] = $client;
+        $this->clients[$this->get_socket_id($client->socket)] = $client;
         return $client;
+    }
+
+    private function get_socket_id($socket)
+    {
+        return $socket instanceof \Socket ? spl_object_id($socket) : (int)$socket;
     }
 
     private function create_read_set()
@@ -360,12 +365,13 @@ class socketDaemon
         return $ret;
     }
 
+
     private function clean_sockets()
     {
         foreach ($this->clients as $socket) {
             if ($socket->disconnected || !is_resource($socket->socket)) {
-                if (isset($this->clients[(int)$socket->socket])) {
-                    unset($this->clients[(int)$socket->socket]);
+                if (isset($this->clients[$this->get_socket_id($socket->socket)])) {
+                    unset($this->clients[$this->get_socket_id($socket->socket)]);
                 }
             }
         }
@@ -373,10 +379,10 @@ class socketDaemon
 
     private function get_class($socket)
     {
-        if (isset($this->clients[(int)$socket])) {
-            return $this->clients[(int)$socket];
-        } elseif (isset($this->servers[(int)$socket])) {
-            return $this->servers[(int)$socket];
+        if (isset($this->clients[$this->get_socket_id($socket)])) {
+            return $this->clients[$this->get_socket_id($socket)];
+        } elseif (isset($this->servers[$this->get_socket_id($socket)])) {
+            return $this->servers[$this->get_socket_id($socket)];
         } else {
             throw (new socketException("Could not locate socket class for $socket"));
         }
@@ -395,7 +401,7 @@ class socketDaemon
                     $socket = $this->get_class($socket);
                     if (is_subclass_of($socket, 'socketServer')) {
                         $client = $socket->accept();
-                        $this->clients[(int)$client->socket] = $client;
+                        $this->clients[$this->get_socket_id($client->socket)] = $client;
                     } elseif (is_subclass_of($socket, 'socketClient')) {
                         // regular on_read event
                         $socket->read();
@@ -415,8 +421,8 @@ class socketDaemon
                     $socket = $this->get_class($socket);
                     if (is_subclass_of($socket, 'socketClient')) {
                         $socket->on_disconnect();
-                        if (isset($this->clients[(int)$socket->socket])) {
-                            unset($this->clients[(int)$socket->socket]);
+                        if (isset($this->clients[$this->get_socket_id($socket->socket)])) {
+                            unset($this->clients[$this->get_socket_id($socket->socket)]);
                         }
                     }
                 }
@@ -451,6 +457,11 @@ class socketCDR
     public $local_port;
     public $read_buffer    = '';
     public $write_buffer   = '';
+
+    private function get_socket_id($socket)
+    {
+        return $socket instanceof \Socket ? spl_object_id($socket) : (int)$socket;
+    }
 
     public function __construct($bind_address = 0, $bind_port = 0, $domain = AF_INET, $type = SOCK_STREAM, $protocol = SOL_TCP)
     {
@@ -494,7 +505,7 @@ class socketCDR
             @socket_shutdown($this->socket, 2);
             @socket_close($this->socket);
         }
-        $this->socket = (int)$this->socket;
+        $this->socket = $this->get_socket_id($this->socket);
     }
 
     public function write($buffer, $length = 4096)
