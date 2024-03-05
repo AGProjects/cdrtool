@@ -230,6 +230,7 @@ class socketClient extends socketCDR
 
 class socketServer extends socketCDR
 {
+    public $startTime;
     protected $client_class;
 
     public function __construct($client_class, $bind_address = 0, $bind_port = 0, $domain = AF_INET, $type = SOCK_STREAM, $protocol = SOL_TCP)

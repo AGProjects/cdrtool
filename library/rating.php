@@ -1543,7 +1543,20 @@ class Rate
 
 class RatingTables
 {
-    var $database_backend = 'mysql'; 
+    private $settings;
+    private $CDRTool;
+    private $table;
+    private $readonly;
+    private $db;
+    private $db1;
+    private $profiles;
+    private $ratesHistory;
+    private $ratesHistoryCount;
+    private $holidays;
+    private $ENUMtlds;
+    private $ENUMtldsCount;
+
+    var $database_backend = 'mysql';
     var $csv_export=array(
         "destinations"          => "destinations.csv",
         "billing_customers"     => "customers.csv",
@@ -2191,6 +2204,7 @@ class RatingTables
         )
     );
 
+
     public function __construct($readonly = false)
     {
         global $CDRTool;
@@ -2240,7 +2254,6 @@ class RatingTables
 
         $this->db->Halt_On_Error="no";
         $this->db1->Halt_On_Error="no";
-
     }
 
     public function ImportCSVFiles($dir = false)
@@ -2697,7 +2710,6 @@ class RatingTables
                     } else {
                         $failed++;
                     }
-
                 }
             } else {
                 $skipped++;
@@ -2836,7 +2848,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops=="3") {
                 $query = sprintf(
                     "delete from billing_rates_history
@@ -2867,7 +2878,6 @@ class RatingTables
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
-
             } elseif ($ops=="2") {
                 $query = sprintf(
                     "select * from billing_rates_history
@@ -2937,7 +2947,6 @@ class RatingTables
                     if ($this->db->affected_rows() >0) {
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into billing_rates_history
@@ -2993,7 +3002,6 @@ class RatingTables
                     } else {
                         $failed++;
                     }
-
                 }
             } else {
                 $skipped++;
@@ -3114,7 +3122,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_customers
@@ -3143,7 +3150,6 @@ class RatingTables
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
-
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_customers
@@ -3208,7 +3214,6 @@ class RatingTables
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into billing_customers
@@ -3381,7 +3386,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from destinations
@@ -3412,7 +3416,6 @@ class RatingTables
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
-
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from destinations
@@ -3483,7 +3486,6 @@ class RatingTables
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into destinations
@@ -3541,7 +3543,6 @@ class RatingTables
                     } else {
                         $failed++;
                     }
-
                 }
             } else {
                 $skipped++;
@@ -3655,7 +3656,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops == "3") {
                 $query=sprintf(
                     "delete from billing_discounts
@@ -3691,7 +3691,6 @@ class RatingTables
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
-
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_discounts
@@ -3763,7 +3762,6 @@ class RatingTables
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into billing_discounts
@@ -3816,7 +3814,6 @@ class RatingTables
                     } else {
                         $failed++;
                     }
-
                 }
             } else {
                 $skipped++;
@@ -3931,7 +3928,6 @@ class RatingTables
                 } else {
                     $failed++;
                 }
-
             } elseif ($ops == "3") {
                 $query = sprintf(
                     "delete from billing_profiles
@@ -3956,7 +3952,6 @@ class RatingTables
                 if ($this->db->affected_rows() >0) {
                     $deleted++;
                 }
-
             } elseif ($ops == "2") {
                 $query = sprintf(
                     "select * from billing_profiles
@@ -4020,7 +4015,6 @@ class RatingTables
                     if ($this->db->affected_rows()) {
                         $updated++;
                     }
-
                 } else {
                     $query = sprintf(
                         "insert into billing_profiles
@@ -4075,7 +4069,6 @@ class RatingTables
                     } else {
                         $failed++;
                     }
-
                 }
             }
 
@@ -7516,10 +7509,18 @@ class OpenSIPSQuota
 
 class RatingEngine
 {
+    private $settings;
+    private $db;
+    private $CDRS;
+    private $db_subscribers_class;
+    private $AccountsDB;
+    private $enableThor;
+
     var $method        = '';
     var $log_runtime   = false;
     var $prepaid_table = "prepaid";
-    var $init_ok       = false;
+    public $init_ok = false;
+
 
     public function __construct()
     {
@@ -7558,7 +7559,7 @@ class RatingEngine
         }
 
         // init database
-        $this->db            = new DB_CDRTool;
+        $this->db = new DB_CDRTool;
         $query=sprintf("delete from memcache where `key` = 'destinations_sip' or `key` = 'destinations'");
 
         if (!$this->db->query($query)) {
@@ -7587,9 +7588,9 @@ class RatingEngine
             return false;
         }
 
-        $this->AccountsDB       = new $this->db_subscribers_class;
+        $this->AccountsDB = new $this->db_subscribers_class;
 
-        $this->enableThor       = $this->CDRS->enableThor;
+        $this->enableThor = $this->CDRS->enableThor;
 
         $this->init_ok = true;
     }
