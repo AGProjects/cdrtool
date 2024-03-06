@@ -102,7 +102,7 @@ class CDRS
         return $CDRStructure;
     }
 
-    function _readCDRFieldsFromDB($fields)
+    protected function _readCDRFieldsFromDB()
     {
         foreach (array_keys($this->CDRFields) as $field) {
             $mysqlField = $this->CDRFields[$field];
@@ -1234,7 +1234,7 @@ class CDRS
 
             while ($this->CDRdb->next_record()) {
                 //$Structure=$this->_readCDRNormalizationFieldsFromDB();
-                $Structure=$this->_readCDRFieldsFromDB('');
+                $Structure=$this->_readCDRFieldsFromDB();
                 if ($this->csv_writter) {
                     if (!$this->csv_file_cannot_be_opened) {
                         if (!$this->csv_writter->ready) {
