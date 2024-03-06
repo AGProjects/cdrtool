@@ -1035,9 +1035,8 @@ class CDRS
     {
     }
 
-    function unNormalize($where = "", $table)
+    function unNormalize($where = "", $table = "")
     {
-
         if ($this->skipNormalize) {
             return 0;
         }
@@ -1073,7 +1072,6 @@ class CDRS
 
     function buildWhereForUnnormalizedSessions()
     {
-
         $this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
 
         if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField not like '0000-00-00 00:00:00%' ";
@@ -1117,7 +1115,7 @@ class CDRS
         }
     }
 
-    function getUnNormalized($where = "", $table)
+    function getUnNormalized($where = "", $table = "")
     {
 
         if ($this->skipNormalize) {
@@ -1154,7 +1152,6 @@ class CDRS
 
     function NormalizeCDRS($where = "", $table = "")
     {
-
         $this->missing_destinations=array();
 
         $b=time();
@@ -1475,7 +1472,6 @@ class CDRS
 
     function lookupDestination($destination, $subscriber = "", $domain = "", $gateway = "", $reseller_id = 0)
     {
-
         if (!$destination) return;
 
         if (is_numeric($destination)) {
@@ -1490,25 +1486,25 @@ class CDRS
         if ($this->destinations_sip[$reseller_id][$subscriber]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$subscriber];
             $fCustomer = "subscriber=$subscriber";
-        } else if ($this->destinations_sip[$reseller_id][$domain]) {
+        } elseif ($this->destinations_sip[$reseller_id][$domain]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$domain];
             $fCustomer = "domain=$domain";
-        } else if ($this->destinations_sip[$reseller_id][$gateway]) {
+        } elseif ($this->destinations_sip[$reseller_id][$gateway]) {
             $destinations_sip = $this->destinations_sip[$reseller_id][$gateway];
             $fCustomer = "gateway=$gateway";
-        } else if ($this->destinations_sip[$reseller_id]['default']) {
+        } elseif ($this->destinations_sip[$reseller_id]['default']) {
             $destinations_sip = $this->destinations_sip[$reseller_id]['default'];
             $fCustomer = "default";
-        } else if ($this->destinations_sip[0][$subscriber]) {
+        } elseif ($this->destinations_sip[0][$subscriber]) {
             $destinations_sip = $this->destinations_sip[0][$subscriber];
             $fCustomer = "subscriber=$subscriber";
-        } else if ($this->destinations_sip[0][$domain]) {
+        } elseif ($this->destinations_sip[0][$domain]) {
             $destinations_sip = $this->destinations_sip[0][$domain];
             $fCustomer = "domain=$domain";
-        } else if ($this->destinations_sip[0][$gateway]) {
+        } elseif ($this->destinations_sip[0][$gateway]) {
             $destinations_sip = $this->destinations_sip[0][$gateway];
             $fCustomer = "gateway=$gateway";
-        } else if ($this->destinations_sip[0]['default']) {
+        } elseif ($this->destinations_sip[0]['default']) {
             $destinations_sip = $this->destinations_sip[0]['default'];
             $fCustomer = "default";
         }
@@ -1528,38 +1524,37 @@ class CDRS
         return $ret;
     }
 
-    function lookupPSTNDestination($destination = '', $subscriber = '', $domain = '',$gateway = '', $reseller_id = 0)
+    function lookupPSTNDestination($destination = '', $subscriber = '', $domain = '', $gateway = '', $reseller_id = 0)
     {
-
         if ($this->destinations[$reseller_id][$subscriber]) {
             $_destinations = $this->destinations[$reseller_id][$subscriber];
             $maxLength = $this->destinations_length[$reseller_id][$subscriber];
             $fCustomer="subscriber=$subscriber";
-        } else if ($this->destinations[$reseller_id][$domain]) {
+        } elseif ($this->destinations[$reseller_id][$domain]) {
             $_destinations = $this->destinations[$reseller_id][$domain];
             $maxLength = $this->destinations_length[$reseller_id][$domain];
             $fCustomer="domain=$domain";
-        } else if ($this->destinations[$reseller_id][$gateway]) {
+        } elseif ($this->destinations[$reseller_id][$gateway]) {
             $_destinations = $this->destinations[$reseller_id][$gateway];
             $maxLength = $this->destinations_length[$reseller_id][$gateway];
             $fCustomer="gateway=$gateway";
-        } else if ($this->destinations[$reseller_id]['default']) {
+        } elseif ($this->destinations[$reseller_id]['default']) {
             $_destinations = $this->destinations[$reseller_id]['default'];
             $maxLength = $this->destinations_length[$reseller_id]['default'];
             $fCustomer="default";
-        } else if ($this->destinations[0][$subscriber]) {
+        } elseif ($this->destinations[0][$subscriber]) {
             $_destinations = $this->destinations[0][$subscriber];
             $maxLength = $this->destinations_length[0][$subscriber];
             $fCustomer="subscriber=$subscriber";
-        } else if ($this->destinations[0][$domain]) {
+        } elseif ($this->destinations[0][$domain]) {
             $_destinations = $this->destinations[0][$domain];
             $maxLength = $this->destinations_length[0][$domain];
             $fCustomer="domain=$domain";
-        } else if ($this->destinations[0][$gateway]) {
+        } elseif ($this->destinations[0][$gateway]) {
             $_destinations = $this->destinations[0][$gateway];
             $maxLength = $this->destinations_length[0][$gateway];
             $fCustomer="gateway=$gateway";
-        } else if ($this->destinations[0]['default']) {
+        } elseif ($this->destinations[0]['default']) {
             $_destinations = $this->destinations[0]['default'];
             $maxLength = $this->destinations_length[0]['default'];
             $fCustomer="default";
@@ -1901,13 +1896,14 @@ class CDRS
                 $top=$max;
             }
 
-            $query=sprintf("delete low_priority from %s where %s <= '%d' and %s >= '%d'",
-                            addslashes($sourceTable),
-                            addslashes($this->CDRFields['id']),
-                            addslashes($top),
-                            addslashes($this->CDRFields['id']),
-                            addslashes($min)
-                            );
+            $query = sprintf(
+                "delete low_priority from %s where %s <= '%d' and %s >= '%d'",
+                addslashes($sourceTable),
+                addslashes($this->CDRFields['id']),
+                addslashes($top),
+                addslashes($this->CDRFields['id']),
+                addslashes($min)
+            );
 
 
             if ($this->CDRdb->query($query)) {
@@ -1931,7 +1927,6 @@ class CDRS
             flush();
 
             $i=$i+$interval;
-
         }
 
         print "\n";
@@ -1948,9 +1943,8 @@ class CDRS
         return 1;
     }
 
-    function cacheQuotaUsage($accounts=array())
+    function cacheQuotaUsage($accounts = array())
     {
-
         if (!$this->quotaEnabled) return true;
 
         $saved_keys=0;
@@ -1992,9 +1986,7 @@ class CDRS
                 } else {
                     $saved_keys++;
                 }
-
             } else {
-
                 $quota=$this->getQuota($_key);
                 $blocked=$this->getBlockedByQuotaStatus($_key);
 
@@ -2077,7 +2069,6 @@ class CDRS
                 //print "$log\n";
                 return 1;
             }
-
         } else {
             $log = sprintf("Database error: failed to request mysql lock %s (%s)\n", $locker->Error, $locker->Errno);
             print $log;
@@ -2145,12 +2136,12 @@ class CDRS
             return 1;
         }
     }
-
 }
 
 class CDRS_unknown extends CDRS
 {
-    function searchForm() {
+    function searchForm()
+    {
         return;
     }
 }
@@ -2653,6 +2644,7 @@ function getLocalTime($timezone,$timestamp) {
     putenv("TZ=$timezone");
     return $startTimeLocal;
 }
+
 function validDay($month,$day,$year) {
     if (!$month || !$year) {
         return $day;

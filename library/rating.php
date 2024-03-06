@@ -9462,10 +9462,10 @@ class RatingEngine
         return 1;
     }
 
-    function getAggregatedMaxSessiontime($parallel_calls = array(), $balance, $BillingPartyId)
+    function getAggregatedMaxSessiontime($parallel_calls = array(), $balance = 0, $BillingPartyId = '')
     {
-        $maxduration=0;
-        $sum_remaining_balance_per_second=0;
+        $maxduration = 0;
+        $sum_remaining_balance_per_second = 0;
 
         foreach (array_keys($parallel_calls) as $_call) {
             $sum_remaining_balance_per_second = $sum_remaining_balance_per_second + $parallel_calls[$_call]['remainingBalancePerSecond'];
