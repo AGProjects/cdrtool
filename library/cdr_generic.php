@@ -231,11 +231,15 @@ class CDRS
             $this->normalizedField = $this->DATASOURCES[$this->cdr_source]['normalizedField'];
         }
 
-        if (strlen($this->DATASOURCES[$this->cdr_source]['intAccessCode'])) {
+        if (array_key_exists('intAccessCode', $this->DATASOURCES[$this->cdr_source])
+            && strlen($this->DATASOURCES[$this->cdr_source]['intAccessCode'])
+        ) {
             $this->intAccessCode = $this->DATASOURCES[$this->cdr_source]['intAccessCode'];
         }
 
-        if (strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])) {
+        if (array_key_exists('natAccessCode', $this->DATASOURCES[$this->cdr_source])
+            && strlen($this->DATASOURCES[$this->cdr_source]['natAccessCode'])
+        ) {
             $this->natAccessCode = $this->DATASOURCES[$this->cdr_source]['natAccessCode'];
         }
 

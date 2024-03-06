@@ -2224,7 +2224,7 @@ class RatingTables
             $this->delimiter=$this->settings['csv_delimiter'];
         }
 
-        if (!strlen($this->CDRTool['filter']['customer'])) {
+        if (!isset($this->CDRTool['filter']['customer']) || !strlen($this->CDRTool['filter']['customer'])) {
             $this->whereResellerFilter = sprintf("reseller_id = %d", '99999999');
         } else {
             if ($this->CDRTool['filter']['customer'] && $this->tables[$this->table]['fields']['reseller_id']) {
@@ -4251,9 +4251,13 @@ class RatingTables
         }
 
         $i=0;
+        $_holidays = array();
         while ($this->db->next_record()) {
             if ($this->db->Record['day']) {
                 $i++;
+                if (!array_key_exists($this->db->Record['day'], $_holidays)) {
+                    $_holidays[$this->db->Record['day']] = 0;
+                }
                 $_holidays[$this->db->Record['day']]++;
             }
         }

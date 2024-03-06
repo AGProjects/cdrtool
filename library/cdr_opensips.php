@@ -132,7 +132,7 @@ class CDRS_opensips extends CDRS
         $this->disconnectCodesElements[] = array("label"=>"Any Status","value"=>"");
         $this->disconnectCodesElements[] = array("label"=>"Undefined (0)","value"=>"0");
         $this->disconnectCodesClassElements[] = array("label"=>"Any Status Class","value"=>"");
-
+        $seen = array();
         if ($this->cdrtool->query($query)) {
             while ($this->cdrtool->next_record()) {
                 $key         = $this->cdrtool->f('code');
@@ -147,10 +147,10 @@ class CDRS_opensips extends CDRS
 
                 $class = substr($key, 0, 1);
                 $class_text = substr($key, 0, 1)."XX (".$this->cdrtool->f('code_type').")";
-                if (!$seen[$class]) {
+                if (!in_array($class, $seen)) {
                     $this->disconnectCodesClassElements[] = array("label"=>$class_text,"value"=>substr($key, 0, 1));
                     $this->disconnectCodesClassDescription[substr($key, 0, 1)] = $class_text;
-                    $seen[$class]++;
+                    $seen[] = $class;
                 }
                 $i++;
             }
