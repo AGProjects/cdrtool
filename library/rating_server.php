@@ -269,6 +269,9 @@ class socketServerClient extends socketClient
     public $remote_port;
     public $local_addr;
     public $local_port;
+    public $parentServer;
+    public $ratingEngine;
+    public $ratingEngineSettings;
 
     public function __construct($socket, $parentServer)
     {
