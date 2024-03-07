@@ -10,6 +10,14 @@ class NetworkStatistics
 {
     // obtain statistics from SIP Thor network
 
+    private $allowedDomains;
+    private $soapEngineId;
+    private $SOAPlogin;
+    private $SOAPurl;
+    private $SoapAuth;
+    private $soapclient;
+    private $hostnames;
+
     public $statistics        = array();
     public $status            = array();
     public $sip_summary       = array();
