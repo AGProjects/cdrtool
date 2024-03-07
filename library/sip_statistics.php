@@ -471,6 +471,13 @@ class SipThorNetworkImage
 class SIPstatistics
 {
     // build graphical statistics with sip registrar and media relay usage
+    private $path;
+    private $harvest_file;
+    private $harvest_script;
+    private $mrtgcfg_dir;
+    private $mrtgcfg_file;
+    private $mrtg_data_script;
+    private $mrtg_config_script;
 
     public $domains        = array('total'=>'total');
 
