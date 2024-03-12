@@ -107,9 +107,9 @@ if (class_exists($_reseller_class)) {
 
 if ($resellerFilters[$login_credentials['reseller']]['sip_engine']) {
     $login_credentials['sip_engine'] = $resellerFilters[$login_credentials['reseller']]['sip_engine'];
-} else if ($_REQUEST['sip_engine']) {
+} elseif ($_REQUEST['sip_engine']) {
     $login_credentials['sip_engine'] = $_REQUEST['sip_engine'];
-} else if ($resellerFilters['default']['sip_engine']) {
+} elseif ($resellerFilters['default']['sip_engine']) {
     $login_credentials['sip_engine'] = $resellerFilters['default']['sip_engine'];
 }
 
