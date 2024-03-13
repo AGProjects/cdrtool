@@ -35,7 +35,7 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
     $sip_engine  = $_REQUEST['sip_engine'];
     if ($reseller && !$customer) {
         $customer = $reseller;
-    } else if ($customer && !$reseller) {
+    } elseif ($customer && !$reseller) {
         $reseller =  $customer;
     }
 
@@ -58,7 +58,7 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
                 'reseller'           => $_reseller,
                 'login_type'         => $login_type
             );
-        } else if ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
+        } elseif ($CDRTool['impersonate'] == '0' || $CDRTool['impersonate'] = '0.0') {
             $login_credentials = array(
                 'customer'           => $customer,
                 'reseller'           => $reseller,

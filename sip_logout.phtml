@@ -1,5 +1,5 @@
 <?php
-require("/etc/cdrtool/global.inc");
+require '/etc/cdrtool/global.inc';
 
 page_open(
     array(
@@ -17,7 +17,7 @@ $auth->logout();
 $sess->delete();
 
 $title = "Logout";
-include("sip_header.phtml");
+include 'sip_header.phtml';
 
 print "<h2>";
 print _("Login");
@@ -25,18 +25,20 @@ print "</h2>";
 print "<p>";
 
 print _("You have been logged in as ");
-print "
+print <<< END
 <b>$loginname</b>
     <p class=s>
-";
+END;
+
 print _("You have been logged out");
-print '</p>
+print <<< END
+</p>
 <br />
 <br />
 <p>
     <a href="sip_settings.phtml">Login again</a>
-</p>'
-;
+</p>
+END;
 
 page_close();
 
