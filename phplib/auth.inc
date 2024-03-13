@@ -66,7 +66,7 @@ class Auth {
     #  3) Login in progress (if $$cl, revert to state 1)
     if ($this->is_authenticated()) {
       $uid = $this->auth["uid"];
-      switch ($uid) {
+      switch ((string)$uid) {
         case "form":
           # Login in progress
           if ($$cl) {
@@ -91,7 +91,7 @@ class Auth {
       $state = 1;
     }
 
-    switch ($state) {
+    switch ((int)$state) {
       case 1:
         # No valid auth info or auth is expired
 
@@ -104,7 +104,7 @@ class Auth {
         }
 
         # Check for "log" vs. "reg" mode
-        switch ($this->mode) {
+        switch ((string)$this->mode) {
           case "yes":
           case "log":
             if ($this->nobody) {
