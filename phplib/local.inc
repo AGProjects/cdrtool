@@ -546,7 +546,7 @@ class SIP_Subscriber_Auth extends Auth
         require_once 'PEAR.php';
 
         if ($username) {
-            $this->auth["uname"]=$username;
+            $this->auth["uname"] = $username;
         }
 
         $a = explode("@", $username);
@@ -561,12 +561,12 @@ class SIP_Subscriber_Auth extends Auth
         require("/etc/cdrtool/ngnpro_engines.inc");
         require_once("ngnpro_soap_library.php");
 
-        $SIP['account']    = $username;
+        $SIP['account'] = $username;
 
         if ($domainFilters[$domain]['sip_engine']) {
-            $SIP['engine']   = $domainFilters[$domain]['sip_engine'];
+            $SIP['engine'] = $domainFilters[$domain]['sip_engine'];
         } else if ($domainFilters['default']['sip_engine']) {
-            $SIP['engine']=$domainFilters['default']['sip_engine'];
+            $SIP['engine'] = $domainFilters['default']['sip_engine'];
         } else {
             print "Error: cannot authenticate SIP subscriber, no domainFilter defined in ngnpro_engines.inc";
             return false;
@@ -619,7 +619,7 @@ class SIP_Subscriber_Auth extends Auth
             }
         }
 
-        if (!$web_password) $web_password=$result->password;
+        if (!$web_password) $web_password = $result->password;
 
         $pass_md5  	   = md5($web_password);
         $expected_response = md5("$username:$pass_md5:$challenge");
@@ -627,7 +627,7 @@ class SIP_Subscriber_Auth extends Auth
         $SIP['customer'] = $result->customer;
         $SIP['reseller'] = $result->reseller;
 
-        $parts=explode(':', $pass_md5);
+        $parts = explode(':', $pass_md5);
 
         dprint_r($result);
         dprint($expected_response);
@@ -877,7 +877,7 @@ class pageLayout
     function showLoginForm(&$parentAuth)
     {
         global $username, $otp_error, $CDRTool;
-        $auth=$parentAuth;
+        $auth = $parentAuth;
 
         $username = $auth->auth["uname"];
 

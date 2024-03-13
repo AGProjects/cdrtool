@@ -81,13 +81,14 @@ if (strlen($_REQUEST['reseller'] || strlen($_REQUEST['customer']))) {
             "auth" => "SIP_Subscriber_Auth"
         )
     );
+
     $account    = $SIP['account'];
     $reseller   = $SIP['reseller'];
     $customer   = $SIP['customer'];
     $sip_engine = $SIP['engine'];
     $login_type = "subscriber";
 
-    $login_credentials=array(
+    $login_credentials = array(
         'login_type' => $login_type,
         'customer'   => $customer,
         'reseller'   => $reseller,

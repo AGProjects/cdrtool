@@ -61,7 +61,7 @@ print "</label>";
 <?php
 if (isset($this->auth["uname"])) {
     print $this->auth["uname"];
-} else if (isset($_REQUEST['username'])) {
+} elseif (isset($_REQUEST['username'])) {
     print $_REQUEST['username'];
 }
 ?>" placeholder="Example: 
