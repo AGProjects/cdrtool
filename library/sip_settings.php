@@ -28,14 +28,14 @@ class SipSettings
     // and subsequently by reseller properties
     // (in ngnpro_soap_engines.inc)
 
-    var $templates_path            = './templates';
-    var $support_company           = "Example company";
-    var $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
-    var $support_web               = "https://www.example.com/help";
-    var $support_email             = "Support <support@example.com>";
+    public $templates_path            = './templates';
+    public $support_company           = "Example company";
+    public $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
+    public $support_web               = "https://www.example.com/help";
+    public $support_email             = "Support <support@example.com>";
     var $billing_email             = "Billing <billing@example.com>";
-    var $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
-    var $xcap_root                 = "https://cdrtool.example.com/xcap-root";
+    public $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
+    public $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
     var $sms_access                = false;
     var $pstn_changes_allowed      = false;
@@ -58,22 +58,22 @@ class SipSettings
     var $check_privacy_access_number    = "*68";
     var $reject_anonymous_access_number = "*69";
 
-    var $show_barring_tab   = false;
-    var $show_payments_tab  = false;
-    var $show_tls_section   = false;
-    var $show_support_tab   = false;
+    public $show_barring_tab   = false;
+    public $show_payments_tab  = false;
+    public $show_tls_section   = false;
+    public $show_support_tab   = false;
     var $show_did_tab       = false;
-    var $show_directory     = false;
+    public $show_directory     = false;
 
     var $notify_on_sip_account_changes  = false;
 
     var $first_tab          = 'calls';
     var $auto_refesh_tab    = 0;              // number of seconds after which to refresh tab content in the web browser
 
-    var $payment_processor_class = false;
-    var $did_processor_class = false;
+    public $payment_processor_class = false;
+    public $did_processor_class = false;
 
-    var $show_download_tab    = 'Blink';     // set it to name of the tab or false to disable it
+    public $show_download_tab    = 'Blink';     // set it to name of the tab or false to disable it
     var $digest_settings_page = "https://blink.sipthor.net/settings.phtml";
 
     // end variables
@@ -125,15 +125,15 @@ class SipSettings
                                            'callLimit'
                                            );
 
-	var $disable_extra_groups=true;
+	public $disable_extra_groups=true;
 
     var $prepaid             = 0;
     var $emergency_regions   = array();
     var $FNOA_timeoutDefault = 35;
     var $enums               = array();
     var $barring_prefixes    = array();
-    var $SipUAImagesPath     = "images";
-    var $SipUAImagesFile     = "phone_images.php";
+    public $SipUAImagesPath     = "images";
+    public $SipUAImagesFile     = "phone_images.php";
     var $balance_history     = array();
     var $enrollment_url      = false;
     var $sip_settings_api_url= false;
@@ -164,8 +164,8 @@ class SipSettings
     var $ownerCredentials = array();
     var $localGroups = array();
     var $max_credit_per_day = 40;
-    var $enrollment_configuration = "/etc/cdrtool/enrollment/config.ini";
-    var $require_proof_of_identity = true;
+    public $enrollment_configuration = "/etc/cdrtool/enrollment/config.ini";
+    public $require_proof_of_identity = true;
     var $call_limit_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
     var $ip_access_list_may_by_changed_by = 'reseller'; #subscriber, reseller, admin
     var $create_certificate = false;
@@ -1819,7 +1819,7 @@ class SipSettings
                    "description"  => "Voicemail");
     }
 
-    function showAboveTabs()
+    public function showAboveTabs()
     {
         print "
         <div class='row-fluid'>
@@ -1872,7 +1872,7 @@ class SipSettings
         ";
     }
 
-    function addInvoice($cardProcessor)
+    public function addInvoice($cardProcessor)
     {
         // called after CC payment sucessfull
     }
@@ -2918,7 +2918,7 @@ class SipSettings
         ";
     }
 
-    function showSupportTab()
+    public function showSupportTab()
     {
 
         $chapter=sprintf(_("Support"));
@@ -3086,7 +3086,7 @@ class SipSettings
         print "</div>";
     }
 
-    function showFooter()
+    public function showFooter()
     {
         print "
           <div class='pull-right'>";
@@ -3686,7 +3686,7 @@ class SipSettings
 
     }
 
-    function showVoicemail()
+    public function showVoicemail()
     {
 
         if ($this->voicemail['Account']) {
