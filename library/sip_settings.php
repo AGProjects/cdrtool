@@ -2153,7 +2153,7 @@ class SipSettings
                 $body = $mime->get();
                 $hdrs = $mime->headers($hdrs);
 
-                $mail =& Mail::factory('mail');
+                $mail = $this->getMailer();
 
                 $mail->send($this->billing_email, $hdrs, $body);
             }
@@ -7414,7 +7414,16 @@ class SipSettings
         }
     }
 
-    function deleteAccount($skip_html=False)
+    private function getMailer() {
+        include_once 'Mail.php';
+        $mail =& Mail::factory('mail');
+        if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
+            $mail->sep = "\r\n";
+        }
+        return $mail;
+    }
+
+    function deleteAccount($skip_html = false)
     {
         dprint("SipSettings->deleteAccount($this->account, $this->email)");
 
@@ -7478,7 +7487,7 @@ class SipSettings
         $body = $mime->get();
         $hdrs = $mime->headers($hdrs);
 
-        $mail =& Mail::factory('mail');
+        $mail = $this->getMailer();
 
         if ($mail->send($this->email, $hdrs, $body)) {
             if (!$skip_html) {
@@ -7572,7 +7581,7 @@ class SipSettings
         $body = $mime->get();
         $hdrs = $mime->headers($hdrs);
 
-        $mail =& Mail::factory('mail');
+        $mail = $this->getMailer();
 
         //dprint_r($_REQUEST);
 
@@ -7654,7 +7663,7 @@ class SipSettings
         $body = $mime->get();
         $hdrs = $mime->headers($hdrs);
 
-        $mail =& Mail::factory('mail');
+        $mail = $this->getMailer();
 
         //dprint_r($_REQUEST);
 
@@ -7737,7 +7746,7 @@ class SipSettings
         $body = $mime->get();
         $hdrs = $mime->headers($hdrs);
 
-        $mail =& Mail::factory('mail');
+        $mail = $this->getMailer();
 
         //dprint_r($_REQUEST);
 
