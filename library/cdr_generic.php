@@ -255,7 +255,7 @@ class CDRS
                 syslog(LOG_NOTICE, $log);
                 return 0;
             }
-        } else if (class_exists('DB_opensips')) {
+        } elseif (class_exists('DB_opensips')) {
             $this->AccountsDB      = new DB_opensips();
             $this->db_subscribers  = 'DB_opensips';
         } else {
@@ -311,7 +311,7 @@ class CDRS
         $this->traceOutURL       = $this->DATASOURCES[$this->cdr_source]['traceOutURL'];
         $this->protocolTraceURL  = $this->DATASOURCES[$this->cdr_source]['protocolTraceURL'];
 
-        $spath = explode("/",$_SERVER["PHP_SELF"]);
+        $spath = explode("/", $_SERVER["PHP_SELF"]);
         $last  = count($spath)-1;
         $this->scriptFile=$spath[$last];
 
@@ -406,10 +406,10 @@ class CDRS
             $b = time();
 
             $this->cdrtool->next_record();
-            $_destinations = json_decode($this->cdrtool->f('value'),true);
+            $_destinations = json_decode($this->cdrtool->f('value'), true);
 
             foreach (array_keys($_destinations) as $_key1) {
-                foreach(array_keys($_destinations[$_key1]) as $_key2) {
+                foreach (array_keys($_destinations[$_key1]) as $_key2) {
                     $this->destinations_count = $this->destinations_count + count($_destinations[$_key1][$_key2]);
                 }
             }
@@ -983,10 +983,10 @@ class CDRS
         <b>Data Source</b>
         </td>
         <td valign=middle>";
-        $f->show_element("cdr_source","");
+        $f->show_element("cdr_source", "");
         if (count($this->tables) > 0) {
             print " Table: ";
-            $this->f->show_element("cdr_table","");
+            $this->f->show_element("cdr_table", "");
         }
         print "
         </td>
@@ -1840,7 +1840,7 @@ class CDRS
                 $beginDate=$m[1]."-".$m[2]."-01";
                 $endDate=date('Y-m-d', mktime(0, 0, 0, $m[2]+1, '01', $m[1]));
             }
-        } else if (is_int($this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'])) {
+        } elseif (is_int($this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'])) {
             $beginDate="1970-01-01";
             $endDate=date('Y-m-d', mktime(0, 0, 0, Date('m'), Date('d')-$this->DATASOURCES[$this->cdr_source]['purgeCDRsAfter'], Date('Y')));
         } else {
@@ -2172,10 +2172,10 @@ class E164
 
         if (preg_match($this->regexp_international,$Number,$m)) {
             return $m[1];
-        } else if (preg_match($this->regexp_national,$Number,$m)) {
+        } elseif (preg_match($this->regexp_national,$Number,$m)) {
             // Add default country code
             return $this->CountryCode.$m[1];
-        } else if (strlen($this->ENUMtldRegexp)) {
+        } elseif (strlen($this->ENUMtldRegexp)) {
             $_regexp="/^".$this->ENUMtldRegexp."\$/";
             if (preg_match($_regexp,$Number,$m)) {
                 return $m[1];
@@ -2236,24 +2236,30 @@ class CDR
         'file-transfer'
     );
 
-    function CDR() {
+    public function __construct()
+    {
     }
 
-    function NormalizeDisconnect() {
+    function NormalizeDisconnect()
+    {
         $causePrint=$this->CDRS->disconnectCodesDescription[$this->disconnect]." (".$this->disconnect.")";
         return $causePrint;
     }
 
-    function traceOut () {
+    function traceOut()
+    {
     }
 
-    function traceIn () {
+    function traceIn() 
+    {
     }
 
-    function show() {
+    function show()
+    {
     }
 
-    function normalize($save="",$table="") {
+    function normalize($save = "", $table = "")
+    {
         if (!$table) $table = $this->CDRS->table;
 
         if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize']['CS_CODES'][$this->CDRS->CSCODE]) {
@@ -2262,7 +2268,6 @@ class CDR
         }
 
         if ($save) {
-
             if (!$this->id) {
                 return 0;
             }
@@ -2623,7 +2628,7 @@ class CDR
     {
         if ($_loc=geoip_record_by_name($ip)) {
             return $_loc['country_name'].'/'.$_loc['city'];
-        } else if ($_loc=geoip_country_name_by_name($ip)) {
+        } elseif ($_loc=geoip_country_name_by_name($ip)) {
             return $_loc;
         } else {
             return '';
@@ -2631,7 +2636,8 @@ class CDR
     }
 }
 
-function getLocalTime($timezone,$timestamp) {
+function getLocalTime($timezone,$timestamp)
+{
     global $CDRTool;
 
     if (!$timezone || $timezone == $CDRTool['provider']['timezone']) {
@@ -2645,14 +2651,14 @@ function getLocalTime($timezone,$timestamp) {
     return $startTimeLocal;
 }
 
-function validDay($month,$day,$year) {
+function validDay($month, $day, $year)
+{
     if (!$month || !$year) {
         return $day;
     }
     while (1) {
-        if (!checkdate($month,$day,$year) && $day) {
+        if (!checkdate($month, $day, $year) && $day) {
             $day--;
-            next;
         } else {
             break;
         }
@@ -2668,9 +2674,10 @@ if (is_array($CDRToolModules)) {
     }
 }
 
-function unLockNormalization ($dbid,$lockname) {
-    $query=sprintf("SELECT RELEASE_LOCK('%s')",addslashes($lockname));
-    $log=sprintf("Unlock %s",$lockname);
+function unLockNormalization($dbid, $lockname)
+{
+    $query=sprintf("SELECT RELEASE_LOCK('%s')", addslashes($lockname));
+    $log=sprintf("Unlock %s", $lockname);
     syslog(LOG_NOTICE, $log);
 
     if (!$dbid->query($query)) {
@@ -2679,9 +2686,10 @@ function unLockNormalization ($dbid,$lockname) {
     }
 }
 
-class SIPonline {
-
-    function SIPonline ($datasource='',$database='db',$table='location') {
+class SIPonline
+{
+    function __construct($datasource='',$database='db',$table='location')
+    {
         global $CDRTool;
 
         $expandAll  = $_REQUEST['expandAll'];
@@ -2741,7 +2749,8 @@ class SIPonline {
         }
     }
 
-    function showHeader() {
+    function showHeader()
+    {
         print "<table id='opensips_registrar' class='table table-striped table-condensed'>";
         print "<thead><tr>
         ";
@@ -2769,7 +2778,8 @@ class SIPonline {
         ";
     }
 
-    function showFooter() {
+    function showFooter()
+    {
         print "
         <tr>
         <th></th>
@@ -2780,7 +2790,8 @@ class SIPonline {
         ";
     }
 
-    function showAll() {
+    function showAll()
+    {
         global $found;
 
         $this->showHeader();
@@ -2828,7 +2839,8 @@ class SIPonline {
 
     }
 
-    function show() {
+    function show()
+    {
         global $found;
 
         $query="SELECT *, SEC_TO_TIME(UNIX_TIMESTAMP(expires)-UNIX_TIMESTAMP(NOW())) AS remain
@@ -2884,7 +2896,8 @@ class SIPonline {
         }
     }
 
-    function showUAdistribution () {
+    function showUAdistribution()
+    {
         print "<table border=0 cellspacing=1 class=border>";
         print "<tr bgcolor=lightgrey> ";
         print "<td></td>";
@@ -2913,12 +2926,15 @@ class SIPonline {
     }
 }
 
-class PrepaidHistory {
-    function PrepaidHistory() {
+class PrepaidHistory 
+{
+    public function __construct()
+    {
         $this->db = new DB_cdrtool;
     }
 
-    function purge($days=7) {
+    function purge($days = 7)
+    {
         $beforeDate=Date("Y-m-d", time()-$days*3600*24);
         $query=sprintf("delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",addslashes($beforeDate),'%');
 
@@ -2934,7 +2950,8 @@ class PrepaidHistory {
     }
 }
 
-class CSVWritter {
+class CSVWritter 
+{
     var $csv_directory      = '/var/spool/cdrtool/normalize';
     var $filename_extension = '.csv';
     var $fields             = array();
@@ -2942,7 +2959,7 @@ class CSVWritter {
     var $cdr_type           = array();
     var $lines              = 0;
 
-    function CSVWritter($cdr_source='',$csv_directory='') {
+    public function __construct($cdr_source = '',$csv_directory = '') {
         if ($cdr_source) {
             $this->cdr_source = $cdr_source;
         } else {
@@ -2973,7 +2990,8 @@ class CSVWritter {
         $this->directory_ready = true;
     }
 
-    function open_file ($filename_suffix='') {
+    function open_file ($filename_suffix = '')
+    {
         if ($this->ready) return true;
 
         if (!$this->directory_ready) return false;
@@ -3000,7 +3018,8 @@ class CSVWritter {
         return true;
     }
 
-    function close_file () {
+    function close_file() 
+    {
         if (!$this->ready) return false;
 
         fclose($this->fp);
@@ -3014,24 +3033,26 @@ class CSVWritter {
         }
     }
 
-    function write_cdr ($CDR) {
+    function write_cdr($CDR)
+    {
         if (!$this->ready) return false;
 
-        $line = sprintf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                        $CDR->id,
-                        $CDR->callId,
-                        $CDR->flow,
-                        $CDR->application,
-                        $CDR->username,
-                        $CDR->CanonicalURI,
-                        $CDR->startTime,
-                        $CDR->stopTime,
-                        $CDR->duration,
-                        $CDR->DestinationId,
-                        $CDR->BillingPartyId,
-                        $CDR->ResellerId,
-                        $CDR->price
-                        );
+        $line = sprintf(
+            "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",
+            $CDR->id,
+            $CDR->callId,
+            $CDR->flow,
+            $CDR->application,
+            $CDR->username,
+            $CDR->CanonicalURI,
+            $CDR->startTime,
+            $CDR->stopTime,
+            $CDR->duration,
+            $CDR->DestinationId,
+            $CDR->BillingPartyId,
+            $CDR->ResellerId,
+            $CDR->price
+        );
 
         if (!fputs($this->fp,$line)) {
             $this->ready = false;
@@ -3044,14 +3065,15 @@ class CSVWritter {
     }
 }
 
-class MaxRate extends CSVWritter {
+class MaxRate extends CSVWritter
+{
     var $skip_prefixes   = array();
     var $skip_numbers    = array();
     var $skip_domains    = array();
     var $rpid_cache      = array();
     var $translate_uris  = array();
 
-    function MaxRate ($cdr_source='', $csv_directory='', $db_subscribers='') {
+    function __construct($cdr_source='', $csv_directory='', $db_subscribers='') {
         global $MaxRateSettings;   // set in global.inc
 
         /*
@@ -3083,11 +3105,12 @@ class MaxRate extends CSVWritter {
 
         $this->AccountsDB = new $db_subscribers();
 
-        $this->CSVWritter($cdr_source, $csv_directory);
+        parent::__construct($cdr_source, $csv_directory);
 
     }
 
-    function write_cdr($CDR) {
+    function write_cdr($CDR)
+    {
         if (!$this->ready) return false;
 
         # skip if no audio
@@ -3131,26 +3154,26 @@ class MaxRate extends CSVWritter {
             # normalize caller id numbers from PSTN gateway to 00format
             if (preg_match("/^\+?0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "0031".$m[1];
-            } else if (preg_match("/^\+?00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^\+?00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "00".$m[1];
-            } else if (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "0031".$m[1];
-            } else if (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
                 $cdr['origin'] = "00".$m[1];
-            } else if (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
+            } elseif (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
                 if (preg_match("/^\+?0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "0031".$m[1];
-                } else if (preg_match("/^\+?00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+?00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "00".$m[1];
-                } else if (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = $m[1];
-                } else if (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
                    $cdr['origin'] = "00".$m[1];
-                } else if (preg_match("/^\+?0[0-9]?+@?(.*)?$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+?0[0-9]?+@?(.*)?$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "0031123456789";
-                } else if (preg_match("/^.*[a-zA-Z].*$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^.*[a-zA-Z].*$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "0031123456789";
-                } else if (preg_match("/^ims.imscore.net.*$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^ims.imscore.net.*$/",$CDR->SipRPID,$m)) {
                     $cdr['origin'] = "0031123456789";
                 } else {
                     $cdr['origin'] = $CDR->SipRPID;
@@ -3225,12 +3248,11 @@ class MaxRate extends CSVWritter {
             }
 
             $cdr['extra'] = $cdr['extra']."$CDR->flow";
-        } else if ($CDR->flow == 'outgoing') {
+        } elseif ($CDR->flow == 'outgoing') {
             # RFP 4.2.2
 
             $cdr['extra'] = $cdr['extra']."$CDR->flow";
-
-        } else if ($CDR->flow == 'incoming') {
+        } elseif ($CDR->flow == 'incoming') {
             # RFP 4.2.3
 
             if ($this->inbound_trunks[$CDR->SourceIP]) {
@@ -3248,8 +3270,7 @@ class MaxRate extends CSVWritter {
             }
 
             $cdr['extra'] = $cdr['extra']."$CDR->flow";
-
-        } else if ($CDR->flow == 'diverted-on-net') {
+        } elseif ($CDR->flow == 'diverted-on-net') {
             # RFP 4.2.4
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
@@ -3272,8 +3293,7 @@ class MaxRate extends CSVWritter {
             $cdr['diversion'] = $cdr['c_num'];
 
             $cdr['extra'] = $cdr['extra']."incoming-diverted-on-net";
-
-        } else if ($CDR->flow == 'diverted-off-net') {
+        } elseif ($CDR->flow == 'diverted-off-net') {
             # RFP 4.2.5
 
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
@@ -3291,8 +3311,7 @@ class MaxRate extends CSVWritter {
             $cdr['diversion'] = $cdr['c_num'];
 
             $cdr['extra'] = $cdr['extra']."incoming-diverted-off-net";
-
-        } else if ($CDR->flow == 'on-net-diverted-on-net') {
+        } elseif ($CDR->flow == 'on-net-diverted-on-net') {
             # RFP 4.2.6
 
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
@@ -3314,8 +3333,7 @@ class MaxRate extends CSVWritter {
             $cdr['diversion'] = $cdr['c_num'];
 
             $cdr['extra'] = $cdr['extra']."$CDR->flow";
-
-        } else if ($CDR->flow == 'on-net-diverted-off-net') {
+        } elseif ($CDR->flow == 'on-net-diverted-off-net') {
             # RFP 4.2.7
 
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
@@ -3340,18 +3358,19 @@ class MaxRate extends CSVWritter {
         $cdr['destination'] = str_replace('+','00',$cdr['destination']);
         $cdr['diversion'] = str_replace('+','00',$cdr['diversion']);
 
-        $line = sprintf('"%s","%s","%s","%s","%s","%s","%s","%s","%s",%s'."\n",
-                        $CDR->callId,
-                        $cdr['origin'],
-                        $cdr['username'],
-                        $cdr['destination'],
-                        $cdr['diversion'],
-                        $cdr['start_date'],
-                        $cdr['stop_date'],
-                        $cdr['duration'],
-                        $cdr['extra'],
-                        $cdr['charge_info']
-                       );
+        $line = sprintf(
+            '"%s","%s","%s","%s","%s","%s","%s","%s","%s",%s'."\n",
+            $CDR->callId,
+            $cdr['origin'],
+            $cdr['username'],
+            $cdr['destination'],
+            $cdr['diversion'],
+            $cdr['start_date'],
+            $cdr['stop_date'],
+            $cdr['duration'],
+            $cdr['extra'],
+            $cdr['charge_info']
+        );
 
         if (!fputs($this->fp,$line)) {
             $log=sprintf ("CSV writter error: cannot append to file %s\n",$this->full_path_tmp);
@@ -3367,14 +3386,15 @@ class MaxRate extends CSVWritter {
         return true;
     }
 
-    function getRPIDforAccount($account) {
+    function getRPIDforAccount($account)
+    {
         if (!$account) return false;
 
         if ($this->rpid_cache[$account]) {
             return $this->rpid_cache[$account];
         }
 
-        list($username,$domain) = explode('@',$account);
+        list($username,$domain) = explode('@', $account);
 
         $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
 
@@ -3389,7 +3409,6 @@ class MaxRate extends CSVWritter {
             $_profile=json_decode(trim($this->AccountsDB->f('profile')));
             $this->rpid_cache[$account]=$_profile->rpid;
             return $_profile->rpid;
-
         } else {
             return false;
         }
