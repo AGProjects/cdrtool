@@ -2645,6 +2645,9 @@ class CDRS_opensips extends CDRS
             $hdrs = $mime->headers($hdrs);
 
             $mail =& Mail::factory('mail');
+            if (version_compare(PHP_VERSION, '8.0.0') >= 0) {
+                $mail->sep = "\r\n";
+            }
             $mail->send($this->notifySubscribers[$_subscriber]['email'], $hdrs, $body);
 
             $log=sprintf(
