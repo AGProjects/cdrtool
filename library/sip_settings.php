@@ -7408,7 +7408,7 @@ class SipSettings
         define("SMARTY_DIR", "/usr/share/php/smarty3/");
         include_once(SMARTY_DIR . 'Smarty.class.php');
 
-        if (!class_exists(Smarty)) {
+        if (!class_exists('Smarty')) {
             define("SMARTY_DIR", "/usr/share/php/smarty/libs/");
             include_once(SMARTY_DIR . 'Smarty.class.php');
         }
