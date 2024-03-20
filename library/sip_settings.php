@@ -5935,7 +5935,7 @@ class SipSettings
             print("</table>");
         }
 
-        if (count($this->calls_placed)) {
+        if (!empty($this->calls_placed)) {
             $chapter = sprintf(_("Outgoing"));
             $this->showChapter($chapter);
 
