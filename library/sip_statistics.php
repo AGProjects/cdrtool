@@ -708,12 +708,6 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                     $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
                     $MediaSessions->getSessions();
                     $totals = array_merge_recursive($totals, $MediaSessions->domain_statistics);
-                } else if ($DATASOURCES[$datasource]['mediaServers']) {
-                    // MediaProxy 1 via relay tcp socket
-                    $MediaSessions = new MediaSessions1($DATASOURCES[$datasource]['mediaServers'], $allowedDomains);
-                    $MediaSessions->getSessions();
-                    $totals = array_merge_recursive($totals, $MediaSessions->domain_statistics);
-                }
 
                 if ($DATASOURCES[$datasource]['networkStatus']) {
                     // OpenSIPS via NGNPro

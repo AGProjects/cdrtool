@@ -1,5 +1,6 @@
 <?php
-class MediaSessions {
+class MediaSessions
+{
 
     public $dispatcher_port   = 25061;
     public $sessions          = array();
@@ -676,12 +677,17 @@ class MediaSessions {
     }
 }
 
-class MediaSessionsNGNPro extends MediaSessions {
-    // get Media session from NGNPro
+class MediaSessionsNGNPro extends MediaSessions
+{
+    private $soapEngineId;
+    private $SOAPlogin;
+    private $SoapAuth;
+    private $SOAPurl;
+    private $soapclient;
 
+    // get Media session from NGNPro
     public function __construct($engineId, $allowedDomains = array(), $filters = array())
     {
-
         if (!strlen($engineId)) {
             return false;
         }
