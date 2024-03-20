@@ -7597,7 +7597,7 @@ class SipSettings
         }
     }
 
-    function sendChangedEmail($skip_html = False, $fields = array())
+    function sendChangedEmail($skip_html = false, $fields = array())
     {
         dprint("SipSettings->sendChangedEmail($this->email)");
         //dprint_r($fields);
