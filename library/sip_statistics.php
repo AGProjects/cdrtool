@@ -145,9 +145,19 @@ class NetworkStatistics
                             if (count($this->allowedDomains) && !in_array($_domain, $this->allowedDomains)) {
                                 continue;
                             }
-                            $this->domain_statistics[$_domain][$_section] = $this->domain_statistics[$_domain][$_section] + $this->statistics[$_ip][$_role][$_section][$_domain];
-                            $this->domain_statistics['total'][$_section]  = $this->domain_statistics['total'][$_section]  + $this->statistics[$_ip][$_role][$_section][$_domain];
-                            $this->node_statistics[$_ip][$_section]       = $this->node_statistics[$_ip][$_section]       + $this->statistics[$_ip][$_role][$_section][$_domain];
+                            if (!isset($this->domain_statistics[$_domain][$_section])) {
+                                $this->domain_statistics[$_domain][$_section] = 0;
+                            }
+                            if (!isset($this->domain_statistics['total'][$_section])) {
+                                $this->domain_statistics['total'][$_section] = 0;
+                            }
+                            if (!isset($this->node_statistics[$_ip][$_section])) {
+                                $this->node_statistics[$_ip][$_section] = 0;
+                            }
+                            $number = $this->statistics[$_ip][$_role][$_section][$_domain];
+                            $this->domain_statistics[$_domain][$_section] += $number;
+                            $this->domain_statistics['total'][$_section]  += $number;
+                            $this->node_statistics[$_ip][$_section]       += $number;
                         }
                     }
                 }
@@ -155,7 +165,8 @@ class NetworkStatistics
         }
     }
 
-    private function addToArray($array, $key) {
+    private function addToArray($array, $key)
+    {
         if (!isset($array[$key])) {
             $array[$key] = 0;
         }
