@@ -184,7 +184,7 @@ class NetworkStatistics
                     $this->addToArray($this->dns_managers, $ip);
                 }
                 if ($_role == 'thor_manager') {
-                    $this->addToArray(this->thor_managers, $ip);
+                    $this->addToArray($this->thor_managers, $ip);
                 }
                 if ($_role == 'conference_server') {
                     $this->addToArray($this->conference_servers, $ip);
