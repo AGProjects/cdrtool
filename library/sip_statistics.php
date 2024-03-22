@@ -708,6 +708,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                     $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
                     $MediaSessions->getSessions();
                     $totals = array_merge_recursive($totals, $MediaSessions->domain_statistics);
+                }
 
                 if ($DATASOURCES[$datasource]['networkStatus']) {
                     // OpenSIPS via NGNPro
