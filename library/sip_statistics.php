@@ -209,8 +209,9 @@ class NetworkStatistics
                     continue;
                 }
             }
+            $print_role = array();
             foreach ($this->roles[$_role] as $_entity) {
-                if (!$print_role[$_role]) {
+                if (!array_key_exists($_role, $print_role)) {
                     $_role_print = preg_replace("/_/", " ", $_role);
                 } else {
                     $_role_print = '';
