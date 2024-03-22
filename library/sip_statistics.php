@@ -16,12 +16,17 @@ class NetworkStatistics
     private $SOAPurl;
     private $SoapAuth;
     private $soapclient;
+    public $roles;
     public $hostnames;
-
+    
     public $statistics        = array();
     public $status            = array();
     public $sip_summary       = array();
     public $sip_proxies       = array();
+    public $conference_servers = array();
+    public $voicemail_servers = array();
+    public $thor_managers = array();
+    public $dns_managers = array();
     public $node_statistics   = array();
     public $domain_statistics = array();
     public $allowedRoles      = array(
@@ -228,7 +233,7 @@ class NetworkStatistics
                 } else {
                     $a_print = '';
 
-                    if (is_array($_entity['attributes'])) {
+                    if (array_key_exists('attributes', $_entity) && is_array($_entity['attributes'])) {
                         foreach (array_keys($_entity['attributes']) as $_a1) {
                             if ($_a1 == 'dburi') {
                                 if (preg_match("/^(mysql:\/\/\w*):\w*(@.*)$/", $_entity['attributes'][$_a1], $m)) {
@@ -278,7 +283,7 @@ class NetworkStatistics
 
     private function ip2host($ip)
     {
-        if ($this->hostnames[$ip]) {
+        if (array_key_exists($ip, $this->hostnames)) {
             return $this->hostnames[$ip];
         } else {
             return $ip;
