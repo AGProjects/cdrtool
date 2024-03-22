@@ -126,7 +126,10 @@ class NetworkStatistics
                                 if (count($this->allowedDomains) && !in_array($_section, $this->allowedSummary)) {
                                     continue;
                                 }
-                                $this->sip_summary[$_section]=$this->sip_summary[$_section]+$this->statistics[$_ip][$_role][$_section][$_domain];
+                                if (!isset($this->sip_summary[$_section])) {
+                                    $this->sip_summary[$_section] = 0;
+                                }
+                                $this->sip_summary[$_section] = $this->sip_summary[$_section] + $this->statistics[$_ip][$_role][$_section][$_domain];
                             }
                         }
                     }
@@ -152,6 +155,13 @@ class NetworkStatistics
         }
     }
 
+    private function addToArray($array, $key) {
+        if (!isset($array[$key])) {
+            $array[$key] = 0;
+        }
+        $array[$key]++;
+    }
+
     public function getStatus()
     {
         $this->soapclient->addHeader($this->SoapAuth);
@@ -165,23 +175,24 @@ class NetworkStatistics
 
         foreach (array_keys($this->status) as $_id) {
             foreach ($this->status[$_id]['roles'] as $_role) {
+                $ip = $this->status[$_id]['ip'];
+
                 if ($_role == 'sip_proxy') {
-                    $this->sip_proxies[$this->status[$_id]['ip']]++;
+                    $this->addToArray($this->sip_proxies, $ip);
                 }
                 if ($_role == 'thor_dnsmanager') {
-                    $this->dns_managers[$this->status[$_id]['ip']]++;
+                    $this->addToArray($this->dns_managers, $ip);
                 }
                 if ($_role == 'thor_manager') {
-                    $this->thor_managers[$this->status[$_id]['ip']]++;
+                    $this->addToArray(this->thor_managers, $ip);
                 }
                 if ($_role == 'conference_server') {
-                    $this->conference_servers[$this->status[$_id]['ip']]++;
+                    $this->addToArray($this->conference_servers, $ip);
                 }
                 if ($_role == 'voicemail_server') {
-                    $this->voicemail_servers[$this->status[$_id]['ip']]++;
+                    $this->addToArray($this->voicemail_servers, $ip);
                 }
 
-                $ip=$this->status[$_id]['ip'];
                 $this->roles[$_role][$ip]=array(
                     'ip'      => $ip,
                     'version' => $this->status[$_id]['version']
