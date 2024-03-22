@@ -444,25 +444,24 @@ class MediaSessions
                 <tr>
                     <td style="text-align:center; vertical-align:middle; height:30px; width:30px">%s</td>
                     <td style="text-align:center; vertical-align:middle; width: 30px;">%s</td>
-                    <td colspan="7" style="font-size:10pt;vertical-align: middle">
+                    <td colspan="9" style="font-size:10pt;vertical-align: middle">
                     <div style="display:flex">
-                    <div><nobr><b>From:</b> %s</nobr></div>
-                    <div style="flex: 1 1 auto; margin-left:5px; margin-right: 5px">
-                    <div class="sarrow right" style="display: inline-block;"></div>
-                    </div>
-                        <div><nobr><b>To:</b> %s</nobr</div>
+                        <div><nobr><b>From:</b> %s</nobr></div>
+                        <div style="flex: 1 1 auto; margin-left:5px; margin-right: 5px">
+                            <div class="sarrow right" style="display: inline-block;">
+                                <span style="position: absolute, transform: translate(-50%, -50%), top: 50%, left: 50%, font-family: monospace, courier; font-size: 8pt;" class="label label-inverse">%s</span>
+                            </div>
                         </div>
-                    </td>
-                    <td  style="text-align:center; vertical-align:middle" colspan="2">
-                        <span style="font-family: monospace, courier; font-size: 8pt;" class="label label-inverse">%s</span>
+                        <div><nobr><b>To:</b> %s</nobr</div>
+                    </div>
                     </td>
                 </tr>
                 ',
                 $fromImage,
                 $toImage,
                 $from,
-                $to,
-                $sessionId
+                $sessionId,
+                $to
             );
 
             // Header row for call sessions
