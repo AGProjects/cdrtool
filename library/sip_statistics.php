@@ -702,7 +702,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                     $MediaSessions = new MediaSessionsNGNPro($DATASOURCES[$datasource]['mediaSessions']);
                     $MediaSessions->getSessions();
                     $totals = array_merge_recursive($totals, $MediaSessions->domain_statistics);
-                } else if ($DATASOURCES[$datasource]['mediaDispatcher']) {
+                } elseif ($DATASOURCES[$datasource]['mediaDispatcher']) {
                     // MediaProxy 2 via dispatcher tcp socket
                     require_once("media_sessions.php");
                     $MediaSessions = new MediaSessions($DATASOURCES[$datasource]['mediaDispatcher']);
@@ -715,7 +715,7 @@ PageTop[{$key}_traffic]: <H1> IP Traffic for {$key} </H1>
                     $NetworkStatistics = new NetworkStatistics($DATASOURCES[$datasource]['networkStatus']);
                     $NetworkStatistics->getStatistics();
                     $totals = array_merge_recursive($totals, $NetworkStatistics->domain_statistics);
-                } else if ($DATASOURCES[$datasource]['db_registrar']) {
+                } elseif ($DATASOURCES[$datasource]['db_registrar']) {
                     // OpenSIPS via MySQL query
                     $db_registrar_domains=$this->getOnlineAccountsFromMySQL($DATASOURCES[$datasource]['db_registrar']);
                     $totals = array_merge_recursive($totals, $db_registrar_domains);

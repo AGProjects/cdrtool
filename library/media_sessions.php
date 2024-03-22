@@ -449,7 +449,7 @@ class MediaSessions
                         <div><nobr><b>From:</b> %s</nobr></div>
                         <div style="flex: 1 1 auto; margin-left:5px; margin-right: 5px">
                             <div class="sarrow right" style="display: inline-block;">
-                                <span style="position: absolute; transform: translate(-50%%, -50%%), top: 50%%; left: 50%%; font-family: monospace, courier; font-size: 8pt;" class="label label-inverse">%s</span>
+                                <span style="position: absolute; transform: translate(-50%%, -50%%); top: 50%%; left: 50%%; font-family: monospace, courier; font-size: 8pt;" class="label label-inverse">%s</span>
                             </div>
                         </div>
                         <div><nobr><b>To:</b> %s</nobr</div>
@@ -492,7 +492,7 @@ class MediaSessions
                     if ($status == "idle" || $status == "hold") {
                         $idletime = $this->normalizeTime($streamInfo->timeout_wait);
                         $status = sprintf("%s %s", $status, $idletime);
-                    } else if ($status == "closed") {
+                    } elseif ($status == "closed") {
                         $statusClass = "muted";
                     }
 
