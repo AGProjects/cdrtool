@@ -165,12 +165,12 @@ class NetworkStatistics
         }
     }
 
-    private function addToArray($array, $key)
+    private function addToArray(&$array, $key)
     {
         if (!isset($array[$key])) {
             $array[$key] = 0;
         }
-        $array[$key]++;
+	$array[$key]++;
     }
 
     public function getStatus()
@@ -202,7 +202,7 @@ class NetworkStatistics
                 }
                 if ($_role == 'voicemail_server') {
                     $this->addToArray($this->voicemail_servers, $ip);
-                }
+		}
 
                 $this->roles[$_role][$ip]=array(
                     'ip'      => $ip,
