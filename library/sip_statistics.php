@@ -213,6 +213,7 @@ class NetworkStatistics
             foreach ($this->roles[$_role] as $_entity) {
                 if (!array_key_exists($_role, $print_role)) {
                     $_role_print = preg_replace("/_/", " ", $_role);
+                    $print_role[$_role] = 0;
                 } else {
                     $_role_print = '';
                 }
