@@ -16,7 +16,7 @@ class NetworkStatistics
     private $SOAPurl;
     private $SoapAuth;
     private $soapclient;
-    private $hostnames;
+    public $hostnames;
 
     public $statistics        = array();
     public $status            = array();
