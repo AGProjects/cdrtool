@@ -14,6 +14,8 @@ $lib_dirs=$_PHPLIB['libdir'].":".
 ini_set('include_path', $lib_dirs);
 
 if (!is_array($_PHPLIB)) $_PHPLIB["libdir"] = "";
+require "logger.php";
+
 require("db_mysqli.inc");  /* Change this to match your database. */
 
 require("ct_sql.inc");    /* Change this to match your data storage container */
