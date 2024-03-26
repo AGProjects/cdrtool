@@ -704,8 +704,10 @@ function random_passwd_gen()
 function dprint($msg = "")
 {
     global $verbose;
+    global $browserLogger;
     if ($verbose) {
-        print "<br>$msg\n";
+        $browserLogger->debug($msg);
+        //print "<br>$msg\n";
     }
 }
 
