@@ -14,7 +14,7 @@ $formatter = new LineFormatter("%channel%: %message% %extra%");
 $syslog->setFormatter($formatter);
 $logger->pushHandler($syslog);
 
-function log($message, $level = 'notice')
+function logger($message, $level = 'notice')
 {
     global $logger;
     if ($level == 'notice') {
@@ -24,6 +24,6 @@ function log($message, $level = 'notice')
 
 function notice($message)
 {
-    $global $logger;
+    global $logger;
     $logger->notice($message);
 }
