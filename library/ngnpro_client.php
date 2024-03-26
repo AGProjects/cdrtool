@@ -886,7 +886,7 @@ class Records
 		if ($this->login_credentials['login_type'] !='admin') {
 		    if (!$pstn_access && (preg_match("/^pstn_/", $_port))) continue;
 		}
-		if (isset($this->SoapEngine->allowedPorts[$_engine]) ? count($this->SoapEngine->allowedPorts[$_engine]) : 0 > 0 && !in_array($_port, $this->SoapEngine->allowedPorts[$_engine])) continue;
+		if ((isset($this->SoapEngine->allowedPorts[$_engine]) ? count($this->SoapEngine->allowedPorts[$_engine]) : 0 )> 0 && !in_array($_port, $this->SoapEngine->allowedPorts[$_engine])) continue;
 
 		// disable some version dependent ports
 
