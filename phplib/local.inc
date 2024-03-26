@@ -701,13 +701,25 @@ function random_passwd_gen()
     return $random_otp;
 }
 
+function is_cli()
+{
+        return defined('STDIN')
+            || php_sapi_name() === "cli"
+            || (stristr(PHP_SAPI, 'cgi') && getenv('TERM'))
+            || (empty($_SERVER['REMOTE_ADDR']) && !isset($_SERVER['HTTP_USER_AGENT']) && count($_SERVER['argv']) > 0);
+}
+
 function dprint($msg = "")
 {
     global $verbose;
     global $browserLogger;
     if ($verbose) {
-        $browserLogger->debug($msg);
-        //print "<br>$msg\n";
+        if (is_cli()) {
+            print "$msg\n";
+        } else {
+            $browserLogger->debug($msg);
+            //print "<br>$msg\n";
+        }
     }
 }
 
