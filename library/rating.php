@@ -73,7 +73,6 @@ class Rate
         if ($this->settings['database_backend']) {
             $this->database_backend = $this->settings['database_backend'];
         }
-
     }
 
     public function calculateAudio($dictionary)

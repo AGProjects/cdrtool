@@ -356,7 +356,7 @@ class SoapEngine
 
             $default_port = 'customers';
 
-            if (isset($this->allowedPorts[$this->soapEngine]) ? count($this->allowedPorts[$this->soapEngine]) : 0 > 0) {
+            if ((isset($this->allowedPorts[$this->soapEngine]) ? count($this->allowedPorts[$this->soapEngine]) : 0) > 0) {
                 if (in_array($_els[0], $this->allowedPorts[$this->soapEngine])) {
                     $this->port = $_els[0];
                 } else if (in_array($default_port, $this->allowedPorts[$this->soapEngine])) {
