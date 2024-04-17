@@ -135,13 +135,13 @@ class Daemon
         pcntl_signal(SIGTERM, "signalHandler", true);
         //  pcntl_signal(SIGKILL, "signalHandler", true);
         pcntl_signal(SIGUSR1, "signalHandler", true);
-        logger("Rating Engine moved to the background");
+        logger("Rating Engine moved to the background\n");
         $logger->popHandler();
     }
 
     private function removePid()
     {
-        if (file_exists($this->pid)) unlink($this->pid);
+        if (file_exists($this->pidFile)) unlink($this->pidFile);
     }
 }
 
