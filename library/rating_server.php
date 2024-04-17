@@ -9,14 +9,14 @@ if (function_exists('pcntl_async_signals')) {
 function signalHandler($sig)
 {
     $log = sprintf("Received signal %s", $sig);
-    syslog(LOG_NOTICE, $log);
+    logger($log);
 
     switch ($sig) {
         case SIGTERM:
-            syslog(LOG_NOTICE, "Rating Engine is exiting ...");
+            logger("Rating Engine is exiting ...");
             exit(0);
         case SIGKILL:
-            syslog(LOG_NOTICE, "Rating Engine is exiting ...");
+            logger("Rating Engine is exiting ...");
             exit(0);
         case SIGUSR1:
             break;
@@ -24,6 +24,9 @@ function signalHandler($sig)
             // handle all other signals
     }
 }
+
+use Monolog\Handler\StreamHandler;
+use Monolog\Formatter\LineFormatter;
 
 class Daemon
 {
@@ -34,12 +37,18 @@ class Daemon
 
     public function start()
     {
+	global $logger;
+
+	$console_log = new StreamHandler('php://stdout');
+	$formatter = new LineFormatter("[%level_name%] %channel%: %message% %extra%", null, true, true);
+	$console_log->setFormatter($formatter);
+	$logger->pushHandler($console_log);
+
         if ($this->pidFile !== false && file_exists($this->pidFile)) {
             $pf = fopen($this->pidFile, 'r');
             if (!$pf) {
                 $log = sprintf("Error: Unable to read pidfile %s\n", $this->pidFile);
-                syslog(LOG_NOTICE, $log);
-                print $log;
+                critical($log);
 
                 exit(-1);
             }
@@ -49,8 +58,7 @@ class Daemon
 
             if ($c === false) {
                 $log = sprintf("Error: Unable to read pidfile %s\n", $this->pidFile);
-                syslog(LOG_NOTICE, $log);
-                print $log;
+                critical($log);
 
                 exit(-1);
             }
@@ -58,8 +66,7 @@ class Daemon
             $pid = intval($c);
             if (posix_kill($pid, 0) === true) {
                 $log = sprintf("Error: Another process is already running on pid %d\n", $pid);
-                syslog(LOG_NOTICE, $log);
-                print $log;
+                critical($log);
 
                 exit(-1);
             }
@@ -68,9 +75,8 @@ class Daemon
         // do the Unix double fork magic
         $pid = pcntl_fork();
         if ($pid == -1) {
-            $log=sprintf("Error: Couldn't fork!\n");
-            syslog(LOG_NOTICE, $log);
-            print $log;
+            $log = sprintf("Error: Couldn't fork!\n");
+            critical($log);
             exit(-1);
         }
 
@@ -83,8 +89,7 @@ class Daemon
         chdir('/');
         if (posix_setsid() == -1) {
             $log=sprintf("Error: Could not detach from terminal\n");
-            syslog(LOG_NOTICE, $log);
-            print $log;
+            critical($log);
             exit(-1);
         }
 
@@ -94,8 +99,7 @@ class Daemon
         $pid = pcntl_fork();
         if ($pid == -1) {
             $log = sprintf("Error: Couldn't fork!\n");
-            syslog(LOG_NOTICE, $log);
-            print $log;
+            critical($log);
             exit(-1);
         }
         if ($pid > 0) {
@@ -112,8 +116,7 @@ class Daemon
             $pf = fopen($this->pidFile, 'w');
             if ($pf === false) {
                 $log = sprintf("Error: Unable to write pidfile %s\n", $this->pidFile);
-                syslog(LOG_NOTICE, $log);
-                print $log;
+                critical($log);
                 exit(-1);
             }
 
@@ -129,7 +132,8 @@ class Daemon
         // for some reason these interfere badly with socket_select()
         pcntl_signal(SIGTERM, "signalHandler", true);
 //        pcntl_signal(SIGKILL, "signalHandler", true);
-        pcntl_signal(SIGUSR1, "signalHandler", true);
+	pcntl_signal(SIGUSR1, "signalHandler", true);
+	$logger->popHandler();
     }
 
     private function removePid()
@@ -245,7 +249,8 @@ class socketServer extends socketCDR
         }
         $this->startTime=time();
         $log=sprintf("Rating Engine listening on %s:%s", $bind_address_print, $bind_port);
-        syslog(LOG_NOTICE, $log);
+	syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     public function accept()
@@ -624,6 +629,8 @@ class ratingEngineClient extends socketServerClient
             }
         }
 
+        $log = sprintf("Output %s", $output);
+        syslog(LOG_NOTICE, $log);
         return $output;
     }
 

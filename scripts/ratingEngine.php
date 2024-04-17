@@ -10,17 +10,29 @@ require 'cdr_generic.php';
 require 'rating.php';
 require 'rating_server.php';
 
+// override logger for rating engine
+use Monolog\Logger;
+use Monolog\Handler\SyslogHandler;
+use Monolog\Formatter\LineFormatter;
+
+global $logger;
+$logger = new Logger('RatingEngine');
+$syslog = new SyslogHandler('cdrtool', 'local0');
+$formatter = new LineFormatter("%channel%: %message% %extra%", null, false, true);
+$syslog->setFormatter($formatter);
+$logger->pushHandler($syslog);
+
 // Init Rating Engine
-syslog(LOG_NOTICE, "Starting CDRTool Rating Engine...");
+logger("Starting CDRTool Rating Engine...");
 
 $RatingEngineServer = new RatingEngine();
 
 if (!$RatingEngineServer->init_ok) {
-    syslog(LOG_NOTICE, 'Error: Cannot start Rating Engine, fix the errors and try again');
+    critical('Error: Cannot start Rating Engine, fix the errors and try again');
     exit;
 }
 
-syslog(LOG_NOTICE, "Rating Engine started sucesfully, going to background...");
+logger("Rating Engine started sucesfully, going to background...");
 
 // Go to the background
 $d = new Daemon('/var/run/ratingEngine.pid');
@@ -34,6 +46,6 @@ $server = $daemon->create_server(
     $RatingEngine['socketPort']
 );
 
-syslog(LOG_NOTICE, "Rating Engine is now ready to serve network requests");
+logger("Rating Engine is now ready to serve network requests");
 
 $daemon->process();
