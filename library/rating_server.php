@@ -37,12 +37,12 @@ class Daemon
 
     public function start()
     {
-	global $logger;
+        global $logger;
 
-	$console_log = new StreamHandler('php://stdout');
-	$formatter = new LineFormatter("[%level_name%] %channel%: %message% %extra%", null, true, true);
-	$console_log->setFormatter($formatter);
-	$logger->pushHandler($console_log);
+        $console_log = new StreamHandler('php://stdout');
+        $formatter = new LineFormatter("[%level_name%] %channel%: %message% %extra%", null, true, true);
+        $console_log->setFormatter($formatter);
+        $logger->pushHandler($console_log);
 
         if ($this->pidFile !== false && file_exists($this->pidFile)) {
             $pf = fopen($this->pidFile, 'r');
@@ -131,9 +131,9 @@ class Daemon
 
         // for some reason these interfere badly with socket_select()
         pcntl_signal(SIGTERM, "signalHandler", true);
-//        pcntl_signal(SIGKILL, "signalHandler", true);
-	pcntl_signal(SIGUSR1, "signalHandler", true);
-	$logger->popHandler();
+        //  pcntl_signal(SIGKILL, "signalHandler", true);
+        pcntl_signal(SIGUSR1, "signalHandler", true);
+        $logger->popHandler();
     }
 
     private function removePid()
@@ -249,7 +249,6 @@ class socketServer extends socketCDR
         }
         $this->startTime=time();
         $log=sprintf("Rating Engine listening on %s:%s", $bind_address_print, $bind_port);
-	syslog(LOG_NOTICE, $log);
         logger($log);
     }
 
