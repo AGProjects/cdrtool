@@ -723,13 +723,30 @@ function dprint($msg = "")
     }
 }
 
+function object_to_array($object) {
+    if (is_object($object)) {
+	return array_map(__FUNCTION__, get_object_vars($object));
+    } else if (is_array($object)) {
+	return array_map(__FUNCTION__, $object);
+    } else {
+	return $object;
+    }
+}
+
 function dprint_r($obj)
 {
     global $verbose;
+    global $browserLogger;
     if ($verbose) {
-        print "<pre>\n";
-        print_r($obj);
-        print "</pre>\n";
+        if (is_cli()) {
+            print "<pre>\n";
+            print_r($obj);
+            print "</pre>\n";
+	} else {
+	    $array = json_decode(json_encode($obj), true);
+	    $array = get_object_vars($obj);
+            $browserLogger->debug('Object:', object_to_array($obj));
+        }
     }
 }
 
