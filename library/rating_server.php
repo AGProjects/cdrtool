@@ -135,6 +135,7 @@ class Daemon
         pcntl_signal(SIGTERM, "signalHandler", true);
         //  pcntl_signal(SIGKILL, "signalHandler", true);
         pcntl_signal(SIGUSR1, "signalHandler", true);
+        logger("Rating Engine moved to the background");
         $logger->popHandler();
     }
 

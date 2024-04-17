@@ -32,13 +32,13 @@ if (!$RatingEngineServer->init_ok) {
     exit;
 }
 
-logger("Rating Engine started sucesfully, going to background...");
+logger("Rating Engine initialized");
 
 // Go to the background
 $d = new Daemon('/var/run/ratingEngine.pid');
 $d->start();
 
-$daemon = new socketDaemon();
+$daemon = new SocketDaemon();
 $server = $daemon->createServer(
     'RatingEngineServer',
     'RatingEngineClient',
