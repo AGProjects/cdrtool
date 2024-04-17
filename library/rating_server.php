@@ -30,6 +30,8 @@ use Monolog\Formatter\LineFormatter;
 
 class Daemon
 {
+    public $pidFile;
+
     public function __construct($pidFile = false)
     {
         $this->pidFile  = $pidFile;
@@ -165,8 +167,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 class socketClient extends socketCDR
 {
-    public $remote_address = null;
-    public $remote_port    = null;
     public $connecting     = false;
     public $disconnected   = false;
     public $read_buffer    = '';
@@ -464,8 +464,10 @@ class socketCDR
     public $local_port;
     public $read_buffer    = '';
     public $write_buffer   = '';
+    public $remote_address = null;
+    public $remote_port    = null;
 
-    private function get_socket_id($socket)
+    private function getSocketId($socket)
     {
         return $socket instanceof \Socket ? spl_object_id($socket) : (int)$socket;
     }
