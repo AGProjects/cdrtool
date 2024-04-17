@@ -39,9 +39,9 @@ $d = new Daemon('/var/run/ratingEngine.pid');
 $d->start();
 
 $daemon = new socketDaemon();
-$server = $daemon->create_server(
-    'ratingEngineServer',
-    'ratingEngineClient',
+$server = $daemon->createServer(
+    'RatingEngineServer',
+    'RatingEngineClient',
     $RatingEngine['socketIP'],
     $RatingEngine['socketPort']
 );

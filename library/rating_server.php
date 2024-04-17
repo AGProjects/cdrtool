@@ -165,7 +165,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 
-class socketClient extends socketCDR
+class SocketClient extends SocketCDR
 {
     public $connecting     = false;
     public $disconnected   = false;
@@ -177,7 +177,7 @@ class socketClient extends socketCDR
         $this->connecting = true;
         try {
             parent::connect($remote_address, $remote_port);
-        } catch (socketException $e) {
+        } catch (SocketException $e) {
             echo "Caught exception: ".$e->getMessage()."\n";
         }
     }
@@ -185,10 +185,10 @@ class socketClient extends socketCDR
     public function write($buffer, $length = 4096)
     {
         $this->write_buffer .= $buffer;
-        $this->do_write();
+        $this->doWrite();
     }
 
-    public function do_write()
+    public function doWrite()
     {
         $length = strlen($this->write_buffer);
         try {
@@ -198,14 +198,14 @@ class socketClient extends socketCDR
             } else {
                 $this->write_buffer = '';
             }
-            $this->on_write();
+            $this->onWrite();
             return true;
-        } catch (socketException $e) {
+        } catch (SocketException $e) {
             $old_socket = ($this->socket instanceof \Socket ? spl_object_id($this->socket) : (int)$this->socket);
             $this->close();
             $this->socket       = $old_socket;
             $this->disconnected = true;
-            $this->on_disconnect();
+            $this->onDisconnect();
             return false;
         }
         return false;
@@ -215,24 +215,38 @@ class socketClient extends socketCDR
     {
         try {
             $this->read_buffer .= parent::read($length);
-            $this->on_read();
-        } catch (socketException $e) {
+            $this->onRead();
+        } catch (SocketException $e) {
             $old_socket = ($this->socket instanceof \Socket ? spl_object_id($this->socket) : (int)$this->socket);
             $this->close();
             $this->socket       = $old_socket;
             $this->disconnected = true;
-            $this->on_disconnect();
+            $this->onDisconnect();
         }
     }
 
-    public function on_connect() {}
-    public function on_disconnect() {}
-    public function on_read() {}
-    public function on_write() {}
-    public function on_timer() {}
+    public function onConnect()
+    {
+    }
+
+    public function onDisconnect()
+    {
+    }
+
+    public function onRead()
+    {
+    }
+
+    public function onWrite()
+    {
+    }
+
+    public function onTimer()
+    {
+    }
 }
 
-class socketServer extends socketCDR
+class SocketServer extends SocketCDR
 {
     public $startTime;
     protected $client_class;
@@ -255,18 +269,20 @@ class socketServer extends socketCDR
     public function accept()
     {
         $client = new $this->client_class(parent::accept(), $this);
-        if (!is_subclass_of($client, 'socketServerClient')) {
-            throw new socketException("Invalid serverClient class specified! Has to be a subclass of socketServerClient");
+        if (!is_subclass_of($client, 'SocketServerClient')) {
+            throw new SocketException("Invalid serverClient class specified! Has to be a subclass of SocketServerClient");
         }
-        $this->on_accept($client);
+        $this->onAccept($client);
         return $client;
     }
 
     // override if desired
-    public function on_accept(socketServerClient $client) {}
+    public function onAccept(SocketServerClient $client)
+    {
+    }
 }
 
-class socketServerClient extends socketClient
+class SocketServerClient extends SocketClient
 {
     public $socket;
     public $remote_address;
@@ -283,11 +299,11 @@ class socketServerClient extends socketClient
         $this->parentServer   = &$parentServer;
 
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!socket_getsockname($this->socket, $this->local_addr, $this->local_port)) {
-            throw new socketException("Could not retrieve local address & port: ".socket_strerror(socket_last_error($this->socket)));
+            throw new SocketException("Could not retrieve local address & port: ".socket_strerror(socket_last_error($this->socket)));
         } elseif (!socket_getpeername($this->socket, $this->remote_address, $this->remote_port)) {
-            throw new socketException("Could not retrieve remote address & port: ".socket_strerror(socket_last_error($this->socket)));
+            throw new SocketException("Could not retrieve remote address & port: ".socket_strerror(socket_last_error($this->socket)));
         }
 
         global $RatingEngineServer, $RatingEngine;
@@ -295,44 +311,44 @@ class socketServerClient extends socketClient
         $this->ratingEngine = & $RatingEngineServer;
         $this->ratingEngineSettings = $RatingEngine;
 
-        $this->set_non_block();
-        $this->on_connect();
+        $this->setNonBlock();
+        $this->onConnect();
     }
 }
 
-class socketDaemon
+class SocketDaemon
 {
     public $servers = array();
     public $clients = array();
 
-    public function create_server($server_class, $client_class, $bind_address = 0, $bind_port = 0)
+    public function createServer($server_class, $client_class, $bind_address = 0, $bind_port = 0)
     {
         $server = new $server_class($client_class, $bind_address, $bind_port);
-        if (!is_subclass_of($server, 'socketServer')) {
-            throw new socketException("Invalid server class specified! Has to be a subclass of socketServer");
+        if (!is_subclass_of($server, 'SocketServer')) {
+            throw new SocketException("Invalid server class specified! Has to be a subclass of SocketServer");
         }
-        $this->servers[$this->get_socket_id($server->socket)] = $server;
+        $this->servers[$this->getSocketId($server->socket)] = $server;
         return $server;
     }
 
-    public function create_client($client_class, $remote_address, $remote_port, $bind_address = 0, $bind_port = 0)
+    public function createClient($client_class, $remote_address, $remote_port, $bind_address = 0, $bind_port = 0)
     {
         $client = new $client_class($bind_address, $bind_port);
-        if (!is_subclass_of($client, 'socketClient')) {
-            throw new socketException("Invalid client class specified! Has to be a subclass of socketClient");
+        if (!is_subclass_of($client, 'SocketClient')) {
+            throw new SocketException("Invalid client class specified! Has to be a subclass of SocketClient");
         }
-        $client->set_non_block(true);
+        $client->setNonBlock(true);
         $client->connect($remote_address, $remote_port);
-        $this->clients[$this->get_socket_id($client->socket)] = $client;
+        $this->clients[$this->getSocketId($client->socket)] = $client;
         return $client;
     }
 
-    private function get_socket_id($socket)
+    private function getSocketId($socket)
     {
         return $socket instanceof \Socket ? spl_object_id($socket) : (int)$socket;
     }
 
-    private function create_read_set()
+    private function createReadSet()
     {
         $ret = array();
         foreach ($this->clients as $socket) {
@@ -344,7 +360,7 @@ class socketDaemon
         return $ret;
     }
 
-    private function create_write_set()
+    private function createWriteSet()
     {
         $ret = array();
         foreach ($this->clients as $socket) {
@@ -360,7 +376,7 @@ class socketDaemon
         return $ret;
     }
 
-    private function create_exception_set()
+    private function createExceptionSet()
     {
         $ret = array();
         foreach ($this->clients as $socket) {
@@ -373,63 +389,63 @@ class socketDaemon
     }
 
 
-    private function clean_sockets()
+    private function cleanSockets()
     {
         foreach ($this->clients as $socket) {
             if ($socket->disconnected || !is_resource($socket->socket)) {
-                if (isset($this->clients[$this->get_socket_id($socket->socket)])) {
-                    unset($this->clients[$this->get_socket_id($socket->socket)]);
+                if (isset($this->clients[$this->getSocketId($socket->socket)])) {
+                    unset($this->clients[$this->getSocketId($socket->socket)]);
                 }
             }
         }
     }
 
-    private function get_class($socket)
+    private function getClass($socket)
     {
-        if (isset($this->clients[$this->get_socket_id($socket)])) {
-            return $this->clients[$this->get_socket_id($socket)];
-        } elseif (isset($this->servers[$this->get_socket_id($socket)])) {
-            return $this->servers[$this->get_socket_id($socket)];
+        if (isset($this->clients[$this->getSocketId($socket)])) {
+            return $this->clients[$this->getSocketId($socket)];
+        } elseif (isset($this->servers[$this->getSocketId($socket)])) {
+            return $this->servers[$this->getSocketId($socket)];
         } else {
-            throw (new socketException("Could not locate socket class for $socket"));
+            throw (new SocketException("Could not locate socket class for $socket"));
         }
     }
 
     public function process()
     {
-        // if socketClient is in write set, and $socket->connecting === true, set connecting to false and call on_connect
-        $read_set      = $this->create_read_set();
-        $write_set     = $this->create_write_set();
-        $exception_set = $this->create_exception_set();
+        // if SocketClient is in write set, and $socket->connecting === true, set connecting to false and call onConnect
+        $read_set      = $this->createReadSet();
+        $write_set     = $this->createWriteSet();
+        $exception_set = $this->createExceptionSet();
         $event_time    = time();
         while (($events = socket_select($read_set, $write_set, $exception_set, 2)) !== false) {
             if ($events > 0) {
                 foreach ($read_set as $socket) {
-                    $socket = $this->get_class($socket);
-                    if (is_subclass_of($socket, 'socketServer')) {
+                    $socket = $this->getClass($socket);
+                    if (is_subclass_of($socket, 'SocketServer')) {
                         $client = $socket->accept();
-                        $this->clients[$this->get_socket_id($client->socket)] = $client;
-                    } elseif (is_subclass_of($socket, 'socketClient')) {
-                        // regular on_read event
+                        $this->clients[$this->getSocketId($client->socket)] = $client;
+                    } elseif (is_subclass_of($socket, 'SocketClient')) {
+                        // regular onRead event
                         $socket->read();
                     }
                 }
                 foreach ($write_set as $socket) {
-                    $socket = $this->get_class($socket);
-                    if (is_subclass_of($socket, 'socketClient')) {
+                    $socket = $this->getClass($socket);
+                    if (is_subclass_of($socket, 'SocketClient')) {
                         if ($socket->connecting === true) {
-                            $socket->on_connect();
+                            $socket->onConnect();
                             $socket->connecting = false;
                         }
-                        $socket->do_write();
+                        $socket->doWrite();
                     }
                 }
                 foreach ($exception_set as $socket) {
-                    $socket = $this->get_class($socket);
-                    if (is_subclass_of($socket, 'socketClient')) {
-                        $socket->on_disconnect();
-                        if (isset($this->clients[$this->get_socket_id($socket->socket)])) {
-                            unset($this->clients[$this->get_socket_id($socket->socket)]);
+                    $socket = $this->getClass($socket);
+                    if (is_subclass_of($socket, 'SocketClient')) {
+                        $socket->onDisconnect();
+                        if (isset($this->clients[$this->getSocketId($socket->socket)])) {
+                            unset($this->clients[$this->getSocketId($socket->socket)]);
                         }
                     }
                 }
@@ -437,22 +453,23 @@ class socketDaemon
             if (time() - $event_time > 1) {
                 // only do this if more then a second passed, else we'd keep looping this for every bit received
                 foreach ($this->clients as $socket) {
-                    $socket->on_timer();
+                    $socket->onTimer();
                 }
                 $event_time = time();
             }
-            $this->clean_sockets();
-            $read_set      = $this->create_read_set();
-            $write_set     = $this->create_write_set();
-            $exception_set = $this->create_exception_set();
+            $this->cleanSockets();
+            $read_set      = $this->createReadSet();
+            $write_set     = $this->createWriteSet();
+            $exception_set = $this->createExceptionSet();
         }
     }
 }
 
-class socketException extends Exception {
+class SocketException extends Exception
+{
 }
 
-class socketCDR
+class SocketCDR
 {
     public $socket;
     public $bind_address;
@@ -480,18 +497,18 @@ class socketCDR
         $this->type         = $type;
         $this->protocol     = $protocol;
         if (($this->socket = @socket_create($domain, $type, $protocol)) === false) {
-            throw new socketException("Could not create socket: ".socket_strerror(socket_last_error($this->socket)));
+            throw new SocketException("Could not create socket: ".socket_strerror(socket_last_error($this->socket)));
         }
         if (!@socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1)) {
-            throw new socketException("Could not set SO_REUSEADDR: ".$this->get_error());
+            throw new SocketException("Could not set SO_REUSEADDR: ".$this->getError());
         }
         if (!@socket_bind($this->socket, $bind_address, $bind_port)) {
-            throw new socketException("Could not bind socket to [$bind_address - $bind_port]: ".socket_strerror(socket_last_error($this->socket)));
+            throw new SocketException("Could not bind socket to [$bind_address - $bind_port]: ".socket_strerror(socket_last_error($this->socket)));
         }
         if (!@socket_getsockname($this->socket, $this->local_addr, $this->local_port)) {
-            throw new socketException("Could not retrieve local address & port: ".socket_strerror(socket_last_error($this->socket)));
+            throw new SocketException("Could not retrieve local address & port: ".socket_strerror(socket_last_error($this->socket)));
         }
-        $this->set_non_block(true);
+        $this->setNonBlock(true);
     }
 
     public function __destruct()
@@ -501,7 +518,7 @@ class socketCDR
         }
     }
 
-    public function get_error()
+    public function getError()
     {
         $error = socket_strerror(socket_last_error($this->socket));
         socket_clear_error($this->socket);
@@ -514,15 +531,15 @@ class socketCDR
             @socket_shutdown($this->socket, 2);
             @socket_close($this->socket);
         }
-        $this->socket = $this->get_socket_id($this->socket);
+        $this->socket = $this->getSocketId($this->socket);
     }
 
     public function write($buffer, $length = 4096)
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (($ret = @socket_write($this->socket, $buffer, $length)) === false) {
-            throw new socketException("Could not write to socket: ".$this->get_error());
+            throw new SocketException("Could not write to socket: ".$this->getError());
         }
         return $ret;
     }
@@ -530,9 +547,9 @@ class socketCDR
     public function read($length = 4096)
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (($ret = @socket_read($this->socket, $length, PHP_BINARY_READ)) == false) {
-            throw new socketException("Could not read from socket: ".$this->get_error());
+            throw new SocketException("Could not read from socket: ".$this->getError());
         }
         return $ret;
     }
@@ -542,78 +559,78 @@ class socketCDR
         $this->remote_address = $remote_address;
         $this->remote_port    = $remote_port;
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_connect($this->socket, $remote_address, $remote_port)) {
-            throw new socketException("Could not connect to {$remote_address} - {$remote_port}: ".$this->get_error());
+            throw new SocketException("Could not connect to {$remote_address} - {$remote_port}: ".$this->getError());
         }
     }
 
     public function listen($backlog = 128)
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_listen($this->socket, $backlog)) {
-            throw new socketException("Could not listen to {$this->bind_address} - {$this->bind_port}: ".$this->get_error());
+            throw new SocketException("Could not listen to {$this->bind_address} - {$this->bind_port}: ".$this->getError());
         }
     }
 
     public function accept()
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (($client = socket_accept($this->socket)) === false) {
-            throw new socketException("Could not accept connection to {$this->bind_address} - {$this->bind_port}: ".$this->get_error());
+            throw new SocketException("Could not accept connection to {$this->bind_address} - {$this->bind_port}: ".$this->getError());
         }
         return $client;
     }
 
-    public function set_non_block()
+    public function setNonBlock()
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_set_nonblock($this->socket)) {
-            throw new socketException("Could not set socket non_block: ".$this->get_error());
+            throw new SocketException("Could not set socket non_block: ".$this->getError());
         }
     }
 
-    public function set_block()
+    public function setBlock()
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_set_block($this->socket)) {
-            throw new socketException("Could not set socket non_block: ".$this->get_error());
+            throw new SocketException("Could not set socket non_block: ".$this->getError());
         }
     }
 
-    public function set_recieve_timeout($sec, $usec)
+    public function setRecieveTimeout($sec, $usec)
     {
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_set_option($this->socket, SOL_SOCKET, SO_RCVTIMEO, array("sec" => $sec, "usec" => $usec))) {
-            throw new socketException("Could not set socket recieve timeout: ".$this->get_error());
+            throw new SocketException("Could not set socket recieve timeout: ".$this->getError());
         }
     }
 
-    public function set_reuse_address($reuse = true)
+    public function setReuseAddress($reuse = true)
     {
         $reuse = $reuse ? 1 : 0;
         if (!is_resource($this->socket) && !($this->socket instanceof \Socket)) {
-            throw new socketException("Invalid socket or resource");
+            throw new SocketException("Invalid socket or resource");
         } elseif (!@socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, $reuse)) {
-            throw new socketException("Could not set SO_REUSEADDR to '$reuse': ".$this->get_error());
+            throw new SocketException("Could not set SO_REUSEADDR to '$reuse': ".$this->getError());
         }
     }
 }
 
-class ratingEngineServer extends socketServer
+class RatingEngineServer extends SocketServer
 {
     public $requests = array();
     public $connected_clients = array();
 }
 
-class ratingEngineClient extends socketServerClient
+class RatingEngineClient extends SocketServerClient
 {
-    private function handle_request($request)
+    private function handleRequest($request)
     {
         $this->parentServer->requests[$this->remote_address]++;
 
@@ -635,11 +652,11 @@ class ratingEngineClient extends socketServerClient
         return $output;
     }
 
-    public function on_read()
+    public function onRead()
     {
         $tinput = trim($this->read_buffer);
         if ($tinput == 'exit' || $tinput =='quit') {
-            $this->on_disconnect();
+            $this->onDisconnect();
             $this->close();
         } elseif (strtolower($tinput) == 'showclients') {
             $output = '';
@@ -680,13 +697,13 @@ class ratingEngineClient extends socketServerClient
             $this->write($output);
             $this->read_buffer  = '';
         } elseif ($tinput) {
-            $this->write($this->handle_request($tinput));
+            $this->write($this->handleRequest($tinput));
             $this->read_buffer  = '';
         }
     }
 
-    public function on_connect() {
-
+    public function onConnect()
+    {
         if ($this->remote_address != '127.0.0.1') {
             if (is_array($this->ratingEngineSettings['allow'])) {
                 $allow_connection = false;
@@ -716,8 +733,8 @@ class ratingEngineClient extends socketServerClient
         syslog(LOG_NOTICE, $log);
     }
 
-    public function on_disconnect() {
-
+    public function onDisconnect()
+    {
         $new_clients = array();
         foreach ($this->parentServer->connected_clients as $_client) {
             $_connected_client=$this->remote_address.":".$this->remote_port;
@@ -731,10 +748,12 @@ class ratingEngineClient extends socketServerClient
         syslog(LOG_NOTICE, $log);
     }
 
-    public function on_write() {
+    public function onWrite()
+    {
     }
 
-    public function on_timer() {
+    public function onTimer()
+    {
     }
 }
 ?>
