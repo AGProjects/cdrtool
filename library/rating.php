@@ -428,7 +428,7 @@ class Rate
                 $this->rateSyslog .= sprintf(" DisDur=%s", $this->discount_duration);
             }
 
-            syslog(LOG_NOTICE, $this->rateSyslog);
+            logger($this->rateSyslog);
 
             $j++;
         }
@@ -3263,7 +3263,6 @@ class RatingTables
                     if ($this->db->affected_rows()) {
                         $inserted++;
                     }
-
                 }
             } else {
                 $skipped++;
@@ -4093,7 +4092,7 @@ class RatingTables
             memory_get_usage() / 1024 / 1024,
             ini_get('memory_limit')
         );
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         $loaded['profiles']     = $this->LoadProfilesTable();
         $loaded['ratesHistory'] = $this->LoadRatesHistoryTable();
@@ -4101,7 +4100,7 @@ class RatingTables
         $loaded['enumTlds']     = $this->LoadENUMtldsTable();
 
         foreach (array_keys($loaded) as $_load) {
-            syslog(LOG_NOTICE, "Loaded $loaded[$_load] $_load into memory");
+            logger("Loaded $loaded[$_load] $_load into memory");
         }
 
         $log = sprintf(
@@ -4109,7 +4108,7 @@ class RatingTables
             memory_get_usage() / 1024 / 1024,
             ini_get('memory_limit')
         );
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         return $loaded;
     }
@@ -4427,7 +4426,7 @@ class RatingTables
             $filename,
             $results
         );
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         if (!$this->db->query($query)) {
             $log = sprintf(
@@ -6523,7 +6522,7 @@ class OpenSIPSQuota
                     $DATASOURCES[$this->cdr_source]['soapEngineId'],
                     $this->SOAPurl
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
 
                 $this->SOAPlogin = array(
                     "username"    => $soapEngines[$DATASOURCES[$this->cdr_source]['soapEngineId']]['username'],
@@ -6547,7 +6546,7 @@ class OpenSIPSQuota
             }
         } else {
             $log = "Using database queries to block accounts\n";
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
     }
 
@@ -6961,7 +6960,7 @@ class OpenSIPSQuota
                         $this->db->f('cost'),
                         $this->db->f('quota')
                     );
-                    syslog(LOG_NOTICE, $log);
+                    logger($log);
 
                     $log_query = sprintf(
                         "insert into log
@@ -7002,7 +7001,7 @@ class OpenSIPSQuota
             $email_body=$email_body.$line;
         } else {
               $log=sprintf("No quota has been exceeded\n");
-              syslog(LOG_NOTICE, $log);
+              logger($log);
         }
 
         if ($blocked_now) {
@@ -7233,7 +7232,7 @@ class OpenSIPSQuota
             return false;
         } else {
             $log = sprintf("Block account %s at %s", $account, $this->SOAPurl);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
 
             $this->markBlocked($account);
             return true;
@@ -7296,7 +7295,7 @@ class OpenSIPSQuota
                     $this->db->Errno
                 );
                 print $log;
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 return false;
             }
         }
@@ -8150,7 +8149,7 @@ class RatingEngine
 
             if ($this->db->affected_rows()) {
                 $log = sprintf("Added prepaid account %s with balance=%s", $account, $balance);
-                syslog(LOG_NOTICE, $log);
+                logger($log);
 
                 // log to prepaid_history
                 $query = sprintf(
@@ -8214,7 +8213,7 @@ class RatingEngine
         }
 
         $log = sprintf("Prepaid account %s has been deleted", $account);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         return 1;
     }
@@ -8255,7 +8254,7 @@ class RatingEngine
         }
 
         $log = sprintf("History of prepaid account %s has been deleted", $account);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         return 1;
     }
@@ -8306,7 +8305,7 @@ class RatingEngine
     function SetEntityProfiles($entity, $profiles)
     {
         if (!$entity) {
-            syslog(LOG_NOTICE, "SetEntityProfiles");
+            logger("SetEntityProfiles");
             return 0;
         }
     }
@@ -8356,7 +8355,7 @@ class RatingEngine
             $t++;
         }
 
-        syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     function processNetworkInput($tinput)
@@ -8378,7 +8377,7 @@ class RatingEngine
 
         $this->runtime['start']=microtime_float();
 
-        syslog(LOG_NOTICE, "Got command: $tinput");
+        logger("Got command: $tinput");
 
         if (!$_els[0]) return 0;
 
@@ -8513,7 +8512,7 @@ class RatingEngine
                     $NetFields['callid'],
                     $CDR->BillingPartyId
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 $ret="none"."\n"."type=postpaid";
                 return $ret;
             }
@@ -8546,7 +8545,7 @@ class RatingEngine
                                 $active_sessions[$_session]['BillingPartyId'],
                                 $expired_since
                             );
-                            syslog(LOG_NOTICE, $log);
+                            logger($log);
                             $expired++;
                         } else {
                             $active_sessions_new[$_session]=$active_sessions[$_session];
@@ -8564,7 +8563,7 @@ class RatingEngine
 
             if (!$current_balance) {
                 $log = "No balance found";
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 $this->logRuntime();
                 $ret="0"."\n"."type=prepaid";
                 return $ret;
@@ -8587,7 +8586,7 @@ class RatingEngine
                     $NetFields['callid'],
                     $CDR->BillingPartyId
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 $this->logRuntime();
                 $ret="none"."\n"."type=prepaid";
                 return $ret;
@@ -8601,7 +8600,7 @@ class RatingEngine
                     $session_counter,
                     $max_sessions
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 $ret="Locked"."\n"."type=prepaid";
                 return $ret;
             }
@@ -8646,7 +8645,7 @@ class RatingEngine
                     $this->remaining_balance,
                     $_maxduration
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
 
                 if ($_maxduration > 0) {
                     $this->parallel_calls[$CDR->callId] = array(
@@ -8658,7 +8657,7 @@ class RatingEngine
                         $CDR->callId,
                         $CDR->BillingPartyId
                     );
-                    syslog(LOG_NOTICE, $log);
+                    logger($log);
                     $ret="0"."\n"."type=prepaid";
                     return $ret;
                 }
@@ -8724,7 +8723,7 @@ class RatingEngine
                     $maxduration,
                     $Rate->min_duration
                 );
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 $ret = "0"."\n"."type=prepaid";
                 return $ret;
             }
@@ -8754,7 +8753,7 @@ class RatingEngine
                 $old_session_counter,
                 count($active_sessions)
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
 
             if ($maxduration > 0) {
                 $query = sprintf(
@@ -8955,7 +8954,7 @@ class RatingEngine
                         $this->old_session_count,
                         $this->new_session_count
                     );
-                    syslog(LOG_NOTICE, $log);
+                    logger($log);
 
                     $RateReturn = "Ok";
                     $RateReturn.= sprintf("\nMaxSessionTime=%d", $result);
@@ -8985,7 +8984,7 @@ class RatingEngine
                             $application
                         );
 
-                        syslog(LOG_NOTICE, $log);
+                        logger($log);
 
                         $RateReturn = "Ok";
 
@@ -9383,7 +9382,7 @@ class RatingEngine
                 $passed_time,
                 $Rate_session->price
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
 
             $ongoing_rates[$_session] = array(
                 'duration'    => $passed_time,
@@ -9408,7 +9407,7 @@ class RatingEngine
                 sprintf("%0.4f", $due_balance),
                 sprintf("%0.4f", $this->remaining_balance)
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
 
         foreach (array_keys($active_sessions) as $_session) {
@@ -9444,7 +9443,7 @@ class RatingEngine
                 $this->remaining_balance,
                 $_maxduration
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
 
             if ($_maxduration > 0) {
                 $this->parallel_calls[$_session] = array(
@@ -9475,7 +9474,7 @@ class RatingEngine
 
             if (count($parallel_calls) > 1) {
                 $log = sprintf("Maximum agregated duration for %s is %s", $BillingPartyId, $maxduration);
-                syslog(LOG_NOTICE, $log);
+                logger($log);
             }
         } else {
             /*
@@ -9504,7 +9503,7 @@ class RatingEngine
         }
 
         $log = sprintf("Keepalive successful");
-        syslog(LOG_NOTICE, $log);
+        logger($log);
         return true;
     }
 }

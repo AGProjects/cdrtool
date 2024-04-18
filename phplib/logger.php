@@ -28,9 +28,9 @@ function logger($message, $level = 'notice')
     if ($level == 'notice') {
         notice($message);
     } elseif ($level == 'error') {
-	error($message);
+	    error($message);
     } elseif ($level == 'critical') {
-	critical($message);
+	    critical($message);
     }
 }
 

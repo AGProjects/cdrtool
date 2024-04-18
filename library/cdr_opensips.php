@@ -2820,7 +2820,7 @@ class CDR_opensips extends CDR
         $app_prefix = preg_replace('/[.].*$/', '', $this->application);
         if (!in_array($app_prefix, $this->supportedApplicationTypes)) {
             $log=sprintf("Changing application from %s to %s\n", $this->application, $this->defaultApplicationType);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
             $this->application = $this->defaultApplicationType;
         }
 

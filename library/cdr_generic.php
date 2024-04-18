@@ -611,11 +611,11 @@ class CDRS
         $destinations_sip_cache = json_encode($this->_destinations_sip);
 
         $log = sprintf("PSTN destinations cache size: %0.2f MB", strlen($destinations_cache) / 1024 / 1024);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         if ($destinations_sip_cache) {
             $log = sprintf("SIP destinations cache size: %0.2f MB", strlen($destinations_sip_cache) / 1024 / 1024);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
 
         $query = sprintf("select `value` from memcache where `key` = 'destinations'");
@@ -656,7 +656,7 @@ class CDRS
                 $this->destinations_domain_count,
                 $this->destinations_subscriber_count
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         } else {
             $query = sprintf(
                 "insert into memcache (`key`,`value`) values ('destinations','%s')",
@@ -682,7 +682,7 @@ class CDRS
                 $this->destinations_domain_count,
                 $this->destinations_subscriber_count
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
 
         $query = sprintf("select `value` from memcache where `key` = 'destinations_sip'");
@@ -715,7 +715,7 @@ class CDRS
                 return false;
             }
             $log = sprintf("Cached %d SIP destinations", $this->destinations_sip_count);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         } else {
             $query = sprintf(
                 "insert into memcache (`key`,`value`) values ('destinations_sip','%s')",
@@ -734,7 +734,7 @@ class CDRS
                 return false;
             }
             $log = sprintf("Updated cache for %d SIP destinations", $this->destinations_sip_count);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
 
         return true;
@@ -1323,7 +1323,7 @@ class CDRS
         if ($this->status['cdr_to_normalize'] > 0) {
             $d = time() - $b;
             $log = sprintf("Normalization done in %d s, memory usage: %0.2f MB", $d, memory_get_usage() / 1024 / 1024);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
 
         if ($this->csv_file_ready) {
