@@ -28,9 +28,9 @@ function logger($message, $level = 'notice')
     if ($level == 'notice') {
         notice($message);
     } elseif ($level == 'error') {
-	    error($message);
+        error($message);
     } elseif ($level == 'critical') {
-	    critical($message);
+        critical($message);
     }
 }
 
@@ -38,6 +38,12 @@ function notice($message)
 {
     global $logger;
     $logger->notice($message);
+}
+
+function warning($message)
+{
+    global $logger;
+    $logger->warning($message);
 }
 
 function error($message)
@@ -51,3 +57,18 @@ function critical($message)
     global $logger;
     $logger->critical($message);
 }
+
+function warningAndPrint($message)
+{
+    global $logger;
+    print "$message";
+    $logger->warning($message);
+}
+
+function errorAndPrint($message)
+{
+    global $logger;
+    print "$message";
+    $logger->error($message);
+}
+
