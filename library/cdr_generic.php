@@ -2030,15 +2030,13 @@ class CDRS
 
         if (!$locker = new DB_Locker()) {
             $log=sprintf("Error: cannot init locker database. ");
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            errorAndPrint($log);
             return 0;
         }
 
         if (!$lockname) {
             $log=sprintf("Error: no lockname provided. ");
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            errorAndPrint($log);
             return 0;
         }
 
@@ -2060,19 +2058,17 @@ class CDRS
 
             if ($return == 0) {
                 $log=sprintf("Lock %s already aquired by another process with id %s ",$lockname,$this->lock_connection_id);
-                syslog(LOG_NOTICE, $log);
-                print "$log\n";
+                errorAndPrint($log);
                 return 0;
             } else {
                 $log=sprintf("Normalize lock id %s aquired for %s ",$this->lock_connection_id,$lockname);
-                syslog(LOG_NOTICE, $log);
+                logger($log);
                 //print "$log\n";
                 return 1;
             }
         } else {
             $log = sprintf("Database error: failed to request mysql lock %s (%s)\n", $locker->Error, $locker->Errno);
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            errorAndPrint($log);
             return 0;
         }
     }
@@ -2678,11 +2674,11 @@ function unLockNormalization($dbid, $lockname)
 {
     $query=sprintf("SELECT RELEASE_LOCK('%s')", addslashes($lockname));
     $log=sprintf("Unlock %s", $lockname);
-    syslog(LOG_NOTICE, $log);
+    logger($log);
 
     if (!$dbid->query($query)) {
         $log="Error in unLockNormalization()";
-        syslog(LOG_NOTICE, $log);
+        error($log);
     }
 }
 
