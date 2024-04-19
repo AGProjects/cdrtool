@@ -24,13 +24,19 @@ $browserLogger->pushHandler($console);
 
 function logger($message, $level = 'notice')
 {
-    global $logger;
     if ($level == 'notice') {
         notice($message);
     } elseif ($level == 'error') {
         error($message);
     } elseif ($level == 'critical') {
         critical($message);
+    }
+}
+
+function loggerAndPrint($message, $level = 'notice')
+{
+    if ($level == 'notice') {
+        noticeAndPrint($message);
     }
 }
 
@@ -58,6 +64,12 @@ function critical($message)
     $logger->critical($message);
 }
 
+function noticeAndPrint($message)
+{
+    print "$message";
+    notice($message);
+}
+
 function warningAndPrint($message)
 {
     global $logger;
@@ -72,3 +84,8 @@ function errorAndPrint($message)
     $logger->error($message);
 }
 
+function criticalAndPrint($message)
+{
+    print "$message";
+    critical($message);
+}

@@ -6,6 +6,18 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
+// override logger for rating engine
+use Monolog\Logger;
+use Monolog\Handler\SyslogHandler;
+use Monolog\Formatter\LineFormatter;
+
+global $logger;
+$logger = new Logger('normalization');
+$syslog = new SyslogHandler('cdrtool', 'local0');
+$formatter = new LineFormatter("%channel%: %message% %extra%", null, false, true);
+$syslog->setFormatter($formatter);
+$logger->pushHandler($syslog);
+
 $lockFile = "/var/lock/CDRTool_normalize.lock";
 
 if ($argv[1]) {
@@ -19,19 +31,16 @@ if ($argv[1]) {
 if ($f = fopen($lockFile, "w")) {
     if (flock($f, LOCK_EX + LOCK_NB, $w)) {
         if ($w) {
-            print "Another CDRTool normalization is in progress. Aborting.\n";
-            syslog(LOG_NOTICE, "Another CDRTool normalization is in progress. Aborting.");
+            criticalAndPrint("Another CDRTool normalization is in progress. Aborting.\n");
             exit(2);
         }
     } else {
-        print "Another CDRTool normalization is in progress. Aborting.\n";
-        syslog(LOG_NOTICE, "Another CDRTool normalization is in progress. Aborting.");
+        criticalAndPrint("Another CDRTool normalization is in progress. Aborting.\n");
         exit(1);
     }
 } else {
     $log = sprintf("Error: Cannot open lock file %s for writing\n", $lockFile);
-    print $log;
-    syslog(LOG_NOTICE, $log);
+    criticalAndPrint($log);
     exit(2);
 }
 
@@ -53,8 +62,7 @@ foreach ($DATASOURCES as $k => $v) {
         if ($table) $CDRS->table = $table;
 
         $log = sprintf("Normalize datasource %s, database %s, table %s\n", $k, $db_class, $CDRS->table);
-        print $log;
-        syslog(LOG_NOTICE, $log);
+        loggerAndPrint($log);
 
         $CDRS->NormalizeCDRS();
 
@@ -71,16 +79,14 @@ foreach ($DATASOURCES as $k => $v) {
                 $d,
                 $speed
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
         }
 
         if (!$table && preg_match("/^(\w+)\d{6}$/", $CDRS->table, $m)) {
             $lastMonthTable=$m[1].date('Ym', mktime(0, 0, 0, date("m")-1, "01", date("Y")));
 
             $log = sprintf("Normalize datasource %s, database %s, table %s\n", $k, $db_class, $lastMonthTable);
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
 
             $b = time();
 
@@ -100,8 +106,7 @@ foreach ($DATASOURCES as $k => $v) {
                     $d,
                     $speed
                 );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+                loggerAndPrint($log);
             }
         }
     }
