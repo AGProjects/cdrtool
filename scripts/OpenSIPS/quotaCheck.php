@@ -42,7 +42,7 @@ if (flock($f, LOCK_EX + LOCK_NB, $w)) {
 }
 
 foreach ($DATASOURCES as $k => $v) {
-    if (strlen($v["UserQuotaClass"])) {
+    if (isset($v["UserQuotaClass"]) && strlen($v["UserQuotaClass"])) {
         unset($CDRS);
         $class_name = $v["class"];
         $CDRS = new $class_name($k);

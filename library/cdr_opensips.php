@@ -2753,10 +2753,8 @@ class CDRS_opensips extends CDRS
 
 class CDR_opensips extends CDR
 {
-
     public function __construct($parent, $CDRfields)
     {
-
         $this->CDRS = $parent;
 
         $this->cdr_source  = $this->CDRS->cdr_source;

@@ -2199,6 +2199,7 @@ class E164_US extends E164 {
     }
 }
 
+#[AllowDynamicProperties]
 class CDR
 {
     // we need two db descriptors to update a CDR
@@ -2284,7 +2285,7 @@ class CDR
                 $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
             }
 
-            if (strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
+            if (isset($this->durationNormalized) && strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
                 $query.=sprintf(" %s ='%s' ",addslashes($this->CDRS->durationField),addslashes($this->durationNormalized));
