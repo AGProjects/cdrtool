@@ -20,6 +20,9 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
+global $logger;
+$logger = $logger->withName('quotaCheck');
+
 $b = time();
 
 $lockFile = sprintf("/var/lock/CDRTool_QuotaCheck.lock");
@@ -30,12 +33,12 @@ $f = fopen($lockFile, "w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     if ($w) {
         print $abort_text;
-        syslog(LOG_NOTICE, $abort_text);
+        critical($abort_text);
         exit(2);
     }
 } else {
     print $abort_text;
-    syslog(LOG_NOTICE, $abort_text);
+    critical($abort_text);
     exit(1);
 }
 
@@ -48,7 +51,7 @@ foreach ($DATASOURCES as $k => $v) {
         $Quota_class = $v["UserQuotaClass"];
 
         $log=sprintf("Checking user quotas for data source %s\n", $v['name']);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
         //print $log;
 
         $Quota = new $Quota_class($CDRS);
@@ -56,7 +59,7 @@ foreach ($DATASOURCES as $k => $v) {
         $d = time() - $b;
         if ($d > 5) {
             $log = sprintf("Runtime: %d s", $d);
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         }
     }
 }
@@ -64,7 +67,6 @@ foreach ($DATASOURCES as $k => $v) {
 function deleteQuotaCheckLockfile($lockFile)
 {
     if (!unlink($lockFile)) {
-        print "Error: cannot delete lock file $lockFile. Aborting.\n";
-        syslog(LOG_NOTICE, "Error: cannot delete lock file $lockFile");
+        errorAndPrint("Error: cannot delete lock file $lockFile");
     }
 }
