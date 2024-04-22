@@ -6145,9 +6145,6 @@ class OpenSIPSQuota
         $this->db1 = new DB_cdrtool;
         $this->db1->Halt_On_Error="no";
 
-        $this->db1 = new DB_cdrtool;
-        $this->db1->Halt_On_Error="no";
-
         $this->CDRS = $parent;
 
         $this->quota_init_flag   = $parent->quota_init_flag;
@@ -6212,7 +6209,6 @@ class OpenSIPSQuota
 
     function ShowAccountsWithQuota($treshhold = '')
     {
-
         $query = sprintf(
             "select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",
             addslashes($this->CDRS->cdr_source)
