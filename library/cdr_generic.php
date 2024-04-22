@@ -2246,7 +2246,7 @@ class CDR
     {
     }
 
-    function traceIn() 
+    function traceIn()
     {
     }
 

@@ -644,12 +644,12 @@ class RatingEngineClient extends SocketServerClient
             $d=$e-$b;
             if ($d >= $this->ratingEngineSettings['log_delay']) {
                 $log = sprintf("%s request took %.4f seconds", $this->ratingEngine->method, $d);
-                syslog(LOG_NOTICE, $log);
+                logger($log);
             }
         }
 
         $log = sprintf("Output %s", $output);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
         return $output;
     }
 
@@ -711,14 +711,14 @@ class RatingEngineClient extends SocketServerClient
                 foreach ($this->ratingEngineSettings['allow'] as $_allow) {
                     if (preg_match("/^$_allow/", $this->remote_address)) {
                         $log = sprintf("Client %s allowed by server configuration %s", $this->remote_address, $_allow);
-                        syslog(LOG_NOTICE, $log);
+                        logger($log);
                         $allow_connection = true;
                         break;
                     }
                 }
                 if (!$allow_connection) {
                     $log = sprintf("Client %s disallowed by server configuration", $this->remote_address);
-                    syslog(LOG_NOTICE, $log);
+                    logger($log);
                     $this->close();
                     return true;
                 }
@@ -731,7 +731,7 @@ class RatingEngineClient extends SocketServerClient
         $this->parentServer->connected_clients = array_unique($this->parentServer->connected_clients);
 
         $log = sprintf("Client connection from %s:%s", $this->remote_address, $this->remote_port);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     public function onDisconnect()
@@ -746,7 +746,7 @@ class RatingEngineClient extends SocketServerClient
         $this->parentServer->connected_clients=array_unique($new_clients);
 
         $log = sprintf("Client disconnection from %s:%s", $this->remote_address, $this->remote_port);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     public function onWrite()
