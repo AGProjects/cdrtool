@@ -6249,7 +6249,7 @@ class OpenSIPSQuota
         }
     }
 
-    function ShowAccountsWithQuota($treshhold = '')
+    public function showAccountsWithQuota($treshhold = '')
     {
         $query = sprintf(
             "select * from quota_usage where datasource = '%s' and quota > 0 and cost > 0",
@@ -6712,7 +6712,7 @@ class OpenSIPSQuota
         }
     }
 
-    function notify($account)
+    private function notify($account)
     {
         global $DATASOURCES;
 
@@ -6816,7 +6816,7 @@ class OpenSIPSQuota
         print $log_msg;
     }
 
-    function blockAccount($account)
+    private function blockAccount($account)
     {
         list($username, $domain) = explode("@", $account);
 
@@ -6853,7 +6853,7 @@ class OpenSIPSQuota
         }
     }
 
-    function blockAccountRemote($account)
+    private function blockAccountRemote($account)
     {
         list($username, $domain) = explode("@", $account);
 
@@ -6900,7 +6900,7 @@ class OpenSIPSQuota
         }
     }
 
-    function unBlockRemoteAccounts($accounts)
+    private function unBlockRemoteAccounts($accounts)
     {
         if (!is_object($this->soapclient)) {
             return;
@@ -6943,7 +6943,7 @@ class OpenSIPSQuota
         }
     }
 
-    function saveQuotaInitFlag()
+    private function saveQuotaInitFlag()
     {
         $query = sprintf("insert into memcache (`key`,`value`) values ('%s','1')", addslashes($this->quota_init_flag));
         if (!$this->db->query($query)) {
@@ -6972,7 +6972,7 @@ class OpenSIPSQuota
         return (bool)!$this->queryHasError($query);
     }
 
-    function deleteQuotaUsageFromCache ($reset_quota_for=array())
+    private function deleteQuotaUsageFromCache($reset_quota_for = array())
     {
         $query = sprintf(
             "delete from quota_usage where datasource = '%s' ",
@@ -7078,7 +7078,7 @@ class OpenSIPSQuota
         }
     }
 
-    function markBlocked($account)
+    private function markBlocked($account)
     {
         $query = sprintf(
             "update quota_usage set blocked = '1', notified = NOW() where account = '%s' and datasource = '%s'",
