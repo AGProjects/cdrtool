@@ -6162,7 +6162,7 @@ class OpenSIPSQuota
         $this->CDRTool         = $parent->CDRTool;
         $this->cdr_source      = $parent->cdr_source;
 
-        $this->path=$this->CDRTool['Path'];
+        $this->path = $this->CDRTool['Path'];
 
         $this->db_subscribers = $parent->db_subscribers;
         if (!class_exists($this->db_subscribers)) {
@@ -6319,6 +6319,7 @@ class OpenSIPSQuota
                 return false;
             }
 
+            $i = 0;
             while ($this->AccountsDB->next_record()) {
                 $i++;
 
@@ -6360,6 +6361,7 @@ class OpenSIPSQuota
             }
 
             $blockedAccounts=array();
+            $i = 0;
             while ($this->AccountsDB->next_record()) {
                 $i++;
                 $blockedAccounts[]=$this->AccountsDB->f('account');
@@ -6410,9 +6412,9 @@ class OpenSIPSQuota
     {
 
         if (!$month) {
-            $this->startTime=Date("Y-m-01 00:00", time());
+            $this->startTime = Date("Y-m-01 00:00", time());
         } else {
-            $this->startTime=$month."-01 00:00";
+            $this->startTime = $month."-01 00:00";
         }
 
         $j=0;
@@ -6927,7 +6929,6 @@ class OpenSIPSQuota
 
                     $extraHeaders="From: $from";
                     $email_body="SOAP request failure: \n\n".
-
                         $log = sprintf(
                             "SOAP client error: %s %s\n",
                             $error_fault->detail->exception->errorcode,
@@ -6963,7 +6964,7 @@ class OpenSIPSQuota
         return true;
     }
 
-    function deleteQuotaInitFlag()
+    public function deleteQuotaInitFlag()
     {
         $query = sprintf(
             "delete from memcache where `key` in ('%s','%s')",
@@ -6975,7 +6976,6 @@ class OpenSIPSQuota
 
     function deleteQuotaUsageFromCache ($reset_quota_for=array())
     {
-
         $query = sprintf(
             "delete from quota_usage where datasource = '%s' ",
             addslashes($this->CDRS->cdr_source)
@@ -6997,7 +6997,6 @@ class OpenSIPSQuota
             return false;
         }
 
-
         if ($this->db->affected_rows()) {
             $log = sprintf("Deleted %d keys from cache\n", $this->db->affected_rows());
             print $log;
@@ -7009,7 +7008,6 @@ class OpenSIPSQuota
 
     private function initQuotaUsage()
     {
-
         $query = sprintf(
             "select value from memcache where `key` = '%s'",
             addslashes($this->quota_init_flag)
@@ -7037,6 +7035,7 @@ class OpenSIPSQuota
         if ($this->queryHasError($query)) {
             return false;
         }
+
 
         $reset_quota_for= array();
 
@@ -7092,7 +7091,7 @@ class OpenSIPSQuota
         return (bool)!$this->queryHasError($query, $this->db1);
     }
 
-    function resetDailyQuota()
+    public function resetDailyQuota()
     {
         $query = sprintf(
             "update quota_usage set cost_today = 0 where datasource = '%s'",
@@ -7119,7 +7118,6 @@ class RatingEngine
 
     public function __construct()
     {
-
         global $RatingEngine;   // set in global.inc
         global $DATASOURCES;    // set in global.inc
 
