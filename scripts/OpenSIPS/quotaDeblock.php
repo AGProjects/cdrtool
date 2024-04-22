@@ -20,6 +20,9 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
+// override logger
+changeLoggerChannel('quotaDeblock');
+
 $b = time();
 
 $lockFile = sprintf("/var/lock/CDRTool_QuotaDeblock.lock");

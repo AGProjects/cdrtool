@@ -22,14 +22,7 @@ require 'rating.php';
 
 
 // override logger
-use Monolog\Formatter\LineFormatter;
-
-global $logger;
-$logger = $logger->withName('quotaCheck');
-$handler = $logger->popHandler();
-$formatter = new LineFormatter("%channel%: %message% %extra%", null, false, true);
-$handler->setFormatter($formatter);
-$logger->pushHandler($handler);
+changeLoggerChannel('quotaCheck');
 
 $b = time();
 

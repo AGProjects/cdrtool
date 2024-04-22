@@ -22,6 +22,16 @@ $browserLogger = new Logger('CDRTool');
 $console= new BrowserConsoleHandler();
 $browserLogger->pushHandler($console);
 
+function changeLoggerChannel($name)
+{
+    global $logger;
+    $logger = $logger->withName($name);
+    $handler = $logger->popHandler();
+    $formatter = new LineFormatter("%channel%: %message% %extra%", null, false, true);
+    $handler->setFormatter($formatter);
+    $logger->pushHandler($handler);
+}
+
 function logger($message, $level = 'notice')
 {
     if ($level == 'notice') {
