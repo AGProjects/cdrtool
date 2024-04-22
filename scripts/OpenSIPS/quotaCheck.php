@@ -33,13 +33,11 @@ $abort_text = "Another check is in progress. Try again later.\n";
 $f = fopen($lockFile, "w");
 if (flock($f, LOCK_EX + LOCK_NB, $w)) {
     if ($w) {
-        print $abort_text;
-        critical($abort_text);
+        criticalAndPrint($abort_text);
         exit(2);
     }
 } else {
-    print $abort_text;
-    critical($abort_text);
+    criticalAndPrint($abort_text);
     exit(1);
 }
 

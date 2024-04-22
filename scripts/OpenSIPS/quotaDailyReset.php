@@ -9,6 +9,9 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
+// override logger
+changeLoggerChannel('quotaDailyReset');
+
 foreach ($DATASOURCES as $k => $v) {
     if (strlen($v["UserQuotaClass"])) {
         unset($CDRS);
@@ -18,7 +21,7 @@ foreach ($DATASOURCES as $k => $v) {
         $Quota_class = $v["UserQuotaClass"];
 
         $log=sprintf("Reset daily user quotas for data source %s\n", $v['name']);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
 
         $Quota = new $Quota_class($CDRS);
         $Quota->resetDailyQuota();

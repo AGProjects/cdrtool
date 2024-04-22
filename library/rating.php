@@ -6403,8 +6403,7 @@ class OpenSIPSQuota
                 "Reset %d users blocked by quota\n",
                 count($blockedAccounts)
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
         }
     }
 
@@ -6453,8 +6452,7 @@ class OpenSIPSQuota
                 "Init quota of data source %s for all accounts\n",
                 $this->CDRS->cdr_source
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
         }
 
         $query = sprintf(
@@ -6940,7 +6938,7 @@ class OpenSIPSQuota
                 }
             } else {
                 $log = sprintf("Unblock remote account %s at %s", $account, $this->SOAPurl);
-                syslog(LOG_NOTICE, $log);
+                logger($log);
             }
         }
     }
@@ -6999,8 +6997,7 @@ class OpenSIPSQuota
 
         if ($this->db->affected_rows()) {
             $log = sprintf("Deleted %d keys from cache\n", $this->db->affected_rows());
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
         }
 
         return true;
