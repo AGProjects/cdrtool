@@ -6134,10 +6134,27 @@ class OpenSIPSQuota
     public $timeout       = 5;       // soap connection timeout
     public $daily_quota   = 0;       // by default do not check daily quota
 
+    private function queryHasError($query, $db = null)
+    {
+        if (is_null($db)) {
+            $db = $this->db;
+        }
+
+        if ($db->query($query)) {
+            return false;
+        }
+        $log = sprintf(
+            "Database error for query %s: %s (%s)",
+            $query,
+            $db->Error,
+            $db->Errno
+        );
+        errorAndPrint($log);
+        return true;
+    }
 
     public function __construct($parent)
     {
-
         global $DATASOURCES;
 
         $this->CDRdb           = $parent->CDRdb;
@@ -6239,15 +6256,7 @@ class OpenSIPSQuota
             addslashes($this->CDRS->cdr_source)
         );
 
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -6346,14 +6355,7 @@ class OpenSIPSQuota
                 $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
             }
 
-            if (!$this->AccountsDB->query($query)) {
-                $log = sprintf(
-                    "Database error: %s (%s)",
-                    $this->AccountsDB->Error,
-                    $this->AccountsDB->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+            if ($this->queryHasError($query, $this->AccountsDB)) {
                 return false;
             }
 
@@ -6388,15 +6390,7 @@ class OpenSIPSQuota
                     $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
                 }
 
-
-                if (!$this->AccountsDB->query($query)) {
-                    $log = sprintf(
-                        "Database error: %s (%s)",
-                        $this->AccountsDB->Error,
-                        $this->AccountsDB->Errno
-                    );
-                    print $log;
-                    syslog(LOG_NOTICE, $log);
+                if ($this->queryHasError($query, $this->AccountsDB)) {
                     return false;
                 }
             }
@@ -6541,15 +6535,7 @@ class OpenSIPSQuota
             addslashes($this->CDRS->cdr_source)
         );
 
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -6751,13 +6737,7 @@ class OpenSIPSQuota
             );
         }
 
-        if (!$this->AccountsDB->query($query)) {
-            $log = sprintf(
-                "Database error: %s (%s)",
-                $this->AccountsDB->Error,
-                $this->AccountsDB->Errno
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query, $this->AccountsDB)) {
             return false;
         }
 
@@ -6990,19 +6970,7 @@ class OpenSIPSQuota
             addslashes($this->quota_init_flag),
             addslashes($this->quota_reset_flag)
         );
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
-
-        return true;
+        return (bool)!$this->queryHasError($query);
     }
 
     function deleteQuotaUsageFromCache ($reset_quota_for=array())
@@ -7025,15 +6993,7 @@ class OpenSIPSQuota
             $query.=")";
         }
 
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -7055,15 +7015,7 @@ class OpenSIPSQuota
             addslashes($this->quota_init_flag)
         );
 
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -7082,15 +7034,7 @@ class OpenSIPSQuota
             "select value from memcache where `key` = '%s'",
             addslashes($this->quota_reset_flag)
         );
-        if (!$this->db->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db->Error,
-                $this->db->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -7130,18 +7074,7 @@ class OpenSIPSQuota
                 "delete from memcache where `key` = '%s'",
                 addslashes($this->quota_reset_flag)
             );
-            if (!$this->db->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->db->Error,
-                    $this->db->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
-                return false;
-            }
-            return true;
+            return (bool)!$this->queryHasError($query);
         } else {
             $log = "Error: failed to save key quotaCheckInit";
             syslog(LOG_NOTICE, $log);
@@ -7156,17 +7089,7 @@ class OpenSIPSQuota
             addslashes($account),
             addslashes($this->CDRS->cdr_source)
         );
-        if (!$this->db1->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db1->Error,
-                $this->db1->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
+        return (bool)!$this->queryHasError($query, $this->db1);
     }
 
     function resetDailyQuota()
@@ -7175,18 +7098,7 @@ class OpenSIPSQuota
             "update quota_usage set cost_today = 0 where datasource = '%s'",
             addslashes($this->CDRS->cdr_source)
         );
-        if (!$this->db1->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->db1->Error,
-                $this->db1->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
-            return false;
-        }
-        return true;
+        return (bool)!$this->queryHasError($query, $this->db1);
     }
 }
 
