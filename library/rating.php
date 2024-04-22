@@ -6105,10 +6105,35 @@ class RatingTables
 
 class OpenSIPSQuota
 {
-    var $localDomains  = array();
-    var $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
-    var $timeout       = 5;       // soap connection timeout
-    var $daily_quota   = 0;       // by default do not check daily quota
+    private $CDRdb;
+    private $table;
+    private $CDRTool;
+    private $cdr_source;
+    private $path;
+    private $db_subscribers;
+    private $AccountsDB;
+    private $enableThor;
+    private $BillingPartyIdField;
+    private $parent;
+    private $db;
+    private $db1;
+    private $CDRS;
+
+    private $quota_init_flag;
+    private $quota_reset_flag;
+
+    private $notificationAddresses;
+
+    private $SOAPurl;
+    private $SOAPlogin;
+    private $SoapAuth;
+    private $soapclient;
+
+    public $localDomains  = array();
+    public $quotaGroup    = 'quota'; // group set if subscriber was blocked by quota
+    public $timeout       = 5;       // soap connection timeout
+    public $daily_quota   = 0;       // by default do not check daily quota
+
 
     public function __construct($parent)
     {
