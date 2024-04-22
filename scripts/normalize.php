@@ -7,16 +7,7 @@ require 'cdr_generic.php';
 require 'rating.php';
 
 // override logger for rating engine
-use Monolog\Logger;
-use Monolog\Handler\SyslogHandler;
-use Monolog\Formatter\LineFormatter;
-
-global $logger;
-$logger = new Logger('normalization');
-$syslog = new SyslogHandler('cdrtool', 'local0');
-$formatter = new LineFormatter("%channel%: %message% %extra%", null, false, true);
-$syslog->setFormatter($formatter);
-$logger->pushHandler($syslog);
+changeLoggerChannel('normalization');
 
 $lockFile = "/var/lock/CDRTool_normalize.lock";
 
