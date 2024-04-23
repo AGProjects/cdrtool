@@ -4,6 +4,9 @@ require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
 
+// override logger
+changeLoggerChannel('quotaShowAccounts');
+
 if (!count($argv) || count($argv) != 2) {
     printf("Syntax: %s treshhold\n", $_SERVER['PHP_SELF']);
     print "Accounts with quota usage percentage greater than the treshhold will be showed.\n";
@@ -24,7 +27,7 @@ foreach ($DATASOURCES as $k => $v) {
         $Quota_class = $v["UserQuotaClass"];
 
         $log=sprintf("Checking user quotas for data source %s\n", $v['name']);
-        syslog(LOG_NOTICE, $log);
+        logger($log);
         //print $log;
 
         $Quota = new $Quota_class($CDRS);
