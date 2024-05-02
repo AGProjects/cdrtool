@@ -207,9 +207,9 @@ class CDRS
         if ($this->DATASOURCES[$this->cdr_source]['rating']) {
             $this->ratingEnabled   = 1;
             $this->rating  = $this->DATASOURCES[$this->cdr_source]['rating'];
-            if ($this->DATASOURCES[$this->cdr_source]['showRate'])   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
-            if ($this->DATASOURCES[$this->cdr_source]['rateField'])  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
-            if ($this->DATASOURCES[$this->cdr_source]['priceField']) $this->priceField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
+            if (isset($this->DATASOURCES[$this->cdr_source]['showRate']))   $this->showRate    = $this->DATASOURCES[$this->cdr_source]['showRate'];
+            if (isset($this->DATASOURCES[$this->cdr_source]['rateField']))  $this->rateField   = $this->DATASOURCES[$this->cdr_source]['rateField'];
+            if (isset($this->DATASOURCES[$this->cdr_source]['priceField'])) $this->priceField   = $this->DATASOURCES[$this->cdr_source]['priceField'];
         }
 
         if ($this->DATASOURCES[$this->cdr_source]['UserQuotaClass']) {
@@ -2439,7 +2439,7 @@ class CDR
                         addslashes($this->pricePrint)
                     );
 
-                    if ($this->CDRS->rateField ) {
+                    if ($this->CDRS->rateField) {
                         if ($updatedFields) $query .= ", ";
                         $updatedFields++;
                         $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->rateField),addslashes($this->rateInfo));
