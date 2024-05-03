@@ -1,0 +1,9 @@
+[Unit]
+Description=Run CDRTool quota deblock each month
+
+[Timer]
+OnCalendar=*-*-1 03:10:00
+RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

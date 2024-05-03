@@ -1,0 +1,7 @@
+[Unit]
+Description=Run CDRTool daily quota reset each day
+
+[Timer]
+OnCalendar=*-*-* 00:10:00
+RandomizedDelaySec=900
+

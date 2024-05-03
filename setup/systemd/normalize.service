@@ -1,0 +1,9 @@
+[Unit]
+Description=CDRTool normalizing
+
+[Service]
+Type=oneshot
+IgnoreSIGPIPE=false
+KillMode=process
+ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/normalize.php
+StandardOutput=null

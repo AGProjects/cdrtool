@@ -1,0 +1,8 @@
+[Unit]
+Description=Run CDRTool quota check each 5 mins
+
+[Timer]
+OnCalendar=*-*-* *:0/5
+
+[Install]
+WantedBy=timers.target

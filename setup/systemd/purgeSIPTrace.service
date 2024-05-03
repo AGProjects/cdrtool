@@ -1,0 +1,11 @@
+
+[Unit]
+Description=CDRTool purge siptraces from central database
+
+[Service]
+Type=oneshot
+IgnoreSIGPIPE=false
+KillMode=process
+ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/purgeSIPTrace.php
+StandardOutput=null
+

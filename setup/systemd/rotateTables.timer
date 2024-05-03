@@ -1,0 +1,6 @@
+[Unit]
+Description=Run CDRTool rotate Tables each month
+
+[Timer]
+OnCalendar=*-*-1 03:00:00
+RandomizedDelaySec=900

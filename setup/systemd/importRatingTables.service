@@ -1,0 +1,9 @@
+[Unit]
+Description=CDRTool import rating tables
+
+[Service]
+Type=oneshot
+IgnoreSIGPIPE=false
+KillMode=process
+ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/importRatingTables.php
+StandardOutput=null

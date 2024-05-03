@@ -1,0 +1,7 @@
+[Unit]
+Description=Run CDRTool notifyLastSession each day
+
+[Timer]
+OnCalendar=*-*-* 02:15:00
+RandomizedDelaySec=900
+

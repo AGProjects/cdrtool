@@ -1,0 +1,6 @@
+[Unit]
+Description=Run CDRTool purgeTables each day
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+RandomizedDelaySec=900

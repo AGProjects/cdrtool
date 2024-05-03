@@ -53,6 +53,11 @@ install: build
 	cp debian/changelog debian/cdrtool/var/www/CDRTool/doc/
 	cp -a bootstrap debian/cdrtool/var/www/CDRTool/
 
+override_dh_auto_install:
+	install -D -m 644 setup/systemd/*.service debian/cdrtool/lib/systemd/system/*.service
+	install -D -m 644 setup/systemd/*.timer debian/cdrtool/lib/systemd/system/*.timer
+	dh_auto_install
+
 # Build architecture-dependent files here.
 binary-arch: build install
 # We have nothing to do by default.

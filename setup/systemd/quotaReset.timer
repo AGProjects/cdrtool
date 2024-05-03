@@ -1,0 +1,9 @@
+[Unit]
+Description=Run CDRTool quota reset each month
+
+[Timer]
+OnCalendar=*-*-1 02:00:00
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

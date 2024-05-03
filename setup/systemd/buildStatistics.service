@@ -1,0 +1,11 @@
+
+[Unit]
+Description=CDRTool build statistics for network
+
+[Service]
+Type=oneshot
+IgnoreSIGPIPE=false
+KillMode=process
+ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/buildStatistics.php
+StandardOutput=null
+
