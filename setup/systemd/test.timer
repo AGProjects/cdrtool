@@ -1,6 +1,0 @@
-[Unit]
-Description=[Timer] "00,10,20,30,40,50 * * * * root /var/www/prj/dnshosting/CDRTool/scripts/normalize.php >/dev/null"
-
-[Timer]
-Unit=cron-cdrtool-root-0.service
-OnCalendar=*-*-* *:0,10,20,30,40,50:00
