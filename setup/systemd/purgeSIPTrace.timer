@@ -4,3 +4,6 @@ Description=Run CDRTool purge SIP Trace each day
 [Timer]
 OnCalendar=*-*-* 03:20:00
 RandomizedDelaySec=900
+
+[Install]
+WantedBy=timers.target

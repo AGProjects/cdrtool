@@ -5,3 +5,5 @@ Description=Run CDRTool notifyLastSession each day
 OnCalendar=*-*-* 02:15:00
 RandomizedDelaySec=900
 
+[Install]
+WantedBy=timers.target
