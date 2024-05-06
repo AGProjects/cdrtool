@@ -50,6 +50,12 @@ function loggerAndPrint($message, $level = 'notice')
     }
 }
 
+function debug($message)
+{
+    global $logger;
+    $logger->debug($message);
+}
+
 function notice($message)
 {
     global $logger;

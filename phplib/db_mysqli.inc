@@ -176,7 +176,7 @@ class DB_Sql
                 return 0;
             }
             $this->Link_ID = $link;
-            syslog(LOG_NOTICE, "Connected to mysql with $User to $Host ".$this->link_id());
+            debug("Connected to mysql with $User to $Host ".$this->link_id());
             // print "Connected to mysql with $User to $Host ".$this->link_id();
 
             if (!((bool)mysqli_query($this->Link_ID, "USE " . $Database))) {
