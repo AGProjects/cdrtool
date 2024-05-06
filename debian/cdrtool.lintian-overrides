@@ -2,3 +2,4 @@ cdrtool: dir-or-file-in-var-www
 cdrtool: duplicate-font-file
 cdrtool: embedded-javascript-library
 cdrtool: extra-license-file
+cdrtool: php-script-but-no-php-cli-dep

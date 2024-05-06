@@ -53,11 +53,6 @@ install: build
 	cp debian/changelog debian/cdrtool/var/www/CDRTool/doc/
 	cp -a bootstrap debian/cdrtool/var/www/CDRTool/
 
-override_dh_auto_install:
-	install -D -m 644 setup/systemd/*.service debian/cdrtool/lib/systemd/system/*.service
-	install -D -m 644 setup/systemd/*.timer debian/cdrtool/lib/systemd/system/*.timer
-	dh_auto_install
-
 # Build architecture-dependent files here.
 binary-arch: build install
 # We have nothing to do by default.
@@ -79,6 +74,29 @@ binary-indep: build install
 #	dh_installmime
 #	dh_python
 	dh_installinit
+	dh_installsystemd
+	dh_installsystemd --no-start --name=buildStatistics buildStatistics.service
+	dh_installsystemd --name=buildStatistics buildStatistics.timer
+	dh_installsystemd --no-start --name=importRatingTables importRatingTables.service
+	dh_installsystemd --name=importRatingTables importRatingTables.timer
+	dh_installsystemd --no-start --name=normalize normalize.service
+	dh_installsystemd --name=normalize normalize.timer
+	dh_installsystemd --no-start --name=quotaCheck quotaCheck.service
+	dh_installsystemd --name=quotaCheck quotaCheck.timer
+	dh_installsystemd --no-start --name=quotaDailyReset quotaDailyReset.service
+	dh_installsystemd --name=quotaDailyReset quotaDailyReset.timer
+	dh_installsystemd --no-start --name=quotaDeblock quotaDeblock.service
+	dh_installsystemd --name=quotaDeblock quotaDeblock.timer
+	dh_installsystemd --no-start --name=quotaReset quotaReset.service
+	dh_installsystemd --name=quotaReset quotaReset.timer
+	dh_installsystemd --no-start --name=notifyLastSessions notifyLastSessions.service
+	dh_installsystemd --no-enable --no-start --name=notifyLastSessions notifyLastSessions.timer
+	dh_installsystemd --no-start --name=purgeSIPTrace purgeSIPTrace.service
+	dh_installsystemd --no-enable --no-start --name=purgeSIPTrace purgeSIPTrace.timer
+	dh_installsystemd --no-start --name=purgeTables purgeTables.service
+	dh_installsystemd --no-enable --no-start --name=purgeTables purgeTables.timer
+	dh_installsystemd --no-start --name=rotateTables rotateTables.service
+	dh_installsystemd --no-enable --no-start --name=rotateTables rotateTables.timer
 	dh_installcron
 #	dh_installinfo
 #	dh_installman
