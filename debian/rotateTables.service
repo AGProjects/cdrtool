@@ -6,6 +6,6 @@ Description=CDRTool radius rotate tables
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/rotateTables.php
+ExecStart=/var/www/CDRTool/scripts/OpenSIPS/rotateTables.php
 StandardOutput=null
 

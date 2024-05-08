@@ -6,6 +6,6 @@ Description=CDRTool purge tables
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/purgeTables.php
+ExecStart=/var/www/CDRTool/scripts/purgeTables.php
 StandardOutput=null
 

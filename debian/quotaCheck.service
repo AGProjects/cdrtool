@@ -6,6 +6,6 @@ Description=CDRTool check quota for sip accounts
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/quotaCheck.php
+ExecStart=/var/www/CDRTool/scripts/OpenSIPS/quotaCheck.php
 StandardOutput=null
 

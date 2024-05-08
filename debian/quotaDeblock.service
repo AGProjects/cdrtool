@@ -6,6 +6,6 @@ Description=CDRTool deblock sip accounts blocked by quota
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/quotaDeblock.php
+ExecStart=/var/www/CDRTool/scripts/OpenSIPS/quotaDeblock.php
 StandardOutput=null
 

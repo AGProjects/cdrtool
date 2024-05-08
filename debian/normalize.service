@@ -5,5 +5,5 @@ Description=CDRTool normalizing
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/normalize.php
+ExecStart=/var/www/CDRTool/scripts/normalize.php
 StandardOutput=null

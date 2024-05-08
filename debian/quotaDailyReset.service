@@ -6,6 +6,6 @@ Description=CDRTool reset daily quota for sip accounts
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/quotaDailyReset.php
+ExecStart=/var/www/CDRTool/scripts/OpenSIPS/quotaDailyReset.php
 StandardOutput=null
 

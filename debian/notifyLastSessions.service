@@ -5,5 +5,5 @@ Description=CDRTool notify sip accounts with last sessions
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/OpenSIPS/notifyLastSessions.php
+ExecStart=/var/www/CDRTool/scripts/OpenSIPS/notifyLastSessions.php
 StandardOutput=null

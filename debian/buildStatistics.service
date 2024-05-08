@@ -6,6 +6,6 @@ Description=CDRTool build statistics for network
 Type=oneshot
 IgnoreSIGPIPE=false
 KillMode=process
-ExecStart=/var/www/prj/dnshosting/CDRTool/scripts/buildStatistics.php
+ExecStart=/var/www/CDRTool/scripts/buildStatistics.php
 StandardOutput=null
 
