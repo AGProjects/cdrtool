@@ -6,6 +6,8 @@ class TrustedPeers extends Records
         'msteams'    => array('type'=>'boolean', 'name' => 'MS Teams'),
         'prepaid'    => array('type'=>'boolean'),
         'tenant'     => array('type'=>'string'),
+        'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
+        'originator' => array('type'=>'string', 'name' => 'LCR originator'),
         'callLimit'  => array('type'=>'integer', 'name' => 'Capacity'),
         'blocked'    => array('type'=>'integer')
     );
@@ -182,6 +184,8 @@ END;
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>
                         ",
@@ -194,6 +198,8 @@ END;
                         $peer->callLimit,
                         $msteams,
                         $peer->tenant,
+                        $peer->carrierName,
+                        $peer->originator,
                         $peer->description,
                         $peer->blocked,
                         $peer->changeDate,
@@ -431,6 +437,18 @@ END;
             $tenant = trim($_REQUEST['tenant']);
         }
 
+        if ($dictionary['carrierName']) {
+            $carrierName = $dictionary['carrierName'];
+        } else {
+            $carrierName = trim($_REQUEST['carrierName']);
+        }
+
+        if ($dictionary['originator']) {
+            $originator = $dictionary['originator'];
+        } else {
+            $originator = trim($_REQUEST['originator']);
+        }
+
         if ($dictionary['callLimit']) {
             $callLimit   = $dictionary['callLimit'];
         } else {
@@ -456,6 +474,8 @@ END;
             'callLimit'  => intval($callLimit),
             'msteams'    => 1 == $msteams,
             'tenant'     => $tenant,
+            'carrierName'=> $carrierName,
+            'originator'=> $originator,
             'blocked'    => 0,
             'owner'       => intval($_REQUEST['owner']),
             'customer'    => intval($customer),
@@ -488,6 +508,8 @@ END;
             'description' => $_REQUEST['description_form'],
             'authToken'   => $_REQUEST['authToken_form'],
             'tenant'      => $_REQUEST['tenant_form'],
+            'carrierName' => $_REQUEST['carrierName_form'],
+            'originator'  => $_REQUEST['originator_form'],
             'callLimit'   => intval($_REQUEST['callLimit_form']),
             'prepaid'     => 1 == $_REQUEST['prepaid_form'],
             'blocked'     => intval($_REQUEST['blocked_form']),
