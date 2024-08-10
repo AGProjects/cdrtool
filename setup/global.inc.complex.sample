@@ -330,6 +330,8 @@ $DATASOURCES = array(
         "name"              => "SIP trace Thor",
         "enableThor"        => true,
         "soapEngineId"      => "sipthor",
+        "proxyGroups"       => array("10.204.3.72" => "20.3.56.20",
+                                    "20.3.56.20" => "20.3.56.20"),
         "mediaTrace"        => "media_trace_thor",
         "invisible"         => 1,
     ),

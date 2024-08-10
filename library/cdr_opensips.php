@@ -3946,6 +3946,7 @@ class SIP_trace
     public $mediaTrace  = false;
     public $thor_nodes  = array();
     public $hostnames   = array();
+    public $proxyGroups = array();
 
     public function __construct($cdr_source)
     {
@@ -3968,6 +3969,10 @@ class SIP_trace
 
         if (strlen($DATASOURCES[$this->cdr_source]['mediaTrace'])) {
             $this->mediaTrace = $DATASOURCES[$this->cdr_source]['mediaTrace'];
+        }
+
+        if (is_array($DATASOURCES[$this->cdr_source]['proxyGroups'])) {
+            $this->proxyGroups = $DATASOURCES[$this->cdr_source]['proxyGroups'];
         }
 
         if ($this->enableThor) {
@@ -4132,6 +4137,14 @@ class SIP_trace
                 } else {
                     $fromip    = $_trace->from_ip;
                     $fromport  = $_trace->from_port;
+                }
+
+                if (isset($this->proxyGroups[$fromip])) {
+                    $fromip = $this->proxyGroups[$fromip];
+                }
+
+                if (isset($this->proxyGroups[$toip])) {
+                    $toip = $this->proxyGroups[$toip];
                 }
 
                 if (!isset($this->column[$fromip])) {
