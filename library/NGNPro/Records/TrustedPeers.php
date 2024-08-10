@@ -13,6 +13,8 @@ class TrustedPeers extends Records
     );
     var $Fields = array(
         'description'  => array('type'=>'string'),
+        'prefix'  => array('type'=>'string', 'name' => 'Add prefix'),
+        'strip'  => array('type'=>'integer', 'name' => 'Strip digits'),
         'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
     );
 
@@ -99,7 +101,11 @@ class TrustedPeers extends Records
         <td><b>Capacity</b></td>
         <td><b>MS Teams</b></td>
         <td><b>Tenant</b></td>
+        <td><b>Carrier</b></td>
+        <td><b>Originator</b></td>
         <td><b>Description</b></td>
+        <td><b>Strip</b></td>
+        <td><b>Prefix</b></td>
         <td><b>Blocked</b></td>
         <td><b>Change date</b></td>
         <td><b>Actions</b></td>
@@ -186,6 +192,8 @@ END;
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>
                         ",
@@ -201,6 +209,8 @@ END;
                         $peer->carrierName,
                         $peer->originator,
                         $peer->description,
+                        $peer->strip,
+                        $peer->prefix,
                         $peer->blocked,
                         $peer->changeDate,
                         $delete_url,
@@ -443,6 +453,18 @@ END;
             $carrierName = trim($_REQUEST['carrierName']);
         }
 
+        if ($dictionary['prefix']) {
+            $prefix = $dictionary['prefix'];
+        } else {
+            $prefix = trim($_REQUEST['prefix']);
+        }
+
+        if ($dictionary['strip']) {
+            $strip = $dictionary['strip'];
+        } else {
+            $strip = trim($_REQUEST['strip']);
+        }
+
         if ($dictionary['originator']) {
             $originator = $dictionary['originator'];
         } else {
@@ -471,12 +493,14 @@ END;
         $peer = array(
             'ip'          => $ipaddress,
             'description' => $description,
-            'callLimit'  => intval($callLimit),
-            'msteams'    => 1 == $msteams,
-            'tenant'     => $tenant,
-            'carrierName'=> $carrierName,
-            'originator'=> $originator,
-            'blocked'    => 0,
+            'callLimit'   => intval($callLimit),
+            'msteams'     => 1 == $msteams,
+            'tenant'      => $tenant,
+            'carrierName' => $carrierName,
+            'originator'  => $originator,
+            'prefix'      => $prefix,
+            'strip'       => intval($strip),
+            'blocked'     => 0,
             'owner'       => intval($_REQUEST['owner']),
             'customer'    => intval($customer),
             'reseller'    => intval($reseller)
@@ -510,6 +534,8 @@ END;
             'tenant'      => $_REQUEST['tenant_form'],
             'carrierName' => $_REQUEST['carrierName_form'],
             'originator'  => $_REQUEST['originator_form'],
+            'prefix'      => $_REQUEST['prefix'],
+            'strip'       => intval($_REQUEST['strip']),
             'callLimit'   => intval($_REQUEST['callLimit_form']),
             'prepaid'     => 1 == $_REQUEST['prepaid_form'],
             'blocked'     => intval($_REQUEST['blocked_form']),
