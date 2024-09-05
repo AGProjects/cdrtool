@@ -290,7 +290,7 @@ class Rate
                 $durationForRating = $thisRate['duration'];
             } else {
                 $payConnect=1;
-                if ($this->min_duration && $this->duration < $this->min_duration) {
+                if ($this->min_duration && $this->duration < $this->min_duration && $this->duration > 0) {
                     $durationForRating = $this->min_duration;
                 } else {
                     $durationForRating = $thisRate['duration'];

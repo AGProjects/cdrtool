@@ -153,7 +153,7 @@ calculation of the price. These properties are:
   this is only used for rating, the actual CDR duration is not modified
 - min_duration: set the duration to min_duration if the CDR duration is
   smaller than min_duration, this is only used for rating, the actual CDR
-  duration is not modified
+  duration is not modified, the call must have connected for this to work
 - max_duration: limit the duration to max_duration if CDR duration is
   bigger than max_duration, this is only used for rating, the actual CDR
   duration is not modified
@@ -256,9 +256,9 @@ the 'destination id' and the billing party determined at the previous steps.
    Pricing formula
    ---------------
 
-   if min_duration then
+   if min_duration and call duration > 0 then
 	minimumDurationCharged = min_duration
-   else if minimumDurationCharged set in global inc
+   else if minimumDurationCharged set in global inc and call duration > 0
 	use minimumDurationCharged from global.inc
    else
 	minimumDurationCharged = call duration
