@@ -832,3 +832,10 @@ Total requests: 33
 Uptime: 169 seconds
 Load: 0.20/s
 
+
+Important note: The re-normalization process must be run in the command line
+of a machine that has a short round trip time to the database during a more
+idle period like night time.  If too many records need to be re-normalized,
+a study must done over how many records can be re-normalized for a given
+hour, day or other criteria, before moving forward attempting to
+re-normalize all records at once.
