@@ -233,8 +233,7 @@ class DB_Sql
             */
             $dbError = $e->getMessage();
             if ($dbError=='2006' || $dbError=='2013') {
-                syslog(LOG_NOTICE, sprintf("Warning: mysql connection %s lost with code %s", $this->link_id(), $dbError));
-                printf("Warning: mysql connection %s lost with code %s\n", $this->link_id(), $dbError);
+                warningAndPrint(sprintf("Warning: mysql connection %s lost with code %s", $this->link_id(), $dbError));
 
                 if ($this->Query_ID) {
                     $this->free();
