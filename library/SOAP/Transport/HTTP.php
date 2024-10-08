@@ -110,7 +110,7 @@ class SOAP_Transport_HTTP extends SOAP_Transport
             $this->timeout = (int)$options['timeout'];
         }
 
-        if (strcasecmp($this->urlparts['scheme'], 'HTTP') == 0) {
+	if (strcasecmp($this->urlparts['scheme'], 'HTTP') == 0) {
             return $this->_sendHTTP($msg, $options);
         } elseif (strcasecmp($this->urlparts['scheme'], 'HTTPS') == 0) {
             return $this->_sendHTTPS($msg, $options);
@@ -329,13 +329,13 @@ class SOAP_Transport_HTTP extends SOAP_Transport
         if (preg_match("/^(.*?)\r?\n\r?\n(.*)/s",
                        $this->incoming_payload,
                        $match)) {
-            $this->response = $match[2];
+            $this->response = $match[2]; 
             // Find the response error, some servers response with 500 for
             // SOAP faults.
-            $this->_parseHeaders($match[1]);
+	    $this->_parseHeaders($match[1]);
 
             list(, $code, $msg) = sscanf($this->result_headers[0], '%s %s %s');
-            unset($this->result_headers[0]);
+	    unset($this->result_headers[0]);
 
             switch($code) {
                 case 100: // Continue
@@ -485,7 +485,8 @@ class SOAP_Transport_HTTP extends SOAP_Transport
         if (isset($options['proxy_host'])) {
             $host = $options['proxy_host'];
             $port = isset($options['proxy_port']) ? $options['proxy_port'] : 8080;
-        }
+	}
+
         // Send.
         if ($this->timeout > 0) {
             $fp = @fsockopen($host, $port, $this->errno, $this->errmsg, $this->timeout);
@@ -501,14 +502,14 @@ class SOAP_Transport_HTTP extends SOAP_Transport
         }
         if (!fputs($fp, $this->outgoing_payload, strlen($this->outgoing_payload))) {
             return $this->_raiseSoapFault("Error POSTing Data to $host");
-        }
+	}
 
         // get reponse
         // XXX time consumer
         do {
             $data = fread($fp, 4096);
             $_tmp_status = socket_get_status($fp);
-            if ($_tmp_status['timed_out']) {
+	    if ($_tmp_status['timed_out']) {
                 return $this->_raiseSoapFault("Timed out read from $host");
             } else {
                 $this->incoming_payload .= $data;

@@ -201,7 +201,7 @@ class SOAP_Client extends SOAP_Client_Overload
     function __construct($endpoint, $wsdl = false, $portName = false,
                          $proxy_params = array(), $cache = false)
     {
-        parent::SOAP_Base('Client');
+	parent::SOAP_Base('Client');
 
         $this->_endpoint = $endpoint;
         $this->_portName = $portName;
@@ -312,14 +312,15 @@ class SOAP_Client extends SOAP_Client_Overload
      * @return mixed  The method result or a SOAP_Fault on error.
      */
     function &call($method, $params, $namespace = false, $soapAction = false)
-    {
+    {	
         $this->headersIn = null;
         $this->_last_request = null;
         $this->_last_response = null;
         $this->wire = null;
         $this->xml = null;
 
-        $soap_data = $this->_generate($method, $params, $namespace, $soapAction);
+	$soap_data = $this->_generate($method, $params, $namespace, $soapAction);
+	
         if ((new PEAR)->isError($soap_data)) {
             $fault = $this->_raiseSoapFault($soap_data);
             return $fault;
@@ -363,7 +364,7 @@ class SOAP_Client extends SOAP_Client_Overload
             return $this->xml;
         }
 
-        $this->__result_encoding = $this->_soap_transport->result_encoding;
+	$this->__result_encoding = $this->_soap_transport->result_encoding;
 
         $result = &$this->parseResponse($this->xml, $this->__result_encoding,
                                         $this->_soap_transport->attachments);
@@ -537,7 +538,7 @@ class SOAP_Client extends SOAP_Client_Overload
 
         if ($params && gettype($params) != 'array') {
             $params = array($params);
-        }
+	}
 
         if (gettype($namespace) == 'array') {
             foreach ($namespace as $optname => $opt) {
@@ -721,8 +722,7 @@ class SOAP_Client extends SOAP_Client_Overload
             }
         } else {
             $soap_data = $soap_msg;
-        }
-
+	}
         return $soap_data;
     }
 
@@ -751,7 +751,6 @@ class SOAP_Client extends SOAP_Client_Overload
             $fault = $this->_raiseSoapFault($response->fault);
             return $fault;
         }
-
         // Return array of parameters.
         $return = $response->getResponse();
         $headers = $response->getHeaders();
@@ -759,7 +758,8 @@ class SOAP_Client extends SOAP_Client_Overload
             $this->headersIn = $this->_decodeResponse($headers, false);
         }
 
-        $decoded = $this->_decodeResponse($return);
+	$decoded = $this->_decodeResponse($return);
+
         return $decoded;
     }
 

@@ -318,7 +318,7 @@ class SOAP_Base extends SOAP_Base_Object
             return $this->_raiseSoapFault("unsuported XMLSchema $schemaVersion");
         }
         $this->_XMLSchemaVersion = $schemaVersion;
-        $tmpNS = array_flip($this->_namespaces);
+        $tmpNS = is_array($this->_namespaces) ? array_flip($this->_namespaces) : array();
         $tmpNS['xsd'] = $this->_XMLSchemaVersion;
         $tmpNS['xsi'] = $this->_XMLSchemaVersion . '-instance';
         $this->_namespaces = array_flip($tmpNS);
@@ -880,9 +880,9 @@ class SOAP_Base extends SOAP_Base_Object
         } else {
             $smsg = $method;
         }
-        $body = "<SOAP-ENV:Body>\r\n" . $smsg . "\r\n</SOAP-ENV:Body>\r\n";
+	$body = "<SOAP-ENV:Body>\r\n" . $smsg . "\r\n</SOAP-ENV:Body>\r\n";
 
-        foreach ($this->_namespaces as $k => $v) {
+	foreach ($this->_namespaces as $k => $v) {
             $ns_string .= " xmlns:$v=\"$k\"\r\n";
         }
         if ($this->_namespace) {
@@ -898,7 +898,6 @@ class SOAP_Base extends SOAP_Base_Object
             ($this->_section5 ? ' SOAP-ENV:encodingStyle="' . SOAP_SCHEMA_ENCODING . '"' : '').
             ">\r\n".
             "$header_xml$body</SOAP-ENV:Envelope>\r\n";
-
         return $xml;
     }
 

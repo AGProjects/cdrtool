@@ -120,7 +120,8 @@ class SOAP_Transport extends SOAP_Base
         $urlparts = @parse_url($url);
 
         if (!$urlparts['scheme']) {
-            $fault = SOAP_Base_Object::_raiseSoapFault("Invalid transport URI: $url");
+            $soap_base = new SOAP_Base_Object();
+            $fault = $soap_base->_raiseSoapFault("Invalid transport URI: $url");
             return $fault;
         }
 
