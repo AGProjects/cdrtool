@@ -15,7 +15,7 @@ class of_element {
   var $multiple;
   var $extrahtml;
   
-  function marshal_dispatch($m,$func) {   
+  function marshal_dispatch($m, $func) {   
     $vname = $this->name;
     global $$vname;
     return $this->$func($$vname);
@@ -66,11 +66,9 @@ class of_element {
         "min_l"=>"minlength",
         "max_l"=>"maxlength",
         "extra_html"=>"extrahtml");
-    reset($a);
-    while (list($k,$v) = each($a)) {
-      if ($cv_tab[$k]=="ignore") continue;
-      else $k = ($cv_tab[$k] ? $cv_tab[$k] : $k);
-      $this->$k = $v;
+        foreach($a as $k=>$v) {
+        if (array_key_exists($k,$cv_tab)) { $k = $cv_tab[$k]; }
+        if ($k != "ignore") $this->$k = $v;
     }
   }
 
@@ -80,7 +78,7 @@ class of_hidden extends of_element {
 
   var $hidden=1;
 
-  function of_hidden($a) {
+  function __construct($a) {
     $this->setup_element($a);
   }
 
@@ -89,8 +87,7 @@ class of_hidden extends of_element {
 
     $v = (is_array($this->value) ? $this->value : array($this->value));
     $n = $this->name . ($this->multiple ? "[]" : "");
-    reset($v);
-    while (list($k,$tv) = each($v)) {
+    foreach($v as $k=>$tv) {
       $str .= "<input type='hidden' name='$n' value='$tv'";
       if ($this->extrahtml)
         $str .=" $this->extrahtml";
@@ -105,7 +102,7 @@ class of_reset extends of_element {
 
   var $src;
 
-  function of_reset($a) {
+  function __construct($a) {
     $this->setup_element($a);
   }
 
@@ -123,7 +120,7 @@ class of_submit extends of_element {
 
   var $src;
 
-  function of_submit($a) {    
+  function __construct($a) {    
     $this->setup_element($a);
   }
 
@@ -177,7 +174,7 @@ class form {
     $str .= " class='$class'";
     if ($jvs_name) {
       $this->jvs_name = $jvs_name;
-      $str .= " onsubmit=\"return ${jvs_name}_Validator(this)\"";
+	  $str .= " onsubmit=\"return ".$jvs_name."_Validator(this)\"";
     }
     
     $str .= ">";
@@ -194,8 +191,7 @@ class form {
     $str = "";
     
     if ($this->hidden) {
-      reset($this->hidden);
-      while (list($k,$elname) = each($this->hidden)) 
+      foreach($this->hidden as $k=>$elname)
         $str .= $this->get_element($elname);
     }
     if (is_object($sess) && ($sess->mode == "get")) {
@@ -206,12 +202,11 @@ class form {
     if ($this->jvs_name) {
       $jvs_name = $this->jvs_name;
       $str .= "<script language='javascript'>\n<!--\n";
-      $str .= "function ${jvs_name}_Validator(f) {\n";
+      $str .= "function ".$jvs_name."_Validator(f) {\n";
 
-      if (strlen($before))
-        $str .= "$before\n";
-      reset($this->elements);
-      while (list($k,$elrec) = each($this->elements)) {
+      if (isset($before)) $str .= "$before\n";
+      if (isset($this->before)) $str .= "$this->before\n";
+      foreach($this->elements as $k=>$elrec) {
         $el = $elrec["ob"];
         $str .= $el->self_get_js($elrec["ndx_array"]);
       }
@@ -276,7 +271,7 @@ class form {
       $this->elements[$name]["which"] = 0;
    
     $el = $this->elements[$name]["ob"];
-    if (true == $flag_nametranslation)
+    if (true == $falg_nametranslation)
       $el->name = $org_name; 
 
     if (false == $value) 
@@ -288,7 +283,6 @@ class form {
       $str .= $el->self_get($value,$this->elements[$name]["which"]++, $x);
     $this->elements[$name]["ndx_array"][] = $this->n;
     $this->n += $x;
-    
     return $str;
   }
 
