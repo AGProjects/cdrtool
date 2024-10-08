@@ -93,16 +93,24 @@ class of_text extends of_element {
 
   function self_validate($val) {
     if (!is_array($val)) $val = array($val);
-    foreach($val as $k=>$v) {
-      if ($this->length_e && (strlen($v) < $this->minlength)) {
+    foreach ($val as $k => $v) {
+    if ($this->length_e && (strlen($v) < $this->minlength))
+      if ($this->valid_minlength_error) {
+        return $this->valid_minlength_error;
+      } else {
         return $this->valid_e;
-	// new added by adigeo 2001-05-28
+      }
+      if ($this->valid_e && (($this->icase &&
+          !preg_match("/$this->valid_regex/i",$v)) ||
+         (!$this->icase &&
+          !preg_match("/$this->valid_regex/",$v))))
+      return $this->valid_e;
+      // new added by adigeo 2001-05-28
       if ($this->valid_e2_error && (($this->icase &&
-            !preg_match("/$this->valid_e2/i",$v)) ||
-           (!$this->icase &&
-            !preg_match("/$this->valid_e2/",$v))))
+          !preg_match("/$this->valid_e2/i",$v)) ||
+          (!$this->icase &&
+           !preg_match("/$this->valid_e2/",$v))))
         return $this->valid_e2_error;
-
     }
     return false;
   } 
