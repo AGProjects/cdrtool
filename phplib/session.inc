@@ -54,9 +54,7 @@ class Session {
   ## call this function to register the things that should become persistent
 
   function register($things) {
-    $things = explode(",",$things);
-    reset($things);
-    while ( list(,$thing) = each($things) ) {
+    foreach (explode(",",$things) as $thing) {
       $thing=trim($thing);
       if ( $thing ) {
         $this->pt[$thing] = true;
@@ -65,21 +63,29 @@ class Session {
   }
 
   function is_registered($name) {
-    if ($this->pt[$name] == true)
+    if (isset($this->pt[$name]) && $this->pt[$name] == true)
       return true;
     return false;
   }
 
   function unregister($things) {
-    $things = explode(",", $things);
-    reset($things);
-    while (list(,$thing) = each($things)) {
+    foreach (explode(",",$things) as $thing) {
       $thing = trim($thing);
       if ($thing) {
         unset($this->pt[$thing]);
       }
     }
   }
+
+  function erase($things) {
+    foreach (explode(",",$things) as $thing) {
+      $thing = trim($thing);
+      if ($thing) {
+        $GLOBALS[$thing]=false;
+      }
+    }
+  }
+
 
   ## get_id():
   ##
@@ -88,8 +94,8 @@ class Session {
   ## one may provide the new session id as a parameter (not recommended).
 
   function get_id($id = "") {
-    $newid=true;
-
+    $newid = true;
+    //print "$id";
     $this->name = $this->cookiename==""?$this->classname:$this->cookiename;
 
     if ( "" == $id ) {
@@ -232,9 +238,9 @@ class Session {
     print $this->add_query($qarray);
   }
 
-  ## serialize($prefix,&$str):
+  ## serialize($var,&$str):
   ##
-  ## appends a serialized representation of $$prefix
+  ## appends a serialized representation of $$var
   ## at the end of $str.
   ##
   ## To be able to serialize an object, the object must implement
@@ -243,41 +249,41 @@ class Session {
   ## to be saved as an array of strings).
   ##
   ## You don't need to know...
-  function serialize($prefix, &$str) {
+  function serialize($var, &$str) {
     static $t,$l,$k;
 
-    ## Determine the type of $$prefix
-    eval("\$t = gettype(\$$prefix);");
+    #print "$str <br/>";
+    ## Determine the type of $$var
+    eval("\$t = gettype(\$$var);");
     switch ( $t ) {
 
       case "array":
-        ## $$prefix is an array. Enumerate the elements and serialize them.
-        eval("reset(\$$prefix); \$l = gettype(list(\$k)=each(\$$prefix));");
-        $str .= "\$$prefix = array(); ";
+        ## $$var is an array. Enumerate the elements and serialize them.
+        eval("reset(\$$var); \$l = gettype(list(\$k)=each(\$$var));");
+        $str .= "\$$var = array(); ";
         while ( "array" == $l ) {
           ## Structural recursion
-          $this->serialize($prefix."['".preg_replace("/([\\\'])/", "\\\\1", $k)."']", $str);
-          eval("\$l = gettype(list(\$k)=each(\$$prefix));");
+          $this->serialize($var."['".preg_replace("/([\\\'])/", "\\\\1", $k)."']", $str);
+          eval("\$l = gettype(list(\$k)=each(\$$var));");
         }
 
       break;
       case "object":
-        ## $$prefix is an object. Enumerate the slots and serialize them.
-        eval("\$k = \$${prefix}->classname; \$l = reset(\$${prefix}->persistent_slots);");
-        $str.="\$$prefix = new $k; ";
-        while ( $l ) {
-          ## Structural recursion.
-          $this->serialize($prefix."->".$l,$str);
-          eval("\$l = next(\$${prefix}->persistent_slots);");
+        ## $$var is an object. Enumerate the slots and serialize them.
+        eval("\$k = \$$var->classname; \$l = reset(\$$var->persistent_slots);");
+        if ($k) {
+          $str.="\$$var = new $k; ";
+          while ( $l ) {
+            ## Structural recursion.
+            $this->serialize($var."->".$l,$str);
+            eval("\$l = next(\$$var->persistent_slots);");
+          }
         }
-
       break;
       default:
-        ## $$prefix is an atom. Extract it to $l, then generate code.
-        eval("\$l = \$$prefix;");
-        $str.="\$$prefix = '".preg_replace("/([\\\\'])/", "\\\\1", $l)."'; ";
-
-
+        ## $$var is an atom. Extract it to $l, then generate code.
+        eval("\$l = \$$var;");
+        $str.="\$$var = '".preg_replace("/([\\\\'])/", "\\\\1", $l)."'; ";
       break;
     }
   }
@@ -296,22 +302,26 @@ class Session {
   ## a database table
 
   function freeze() {
+    global $auth;
+    unset($auth->db);  // PDO objects can't be serialized and we don't need this anyway
     $str="";
-
-    $this->serialize("this->in",$str);
-    $this->serialize("this->pt",$str);
-
-    reset($this->pt);
-    while ( list($thing) = each($this->pt) ) {
+        $arr=array();
+        #print_r($this->in);
+    //$this->serialize("this->in",$str);
+    //$this->serialize("this->pt",$str);
+    foreach ($this->pt as $thing=>$val) {
       $thing=trim($thing);
       if ( $thing ) {
-        $this->serialize("GLOBALS['".$thing."']",$str);
+        //$this->serialize("GLOBALS['".$thing."']", $str);  //php3 serialize was broken, use our own.
+	$arr[$thing] = $GLOBALS[$thing];
       }
     }
-
+        $str=serialize($arr);
+        //print_r(unserialize($str));
     $r = $this->that->ac_store($this->id, $this->name, $str);
     $this->release_lock();
-    if(!$r) $this->that->ac_halt("Session: freeze() failed.");
+
+    if (!$r) $this->that->ac_halt("Session: freeze() failed.");
   }
 
   ## thaw:
@@ -323,7 +333,15 @@ class Session {
 
     $vals = $this->that->ac_get_value($this->id, $this->name);
 
-    eval(sprintf(";%s",$vals));
+	$arr = unserialize($vals);   // new serialised data req. php => 4.07
+	if (is_array($arr)) {
+	    foreach($arr as $k=>$v) {
+		$this->pt[$k]=1;
+		$GLOBALS[$k]=$v;
+	    }
+	}
+	//print "<pre>";print_r($GLOBALS['auth']);print "</pre>";
+    //eval(sprintf(";%s", $vals));
   }
 
   ##
@@ -353,11 +371,11 @@ class Session {
 
   function reimport_any_vars($arrayname) {
     global $$arrayname;
+
     if (!is_array($$arrayname))
       return;
 
-    reset($$arrayname);
-    while(list($key, $val) = each($$arrayname)) {
+    foreach ($$arrayname as $key=>$val) {
       $GLOBALS[$key] = $val;
     }
   }
