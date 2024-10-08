@@ -723,13 +723,14 @@ function dprint($msg = "")
     }
 }
 
-function object_to_array($object) {
+function object_to_array($object)
+{
     if (is_object($object)) {
-	return array_map(__FUNCTION__, get_object_vars($object));
-    } else if (is_array($object)) {
-	return array_map(__FUNCTION__, $object);
+        return array_map(__FUNCTION__, get_object_vars($object));
+    } elseif (is_array($object)) {
+        return array_map(__FUNCTION__, $object);
     } else {
-	return $object;
+        return $object;
     }
 }
 
@@ -739,12 +740,8 @@ function dprint_r($obj)
     global $browserLogger;
     if ($verbose) {
         if (is_cli()) {
-            print "<pre>\n";
             print_r($obj);
-            print "</pre>\n";
-	} else {
-	    $array = json_decode(json_encode($obj), true);
-	    $array = get_object_vars($obj);
+        } else {
             $browserLogger->debug('Object:', object_to_array($obj));
         }
     }
