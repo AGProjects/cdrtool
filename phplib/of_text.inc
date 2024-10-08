@@ -22,7 +22,7 @@ class of_text extends of_element {
   var $class;
 
   // Constructor
-  function of_text($a) {
+  function __construct($a) {
     $this->setup_element($a);
     if ($a["type"]=="password")
       $this->pass=1;
@@ -59,7 +59,7 @@ class of_text extends of_element {
     else 
       $v = $this->value;
     $n = $this->name . ($this->multiple ? "[]" : "");
-    $str .= "<input type='hidden' name='$n' value='$v'>\n";
+    $str .= "<input type='hidden' name='$n' value=\"$v\">\n";
     $str .= "$v\n";
     
     $count = 1;
@@ -68,44 +68,33 @@ class of_text extends of_element {
 
   function self_get_js($ndx_array) {
     $str = "";
-    
-    reset($ndx_array);
-    while (list($k,$n) = each($ndx_array)) {
-      if ($this->length_e) {
-        $str .= "if (f.elements[${n}].value.length < $this->minlength) {\n";
-        $str .= "  alert(\"Too short!\");\n";
-        $str .= "  f.elements[${n}].focus();\n";
+   if (is_array($ndx_array)) { //Added by DaveB
+    foreach($ndx_array as $k=>$n) {
+      if (!empty($this->length_e)) {
+        $str .= "if (f.elements[\"$n\"].value.length < $this->minlength) {\n";
+        $str .= "  alert(\"$this->length_e\");\n";
+        $str .= "  f.elements[$n].focus();\n";
         $str .= "  return(false);\n}\n";
       }
-      if ($this->valid_e) {
-        $flags = ($this->icase ? "gi" : "g");
+      if (!empty($this->valid_e)) {
+        $flags = (!empty($this->icase) ? "gi" : "g");
         $str .= "if (window.RegExp) {\n";
         $str .= "  var reg = new RegExp(\"$this->valid_regex\",\"$flags\");\n";
-        $str .= "  if (!reg.test(f.elements[${n}].value)) {\n";
+        $str .= "  if (!reg.test(f.elements[$n].value)) {\n";
         $str .= "    alert(\"$this->valid_e\");\n";
-        $str .= "    f.elements[${n}].focus();\n";
+        $str .= "    f.elements[$n].focus();\n";
         $str .= "    return(false);\n";
         $str .= "  }\n}\n";
       }
     }
-
+  }    
     return $str;
   }
 
   function self_validate($val) {
     if (!is_array($val)) $val = array($val);
-    reset($val);
-    while (list($k,$v) = each($val)) {
-      if ($this->length_e && (strlen($v) < $this->minlength))
-	if ($this->valid_minlength_error) {
-		return $this->valid_minlength_error;
-	} else {
-	        return $this->valid_e;
-	}
-      if ($this->valid_e && (($this->icase &&
-            !preg_match("/$this->valid_regex/i",$v)) ||
-           (!$this->icase &&
-            !preg_match("/$this->valid_regex/",$v))))
+    foreach($val as $k=>$v) {
+      if ($this->length_e && (strlen($v) < $this->minlength)) {
         return $this->valid_e;
 	// new added by adigeo 2001-05-28
       if ($this->valid_e2_error && (($this->icase &&
@@ -115,9 +104,8 @@ class of_text extends of_element {
         return $this->valid_e2_error;
 
     }
-
     return false;
-  }
+  } 
 
 } // end TEXT
 

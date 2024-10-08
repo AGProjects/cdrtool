@@ -13,7 +13,7 @@ class of_select extends of_element {
   var $valid_e;
 
   // Constructor
-  function of_select($a) {
+    function __construct($a) {
     $this->setup_element($a);
     if ($a["type"]=="select multiple") $this->multiple=1;
   }
@@ -37,16 +37,14 @@ class of_select extends of_element {
       $str .= " $this->extrahtml";
     $str .= ">";
 
-    reset($this->options);
-    while (list($k,$o) = each($this->options)) {
+    foreach ($this->options as $k=>$o) {
       $str .= "<option";
       if (is_array($o)) 
         $str .= " value='" .  $o["value"] . "'";
       if (!$this->multiple && ($this->value==$o["value"] || $this->value==$o))
         $str .= " selected";
       elseif ($this->multiple && is_array($this->value)) {
-        reset($this->value);
-        while (list($tk,$v) = each($this->value)) {
+        foreach ($this->value as $tk=>$v) {
           if ($v==$o["value"] || $v==$o) { 
             $str .= " selected"; break; 
           }
@@ -67,10 +65,8 @@ class of_select extends of_element {
     $n = $this->name . ($this->multiple ? "[]" : "");
     $v_array = (is_array($this->value) ? $this->value : array($this->value));
     $str .= "\n";
-    reset($v_array);
-    while (list($tk,$tv) = each($v_array)) {
-      reset($this->options);
-      while (list($k,$v) = each($this->options)) {
+    foreach($v_array as $tk=>$tv) {
+      foreach ($this->options as $k=>$v) {
         if ((is_array($v) && 
            (($tmp=$v["value"])==$tv || $v["label"]==$tv))
          || ($tmp=$v)==$tv) {

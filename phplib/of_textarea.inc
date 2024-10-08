@@ -13,7 +13,7 @@ class of_textarea extends of_element {
   var $wrap;
 
   // Constructor
-  function of_textarea($a) {
+  function __construct($a) {
     $this->setup_element($a);
   }
 
@@ -25,7 +25,7 @@ class of_textarea extends of_element {
       $str .= " wrap='$this->wrap'";
     if ($this->extrahtml) 
       $str .= " $this->extrahtml";
-    $str .= ">" . htmlspecialchars($this->value) ."</textarea>";
+     $str .= ">" . htmlspecialchars($this->value, ENT_COMPAT,'ISO-8859-1', true) ."</textarea>";
     
     $count = 1;
     return $str;

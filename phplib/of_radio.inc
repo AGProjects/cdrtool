@@ -11,7 +11,7 @@ class of_radio extends of_element {
   var $valid_e;
 
   // Constructor
-  function of_radio($a) {
+  function __construct($a) {
     $this->setup_element($a);
   }
 
@@ -51,10 +51,10 @@ class of_radio extends of_element {
     
     if ($this->valid_e) {
       $n = $this->name;
-      $str .= "var l = f.${n}.length;\n";
+      $str .= "var l = f.$n.length;\n";
       $str .= "var radioOK = false;\n";
       $str .= "for (i=0; i<l; i++)\n";
-      $str .= "  if (f.${n}[i].checked) {\n";
+      $str .= "  if (f.$n[i].checked) {\n";
       $str .= "    radioOK = true;\n";
       $str .= "    break;\n";
       $str .= "  }\n";

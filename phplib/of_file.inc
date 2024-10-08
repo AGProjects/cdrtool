@@ -11,7 +11,7 @@ class of_file extends of_element {
   var $isfile = true;
   var $size;
 
-  function of_file($a) {
+  function __construct($a) {
     $this->setup_element($a);
   }
 
