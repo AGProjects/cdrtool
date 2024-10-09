@@ -798,7 +798,7 @@ function checkSipAccount($account)
 class OpenSIPS_DomainAuth
 {
 
-    function OpenSIPS_DomainAuth()
+    function __construct()
     {
         $this->userDB   = new DB_opensips;
         $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
@@ -829,7 +829,7 @@ class OpenSIPS_DomainAuth
 class SipThor_DomainAuth
 {
 
-    function SipThor_DomainAuth()
+    function __construct()
     {
         $this->userDB   = new DB_sipthor;
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
