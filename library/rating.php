@@ -7118,6 +7118,7 @@ class RatingEngine
         global $RatingEngine;   // set in global.inc
         global $DATASOURCES;    // set in global.inc
 
+
         if (!strlen($RatingEngine['socketIP']) || !$RatingEngine['socketPort'] || !$RatingEngine['cdr_source']) {
             $log = sprintf("Please define \$RatingEngine['socketIP'], \$RatingEngine['socketPort'] and \$RatingEngine['cdr_source'] in /etc/cdrtool/global.inc\n");
             syslog(LOG_NOTICE, $log);
@@ -7965,7 +7966,7 @@ class RatingEngine
 
         $this->runtime['start']=microtime_float();
 
-        logger("Got command: $tinput");
+        logger("[command] $tinput");
 
         if (!$_els[0]) return 0;
 
@@ -8382,7 +8383,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "dumpprepaidsessions") {
             if (!$NetFields['account']) {
                 $log = "Error: missing account parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
@@ -8406,7 +8407,7 @@ class RatingEngine
 
             if (!$this->db->num_rows()) {
                 $log = sprintf("DebitBalanceAudio() Error: account %s does not exist", $account);
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 $this->logRuntime();
                 return 0;
             }
@@ -8417,13 +8418,13 @@ class RatingEngine
         } elseif ($NetFields['action'] == "debitbalance") {
             if (!$NetFields['from']) {
                 $log = "Error: missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
             if (!$NetFields['to']) {
                 $log = "Error: missing To parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
@@ -8431,7 +8432,7 @@ class RatingEngine
             if (!strlen($app_prefix) || (strlen($app_prefix) && $app_prefix == 'audio')) {
                 if (!strlen($NetFields['duration'])) {
                     $log= "Error: missing Duration parameter";
-                    syslog(LOG_NOTICE, $log);
+                    error($log);
                     return $log;
                 }
             }
@@ -8441,7 +8442,7 @@ class RatingEngine
                     $application = $NetFields['application'];
                 } else {
                     $log = sprintf("Error: unsupported application %s", $NetFields['application']);
-                    syslog(LOG_NOTICE, $log);
+                    error($log);
                     return $log;
                 }
             } else {
@@ -8451,13 +8452,13 @@ class RatingEngine
 
             if (!$NetFields['gateway']) {
                 $log = "Error: missing gateway parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
             if (!$NetFields['callid']) {
                 $log = "Error: missing Call Id parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
@@ -8596,13 +8597,13 @@ class RatingEngine
         } elseif ($NetFields['action'] == "addbalance") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
             if (!is_numeric($NetFields['value'])) {
                 $log = "Error: Missing Value parameter, it must be numeric";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8610,7 +8611,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "deletebalance") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8618,7 +8619,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "deletebalancehistory") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8626,19 +8627,19 @@ class RatingEngine
         } elseif ($NetFields['action'] == "showprice") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
             if (!$NetFields['to']) {
                 $log = "Error: Missing To parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
             if (!strlen($NetFields['duration'])) {
                 $log = "Error: Missing Duration parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8650,7 +8651,7 @@ class RatingEngine
 
             if (!$NetFields['gateway']) {
                 $log = "Error: missing gateway parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return $log;
             }
 
@@ -8718,7 +8719,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "getbalance") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8749,7 +8750,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "getbalancehistory") {
             if (!$NetFields['from']) {
                 $log = "Error: Missing From parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8758,7 +8759,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "getentityprofiles") {
             if (!$NetFields['entity']) {
                 $log = "Error: Missing Entity parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8781,7 +8782,7 @@ class RatingEngine
         } elseif ($NetFields['action'] == "reloadquota") {
             if (!$NetFields['account']) {
                 $log = "Error: Missing Account parameter";
-                syslog(LOG_NOTICE, $log);
+                error($log);
                 return 0;
             }
 
@@ -8798,7 +8799,7 @@ class RatingEngine
             return $this->reloadCustomers($_customerFilter);
         } else {
             $log = "Error: Invalid request";
-            syslog(LOG_NOTICE, $log);
+            warning($log);
             return 0;
         }
     }
