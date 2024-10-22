@@ -393,7 +393,7 @@ class SocketDaemon
     private function cleanSockets()
     {
         foreach ($this->clients as $socket) {
-            if ($socket->disconnected || (!is_resource($socket) && ! $socket instanceof \RatingEngineClient)) {
+            if ($socket->disconnected || (!is_resource($socket) && !$socket->socket instanceof \Socket)) {
                 if (isset($this->clients[$this->getSocketId($socket->socket)])) {
                     unset($this->clients[$this->getSocketId($socket->socket)]);
                 }
@@ -648,8 +648,8 @@ class RatingEngineClient extends SocketServerClient
             }
         }
 
-        $log = sprintf("Output %s", $output);
-        logger($log);
+        // $log = sprintf("Output %s", $output);
+        //  logger($log);
         return $output;
     }
 
