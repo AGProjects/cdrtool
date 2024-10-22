@@ -710,14 +710,14 @@ class RatingEngineClient extends SocketServerClient
                 $allow_connection = false;
                 foreach ($this->ratingEngineSettings['allow'] as $_allow) {
                     if (preg_match("/^$_allow/", $this->remote_address)) {
-                        $log = sprintf("Client %s allowed by server configuration %s", $this->remote_address, $_allow);
+                        $log = sprintf("Client IP %s allowed by ACL [%s]", $this->remote_address, $_allow);
                         logger($log);
                         $allow_connection = true;
                         break;
                     }
                 }
                 if (!$allow_connection) {
-                    $log = sprintf("Client %s disallowed by server configuration", $this->remote_address);
+                    $log = sprintf("Client IP %s disallowed by ACL", $this->remote_address);
                     logger($log);
                     $this->close();
                     return true;
@@ -730,7 +730,7 @@ class RatingEngineClient extends SocketServerClient
         $this->parentServer->connected_clients[] = $_client;
         $this->parentServer->connected_clients = array_unique($this->parentServer->connected_clients);
 
-        $log = sprintf("Client connection from %s:%s", $this->remote_address, $this->remote_port);
+        $log = sprintf("Client connected from %s:%s", $this->remote_address, $this->remote_port);
         logger($log);
     }
 
@@ -745,7 +745,7 @@ class RatingEngineClient extends SocketServerClient
 
         $this->parentServer->connected_clients=array_unique($new_clients);
 
-        $log = sprintf("Client disconnection from %s:%s", $this->remote_address, $this->remote_port);
+        $log = sprintf("Client disconnected from %s:%s", $this->remote_address, $this->remote_port);
         logger($log);
     }
 
