@@ -7947,7 +7947,7 @@ class RatingEngine
         logger($log);
     }
 
-    function processNetworkInput($tinput)
+    function processNetworkInput($tinput, $ip='0.0.0.0')
     {
 
         // Read key=value pairs from input
@@ -7966,7 +7966,7 @@ class RatingEngine
 
         $this->runtime['start']=microtime_float();
 
-        logger("[command] $tinput");
+        logger("[$ip] command: $tinput");
 
         if (!$_els[0]) return 0;
 

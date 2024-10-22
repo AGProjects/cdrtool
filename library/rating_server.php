@@ -636,7 +636,7 @@ class RatingEngineClient extends SocketServerClient
         $this->parentServer->requests[$this->remote_address]++;
 
         $b = microtime(true);
-        $output  = $this->ratingEngine->processNetworkInput($request);
+        $output  = $this->ratingEngine->processNetworkInput($request, $this->remote_address);
         $output .= "\n\n";
 
         if ($this->ratingEngineSettings['log_delay']) {
