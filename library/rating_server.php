@@ -393,7 +393,7 @@ class SocketDaemon
     private function cleanSockets()
     {
         foreach ($this->clients as $socket) {
-            if ($socket->disconnected || !is_resource($socket->socket)) {
+            if ($socket->disconnected || (!is_resource($socket) && ! $socket instanceof \RatingEngineClient)) {
                 if (isset($this->clients[$this->getSocketId($socket->socket)])) {
                     unset($this->clients[$this->getSocketId($socket->socket)]);
                 }
