@@ -209,7 +209,8 @@ class Rate
                 "    Duration: $this->duration s\n".
                 "         App: $this->application\n".
                 " Destination: $this->DestinationId\n".
-                "    Customer: $this->CustomerProfile\n";
+                "    Customer: $this->CustomerProfile\n".
+                "    Reseller: $this->ResellerId\n";
 
             if ($this->region) {
                 $this->rateInfo .=
