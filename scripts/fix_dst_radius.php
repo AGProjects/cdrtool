@@ -383,7 +383,7 @@ foreach ($DATASOURCES as $key => $value) {
             if (count($update_rows) > 0) {
                 $now = new DateTime();
                 if ($transition->format('m') == $now->format('m')) {
-                    logger("Fix is for the current month, running quota_reset exit\n");
+                    logger("Fix is for the current month, reset quota usage\n");
                     include 'quotaReset.php';
                 }
                 logger("\nRunning normalize:\n");

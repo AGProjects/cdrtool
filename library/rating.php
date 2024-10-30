@@ -25,7 +25,7 @@ class Rate
     var $discount_connect       = 0;
     var $discount_duration      = 0;
 
-    var $rateValuesCache        = array(); // used to speed up prepaid apoplication
+    var $rateValuesCache        = array(); // used to speed up prepaid application
     var $broken_rate            = false;
     var $db                     = null;
     var $database_backend       = "mysql";
