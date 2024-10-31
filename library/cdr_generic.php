@@ -2150,7 +2150,7 @@ class E164
     // to consider the session a PSTN destination and rate it according
     // to the PSTN rating plan
 
-    function E164($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="") {
+    public function __construct($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="") {
         $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
@@ -2182,7 +2182,7 @@ class E164
 }
 
 class E164_Europe extends E164 {
-    function E164_Europe ($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
+    public function __construct($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([1-9][0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
@@ -2191,7 +2191,7 @@ class E164_Europe extends E164 {
 }
 
 class E164_US extends E164 {
-    function E164_US($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
+    public function __construct($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
