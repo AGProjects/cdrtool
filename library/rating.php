@@ -288,18 +288,18 @@ class Rate
             $span++;
             if ($j > 0) {
                 $payConnect = 0;
-                $durationForRating = $thisRate['duration'];
+                $durationForRating = intval($thisRate['duration']);
             } else {
                 $payConnect=1;
                 if ($this->min_duration && $this->duration < $this->min_duration && $this->duration > 0) {
                     $durationForRating = $this->min_duration;
                 } else {
-                    $durationForRating = $thisRate['duration'];
+                    $durationForRating = intval($thisRate['duration']);
                 }
             }
 
-            $connectCost     = $thisRate['values']['connectCost'];
-            $durationRate    = $thisRate['values']['durationRate'];
+            $connectCost     = (float) $thisRate['values']['connectCost'];
+            $durationRate    = (float) $thisRate['values']['durationRate'];
 
             // apply discounts for connect
             if ($this->discount_connect) {
@@ -311,8 +311,8 @@ class Rate
                 $durationRate = $durationRate - $durationRate * $this->discount_duration / 100;
             }
 
-            $connectCostIn   = $thisRate['values']['connectCostIn'];
-            $durationRateIn  = $thisRate['values']['durationRateIn'];
+            $connectCostIn   = (float) $thisRate['values']['connectCostIn'];
+            $durationRateIn  = (float) $thisRate['values']['durationRateIn'];
 
             if ($span=="1") {
                 $connectCostSpan = $connectCost;
@@ -1543,18 +1543,18 @@ class Rate
 
 class RatingTables
 {
-    private $settings;
-    private $CDRTool;
-    private $table;
-    private $readonly;
-    private $db;
-    private $db1;
-    private $profiles;
-    private $ratesHistory;
-    private $ratesHistoryCount;
-    private $holidays;
-    private $ENUMtlds;
-    private $ENUMtldsCount;
+    public $settings;
+    public $CDRTool;
+    public $table;
+    public $readonly;
+    public $db;
+    public $db1;
+    public $profiles;
+    public $ratesHistory;
+    public $ratesHistoryCount;
+    public $holidays;
+    public $ENUMtlds;
+    public $ENUMtldsCount;
 
     var $database_backend = 'mysql';
     var $csv_export=array(
