@@ -7888,7 +7888,8 @@ class RatingEngine
                 'profileWeekendAlt' => $this->db->f('profile_name2_alt'),
                 'timezone'          => $this->db->f('timezone'),
                 'increment'         => $this->db->f('increment'),
-                'min_duration'      => $this->db->f('min_duration')
+                'min_duration'      => $this->db->f('min_duration'),
+                'reseller_id'       => $this->db->f('reseller_id')
             );
         }
 
