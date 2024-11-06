@@ -137,15 +137,15 @@ class Rate
             return false;
         }
 
-        if (!$this->lookupDestinationDetails()) {
-            // get region, increment and other per destination details
-            syslog(LOG_NOTICE, "Error: Cannot find destination details for call_id=$this->callId, dest_id=$this->DestinationId)");
-            return false;
-        }
-
         if (!$this->lookupProfiles()) {
             // get profiles for the billing party
             syslog(LOG_NOTICE, "Error: Cannot find any profiles for call_id=$this->callId, dest_id=$this->DestinationId)");
+            return false;
+        }
+
+        if (!$this->lookupDestinationDetails()) {
+            // get region, increment and other per destination details
+            syslog(LOG_NOTICE, "Error: Cannot find destination details for call_id=$this->callId, dest_id=$this->DestinationId)");
             return false;
         }
 
@@ -790,6 +790,10 @@ class Rate
                 $this->min_duration = $this->db->Record['min_duration'];
             }
 
+            if ($this->db->Record['reseller_id']) {
+                $this->ResellerId = $this->db->Record['reseller_id'];
+            }
+
             return true;
         } else {
             $log = sprintf(
@@ -1276,11 +1280,11 @@ class Rate
             return false;
         }
 
-        if (!$this->lookupDestinationDetails()) {
+        if (!$this->lookupProfiles()) {
             return false;
         }
 
-        if (!$this->lookupProfiles()) {
+        if (!$this->lookupDestinationDetails()) {
             return false;
         }
 
