@@ -1,7 +1,7 @@
 CDRTool
 =======
 
-Copyright (c) 2002-2022 AG Projects
+Copyright (c) 2002-2024 AG Projects
 https://ag-projects.com
 
 CDRTool provides a CDR mediation and rating engine for Call Details Records
