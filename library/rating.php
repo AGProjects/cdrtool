@@ -7024,9 +7024,8 @@ class OpenSIPSQuota
         $lockName = sprintf("%s:%s", $this->CDRS->cdr_source, $this->CDRS->table);
 
         if (!$this->CDRS->getNormalizeLock($lockName)) {
-            $log = "Error: cannot initialize now the quota because a normalization process in progress\n";
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            $log = "Error: cannot initialize quota, a normalization process in progress";
+            errorAndPrint($log);
             return false;
         }
 

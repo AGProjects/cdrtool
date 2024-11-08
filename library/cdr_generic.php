@@ -2057,11 +2057,15 @@ class CDRS
             }
 
             if ($return == 0) {
-                $log=sprintf("Lock %s already aquired by another process with id %s ",$lockname,$this->lock_connection_id);
+                $log = sprintf(
+                    "Lock %s already aquired by another process with id %s ",
+                    $lockname,
+                    $this->lock_connection_id
+                );
                 errorAndPrint($log);
                 return 0;
             } else {
-                $log=sprintf("Normalize lock id %s aquired for %s ",$this->lock_connection_id,$lockname);
+                $log = sprintf("Normalize lock id %s aquired for %s ", $this->lock_connection_id, $lockname);
                 logger($log);
                 //print "$log\n";
                 return 1;
