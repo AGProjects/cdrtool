@@ -6495,14 +6495,13 @@ class OpenSIPSQuota
 
         $rows = $this->CDRdb->num_rows();
         $log = sprintf(
-            "%d callers generated traffic in %s for data source %s\n",
+            "%d callers generated traffic in %s for data source %s",
             $rows,
             Date("Y-m", time()),
             $this->CDRS->cdr_source
         );
-        print $log;
+        loggerAndPrint($log);
         flush();
-        syslog(LOG_NOTICE, $log);
 
         $j=0;
         $progress=0;
@@ -7056,8 +7055,7 @@ class OpenSIPSQuota
                 "Saved %d accounts in quota cache\n",
                 $this->CDRS->status['cached_keys']['saved_keys']
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
         }
 
         if ($this->CDRS->status['cached_keys']['failed_keys']) {
@@ -7065,8 +7063,7 @@ class OpenSIPSQuota
                 "Error: failed to save %d account\n",
                 $this->CDRS->status['cached_keys']['failed_keys']
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            errorAndPrint($log);
         }
 
         if ($this->saveQuotaInitFlag()) {
@@ -7077,7 +7074,7 @@ class OpenSIPSQuota
             return (bool)!$this->queryHasError($query);
         } else {
             $log = "Error: failed to save key quotaCheckInit";
-            syslog(LOG_NOTICE, $log);
+            errorAndPrint($log);
             return false;
         }
     }
