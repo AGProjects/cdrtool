@@ -216,7 +216,7 @@ class Customers extends Records
             'adminonly'  => true
         ),
         'username'    => array(
-            'type'       =>'text', 'extra_html' => 'readonly autocomplete="off"'
+            'type'       =>'text', 'extra_html' => 'autocomplete="off"'
         ),
         'password'    => array(
             'type'=>'text',
