@@ -6336,13 +6336,13 @@ class OpenSIPSQuota
                 }
 
                 if ($i%5000 == 0) {
-                    print "$i accounts checked for deblocking\n";
+                    print "... $i accounts checked for deblocking\n";
                     flush();
                 }
             }
 
             if ($i) {
-                print "$i accounts checked for deblocking\n";
+                print "Total $i accounts checked for deblocking\n";
                 flush();
             }
         } else {
@@ -6495,7 +6495,7 @@ class OpenSIPSQuota
 
         $rows = $this->CDRdb->num_rows();
         $log = sprintf(
-            "%d callers generated traffic in %s for data source %s",
+            "%d callers generated traffic in %s for data source %s\n",
             $rows,
             Date("Y-m", time()),
             $this->CDRS->cdr_source
@@ -7023,7 +7023,7 @@ class OpenSIPSQuota
         $lockName = sprintf("%s:%s", $this->CDRS->cdr_source, $this->CDRS->table);
 
         if (!$this->CDRS->getNormalizeLock($lockName)) {
-            $log = "Error: cannot initialize quota, a normalization process in progress";
+            $log = "Error: cannot initialize quota, a normalization process in progress\n";
             errorAndPrint($log);
             return false;
         }
@@ -7074,7 +7074,7 @@ class OpenSIPSQuota
             return (bool)!$this->queryHasError($query);
         } else {
             $log = "Error: failed to save key quotaCheckInit";
-            errorAndPrint($log);
+            error($log);
             return false;
         }
     }

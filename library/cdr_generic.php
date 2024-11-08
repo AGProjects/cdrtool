@@ -2058,7 +2058,7 @@ class CDRS
 
             if ($return == 0) {
                 $log = sprintf(
-                    "Lock %s already aquired by another process with id %s ",
+                    "Lock %s already aquired by another process with id %s\n",
                     $lockname,
                     $this->lock_connection_id
                 );
