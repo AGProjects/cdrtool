@@ -6305,6 +6305,8 @@ class OpenSIPSQuota
             printf("Deblocking %d SIP accounts blocked by quota\n", count($reset_quota_for));
         }
 
+        $blockedAccounts = array();
+
         if ($this->enableThor) {
             $query = sprintf("select username, domain, profile from sip_accounts where (1=1) ");
 
@@ -6318,7 +6320,7 @@ class OpenSIPSQuota
                 $query.= "and CONCAT(username,'@',domain) in (".$usage_keys.")";
             }
 
-            if (!$this->AccountsDB->query($query)) {
+            if (!$this->AccountsDB->query($query, MYSQLI_USE_RESULT)) {
                 $log = sprintf("Error: %s (%s)", $this->AccountsDB->Error, $this->AccountsDB->Errno);
                 syslog(LOG_NOTICE, $log);
                 return false;
@@ -6328,11 +6330,11 @@ class OpenSIPSQuota
             while ($this->AccountsDB->next_record()) {
                 $i++;
 
-                $_account=$this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
-                $_profile=json_decode(trim($this->AccountsDB->f('profile')));
+                $_account = $this->AccountsDB->f('username')."@".$this->AccountsDB->f('domain');
+                $_profile = json_decode(trim($this->AccountsDB->f('profile')));
 
-                if (in_array('quota', $_profile->groups)) {
-                    $blockedAccounts[]=$_account;
+                if (isset($_profile) && in_array('quota', $_profile->groups)) {
+                    $blockedAccounts[] = $_account;
                 }
 
                 if ($i%5000 == 0) {
@@ -6365,7 +6367,6 @@ class OpenSIPSQuota
                 return false;
             }
 
-            $blockedAccounts=array();
             $i = 0;
             while ($this->AccountsDB->next_record()) {
                 $i++;
@@ -6382,7 +6383,7 @@ class OpenSIPSQuota
             $blockedAccounts = array_intersect($blockedAccounts, $reset_quota_for);
         }
 
-        if (count($blockedAccounts) >0) {
+        if (count($blockedAccounts) > 0) {
             $this->unBlockRemoteAccounts($blockedAccounts);
 
             if (!$this->enableThor) {
