@@ -198,7 +198,7 @@ class DB_Sql
     }
 
     /* public: perform a query */
-    public function query($Query_String)
+    public function query($Query_String, $result_mode=MYSQLI_STORE_RESULT)
     {
         /* No empty queries, please, since PHP4 chokes on them. */
         if ($Query_String == "") {
@@ -219,7 +219,7 @@ class DB_Sql
         }
 
         try {
-            $this->Query_ID = @mysqli_query($this->Link_ID, $Query_String);
+            $this->Query_ID = @mysqli_query($this->Link_ID, $Query_String, $result_mode);
             $this->Row   = 0;
             $this->Errno = mysqli_errno($this->Link_ID);
             $this->Error = mysqli_error($this->Link_ID);
