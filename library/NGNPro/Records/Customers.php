@@ -834,6 +834,14 @@ class Customers extends Records
                         'customer_filter' => $customer->id,
                     );
 
+                    $show_delete = True;
+                    foreach ($customer->properties as $_property) {
+                        if ($_property->name == "support_order" and $_property->value) {
+                            $show_delete = False;
+                            break;
+                        }
+                    }
+
                     $delete_url_data = array_merge(
                         $base_url_data,
                         array(
@@ -865,7 +873,7 @@ class Customers extends Records
                         <td><a href=mailto:%s>%s</a></td>
                         <td>%s</td>
                         <td>%s</td>
-                        <td><a class='btn-small btn-danger' href=%s>%s</a>
+                        <td>
                         ",
                         $index,
                         $_customer_url,
@@ -880,10 +888,18 @@ class Customers extends Records
                         strip_tags($customer->email),
                         strip_tags($customer->email),
                         $customer->tel,
-                        $customer->changeDate,
-                        $_url,
-                        $actionText
+                        $customer->changeDate
                     );
+                    
+                    if ($show_delete) {
+                        printf(
+                            "
+                            <a class='btn-small btn-danger' href=%s>%s</a>
+                            ",
+                            $_url,
+                            $actionText
+                        );
+                    }
 
                     $this->showExtraActions($customer);
                     print "</td>
@@ -1010,8 +1026,17 @@ class Customers extends Records
                 print "<div class='btn-group'><input class='btn' type=submit name=action value=Copy>";
             }
 
-            print "<input class='btn btn-danger'type=submit name=action value=Delete></div>";
+            $show_delete = True;
+            foreach ($customer->properties as $_property) {
+                if ($_property->name == "support_order" and $_property->value) {
+                    $show_delete = False;
+                    break;
+                }
+            }
 
+            if ($show_delete) {
+                print "<input class='btn btn-danger'type=submit name=action value=Delete></div>";
+            }
             if ($_REQUEST['action'] == 'Delete' || $_REQUEST['action'] == 'Copy') {
                 print "<input class='btn btn-warning' type=hidden name=confirm value=1>";
             }
