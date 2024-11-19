@@ -162,7 +162,7 @@ END;
                     }
 
                     $delete_url = $this->buildUrl($delete_url_data);
-                    $update_url = $this->buildUrl($_url_data);
+                    $update_url = $this->buildUrl($update_url_data);
                     $_customer_url = $this->buildUrl($customer_url_data);
 
                     if ($peer->msteams) {
