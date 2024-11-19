@@ -25,7 +25,8 @@ class TrustedPeers extends Records
             'ip'     => trim($_REQUEST['ip_filter']),
             'tenant'   => trim($_REQUEST['tenant_filter']),
             'description'  => trim($_REQUEST['description_filter']),
-            'msteams'  => trim($_REQUEST['msteams_filter'])
+            'msteams'  => trim($_REQUEST['msteams_filter']),
+            'blocked'  => trim($_REQUEST['blocked_filter'])
         );
 
         parent::__construct($SoapEngine);
