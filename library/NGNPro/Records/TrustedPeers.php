@@ -98,6 +98,7 @@ class TrustedPeers extends Records
         <td><b>Id</b></th>
         <td><b>Owner</b></td>
         <td><b>Trusted peer</b></td>
+        <td><b>Blocked</b></td>
         <td><b>Prepaid</b></td>
         <td><b>Capacity</b></td>
         <td><b>MS Teams</b></td>
@@ -107,7 +108,6 @@ class TrustedPeers extends Records
         <td><b>Description</b></td>
         <td><b>Strip</b></td>
         <td><b>Prefix</b></td>
-        <td><b>Blocked</b></td>
         <td><b>Change date</b></td>
         <td><b>Actions</b></td>
     </tr>
@@ -203,6 +203,7 @@ END;
                         $peer->reseller,
                         $update_url,
                         $peer->ip,
+                        $peer->blocked ? 'Yes' : 'No',
                         $prepaid,
                         $peer->callLimit,
                         $msteams,
@@ -212,7 +213,6 @@ END;
                         $peer->description,
                         $peer->strip,
                         $peer->prefix,
-                        $peer->blocked,
                         $peer->changeDate,
                         $delete_url,
                         $actionText
