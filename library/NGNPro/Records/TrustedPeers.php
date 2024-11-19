@@ -618,16 +618,16 @@ END;
         printf(
             "
             <label class='checkbox'>
-                <input type=checkbox value='%s' name=blocked_filter> Blocked
+                <input type=checkbox value=1 name=blocked_filter %s> Blocked
             </label>
             ",
-            $this->filters['blocked']
+            $this->filters['blocked'] == 1 ? 'checked' : ''
         );
         printf(
             "
             <label class='checkbox'>
-                <input type=checkbox value='%s' name=msteams_filter> MS Teams
-            </label>
+                <input type=checkbox value=1 name=msteams_filter %s> MS Teams
+            </label;>
             ",
             $checked_msteams
         );
