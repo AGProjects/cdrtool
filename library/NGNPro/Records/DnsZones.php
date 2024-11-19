@@ -535,13 +535,13 @@ END;
             }
 
             $zone = array(
-                         'name'        => $name,
-                         'ttl'         => $ttl,
-                         'info'        => $info,
-                         'customer'    => intval($customer),
-                         'reseller'    => intval($reseller),
-                         'nameservers' => $ns_array
-                        );
+                'name'        => $name,
+                'ttl'         => $ttl,
+                'info'        => $info,
+                'customer'    => intval($customer),
+                'reseller'    => intval($reseller),
+                'nameservers' => $ns_array
+            );
 
             $function = array('commit'   => array('name'       => 'addZone',
                                                 'parameters' => array($zone),
@@ -592,7 +592,7 @@ END;
         printf("<form method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
 
         print <<< END
-            <input type=hidden name=action value=Update>";
+            <input type=hidden name=action value=Update>
             <tr>
                 <td colspan=2><input type=submit value=Update></td>
             </tr>
