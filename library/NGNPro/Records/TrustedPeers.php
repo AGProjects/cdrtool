@@ -20,7 +20,6 @@ class TrustedPeers extends Records
 
     public function __construct($SoapEngine)
     {
-
         $this->filters   = array(
             'ip'     => trim($_REQUEST['ip_filter']),
             'tenant'   => trim($_REQUEST['tenant_filter']),
@@ -51,7 +50,8 @@ class TrustedPeers extends Records
             'ip' => $this->filters['ip'],
             'description'   => $this->filters['description'],
             'tenant' => $this->filters['tenant'],
-            'msteams' => 1 == intval($this->filters['msteams'])
+            'msteams' => 1 == intval($this->filters['msteams']),
+            'blocked' => 1 == intval($this->filters['blocked'])
         );
 
         // Range
