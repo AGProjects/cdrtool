@@ -5,11 +5,11 @@ class TrustedPeers extends Records
     var $FieldsAdminOnly = array(
         'msteams'    => array('type'=>'boolean', 'name' => 'MS Teams'),
         'prepaid'    => array('type'=>'boolean'),
+        'blocked'    => array('type'=>'boolean'),
         'tenant'     => array('type'=>'string'),
         'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
         'originator' => array('type'=>'string', 'name' => 'LCR originator'),
-        'callLimit'  => array('type'=>'integer', 'name' => 'Capacity'),
-        'blocked'    => array('type'=>'boolean')
+        'callLimit'  => array('type'=>'integer', 'name' => 'Capacity')
     );
     var $Fields = array(
         'description'  => array('type'=>'string'),
