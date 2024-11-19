@@ -402,9 +402,9 @@ END;
         );
         printf(
             "
-            <div class='input-prepend'>
-            <span class='add-on'>MS Teams<input type=checkbox class=span1 name=msteams value=1 %s></span>
-            </div>
+            <label>
+                <input type=checkbox value=1 name=msteams_filter %s> MS Teams
+            </label>
             ",
             $checked
         );
