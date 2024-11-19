@@ -617,16 +617,17 @@ END;
         );
         printf(
             "
-            <div class='input-prepend'>
-            <span class='add-on'>Blocked</span><input class=span1 type=text size=4 name=blocked_filter value='%s'>
-            </div>
+            <label class='checkbox'>
+                <input type=checkbox value=0 name=blocked_filter> Blocked
+            </label>
             ",
             $this->filters['blocked']
         );
         printf(
-            "<div class='input-prepend'>
-            <span class='add-on'>MS Teams<input type=checkbox value=1 name=msteams_filter class=span1 %s></span>
-            </div>
+            "
+            <label class='checkbox'>
+                <input type=checkbox value=0 name=msteams_filter> MS Teams
+            </label>
             ",
             $checked_msteams
         );
