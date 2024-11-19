@@ -9,7 +9,7 @@ class TrustedPeers extends Records
         'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
         'originator' => array('type'=>'string', 'name' => 'LCR originator'),
         'callLimit'  => array('type'=>'integer', 'name' => 'Capacity'),
-        'blocked'    => array('type'=>'integer')
+        'blocked'    => array('type'=>'boolean')
     );
     var $Fields = array(
         'description'  => array('type'=>'string'),
@@ -538,7 +538,7 @@ END;
             'strip'       => intval($_REQUEST['strip_form']),
             'callLimit'   => intval($_REQUEST['callLimit_form']),
             'prepaid'     => 1 == $_REQUEST['prepaid_form'],
-            'blocked'     => intval($_REQUEST['blocked_form']),
+            'blocked'     => 1 == $_REQUEST['blocked_form'],
             'msteams'     => 1 == $_REQUEST['msteams_form'],
             'customer'    => intval($customer),
             'reseller'    => intval($reseller)
