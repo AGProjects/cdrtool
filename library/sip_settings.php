@@ -7257,15 +7257,15 @@ END;
                 && !in_array('nobody', $this->acceptRules['persistent'][$profile]['groups'])
                 && count($this->acceptRules['persistent'][$profile]['groups'])
             ) {
-                $_checked_groups="checked";
+                $_checked_groups = "checked";
             } else {
-                $_checked_everybody="checked";
+                $_checked_everybody = "checked";
             }
 
             if ($_checked_nobody) {
-                $class_nobody="checked_groups";
+                $class_nobody = "checked_groups";
             } else {
-                $class_nobody="note";
+                $class_nobody = "note";
             }
 
             printf("<td style='vertical-align: middle;' class='note'><input style='vertical-align: top;' type=radio name=%s value=0 %s> %s</td>", $_name, $_checked_everybody, _("Everybody"));
@@ -7288,7 +7288,9 @@ END;
                     $i++;
                     if (preg_match("/(everybody|nobody)/", $this->acceptRules['groups'][$_group])) continue;
 
-                    if (in_array($this->acceptRules['groups'][$_group], $this->acceptRules['persistent'][$profile]['groups'])) {
+                    if (is_array($this->acceptRules['persistent'][$profile]['groups'])
+                        && in_array($this->acceptRules['groups'][$_group], $this->acceptRules['persistent'][$profile]['groups'])
+                    ) {
                         $_checked="checked";
                     } else {
                         $_checked="";
