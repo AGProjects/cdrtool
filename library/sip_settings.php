@@ -6949,7 +6949,7 @@ class SipSettings
             return false;
         }
 
-        $chapter=sprintf(_("Do Not Disturb"));
+        $chapter = sprintf(_("Do Not Disturb"));
         $this->showChapter($chapter);
 
         $this->getAcceptRules();
@@ -6958,30 +6958,23 @@ class SipSettings
         $this->getDivertTargets();
         $this->getDiversions();
 
-        print "
-        <form method=post class=form-horizontal name=sipsettings onSubmit=\"return checkForm(this)\">
-        ";
-
-        print "
-        <div class=row-fluid>
-            <div class=span12>
-                <p>";
+        print <<< END
+        <form method=post class=form-horizontal name=sipsettings onSubmit="return checkForm(this)">
+            <div class=row-fluid>
+                <div class=span12>
+                    <p>
+END
         print _("You can reject calls depending on the time of day and Caller-ID. ");
         print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
-        print  "</p>
-            <p>";
+        print  "</p><p>";
         print _("Rejected calls are diverted based on the Unavailable condition in the Call Forwarding page. ");
-        print "<p>";
-        print "<p class=desc>";
+        print "</p><p class=desc>";
         printf(_("Your current time is: %s"), $this->timezone);
-        $timestamp=time();
-        $LocalTime=getLocalTime($this->timezone, $timestamp);
+        $timestamp = time();
+        $LocalTime = getLocalTime($this->timezone, $timestamp);
         print " $LocalTime";
 
-        print "
-        </div>
-        </div>
-        ";
+        print "</p></div></div>";
 
        // $chapter=sprintf(_("Rules"));
        // $this->showChapter($chapter);
@@ -6996,9 +6989,9 @@ class SipSettings
         ";
  */
         if ($this->acceptRules['temporary']['duration']) {
-            $class_e='error';
+            $class_e = 'error';
         } else {
-            $class_e='';
+            $class_e = '';
         }
 
        // print "<div class='control-group $class_e'>
@@ -7018,76 +7011,76 @@ class SipSettings
 
         //";
 
-        $chapter=sprintf(_("Rules"));
+        $chapter = sprintf(_("Rules"));
         $this->showChapter($chapter);
 
-        print "
-        <div class=row-fluid>
-        ";
-
-        print "<table class='table table-condensed table-striped middle' border=0 width=100%>";
-        print "<thead><tr>
-            <tr>
-            <th colspan=6>
-            ";
+        print <<< END
+        <div class='row-fluid'>
+            <table class='table table-condensed table-striped middle' border=0 width=100%>
+                <thead>
+                    <tr>
+                        <th colspan=6>
+END
         print _("Temporary");
         print "</th></tr></thead>";
         print "<tr><td style='vertical-align: middle'><span>";
         print _("Duration");
         print "</span></td><td colspan='2' style='vertical-align: middle'>";
         if ($this->acceptRules['temporary']['duration']) {
-                printf('
+            printf(
+                '
                 <script LANGUAGE="JavaScript">
-                    var minutes = %s;
-                    ID=window.setTimeout("update();", 1000*60);
-                    function update() {
-                            minutes--;
-                            document.sipsettings.minutes.value = minutes;
-                            ID=window.setTimeout("update();",1000*60);
-                    }
-
+                var minutes = %s;
+                ID=window.setTimeout("update();", 1000*60);
+                function update() {
+                        minutes--;
+                        document.sipsettings.minutes.value = minutes;
+                        ID=window.setTimeout("update();",1000*60);
+                }
                 </script>
-                ', $this->acceptRules['temporary']['duration']);
+                ',
+                $this->acceptRules['temporary']['duration']
+            );
 
-                    print " <input type=text name=minutes size=3 maxsize=3 value=\"";
-                    print $this->acceptRules['temporary']['duration'];
-                    print "\" disabled=true>";
-                    print " <input type=hidden name=accept_temporary_remain value=\"";
-                    print $this->acceptRules['temporary']['duration'];
-                    print "\"> ";
-            } else {
-                print "<select id=testselect rel='popover' class=input-medium name=duration data-original-title='";
-                print _("Temporary Rules");
-                print "' data-content='";
-                    print _("This will override the permanent rules for the chosen duration.");
-                    print "'> ";
-                    print "<option>";
-                    print "<option value=1  >  1";
-                    print "<option value=5  >  5";
-                    print "<option value=10 > 10";
-                    print "<option value=20 > 20";
-                    print "<option value=30 > 30";
-                    print "<option value=45 > 45";
-                    print "<option value=60 > 60";
-                    print "<option value=90 > 90";
-                    print "<option value=120>120";
-                    print "<option value=150>150";
-                    print "<option value=180>180";
-                    print "<option value=240>240";
-                    print "<option value=480>480";
-                    print "</select><span> ";
-                    print _("Minute(s)");
-                    print "</span>";
-            }
+            print " <input type=text name=minutes size=3 maxsize=3 value=\"";
+            print $this->acceptRules['temporary']['duration'];
+            print "\" disabled=true>";
+            print " <input type=hidden name=accept_temporary_remain value=\"";
+            print $this->acceptRules['temporary']['duration'];
+            print "\"> ";
+        } else {
+            print "<select id=testselect rel='popover' class=input-medium name=duration data-original-title='";
+            print _("Temporary Rules");
+            print "' data-content='";
+            print _("This will override the permanent rules for the chosen duration.");
+            print "'> ";
+            print "<option>";
+            print "<option value=1  >  1";
+            print "<option value=5  >  5";
+            print "<option value=10 > 10";
+            print "<option value=20 > 20";
+            print "<option value=30 > 30";
+            print "<option value=45 > 45";
+            print "<option value=60 > 60";
+            print "<option value=90 > 90";
+            print "<option value=120>120";
+            print "<option value=150>150";
+            print "<option value=180>180";
+            print "<option value=240>240";
+            print "<option value=480>480";
+            print "</select><span> ";
+            print _("Minute(s)");
+            print "</span>";
+        }
         print "</td>";
 
-        $_name="radio_temporary";
+        $_name = "radio_temporary";
 
-        $_checked_everybody="";
-        $_checked_nobody="";
-        $_checked_groups="";
+        $_checked_everybody = "";
+        $_checked_nobody = "";
+        $_checked_groups = "";
 
-        if (is_array($this->acceptRules['temporary']['groups']) &&in_array("everybody", $this->acceptRules['temporary']['groups'])) {
+        if (is_array($this->acceptRules['temporary']['groups']) && in_array("everybody", $this->acceptRules['temporary']['groups'])) {
             $_checked_everybody="checked";
         } elseif (is_array($this->acceptRules['temporary']['groups'])
             && in_array("nobody", $this->acceptRules['temporary']['groups'])
@@ -7110,19 +7103,22 @@ class SipSettings
         printf("<td style='vertical-align:middle' class='note'><input type=radio name=%s value=0 %s> %s</td> ", $_name, $_checked_everybody, _("Everybody"));
         printf("<td style='vertical-align:middle' class='$class_nobody'><input type=radio name=%s value=1 %s> %s </td>", $_name, $_checked_nobody, _("Nobody"));
 
-        $c=count($this->acceptRules['groups']);
+        $c = count($this->acceptRules['groups']);
 
         if ($_checked_groups) {
-            $class_groups="checked_groups";
+            $class_groups = "checked_groups";
         } else {
-            $class_groups="note";
+            $class_groups = "note";
         }
 
         print "<td style='vertical-align:middle' class='$class_groups'>";
 
-        if (count($this->acceptRules['groups'])>2) {
-
-            printf("<input type=radio name=%s value=2 %s class=hidden>", $_name, $_checked_groups);
+        if (count($this->acceptRules['groups']) > 2) {
+            printf(
+                "<input type=radio name=%s value=2 %s class=hidden>",
+                $_name,
+                $_checked_groups
+            );
             $i=0;
 
             foreach(array_keys($this->acceptRules['groups']) as $_group) {
@@ -7130,18 +7126,21 @@ class SipSettings
 
                 if (preg_match("/(everybody|nobody)/", $this->acceptRules['groups'][$_group])) continue;
 
-                if (in_array($this->acceptRules['groups'][$_group], $this->acceptRules['temporary']['groups'])) {
-                    $_checked="checked";
+                if (is_array($this->acceptRules['temporary']['groups'])
+                   && in_array($this->acceptRules['groups'][$_group], $this->acceptRules['temporary']['groups'])
+                ) {
+                    $_checked = "checked";
                 } else {
-                    $_checked="";
+                    $_checked = "";
                 }
 
-                $_name="groups_temporary[]";
-                printf("<span><input style='vertical-align:top' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_temporary[2].checked=true\" %s> %s</span>\n",
-                $_name,
-                $this->acceptRules['groups'][$_group],
-                $_checked,
-                $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
+                $_name = "groups_temporary[]";
+                printf(
+                    "<span><input style='vertical-align:top' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_temporary[2].checked=true\" %s> %s</span>\n",
+                    $_name,
+                    $this->acceptRules['groups'][$_group],
+                    $_checked,
+                    $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
                 );
             }
         }
@@ -7165,7 +7164,6 @@ class SipSettings
         ";
 
         foreach (array_keys($this->acceptDailyProfiles) as $profile) {
-
             if ($this->acceptRules['persistent'][$profile]['start'] || $this->acceptRules['persistent'][$profile]['stop']) {
                 $class="checked_groups";
                 $class2="label label-info";
@@ -7297,12 +7295,13 @@ class SipSettings
                     }
 
                     $_name="groups_".$profile."[]";
-                    printf("<input style='vertical-align: top;' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s> %s ",
-                    $_name,
-                    $this->acceptRules['groups'][$_group],
-                    $profile,
-                    $_checked,
-                    $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
+                    printf(
+                        "<input style='vertical-align: top;' type=checkbox name=%s value=%s onClick=\"document.sipsettings.radio_persistent_%s[2].checked=true\" %s> %s ",
+                        $_name,
+                        $this->acceptRules['groups'][$_group],
+                        $profile,
+                        $_checked,
+                        $this->PhonebookGroups[$this->acceptRules['groups'][$_group]]
                     );
                 }
             }
