@@ -421,7 +421,7 @@ class MediaSessions
 
     public function showSessions()
     {
-        if (!count($this->sessions)) {
+        if (!is_array($this->sessions) || !count($this->sessions)) {
             print '<h2 id="sessions_title">Sessions</h2>';
             return;
         }
