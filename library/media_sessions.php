@@ -302,7 +302,7 @@ class MediaSessions
     {
         $this->getSummary();
 
-        if (!count($this->summary)) {
+        if (!is_array($this->summary) || !count($this->summary)) {
             return;
         }
 
