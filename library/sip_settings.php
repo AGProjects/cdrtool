@@ -6963,7 +6963,7 @@ class SipSettings
             <div class=row-fluid>
                 <div class=span12>
                     <p>
-END
+END;
         print _("You can reject calls depending on the time of day and Caller-ID. ");
         print _("You can create custom groups in the Contacts page like Family or Coworkers. ");
         print  "</p><p>";
@@ -7020,7 +7020,7 @@ END
                 <thead>
                     <tr>
                         <th colspan=6>
-END
+END;
         print _("Temporary");
         print "</th></tr></thead>";
         print "<tr><td style='vertical-align: middle'><span>";
