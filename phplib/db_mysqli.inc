@@ -252,8 +252,8 @@ class DB_Sql
                 printf("Mysql connection re-created with %s\n", $this->link_id());
                 $this->Query_ID = @mysqli_query($this->Link_ID, $Query_String);
                 $this->Row   = 0;
-                $this->Errno = mysqli_errno();
-                $this->Error = mysqli_error();
+                $this->Errno = mysqli_errno($this->Link_ID);
+                $this->Error = mysqli_error($this->Link_ID);
             } else {
                 $this->halt("Invalid SQL: ".$Query_String);
             }
