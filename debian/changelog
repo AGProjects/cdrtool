@@ -1,3 +1,33 @@
+cdrtool (10.0.0) unstable; urgency=medium
+
+  * Formatted code and compatibility fixes for PHP > 8.1
+  * Added new attributes for trusted peers
+  * Allow customer delete if no support order is set
+  * Fixed syntax and use unbuffered query in quota deblocking
+  * Added option to allow unbuffered mysql queries
+  * Update debian pkg description and readme
+  * Return reseller_id to command GetEntityProfiles
+  * Fix lookup up destinations with different reseller id
+  * Log ResellerId in rate info and IP in rating engine command
+  * Only rate a minimum duration if call was connected
+  * Added sip_trace lookup for SIP proxies with multiple interfaces
+  * Propagate PAI Header into Mysql procedure
+  * Update crontab and added systemd timers
+  * Added extra query to fix wrong duration on dst transitions
+  * Lower downtime of mysql replication repair advise
+  * Fixed empty password in hashed ha1 on password change
+  * Added possibility to translate proxy ip in trace links
+  * Remove stale/remaining unauthorized field based on new showCallerId permission
+  * Apply new permission 'showCallerId' to search form
+  * Export PAI header if login if login permissions allow
+  * Show TLS certificate information
+  * Added XMPP over TLS DNS record template
+  * Fixed regexp for subscriber when adding entry to billing customers
+  * Print TLS Common Name in extra call info
+  * Added TLS-CN radius attribute
+
+ -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Nov 2024 12:00:24 +0100
+
 cdrtool (9.9.0) unstable; urgency=medium
 
   * Added filter SIP account by trunking group
