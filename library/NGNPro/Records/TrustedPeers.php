@@ -5,12 +5,12 @@ class TrustedPeers extends Records
     var $FieldsAdminOnly = array(
         'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
         'prepaid'     => array('type'=>'boolean'),
+        'enumLookup'  => array('type'=>'boolean', 'name' => 'ENUM lookup'),
+        'transit'     => array('type'=>'boolean', 'name' => 'Transit'),
         'blocked'     => array('type'=>'integer'),
         'tenant'      => array('type'=>'string'),
         'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
         'originator'  => array('type'=>'string', 'name' => 'LCR originator'),
-        'enumLookup'  => array('type'=>'integer'),
-        'transit'     => array('type'=>'integer'),
         'description' => array('type'=>'string'),
         'callLimit'   => array('type'=>'integer', 'name' => 'Capacity')
     );
@@ -27,8 +27,11 @@ class TrustedPeers extends Records
             'tenant'   => trim($_REQUEST['tenant_filter']),
             'description'  => trim($_REQUEST['description_filter']),
             'msteams'  => trim($_REQUEST['msteams_filter']),
-            'blocked'  => trim($_REQUEST['blocked_filter'])
         );
+
+        if (strlen($_REQUEST['blocked_filter'])) {
+            $this->filters['blocked'] = intval(trim($_REQUEST['blocked_filter']));
+        }
 
         parent::__construct($SoapEngine);
 
@@ -52,9 +55,12 @@ class TrustedPeers extends Records
             'ip' => $this->filters['ip'],
             'description'   => $this->filters['description'],
             'tenant' => $this->filters['tenant'],
-            'msteams' => 1 == intval($this->filters['msteams']),
-            'blocked' => 1 == intval($this->filters['blocked'])
+            'msteams' => 1 == intval($this->filters['msteams'])
         );
+
+        if (strlen($this->filters['blocked'])) {
+            $filter['blocked'] = intval($this->filters['blocked']);
+        }
 
         // Range
         $range = array(
@@ -92,6 +98,7 @@ class TrustedPeers extends Records
                 $this->showActionsForm();
             }
 
+if (intval($this->filters['msteams'])) {
             print <<< END
 <div class="alert alert-success"><center>$this->rows records found</center></div>
     <table class='table table-striped table-condensed' width=100%>
@@ -105,7 +112,6 @@ class TrustedPeers extends Records
         <td><b>ENUM</b></td>
         <td><b>Transit</b></td>
         <td><b>Capacity</b></td>
-        <td><b>MS Teams</b></td>
         <td><b>Tenant</b></td>
         <td><b>Carrier</b></td>
         <td><b>Originator</b></td>
@@ -117,6 +123,31 @@ class TrustedPeers extends Records
     </tr>
     </thead>
 END;
+} else {
+            print <<< END
+<div class="alert alert-success"><center>$this->rows records found</center></div>
+    <table class='table table-striped table-condensed' width=100%>
+    <thead>
+    <tr>
+        <td><b>Id</b></th>
+        <td><b>Owner</b></td>
+        <td><b>Trusted peer</b></td>
+        <td><b>Blocked</b></td>
+        <td><b>Prepaid</b></td>
+        <td><b>ENUM</b></td>
+        <td><b>Transit</b></td>
+        <td><b>Capacity</b></td>
+        <td><b>Carrier</b></td>
+        <td><b>Originator</b></td>
+        <td><b>Description</b></td>
+        <td><b>Strip</b></td>
+        <td><b>Prefix</b></td>
+        <td><b>Change date</b></td>
+        <td><b>Actions</b></td>
+    </tr>
+    </thead>
+END;
+}
 
             if (!$this->next)  $this->next=0;
 
@@ -194,13 +225,13 @@ END;
                         $transit = 'No';
                     }
 
-                    printf(
+                    if (intval($this->filters['msteams'])) {
+                        printf(
                         "
                         <tr>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         <td><a href=%s>%s</a></td>
-                        <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -226,7 +257,6 @@ END;
                         $enumLookup,
                         $transit,
                         $peer->callLimit,
-                        $msteams,
                         $peer->tenant,
                         $peer->carrierName,
                         $peer->originator,
@@ -236,7 +266,48 @@ END;
                         $peer->changeDate,
                         $delete_url,
                         $actionText
-                    );
+                        );
+                    } else {
+                        printf(
+                        "
+                        <tr>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
+                        <td><a href=%s>%s</a></td>
+                        </tr>
+                        ",
+                        $index,
+                        $_customer_url,
+                        $peer->reseller,
+                        $update_url,
+                        $peer->ip,
+                        $peer->blocked,
+                        $prepaid,
+                        $enumLookup,
+                        $transit,
+                        $peer->callLimit,
+                        $peer->carrierName,
+                        $peer->originator,
+                        $peer->description,
+                        $peer->strip,
+                        $peer->prefix,
+                        $peer->changeDate,
+                        $delete_url,
+                        $actionText
+                        );
+                    }
 
                     $i++;
                 }
@@ -266,6 +337,14 @@ END;
 
         if ($this->adminonly) {
             foreach (array_keys($this->FieldsAdminOnly) as $item) {
+                if ($item  == 'msteams' and !$peer->msteams) {
+                   continue;
+                }
+
+                if ($item  == 'tenant' and !$peer->msteams) {
+                   continue;
+                }
+
                 if ($this->FieldsAdminOnly[$item]['name']) {
                     $item_name = $this->FieldsAdminOnly[$item]['name'];
                 } else {
@@ -319,6 +398,10 @@ END;
         }
 
         foreach (array_keys($this->Fields) as $item) {
+            if ($item  == 'authToken' and !$peer->msteams) {
+               continue;
+            }
+
             if ($this->Fields[$item]['name']) {
                 $item_name = $this->Fields[$item]['name'];
             } else {
@@ -561,7 +644,7 @@ END;
             'strip'       => intval($_REQUEST['strip_form']),
             'callLimit'   => intval($_REQUEST['callLimit_form']),
             'prepaid'     => 1 == $_REQUEST['prepaid_form'],
-            'blocked'     => 1 == $_REQUEST['blocked_form'],
+            'blocked'     => intval($_REQUEST['blocked_form']),
             'enumLookup'  => 1 == $_REQUEST['enumLookup_form'],
             'transit'     => 1 == $_REQUEST['transit_form'],
             'msteams'     => 1 == $_REQUEST['msteams_form'],
@@ -643,7 +726,7 @@ END;
         printf(
             "
             <div class='input-prepend'>
-             <span class='add-on'>Blocked</span><input type=text value=%s name=blocked_filter>
+             <span class='add-on'>Blocked</span><input type=text class=span1 size=1 name=blocked_filter value='%s'>
             </div>
             ",
             $this->filters['blocked']
