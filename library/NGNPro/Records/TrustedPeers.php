@@ -3,16 +3,18 @@
 class TrustedPeers extends Records
 {
     var $FieldsAdminOnly = array(
-        'msteams'    => array('type'=>'boolean', 'name' => 'MS Teams'),
-        'prepaid'    => array('type'=>'boolean'),
-        'blocked'    => array('type'=>'boolean'),
-        'tenant'     => array('type'=>'string'),
+        'msteams'     => array('type'=>'boolean', 'name' => 'MS Teams'),
+        'prepaid'     => array('type'=>'boolean'),
+        'blocked'     => array('type'=>'integer'),
+        'tenant'      => array('type'=>'string'),
         'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
-        'originator' => array('type'=>'string', 'name' => 'LCR originator'),
-        'callLimit'  => array('type'=>'integer', 'name' => 'Capacity')
+        'originator'  => array('type'=>'string', 'name' => 'LCR originator'),
+        'enumLookup'  => array('type'=>'integer'),
+        'transit'     => array('type'=>'integer'),
+        'description' => array('type'=>'string'),
+        'callLimit'   => array('type'=>'integer', 'name' => 'Capacity')
     );
     var $Fields = array(
-        'description'  => array('type'=>'string'),
         'prefix'  => array('type'=>'string', 'name' => 'Add prefix'),
         'strip'  => array('type'=>'integer', 'name' => 'Strip digits'),
         'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
@@ -100,6 +102,8 @@ class TrustedPeers extends Records
         <td><b>Trusted peer</b></td>
         <td><b>Blocked</b></td>
         <td><b>Prepaid</b></td>
+        <td><b>ENUM</b></td>
+        <td><b>Transit</b></td>
         <td><b>Capacity</b></td>
         <td><b>MS Teams</b></td>
         <td><b>Tenant</b></td>
@@ -178,12 +182,26 @@ END;
                         $prepaid = 'No';
                     }
 
+                    if ($peer->enumLookup) {
+                        $enumLookup = 'Yes';
+                    } else {
+                        $enumLookup = 'No';
+                    }
+
+                    if ($peer->transit) {
+                        $transit = 'Yes';
+                    } else {
+                        $transit = 'No';
+                    }
+
                     printf(
                         "
                         <tr>
                         <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         <td><a href=%s>%s</a></td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
@@ -203,8 +221,10 @@ END;
                         $peer->reseller,
                         $update_url,
                         $peer->ip,
-                        $peer->blocked ? 'Yes' : 'No',
+                        $peer->blocked,
                         $prepaid,
+                        $enumLookup,
+                        $transit,
                         $peer->callLimit,
                         $msteams,
                         $peer->tenant,
@@ -502,6 +522,8 @@ END;
             'prefix'      => $prefix,
             'strip'       => intval($strip),
             'blocked'     => 0,
+            'enumLookup'  => 1,
+            'transit'     => 0,
             'owner'       => intval($_REQUEST['owner']),
             'customer'    => intval($customer),
             'reseller'    => intval($reseller)
@@ -540,6 +562,8 @@ END;
             'callLimit'   => intval($_REQUEST['callLimit_form']),
             'prepaid'     => 1 == $_REQUEST['prepaid_form'],
             'blocked'     => 1 == $_REQUEST['blocked_form'],
+            'enumLookup'  => 1 == $_REQUEST['enumLookup_form'],
+            'transit'     => 1 == $_REQUEST['transit_form'],
             'msteams'     => 1 == $_REQUEST['msteams_form'],
             'customer'    => intval($customer),
             'reseller'    => intval($reseller)
@@ -618,11 +642,11 @@ END;
         );
         printf(
             "
-            <label class='checkbox'>
-                <input type=checkbox value=1 name=blocked_filter %s> Blocked
-            </label>
+            <div class='input-prepend'>
+             <span class='add-on'>Blocked</span><input type=text value=%s name=blocked_filter>
+            </div>
             ",
-            $this->filters['blocked'] == 1 ? 'checked' : ''
+            $this->filters['blocked']
         );
         printf(
             "
