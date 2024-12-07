@@ -11,6 +11,7 @@ class SipDomains extends Records
         'certificate' =>  array('type'=>'text'),
         'private_key' =>  array('type'=>'text'),
         'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
+        'match_sip_domain' =>  array('type'=>'text', 'name'=> 'Match SIP Domain'),
         'verify_cert' => array('type'=>'boolean'),
         'require_cert' => array('type'=>'boolean')
     );
