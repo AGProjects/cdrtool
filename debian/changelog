@@ -2,6 +2,7 @@ cdrtool (10.0.0) unstable; urgency=medium
 
   * Formatted code and compatibility fixes for PHP > 8.1
   * Added new attributes for trusted peers
+  * Added new attributes for sip domains
   * Allow customer delete if no support order is set
   * Fixed syntax and use unbuffered query in quota deblocking
   * Added option to allow unbuffered mysql queries
