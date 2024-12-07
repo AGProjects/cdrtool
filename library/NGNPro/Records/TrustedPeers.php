@@ -9,14 +9,14 @@ class TrustedPeers extends Records
         'transit'     => array('type'=>'boolean', 'name' => 'Transit'),
         'blocked'     => array('type'=>'integer'),
         'tenant'      => array('type'=>'string'),
-        'carrierName' => array('type'=>'string', 'name' => 'LCR carrier'),
-        'originator'  => array('type'=>'string', 'name' => 'LCR originator'),
+        'carrierName' => array('type'=>'string', 'name' => 'PSTN carrier'),
+        'originator'  => array('type'=>'string', 'name' => 'PSTN route originator'),
         'description' => array('type'=>'string'),
         'callLimit'   => array('type'=>'integer', 'name' => 'Capacity')
     );
     var $Fields = array(
-        'prefix'  => array('type'=>'string', 'name' => 'Add prefix'),
         'strip'  => array('type'=>'integer', 'name' => 'Strip digits'),
+        'prefix'  => array('type'=>'string', 'name' => 'Add prefix'),
         'authToken'    => array('type'=>'string', 'name' => 'Authentication token')
     );
 
