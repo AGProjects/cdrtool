@@ -8,8 +8,8 @@ class SipDomains extends Records
 
     var $Fields = array(
         'customer'    => array('type'=>'integer'),
-        'certificate' =>  array('type'=>'text'),
-        'private_key' =>  array('type'=>'text'),
+        'certificate' =>  array('type'=>'text', 'description'=> ' in PEM format'),
+        'private_key' =>  array('type'=>'text', 'description'=> ' in PEM format'),
         'match_ip_address' =>  array('type'=>'text', 'name'=> 'Match IP addresses'),
         'match_sip_domain' =>  array('type'=>'text', 'name'=> 'Match SIP Domain'),
         'verify_cert' => array('type'=>'boolean'),
@@ -661,9 +661,6 @@ END;
         printf("<form method=post name=addform action=%s>", $_SERVER['PHP_SELF']);
         print "<input type=hidden name=action value=Update>";
 
-        print "<tr>
-        <td colspan=2><input type=submit value=Update>
-        </td></tr>";
 
         if ($cert_data) {
             // Parse the resource and print out the contents.
@@ -689,16 +686,24 @@ END;
                     $item_name = preg_replace("/_/", " ", ucfirst($item));
                 }
 
+                if ($this->FieldsAdminOnly[$item]['description']) {
+                    $description = $this->FieldsAdminOnly[$item]['description'];
+                } else {
+                    $description = '';
+                }
+
                 if ($this->FieldsAdminOnly[$item]['type'] == 'text') {
                     printf(
                         "
                         <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                        <td class=border valign=top>%s</td>
                         </tr>",
                         $item_name,
                         $item,
-                        $domain->$item
+                        $domain->$item,
+                        $description
                     );
                 } elseif ($this->FieldsAdminOnly[$item]['type'] == 'boolean') {
                     if ($domain->$item == 1) {
@@ -712,10 +717,12 @@ END;
                         <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                        <td class=border valign=top>%s</td>
                         </tr>",
                         $item_name,
                         $item,
-                        $checked
+                        $checked,
+                        $description
                     );
                 } else {
                     printf(
@@ -723,10 +730,12 @@ END;
                         <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                        <td class=border valign=top>%s</td>
                         </tr>",
                         $item_name,
                         $item,
-                        $domain->$item
+                        $domain->$item,
+                        $description
                     );
                 }
             }
@@ -739,17 +748,25 @@ END;
                 $item_name = preg_replace("/_/", " ", ucfirst($item));
             }
 
+            if ($this->Fields[$item]['description']) {
+                $description = $this->Fields[$item]['description'];
+            } else {
+                $description = '';
+            }
+
             if ($this->Fields[$item]['type'] == 'text') {
                 printf(
                     "
                     <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><textarea cols=30 name=%s_form rows=4>%s</textarea></td>
+                        <td class=border valign=top>%s</td>
                     </tr>
                     ",
                     $item_name,
                     $item,
-                    $domain->$item
+                    $domain->$item,
+                    $description
                 );
             } elseif ($this->Fields[$item]['type'] == 'boolean') {
                 if ($domain->$item == 1) {
@@ -763,11 +780,13 @@ END;
                     <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><input type=checkbox name=%s_form %s value=1></td>
+                        <td class=border valign=top>%s</td>
                     </tr>
                     ",
                     $item_name,
                     $item,
-                    $checked
+                    $checked,
+                    $description
                 );
             } else {
                 printf(
@@ -775,14 +794,20 @@ END;
                     <tr>
                         <td class=border valign=top>%s</td>
                         <td class=border><input name=%s_form size=30 type=text value='%s'></td>
+                        <td class=border valign=top>%s</td>
                     </tr>
                     ",
                     $item_name,
                     $item,
-                    $domain->$item
+                    $domain->$item,
+                    $description
                 );
             }
         }
+
+        print "<tr>
+        <td colspan=2><input type=submit value=Update>
+        </td></tr>";
 
         printf("<input type=hidden name=domain_filter value='%s'>", $domain->domain);
         $this->printFiltersToForm();
