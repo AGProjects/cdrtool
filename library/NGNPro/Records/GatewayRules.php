@@ -384,7 +384,7 @@ END;
         );
         print <<< END
     <select class=span2 name=carrier_id_filter>
-        <option value=''>Carrier";
+        <option value=''>Carrier
 END;
         $selected_carrier[$this->filters['carrier_id']]='selected';
 
