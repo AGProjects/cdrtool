@@ -10990,8 +10990,6 @@ function getSipAccountFromHTTPDigest()
     // override logger
     changeloggerchannel('Enrollment');
 
-    $remote_ip = $_SERVER['REMOTE_ADDR'];
-
     if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
         $log= 'Error: Missing nonce in enrollment settings';
         error($log);
@@ -11030,7 +11028,7 @@ function getSipAccountFromHTTPDigest()
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
         !isset($data['username'])) {
-        $log = sprintf("SIP settings page: Invalid credentials from %s", $remote_ip);
+        $log = print("SIP settings page: Invalid credentials from %s");
         warning($log);
         die($log);
     }
@@ -11059,7 +11057,7 @@ function getSipAccountFromHTTPDigest()
     } elseif ($domainFilters['default']['sip_engine']) {
         $credentials['engine']=$domainFilters['default']['sip_engine'];
     } else {
-        $log = sprintf("SIP settings page error: no domainFilter available in ngnpro_engines.inc from %s", $remote_ip);
+        $log = print("SIP settings page error: no domainFilter available in ngnpro_engines.inc");
         error($log);
         die();
     }
@@ -11079,7 +11077,12 @@ function getSipAccountFromHTTPDigest()
     $SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
     $SipPort->addHeader($SoapAuth);
 
-    $result = $SipPort->getAccount(array("username" =>$username,"domain"   =>$domain));
+    $result = $SipPort->getAccount(
+        array(
+            "username" => $username,
+            "domain"   => $domain
+        )
+    );
 
     if ((new PEAR)->isError($result)) {
         $error_msg  = $result->getMessage();
@@ -11088,7 +11091,7 @@ function getSipAccountFromHTTPDigest()
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-        $log = sprintf("SIP settings page error: non-existent username %s from %s", $credentials['account'], $remote_ip);
+        $log = sprintf("SIP settings page error: non-existent username %s", $credentials['account']);
         warning($log);
         die();
     }
@@ -11129,7 +11132,7 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = sprintf("SIP settings page error: wrong credentials using %s for %s from %s", $login_type_log, $credentials['account'], $remote_ip);
+        $log = sprintf("SIP settings page error: wrong credentials using %s for %s", $login_type_log, $credentials['account']);
         warning($log);
         die();
     }
@@ -11142,7 +11145,7 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = sprintf("SIP settings page error: wrong nonce for %s from %s", $credentials['account'], $remote_ip);
+        $log = sprintf("SIP settings page error: wrong nonce for %s", $credentials['account']);
         warning($log);
         die();
     }
@@ -11154,7 +11157,7 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",stale=true, opaque="'.md5($realm).'"');
 
-        $log=sprintf("SIP settings page error: nonce has expired for %s from %s", $username, $remote_ip);
+        $log=sprintf("SIP settings page error: nonce has expired for %s", $username);
         warning($log);
         die();
     }
@@ -11191,14 +11194,13 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
     // Generic code for all sip settings pages
 
     $SipSettings = new $SipSettings_class($account, $login_credentials, $soapEngines);
-    changeloggerchannel('Enrollment');
 
     if ($_REQUEST['action']) {
         $log_action=$_REQUEST['action'];
     } else {
         $log_action='load main page';
     }
-    $log = sprintf("SIP settings page: %s for %s from %s", $log_action, $account, $_SERVER['REMOTE_ADDR']);
+    $log = sprintf("SIP settings page: %s for %s", $log_action, $account);
     logger($log);
 
     if (!strstr($_REQUEST['action'],'get_') &&
