@@ -244,12 +244,12 @@ class DB_Sql
                 $this->Link_ID = 0;
 
                 if (!$this->connect()) {
-                    syslog(LOG_NOTICE, "Error: failed to re-connect to the MySQL server");
+                    error("Error: failed to re-connect to the MySQL server");
                     return 0;
                 }
 
-                syslog(LOG_NOTICE, sprintf("Mysql connection re-created with %s", $this->link_id()));
-                printf("Mysql connection re-created with %s\n", $this->link_id());
+                noticeAndPrint(sprintf("Mysql connection re-created with %s\n", $this->link_id()));
+
                 $this->Query_ID = @mysqli_query($this->Link_ID, $Query_String);
                 $this->Row   = 0;
                 $this->Errno = mysqli_errno($this->Link_ID);

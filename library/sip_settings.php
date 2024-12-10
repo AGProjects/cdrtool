@@ -10985,12 +10985,16 @@ function getSipAccountFromX509Certificate($account = '')
 
 function getSipAccountFromHTTPDigest()
 {
+    require "/etc/cdrtool/enrollment/config.ini";
 
-    require("/etc/cdrtool/enrollment/config.ini");
+    // override logger
+    changeloggerchannel('Enrollment');
+
+    $remote_ip = $_SERVER['REMOTE_ADDR'];
 
     if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
         $log= 'Error: Missing nonce in enrollment settings';
-        syslog(LOG_NOTICE, $log);
+        error($log);
         die($log);
         return false;
     }
@@ -11026,8 +11030,8 @@ function getSipAccountFromHTTPDigest()
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
         !isset($data['username'])) {
-        $log=sprintf("SIP settings page: Invalid credentials from %s", $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log = sprintf("SIP settings page: Invalid credentials from %s", $remote_ip);
+        warning($log);
         die($log);
     }
 
@@ -11035,11 +11039,11 @@ function getSipAccountFromHTTPDigest()
     $username    = $data['username'];
 
     if (strstr($username, '@')) {
-       $a = explode("@", $username);
-       $username = $a[0];
-       $domain   = $a[1];
+        $a = explode("@", $username);
+        $username = $a[0];
+        $domain   = $a[1];
     } else {
-       $domain = $realm;
+        $domain = $realm;
     }
 
     require("/etc/cdrtool/ngnpro_engines.inc");
@@ -11055,15 +11059,15 @@ function getSipAccountFromHTTPDigest()
     } elseif ($domainFilters['default']['sip_engine']) {
         $credentials['engine']=$domainFilters['default']['sip_engine'];
     } else {
-        $log=sprintf("SIP settings page error: no domainFilter available in ngnpro_engines.inc from %s", $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log = sprintf("SIP settings page error: no domainFilter available in ngnpro_engines.inc from %s", $remote_ip);
+        error($log);
         die();
     }
 
     $SOAPlogin=array(
-                           "username" => $soapEngines[$credentials['engine']]['username'],
-                           "password" => $soapEngines[$credentials['engine']]['password'],
-                           "admin"    => true
+        "username" => $soapEngines[$credentials['engine']]['username'],
+        "password" => $soapEngines[$credentials['engine']]['password'],
+        "admin"    => true
     );
 
     $SoapAuth = array('auth', $SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
@@ -11084,8 +11088,8 @@ function getSipAccountFromHTTPDigest()
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-        $log=sprintf("SIP settings page error: non-existent username %s from %s", $credentials['account'], $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log = sprintf("SIP settings page error: non-existent username %s from %s", $credentials['account'], $remote_ip);
+        warning($log);
         die();
     }
 
@@ -11125,8 +11129,8 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log=sprintf("SIP settings page error: wrong credentials using %s for %s from %s", $login_type_log, $credentials['account'], $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log = sprintf("SIP settings page error: wrong credentials using %s for %s from %s", $login_type_log, $credentials['account'], $remote_ip);
+        warning($log);
         die();
     }
     // check nonce
@@ -11138,8 +11142,8 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log=sprintf("SIP settings page error: wrong nonce for %s from %s", $credentials['account'], $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log = sprintf("SIP settings page error: wrong nonce for %s from %s", $credentials['account'], $remote_ip);
+        warning($log);
         die();
     }
 
@@ -11150,13 +11154,13 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",stale=true, opaque="'.md5($realm).'"');
 
-        $log=sprintf("SIP settings page error: nonce has expired for %s from %s", $username, $_SERVER['REMOTE_ADDR']);
-        syslog(LOG_NOTICE, $log);
+        $log=sprintf("SIP settings page error: nonce has expired for %s from %s", $username, $remote_ip);
+        warning($log);
         die();
     }
 
-    $log=sprintf("SIP settings page: %s logged in using %s from %s", $credentials['account'], $login_type_log, $_SERVER['REMOTE_ADDR']);
-    syslog(LOG_NOTICE, $log);
+    $log = sprintf("SIP settings page: %s logged in from %s [%s]", $credentials['account'], $remote_ip, $login_type_log);
+    logger($log);
 
     $credentials['customer'] = $result->customer;
     $credentials['reseller'] = $result->reseller;
@@ -11187,14 +11191,15 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
     // Generic code for all sip settings pages
 
     $SipSettings = new $SipSettings_class($account, $login_credentials, $soapEngines);
+    changeloggerchannel('Enrollment');
 
     if ($_REQUEST['action']) {
         $log_action=$_REQUEST['action'];
     } else {
         $log_action='load main page';
     }
-    $log=sprintf("SIP settings page: %s for %s from %s", $log_action, $account, $_SERVER['REMOTE_ADDR']);
-    syslog(LOG_NOTICE, $log);
+    $log = sprintf("SIP settings page: %s for %s from %s", $log_action, $account, $_SERVER['REMOTE_ADDR']);
+    logger($log);
 
     if (!strstr($_REQUEST['action'],'get_') &&
         !strstr($_REQUEST['action'],'set_') &&
@@ -11584,20 +11589,19 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             $old_diversions[$condition]=$result->$condition;
         }
 
-		$_log='';
+        $_log='';
         foreach(array_keys($old_diversions) as $key) {
             if (isset($_REQUEST[$key])) {
                 printf("Key $key changed %s", $_REQUEST[$key]);
-	        	$textboxURI=$_REQUEST[$key];
+                $textboxURI=$_REQUEST[$key];
 
-				if ($textboxURI == "<mobile-number>" && strlen($SipSettings->mobile_number)) {
-                	$textboxURI = $SipSettings->mobile_number;
+                if ($textboxURI == "<mobile-number>" && strlen($SipSettings->mobile_number)) {
+                    $textboxURI = $SipSettings->mobile_number;
                 }
 
                 if ($textboxURI && $textboxURI != "<voice-mailbox>" && !preg_match("/@/", $textboxURI)) {
                     $textboxURI=$textboxURI."@".$SipSettings->domain;
                 }
-
 
                 if (preg_match("/^([\+|0].*)@/", $textboxURI, $m))  {
                     $textboxURI=$m[1]."@".$SipSettings->domain;
@@ -11684,24 +11688,26 @@ class Enrollment
     function log_action($action) {
         global $auth;
         $location = "Unknown";
-        $_loc=geoip_record_by_name($_SERVER['REMOTE_ADDR']);
+        $_loc = geoip_record_by_name($_SERVER['REMOTE_ADDR']);
         if ($_loc['country_name']) {
             $location = $_loc['country_name'];
-            }
-        $log = sprintf("CDRTool login username=%s, IP=%s, location=%s, action=%s, script=%s",
-        $auth->auth["uname"],
-        $_SERVER['REMOTE_ADDR'],
-        $location,
-        $action,
-        $_SERVER['PHP_SELF']
+        }
+        $log = sprintf(
+            "username=%s, IP=%s, location=%s, action=%s, script=%s",
+            $auth->auth["uname"],
+            $_SERVER['REMOTE_ADDR'],
+            $location,
+            $action,
+            $_SERVER['PHP_SELF']
         );
-        syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     public function __construct()
     {
         require($this->configuration_file);
         require("/etc/cdrtool/ngnpro_engines.inc");
+        changeloggerchannel('Enrollment');
 
     	$this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
@@ -12215,8 +12221,8 @@ class Enrollment
     function loadTimezones()
     {
         if (!$fp = fopen("timezones", "r")) {
-        	syslog(LOG_NOTICE, 'Error: Failed to open timezones file');
-        	return false;
+            syslog(LOG_NOTICE, 'Error: Failed to open timezones file');
+            return false;
         }
         while ($buffer = fgets($fp,1024)) {
             $this->timezones[]=trim($buffer);
