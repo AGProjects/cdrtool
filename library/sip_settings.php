@@ -11162,7 +11162,7 @@ function getSipAccountFromHTTPDigest()
         die();
     }
 
-    $log = sprintf("SIP settings page: %s logged in from %s [%s]", $credentials['account'], $remote_ip, $login_type_log);
+    $log = sprintf("SIP settings page: %s logged in [%s]", $credentials['account'], $remote_ip, $login_type_log);
     logger($log);
 
     $credentials['customer'] = $result->customer;
