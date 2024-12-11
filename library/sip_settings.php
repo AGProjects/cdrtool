@@ -10988,7 +10988,7 @@ function getSipAccountFromHTTPDigest()
     require "/etc/cdrtool/enrollment/config.ini";
 
     // override logger
-    changeloggerchannel('Enrollment');
+    changeloggerchannel('EnrollmentAPI');
 
     if (!is_array($enrollment) || !strlen($enrollment['nonce_key'])) {
         $log= 'Error: Missing nonce in enrollment settings';
@@ -11028,7 +11028,7 @@ function getSipAccountFromHTTPDigest()
     // analyze the PHP_AUTH_DIGEST variable
     if (!($data = http_digest_parse($_SERVER['PHP_AUTH_DIGEST'])) ||
         !isset($data['username'])) {
-        $log = print("SIP settings page: Invalid credentials from %s");
+        $log = print("Invalid credentials from %s");
         warning($log);
         die($log);
     }
@@ -11057,7 +11057,7 @@ function getSipAccountFromHTTPDigest()
     } elseif ($domainFilters['default']['sip_engine']) {
         $credentials['engine']=$domainFilters['default']['sip_engine'];
     } else {
-        $log = print("SIP settings page error: no domainFilter available in ngnpro_engines.inc");
+        $log = print("error: no domainFilter available in ngnpro_engines.inc");
         error($log);
         die();
     }
@@ -11091,7 +11091,7 @@ function getSipAccountFromHTTPDigest()
     	header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
-        $log = sprintf("SIP settings page error: non-existent username %s", $credentials['account']);
+        $log = sprintf("error: non-existent username %s", $credentials['account']);
         warning($log);
         die();
     }
@@ -11132,7 +11132,7 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = sprintf("SIP settings page error: wrong credentials using %s for %s", $login_type_log, $credentials['account']);
+        $log = sprintf("error: wrong credentials using %s for %s", $login_type_log, $credentials['account']);
         warning($log);
         die();
     }
@@ -11145,7 +11145,7 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
-        $log = sprintf("SIP settings page error: wrong nonce for %s", $credentials['account']);
+        $log = sprintf("error: wrong nonce for %s", $credentials['account']);
         warning($log);
         die();
     }
@@ -11157,12 +11157,12 @@ function getSipAccountFromHTTPDigest()
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",stale=true, opaque="'.md5($realm).'"');
 
-        $log=sprintf("SIP settings page error: nonce has expired for %s", $username);
+        $log = sprintf("error: nonce has expired for %s", $username);
         warning($log);
         die();
     }
 
-    $log = sprintf("SIP settings page: %s logged in [%s]", $credentials['account'], $login_type_log);
+    $log = sprintf("%s logged in [%s]", $credentials['account'], $login_type_log);
     logger($log);
 
     $credentials['customer'] = $result->customer;
@@ -11200,7 +11200,13 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
     } else {
         $log_action='load main page';
     }
-    $log = sprintf("SIP settings page: %s for %s", $log_action, $account);
+    global $logger;
+
+    if ($logger->getName() == 'EnrollmentAPI') {
+        $log = sprintf("%s for %s", $log_action, $account);
+    } else {
+        $log = sprintf("SIP settings page: %s for %s", $log_action, $account);
+    }
     logger($log);
 
     if (!strstr($_REQUEST['action'],'get_') &&
