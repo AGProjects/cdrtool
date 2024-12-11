@@ -395,11 +395,11 @@ END;
             $selected_carrier[$this->filters['carrier_id']] = 'selected';
             foreach (array_keys($this->carriers) as $_carrier) {
                 printf(
-                    "<option value='%s' %s>%s <%s></option>",
+                    "<option value='%s' %s>Id %s: %s</option>",
                     $_carrier,
                     $selected_carrier[$_carrier],
-                    $this->carriers[$_carrier],
-                    $_carrier
+                    $_carrier,
+                    $this->carriers[$_carrier]
                 );
             }
             print "</select>";
