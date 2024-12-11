@@ -378,17 +378,33 @@ END;
             $this->filters['id']
         );
 
-        print "
-        <select name=carrier_id_filter>
-        <option value=''>Carrier";
-
-        $selected_carrier[$this->filters['carrier_id']]='selected';
-
-        foreach (array_keys($this->carriers) as $_carrier) {
-            printf("<option value='%s' %s>%s", $_carrier, $selected_carrier[$_carrier], $this->carriers[$_carrier]);
+        if (count($this->carriers) > 250) {
+            printf(
+                "
+                <div class='input-prepend'>
+                <span class='add-on'>Carrier</span><input class=span2 type=text size=15 name=carrier_id_filter value='%s'>
+                </div>
+                ",
+                $this->filters['carrier_id']
+            );
+        } else {
+            print <<< END
+            <select class=span2 name=carrier_id_filter>
+                <option value=''>Carrier
+END;
+            $selected_carrier[$this->filters['carrier_id']] = 'selected';
+            foreach (array_keys($this->carriers) as $_carrier) {
+                printf(
+                    "<option value='%s' %s>%s (%s)</option>",
+                    $_carrier,
+                    $selected_carrier[$_carrier],
+                    $this->carriers[$_carrier],
+                    $_carrier
+                );
+            }
+            print "</select>";
         }
 
-        print "</select>";
         printf(
             "
             <div class=input-prepend>
