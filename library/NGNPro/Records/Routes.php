@@ -352,7 +352,7 @@ END;
             printf(
                 "
                 <div class='input-prepend'>
-                <span class='add-on'>Carrier</span><input class=span2 type=text size=15 name=carrier_id_filter value='%s'>
+                <span class='add-on'>Carrier ID</span><input class=span1 type=text size=15 name=carrier_id_filter value='%s'>
                 </div>
                 ",
                 $this->filters['carrier_id']
