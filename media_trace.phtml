@@ -1,13 +1,13 @@
 <?php
 require '/etc/cdrtool/global.inc';
 
-page_open(
-    array(
-        "sess" => "CDRTool_Session",
-        "auth" => "CDRTool_Auth",
-        "perm" => "CDRTool_Perm"
-    )
-);
+#page_open(
+#    array(
+#        "sess" => "CDRTool_Session",
+#        "auth" => "CDRTool_Auth",
+#        "perm" => "CDRTool_Perm"
+#    )
+#);
 
 $title = sprintf("CDRTool media trace for session %s", $callid);
 include 'header.phtml';
@@ -32,5 +32,5 @@ print "
     </body>
 </html>
 ";
-page_close();
+#page_close();
 ?>
