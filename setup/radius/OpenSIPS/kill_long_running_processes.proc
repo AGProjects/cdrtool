@@ -1,0 +1,37 @@
+-- CALL KillLongRunningProcesses(60);
+
+DELIMITER $$
+
+CREATE PROCEDURE KillLongRunningProcesses(timeout INT)
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE proc_id INT;
+    DECLARE proc_time INT;
+    DECLARE cur CURSOR FOR 
+        SELECT id, time 
+        FROM information_schema.processlist 
+        WHERE command = 'Query' AND time > timeout;
+    
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO proc_id, proc_time;
+        
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+        
+        -- Kill the long-running process
+        SET @kill_query = CONCAT('KILL ', proc_id);
+        PREPARE stmt FROM @kill_query;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+        
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
