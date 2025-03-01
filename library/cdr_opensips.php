@@ -325,7 +325,7 @@ class CDRS_opensips extends CDRS
 
         $cdr_table_els = array();
         foreach ($this->tables as $_table) {
-            if (preg_match("/^.*(\d{6})$/", $_table, $m)) {
+            if (preg_match("/^radacct(\d{6})$/", $_table, $m)) {
                 $cdr_table_els[]=array("label"=>$m[1],"value"=>$_table);
             } else {
                 $cdr_table_els[]=array("label"=>$_table,"value"=>$_table);
