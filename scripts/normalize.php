@@ -64,9 +64,11 @@ foreach ($DATASOURCES as $k => $v) {
             $speed = 0;
             if ($d) $speed = number_format($CDRS->status['cdr_to_normalize']/$d, 0, "", "");
             $log = sprintf(
-                " %d CDRs, %d normalized in %s s @ %s cps\n",
+                " CDR normalize: %6d new, %6d done, %6d minutes, %6.1f price, %d seconds, %s cps\n",
                 $CDRS->status['cdr_to_normalize'],
                 $CDRS->status['normalized'],
+                $CDRS->status['duration']/60,
+                $CDRS->status['price'],
                 $d,
                 $speed
             );

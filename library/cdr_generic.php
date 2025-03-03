@@ -1179,6 +1179,8 @@ class CDRS
         $this->status['cdr_to_normalize'] = 0;
         $this->status['normalized'] = 0;
         $this->status['normalize_failures'] = 0;
+        $this->status['duration'] = 0;
+        $this->status['price'] = 0;
 
         $query = sprintf(
             "select count(*) as c from %s where %s and %s",
@@ -1253,6 +1255,8 @@ class CDRS
 
                 if ($CDR->normalize("Save", $table)) {
                     $this->status['normalized']++;
+                    $this->status['price'] = $this->status['price'] + $CDR->price;
+                    $this->status['duration'] = $this->status['duration'] + $CDR->duration;
                     if ($this->csv_file_ready) {
                         if (!$this->csv_writter->write_cdr($CDR)) {
                             // stop writing future records if we have a failure
