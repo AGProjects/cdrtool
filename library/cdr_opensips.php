@@ -2108,7 +2108,9 @@ class CDRS_opensips extends CDRS
             if ($this->AccountsDB->f('ip')) {
                 $this->trustedPeers[$this->AccountsDB->f('ip')] = array(
                     'ip'     => $this->AccountsDB->f('ip'),
-                    'reseller' => intval($this->AccountsDB->f('reseller_id'))
+                    'reseller' => intval($this->AccountsDB->f('reseller_id')),
+                    'tags' => intval($this->AccountsDB->f('tags')),
+                    'billing_id' => intval($this->AccountsDB->f('billing_id'))
                 );
             }
         }
