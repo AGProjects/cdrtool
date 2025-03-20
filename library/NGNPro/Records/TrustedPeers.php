@@ -12,6 +12,8 @@ class TrustedPeers extends Records
         'carrierName' => array('type'=>'string', 'name' => 'PSTN carrier'),
         'originator'  => array('type'=>'string', 'name' => 'PSTN route originator'),
         'description' => array('type'=>'string'),
+        'billingId'   => array('type'=>'string', 'name' => 'Billing Id'),
+        'tags'        => array('type'=>'string'),
         'callLimit'   => array('type'=>'integer', 'name' => 'Capacity')
     );
     var $Fields = array(
@@ -25,6 +27,8 @@ class TrustedPeers extends Records
         $this->filters   = array(
             'ip'     => trim($_REQUEST['ip_filter']),
             'tenant'   => trim($_REQUEST['tenant_filter']),
+            'tags'   => trim($_REQUEST['tags_filter']),
+            'billingId'   => trim($_REQUEST['billingId_filter']),
             'description'  => trim($_REQUEST['description_filter']),
             'msteams'  => trim($_REQUEST['msteams_filter']),
         );
@@ -55,6 +59,8 @@ class TrustedPeers extends Records
             'ip' => $this->filters['ip'],
             'description'   => $this->filters['description'],
             'tenant' => $this->filters['tenant'],
+            'tags' => sprintf("%%%s%%", $this->filters['tags']),
+            'billingId' => $this->filters['billingId'],
             'msteams' => 1 == intval($this->filters['msteams'])
         );
 
@@ -106,7 +112,10 @@ if (intval($this->filters['msteams'])) {
     <tr>
         <td><b>Id</b></th>
         <td><b>Owner</b></td>
-        <td><b>Trusted peer</b></td>
+        <td><b>Hostname</b></td>
+        <td><b>Description</b></td>
+        <td><b>Tags</b></td>
+        <td><b>Billing</b></td>
         <td><b>Blocked</b></td>
         <td><b>Prepaid</b></td>
         <td><b>ENUM</b></td>
@@ -115,7 +124,6 @@ if (intval($this->filters['msteams'])) {
         <td><b>Tenant</b></td>
         <td><b>Carrier</b></td>
         <td><b>Originator</b></td>
-        <td><b>Description</b></td>
         <td><b>Strip</b></td>
         <td><b>Prefix</b></td>
         <td><b>Change date</b></td>
@@ -131,18 +139,20 @@ END;
     <tr>
         <td><b>Id</b></th>
         <td><b>Owner</b></td>
-        <td><b>Trusted peer</b></td>
-        <td><b>Blocked</b></td>
-        <td><b>Prepaid</b></td>
+        <td><b>IP address</b></td>
+        <td><b>Description</b></td>
+        <td><b>Tags</b></td>
+        <td><b>Billing</b></td>
+        <td><b>Block</b></td>
+        <td><b>Prep</b></td>
         <td><b>ENUM</b></td>
         <td><b>Transit</b></td>
         <td><b>Capacity</b></td>
         <td><b>Carrier</b></td>
         <td><b>Originator</b></td>
-        <td><b>Description</b></td>
         <td><b>Strip</b></td>
         <td><b>Prefix</b></td>
-        <td><b>Change date</b></td>
+        <td><b>Date</b></td>
         <td><b>Actions</b></td>
     </tr>
     </thead>
@@ -244,6 +254,8 @@ END;
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>
                         ",
@@ -252,6 +264,9 @@ END;
                         $peer->reseller,
                         $update_url,
                         $peer->ip,
+                        $peer->description,
+                        $peer->tags,
+                        $peer->billingId,
                         $peer->blocked,
                         $prepaid,
                         $enumLookup,
@@ -260,7 +275,6 @@ END;
                         $peer->tenant,
                         $peer->carrierName,
                         $peer->originator,
-                        $peer->description,
                         $peer->strip,
                         $peer->prefix,
                         $peer->changeDate,
@@ -285,6 +299,8 @@ END;
                         <td>%s</td>
                         <td>%s</td>
                         <td>%s</td>
+                        <td>%s</td>
+                        <td>%s</td>
                         <td><a href=%s>%s</a></td>
                         </tr>
                         ",
@@ -293,6 +309,9 @@ END;
                         $peer->reseller,
                         $update_url,
                         $peer->ip,
+                        $peer->description,
+                        $peer->tags,
+                        $peer->billingId,
                         $peer->blocked,
                         $prepaid,
                         $enumLookup,
@@ -300,7 +319,6 @@ END;
                         $peer->callLimit,
                         $peer->carrierName,
                         $peer->originator,
-                        $peer->description,
                         $peer->strip,
                         $peer->prefix,
                         $peer->changeDate,
@@ -640,6 +658,8 @@ END;
             'tenant'      => $_REQUEST['tenant_form'],
             'carrierName' => $_REQUEST['carrierName_form'],
             'originator'  => $_REQUEST['originator_form'],
+            'tags'        => $_REQUEST['tags_form'],
+            'billingId'   => $_REQUEST['billingId_form'],
             'prefix'      => $_REQUEST['prefix_form'],
             'strip'       => intval($_REQUEST['strip_form']),
             'callLimit'   => intval($_REQUEST['callLimit_form']),
@@ -714,6 +734,22 @@ END;
             </div>
             ",
             $this->filters['description']
+        );
+        printf(
+            "
+            <div class='input-prepend'>
+            <span class='add-on'>Tags</span><input type=text class=span1 size=10 name=tags_filter value='%s'>
+            </div>
+            ",
+            $this->filters['tags']
+        );
+        printf(
+            "
+            <div class='input-prepend'>
+            <span class='add-on'>Billing Id</span><input type=text class=span1 size=10 name=billingId_filter value='%s'>
+            </div>
+            ",
+            $this->filters['billingId']
         );
         printf(
             "
