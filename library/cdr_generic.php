@@ -1197,6 +1197,8 @@ class CDRS
         $this->status['normalize_failures'] = 0;
         $this->status['duration'] = 0;
         $this->status['price'] = 0;
+        $this->status['newest_date'] = '';
+        $this->status['oldest_date'] = '';
 
         $query = sprintf(
             "select count(*) as c from %s where %s and %s",
@@ -1243,7 +1245,6 @@ class CDRS
                 $this->whereUnnormalized
             );
 
-
             if (!$this->CDRdb->query($query)) {
                 $log = sprintf(
                     "Database error: %s (%s)\n",
@@ -1281,8 +1282,17 @@ class CDRS
 
                 if ($CDR->normalize("Save", $table)) {
                     $this->status['normalized']++;
-                    $this->status['price'] = $this->status['price'] + $CDR->price;
-                    $this->status['duration'] = $this->status['duration'] + $CDR->duration;
+                    $this->status['price'] = $this->status['price'] + intval($CDR->price);
+                    $this->status['duration'] = $this->status['duration'] + intval($CDR->duration);
+
+                    if (!$this->status['oldest_date'] or $CDR->startTime < $this->status['oldest_date']) {
+                        $this->status['oldest_date'] = $CDR->startTime;
+                    }
+
+                    if (!$this->status['newest_date'] or $CDR->startTime > $this->status['newest_date']) {
+                        $this->status['newest_date'] = $CDR->startTime;
+                    }
+                    
                     if ($this->csv_file_ready) {
                         if (!$this->csv_writter->write_cdr($CDR)) {
                             // stop writing future records if we have a failure
