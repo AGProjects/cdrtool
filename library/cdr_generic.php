@@ -2,6 +2,10 @@
 $tz = $CDRTool['provider']['timezone'];
 putenv("TZ=$tz");
 
+// Define signal constant (for clarity)
+define('SIGINT', 2);
+
+
 #[AllowDynamicProperties]
 class CDRS
 {
@@ -190,6 +194,11 @@ class CDRS
             return 0;
         }
 
+        $this->abort = false;
+
+        // Register the signal handler
+        pcntl_signal(SIGINT, [$this, 'signalHandler']);
+
         $this->initDefaults();
 
         $this->cdrtool         = new DB_CDRTool();
@@ -353,6 +362,13 @@ class CDRS
         }
 
         $this->initOK=1;
+    }
+
+    function signalHandler($signal) {
+        if ($signal === SIGINT) {
+            echo "\nCTRL+C detected! Exiting gracefully...\n";
+            $this->abort = true;
+        }
     }
 
     function initDefaults()
@@ -1214,6 +1230,11 @@ class CDRS
 
         // For loop to process 1k records each time
         for ($i = 0; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
+            pcntl_signal_dispatch();
+            if ($this->abort) {
+                break;
+            }
+        
             $query = sprintf(
                 "select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
                 from %s where %s and %s limit 0,1000",
@@ -1236,6 +1257,11 @@ class CDRS
 
             while ($this->CDRdb->next_record()) {
                 //$Structure=$this->_readCDRNormalizationFieldsFromDB();
+                pcntl_signal_dispatch();
+                if ($this->abort) {
+                    break;
+                }
+
                 $Structure=$this->_readCDRFieldsFromDB();
                 if ($this->csv_writter) {
                     if (!$this->csv_file_cannot_be_opened) {
