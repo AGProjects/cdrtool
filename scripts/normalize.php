@@ -29,6 +29,12 @@ echo "Press CTRL+C to exit...\n";
 changeLoggerChannel('normalization');
 
 $lockFile = "/var/lock/CDRTool_normalize.lock";
+$logDir = "/var/log/cdrtool";
+$stats_file = sprintf("%s/normalize.txt", $logDir);
+
+if (!is_dir($logDir)) {
+    mkdir($logDir, 0777, true); // Create directory with full permissions
+}
 
 if ($argv[1]) {
     if (preg_match("/^\d{4}\d{2}$/", $argv[1], $m)) {
@@ -78,20 +84,34 @@ foreach ($DATASOURCES as $k => $v) {
 
         $e = time();
         $d = $e - $b;
-
+        $cps = 0;
+        $speed = 0;
+ 
         if ($CDRS->status['cdr_to_normalize']) {
-            $speed = 0;
-            if ($d) $speed = number_format($CDRS->status['cdr_to_normalize']/$d, 0, "", "");
+            if ($d) $speed = number_format($CDRS->status['normalized']/$d, 0, "", "");
+            $d2 = abs(strtotime($CDRS->status['newest_date']) - strtotime($CDRS->status['oldest_date']));
+            
+            if ($d2) $cps = $CDRS->status['normalized']/$d2;
+
             $log = sprintf(
-                " CDR normalize: %6d new, %6d done, %6d minutes, %6.1f price, %d seconds, %s cps\n",
-                $CDRS->status['cdr_to_normalize'],
+                "CDR normalized: %6d calls, %6d minutes, %6.1f price, in %3d seconds @ %5d nps, %5d cps\n",
                 $CDRS->status['normalized'],
                 $CDRS->status['duration']/60,
                 $CDRS->status['price'],
                 $d,
-                $speed
+                $speed,
+                $cps
             );
+
             loggerAndPrint($log);
+            syslog(LOG_NOTICE, $log);
+            $logfile = fopen($stats_file,'a');
+            if ($logfile === false) {
+                loggerAndPrint(sprintf("Failed to open stats file %s", $stats_file));
+            } else {
+                fwrite($logfile, sprintf("%s %s", date("Y-m-d H:i:s"), $log));
+                fclose($logfile);
+            }
         }
 
         if (!$table && preg_match("/^(\w+)\d{6}$/", $CDRS->table, $m)) {
@@ -105,20 +125,36 @@ foreach ($DATASOURCES as $k => $v) {
             $CDRS->table = $lastMonthTable;
             $CDRS->NormalizeCDRS();
 
-            if ($CDRS->status['cdr_to_normalize']) {
-                $e = time();
-                $d = $e - $b;
+            if (!$CDRS->status['cdr_to_normalize']) {
+                return;
+            }
 
-                $speed = 0;
-                if ($d) $speed = number_format($CDRS->status['cdr_to_normalize']/$d, 0, "", "");
-                $log = sprintf(
-                    " %d CDRs, %d normalized in %s s @ %s cps\n",
-                    $CDRS->status['cdr_to_normalize'],
-                    $CDRS->status['normalized'],
-                    $d,
-                    $speed
-                );
-                loggerAndPrint($log);
+            $e = time();
+            $d = $e - $b;
+            $cps = 0;
+            $speed = 0;
+
+            if ($d) $speed = number_format($CDRS->status['normalized']/$d, 0, "", "");
+            $d2 = abs(strtotime($CDRS->status['newest_date']) - strtotime($CDRS->status['oldest_date']));
+            if ($d2) $cps = $CDRS->status['normalized']/$d2;
+
+            $log = sprintf(
+                "CDR normalized: %6d calls, %6d minutes, %6.1f price, in %3d seconds @ %5d nps, %5d cps\n",
+                $CDRS->status['normalized'],
+                $CDRS->status['duration']/60,
+                $CDRS->status['price'],
+                $d,
+                $speed,
+                $cps
+            );
+
+            loggerAndPrint($log);
+            $logfile = fopen($stats_file,'a');
+            if ($logfile === false) {
+                loggerAndPrint(sprintf("Failed to open stats file %s", $stats_file));
+            } else {
+                fwrite($logfile, sprintf("%s %s", date("Y-m-d H:i:s"), $log));
+                fclose($logfile);
             }
         }
     }
