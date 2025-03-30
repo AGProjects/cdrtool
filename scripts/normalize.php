@@ -5,6 +5,25 @@ set_time_limit(0);
 require '/etc/cdrtool/global.inc';
 require 'cdr_generic.php';
 require 'rating.php';
+// Function to handle SIGINT (CTRL+C)
+
+function signalHandler($signal) {
+    if ($signal === SIGINT) {
+        echo "\nCTRL+C detected! Exiting gracefully...\n";
+    }
+}
+
+// Check if pcntl extension is available
+if (!function_exists('pcntl_signal')) {
+    die("pcntl_signal() is not available. Make sure the PCNTL extension is enabled.\n");
+}
+
+// Define signal constant (for clarity)
+define('SIGINT', 2);
+
+// Register the signal handler
+pcntl_signal(SIGINT, 'signalHandler');
+echo "Press CTRL+C to exit...\n";
 
 // override logger for rating engine
 changeLoggerChannel('normalization');
