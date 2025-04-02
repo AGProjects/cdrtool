@@ -197,7 +197,9 @@ class CDRS
         $this->abort = false;
 
         // Register the signal handler
-        pcntl_signal(SIGINT, [$this, 'signalHandler']);
+        if (function_exists('pcntl_signal')) {
+            pcntl_signal(SIGINT, [$this, 'signalHandler']);
+        }
 
         $this->initDefaults();
 
