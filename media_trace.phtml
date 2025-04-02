@@ -13,7 +13,7 @@ $title = sprintf("CDRTool media trace for session %s", $callid);
 include 'header.phtml';
 $cdr_source = $_REQUEST['cdr_source'];
 
-if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
+#if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $proxyIP     = $_REQUEST['proxyIP'];
     $callid      = $_REQUEST['callid'];
@@ -24,9 +24,9 @@ if (in_array($cdr_source,$CDRTool['dataSourcesAllowed'])) {
 
     $mediaTrace = new Media_trace($cdr_source);
     $mediaTrace->show($proxyIP, $callid, $fromtag, $totag);
-} else {
-    printf("Error: Invalid datasource '%s' for user '%s'", $cdr_source, $auth->auth["uname"]);
-}
+#} else {
+#    printf("Error: Invalid datasource '%s' for user '%s'", $cdr_source, $auth->auth["uname"]);
+#}
 
 print "
     </body>
