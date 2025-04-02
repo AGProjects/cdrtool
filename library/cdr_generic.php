@@ -1234,7 +1234,9 @@ class CDRS
 
         // For loop to process 1k records each time
         for ($i = 0; $i <= $this->status['cdr_to_normalize']; $i=$i+1000) {
-            pcntl_signal_dispatch();
+            if (function_exists('pcntl_signal_dispatch')) {
+                pcntl_signal_dispatch();
+            }
             if ($this->abort) {
                 break;
             }
@@ -1260,7 +1262,9 @@ class CDRS
 
             while ($this->CDRdb->next_record()) {
                 //$Structure=$this->_readCDRNormalizationFieldsFromDB();
-                pcntl_signal_dispatch();
+                if (function_exists('pcntl_signal_dispatch')) {
+                    pcntl_signal_dispatch();
+                }
                 if ($this->abort) {
                     break;
                 }
