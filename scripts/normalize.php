@@ -104,10 +104,9 @@ foreach ($DATASOURCES as $k => $v) {
             );
 
             loggerAndPrint($log);
-            syslog(LOG_NOTICE, $log);
             $logfile = fopen($stats_file,'a');
             if ($logfile === false) {
-                loggerAndPrint(sprintf("Failed to open stats file %s", $stats_file));
+                warningAndPrint(sprintf("Failed to open stats file %s", $stats_file));
             } else {
                 fwrite($logfile, sprintf("%s %s", date("Y-m-d H:i:s"), $log));
                 fclose($logfile);
@@ -151,7 +150,7 @@ foreach ($DATASOURCES as $k => $v) {
             loggerAndPrint($log);
             $logfile = fopen($stats_file,'a');
             if ($logfile === false) {
-                loggerAndPrint(sprintf("Failed to open stats file %s", $stats_file));
+                warningAndPrint(sprintf("Failed to open stats file %s", $stats_file));
             } else {
                 fwrite($logfile, sprintf("%s %s", date("Y-m-d H:i:s"), $log));
                 fclose($logfile);
