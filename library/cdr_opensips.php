@@ -5186,7 +5186,7 @@ class Media_trace
         print "<h1 class=page-header>CDRTool Media Trace<br/><small>Call ID: $callid</small><br /><small>Media Session ID: $sessionId</small></h1>";
 
         foreach (array_values($this->info->streams) as $_val) {
-            $_diff=$_val->end_time-$_val->timeout_wait;
+            $_diff = $_val->end_time - $_val->timeout_wait;
             $seen_stamp[$_val->start_time]++;
             $seen_stamp[$_val->end_time]++;
             $seen_stamp[$_diff]++;
@@ -5266,14 +5266,17 @@ class Media_trace
 
             $w_start_time = intval($_index*$w_legend_bar/$this->info->duration);
             $w_rest       = $w_legend_bar-$w_duration-$w_timeout-$w_start_time;
-            $w_duration_p = ($w_legend_bar/$w_duration) * 100;
-            $w_timeout = 0;
+            $w_duration_p = 0;
+            if ($w_duration > 0) {
+                $w_duration_p = ($w_legend_bar / $w_duration) * 100;
+            }
+            $w_timeout_p = 0;
             if ($w_timeout > 0) {
-                $w_timeout_p  = ($w_legend_bar/$w_timeout) * 100;
+                $w_timeout_p  = ($w_legend_bar / $w_timeout) * 100;
             }
             $w_start_p = 0;
             if ($w_start_time > 0) {
-                $w_start_p  = ($w_legend_bar/$w_start_time)* 100;
+                $w_start_p  = ($w_legend_bar / $w_start_time)* 100;
             }
             //printf ("%s, %s, %s, %s<br>\n",$w_start_p,$w_duration_p,$w_timeout_p,$w_rest);
 
@@ -5286,9 +5289,9 @@ class Media_trace
                 print "<div class='bar bar-success'  style='width:$w_duration_p% ; text-align:center'><font color=white>$duration_print</font></div>\n";
 
                 if ($_val->timeout_wait) {
-                    print "<div class='bar bar-danger' style='width:$w_timeout%; text-align:center'><font color=white>$_timeout</font></div>\n";
+                    print "<div class='bar bar-danger' style='width:$w_timeout_p%; text-align:center'><font color=white>$_timeout</font></div>\n";
                 } else {
-                    print "<div class='bar bar-warning' style='width:$w_timeout%; text-align:center'></div>\n";
+                    print "<div class='bar bar-warning' style='width:$w_timeout_p%; text-align:center'></div>\n";
                 }
                 //print "<td width=$w_rest bgcolor=white align=center></td>\n";
 
