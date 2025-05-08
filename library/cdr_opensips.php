@@ -5299,9 +5299,9 @@ class Media_trace
 
                 print "</td></tr>";
             } elseif ($_val->status == 'unselected ICE candidate') {
-                print "<tr><td>ICE session</td></tr>";
+                print "<tr><td>$_val->media_type</td><td>ICE session</td></tr>";
             } else {
-                print "<tr><td>No stream data found</td></tr>";
+                print "<tr><td>$_val->media_type</td><td>No stream data found</td></tr>";
             }
         }
 
