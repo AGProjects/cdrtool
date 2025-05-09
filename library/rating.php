@@ -6415,7 +6415,6 @@ class OpenSIPSQuota
 
     private function initQuotaUsageFromDatabase($month = "", $reset_quota_for = array())
     {
-
         if (!$month) {
             $this->startTime = Date("Y-m-01 00:00", time());
         } else {
@@ -6431,8 +6430,7 @@ class OpenSIPSQuota
                 addslashes($this->CDRS->cdr_source),
                 count($reset_quota_for)
             );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+            loggerAndPrint($log);
 
             $k=0;
             foreach ($reset_quota_for as $_account) {
