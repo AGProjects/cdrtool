@@ -1240,7 +1240,7 @@ class CDRS
             if ($this->abort) {
                 break;
             }
-        
+
             $query = sprintf(
                 "select *, UNIX_TIMESTAMP($this->startTimeField) as timestamp
                 from %s where %s and %s limit 0,1000",
@@ -1298,7 +1298,7 @@ class CDRS
                     if (!$this->status['newest_date'] or $CDR->startTime > $this->status['newest_date']) {
                         $this->status['newest_date'] = $CDR->startTime;
                     }
-                    
+
                     if ($this->csv_file_ready) {
                         if (!$this->csv_writter->write_cdr($CDR)) {
                             // stop writing future records if we have a failure
@@ -1347,7 +1347,7 @@ class CDRS
                     );
                     syslog(LOG_NOTICE, $log);
 
-                    mail($to, "Missing CDRTool rates",$missingRatesBodytext, "From: $from");
+                    mail($to, "Missing CDRTool rates", $missingRatesBodytext, "From: $from");
                 }
             }
         }
@@ -2009,20 +2009,21 @@ class CDRS
 
             if ($this->cdrtool->num_rows()) {
                 // sync with quota_usage table
-                $query=sprintf("update quota_usage set
-                calls = calls + %d,
-                duration = duration + %d,
-                cost = cost + '%s',
-                cost_today = cost_today + '%s',
-                traffic = traffic + '%s'
-                where account = '%s'
-                ",
-                addslashes($accounts[$_key]['usage']['calls']),
-                addslashes($accounts[$_key]['usage']['duration']),
-                addslashes($accounts[$_key]['usage']['cost']),
-                addslashes($accounts[$_key]['usage']['cost_today']),
-                addslashes($accounts[$_key]['usage']['traffic']),
-                addslashes($_key)
+                $query = sprintf(
+                    "update quota_usage set
+                    calls = calls + %d,
+                    duration = duration + %d,
+                    cost = cost + '%s',
+                    cost_today = cost_today + '%s',
+                    traffic = traffic + '%s'
+                    where account = '%s'
+                    ",
+                    addslashes($accounts[$_key]['usage']['calls']),
+                    addslashes($accounts[$_key]['usage']['duration']),
+                    addslashes($accounts[$_key]['usage']['cost']),
+                    addslashes($accounts[$_key]['usage']['cost_today']),
+                    addslashes($accounts[$_key]['usage']['traffic']),
+                    addslashes($_key)
                 );
 
                 if (!$this->cdrtool->query($query)){
@@ -2036,24 +2037,25 @@ class CDRS
                 $quota=$this->getQuota($_key);
                 $blocked=$this->getBlockedByQuotaStatus($_key);
 
-                list($_u,$_d)=explode("@",$_key);
+                list($_u, $_d) = explode("@", $_key);
 
-                $query=sprintf("insert into quota_usage
-                (datasource,account,domain,quota,calls,duration,cost,cost_today,traffic,blocked,reseller_id)
-                values
-                ('%s','%s','%s',%d,%d,'%s','%s','%s','%s','%s',%d)
-                ",
-                addslashes($this->cdr_source),
-                addslashes($_key),
-                addslashes($_d),
-                addslashes($quota),
-                addslashes($accounts[$_key]['usage']['calls']),
-                addslashes($accounts[$_key]['usage']['duration']),
-                addslashes($accounts[$_key]['usage']['cost']),
-                addslashes($accounts[$_key]['usage']['cost_today']),
-                addslashes($accounts[$_key]['usage']['traffic']),
-                intval($blocked),
-                addslashes($this->localDomains[$_d]['reseller'])
+                $query = sprintf(
+                    "insert into quota_usage
+                    (datasource,account,domain,quota,calls,duration,cost,cost_today,traffic,blocked,reseller_id)
+                    values
+                    ('%s','%s','%s',%d,%d,'%s','%s','%s','%s','%s',%d)
+                    ",
+                    addslashes($this->cdr_source),
+                    addslashes($_key),
+                    addslashes($_d),
+                    addslashes($quota),
+                    addslashes($accounts[$_key]['usage']['calls']),
+                    addslashes($accounts[$_key]['usage']['duration']),
+                    addslashes($accounts[$_key]['usage']['cost']),
+                    addslashes($accounts[$_key]['usage']['cost_today']),
+                    addslashes($accounts[$_key]['usage']['traffic']),
+                    intval($blocked),
+                    addslashes($this->localDomains[$_d]['reseller'])
                 );
 
                 if (!$this->cdrtool->query($query)){
@@ -2162,6 +2164,7 @@ class CDRS
             syslog(LOG_NOTICE, $log);
             return false;
         }
+
 
         $query="delete from quota_usage where account in (";
         $t=0;
@@ -2599,7 +2602,6 @@ class CDR
 
     function cacheQuotaUsage($usage)
     {
-
         if (!is_array($usage)) return ;
 
         $accounts[$this->BillingPartyId]['usage'] = $usage;
@@ -2723,8 +2725,8 @@ if (is_array($CDRToolModules)) {
 
 function unLockNormalization($dbid, $lockname)
 {
-    $query=sprintf("SELECT RELEASE_LOCK('%s')", addslashes($lockname));
-    $log=sprintf("Unlock %s", $lockname);
+    $query = sprintf("SELECT RELEASE_LOCK('%s')", addslashes($lockname));
+    $log = sprintf("Unlock %s", $lockname);
     logger($log);
 
     if (!$dbid->query($query)) {
@@ -2735,7 +2737,7 @@ function unLockNormalization($dbid, $lockname)
 
 class SIPonline
 {
-    function __construct($datasource='',$database='db',$table='location')
+    public function __construct($datasource = '', $database = 'db', $table = 'location')
     {
         global $CDRTool;
 
@@ -2781,9 +2783,9 @@ class SIPonline
             $this->total=$this->total+$this->locationDB->f('c');
         }
 
-        $query=sprintf("select count(*) as c, user_agent from %s %s",addslashes($this->locationTable),$where);
+        $query = sprintf("select count(*) as c, user_agent from %s %s", addslashes($this->locationTable), $where);
         if ($this->domain) {
-            $query.=sprintf(" and domain = '%s' ",addslashes($this->domain));
+            $query.=sprintf(" and domain = '%s' ", addslashes($this->domain));
         }
 
         $query.="
@@ -2883,7 +2885,6 @@ class SIPonline
         print "<p>";
         $this->showUAdistribution();
         */
-
     }
 
     function show()
@@ -2939,7 +2940,6 @@ class SIPonline
 
             $seen[$username]++;
             $seen[$domain]++;
-
         }
     }
 
@@ -2973,7 +2973,7 @@ class SIPonline
     }
 }
 
-class PrepaidHistory 
+class PrepaidHistory
 {
     public function __construct()
     {
@@ -2997,7 +2997,7 @@ class PrepaidHistory
     }
 }
 
-class CSVWritter 
+class CSVWritter
 {
     var $csv_directory      = '/var/spool/cdrtool/normalize';
     var $filename_extension = '.csv';
@@ -3065,7 +3065,7 @@ class CSVWritter
         return true;
     }
 
-    function close_file() 
+    function close_file()
     {
         if (!$this->ready) return false;
 
@@ -3101,7 +3101,7 @@ class CSVWritter
             $CDR->price
         );
 
-        if (!fputs($this->fp,$line)) {
+        if (!fputs($this->fp, $line)) {
             $this->ready = false;
             return false;
         }
@@ -3120,7 +3120,8 @@ class MaxRate extends CSVWritter
     var $rpid_cache      = array();
     var $translate_uris  = array();
 
-    function __construct($cdr_source='', $csv_directory='', $db_subscribers='') {
+    public function __construct($cdr_source = '', $csv_directory = '', $db_subscribers = '')
+    {
         global $MaxRateSettings;   // set in global.inc
 
         /*
@@ -3153,7 +3154,6 @@ class MaxRate extends CSVWritter
         $this->AccountsDB = new $db_subscribers();
 
         parent::__construct($cdr_source, $csv_directory);
-
     }
 
     function write_cdr($CDR)
@@ -3232,12 +3232,12 @@ class MaxRate extends CSVWritter
         }
 
         # normalize short origins
-        if (preg_match("/^\d{1,3}@.*$/",$cdr['origin'])) {
+        if (preg_match("/^\d{1,3}@.*$/", $cdr['origin'])) {
             $cdr['origin']='+31000000000';
         }
 
         # normalize anonymous origins
-        if (preg_match("/^anonymous@.*$/",$cdr['origin'])) {
+        if (preg_match("/^anonymous@.*$/", $cdr['origin'])) {
             $cdr['origin']='+31000000000';
         }
 
@@ -3251,12 +3251,12 @@ class MaxRate extends CSVWritter
             }
         }
 
-        preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->startTime,$m);
+        preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/", $CDR->startTime, $m);
 
-        $cdr['start_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
+        $cdr['start_date']  = sprintf("%s/%s/%s %s", $m[3], $m[2], $m[1], $m[4]);
         $cdr['diversion'] = '';
-        preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/",$CDR->stopTime,$m);
-        $cdr['stop_date']  = sprintf ("%s/%s/%s %s",$m[3],$m[2],$m[1],$m[4]);
+        preg_match("/^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/", $CDR->stopTime, $m);
+        $cdr['stop_date']  = sprintf("%s/%s/%s %s", $m[3], $m[2], $m[1], $m[4]);
 
         $cdr['product']     = $this->product;
 
@@ -3269,23 +3269,20 @@ class MaxRate extends CSVWritter
 
         $rate_info = explode("\n", $CDR->rateInfo);
 
-        for ($i = 0; $i < sizeof($rate_info); ++$i)
-        {
+        for ($i = 0; $i < sizeof($rate_info); ++$i) {
             //dprint_r($rate_info[$i]);
-            if (strpos($rate_info[$i], "ProfileId:") !== false)
-            {
+            if (strpos($rate_info[$i], "ProfileId:") !== false) {
                 $cdr['profile'] = ltrim(str_replace("ProfileId: ", '', $rate_info[$i]));
             }
         }
 
         //$cdr['extra']="$CDR->callId";
 
-        list($cdr['username'],$cdr['domain'])= explode('@',$CDR->username);
+        list($cdr['username'], $cdr['domain'])= explode('@', $CDR->username);
 
-        $cdr['charge_info'] = sprintf('"%s","%s","%s"',$CDR->price,$cdr['profile'],$CDR->destinationName);
+        $cdr['charge_info'] = sprintf('"%s","%s","%s"', $CDR->price,$cdr['profile'], $CDR->destinationName);
 
         if ($CDR->flow == 'on-net') {
-
             # RFP 4.2.1
 
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
@@ -3325,13 +3322,13 @@ class MaxRate extends CSVWritter
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin = '0031'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '0031'.ltrim($DiverterRPID, '0');
             } else {
                 $diverter_origin = $CDR->username;
             }
 
             if ($CalleeRPID) {
-                $cdr['c_num'] = '0031'.ltrim($CalleeRPID,'0');
+                $cdr['c_num'] = '0031'.ltrim($CalleeRPID, '0');
             }
 
             # Set destination to B-Number
@@ -3346,7 +3343,7 @@ class MaxRate extends CSVWritter
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin = '0031'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '0031'.ltrim($DiverterRPID, '0');
             } else {
                 $diverter_origin = $CDR->username;
             }
@@ -3354,7 +3351,7 @@ class MaxRate extends CSVWritter
             $cdr['c_num'] = $cdr['destination'];
 
             # Set destination to B-Number
-            $cdr['destination']=$diverter_origin;
+            $cdr['destination'] = $diverter_origin;
             $cdr['diversion'] = $cdr['c_num'];
 
             $cdr['extra'] = $cdr['extra']."incoming-diverted-off-net";
@@ -3364,7 +3361,7 @@ class MaxRate extends CSVWritter
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin = '0031'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '0031'.ltrim($DiverterRPID, '0');
             } else {
                 $diverter_origin = $CDR->username;
             }
@@ -3372,7 +3369,7 @@ class MaxRate extends CSVWritter
             $CalleeRPID=$this->getRPIDforAccount($CDR->CanonicalURI);
 
             if ($CalleeRPID) {
-                $cdr['c_num'] = '0031'.ltrim($CalleeRPID,'0');
+                $cdr['c_num'] = '0031'.ltrim($CalleeRPID, '0');
             }
 
             # Set destination to B-Number
@@ -3386,7 +3383,7 @@ class MaxRate extends CSVWritter
             $DiverterRPID=$this->getRPIDforAccount($CDR->username);
 
             if ($DiverterRPID) {
-                $diverter_origin = '0031'.ltrim($DiverterRPID,'0');
+                $diverter_origin = '0031'.ltrim($DiverterRPID, '0');
             } else {
                 $diverter_origin = $CDR->username;
             }
@@ -3401,9 +3398,9 @@ class MaxRate extends CSVWritter
         }
 
         $cdr['username'] = preg_replace('/caiw0+|test0+/', "", $cdr['username']);
-        $cdr['origin'] = str_replace('+','00',$cdr['origin']);
-        $cdr['destination'] = str_replace('+','00',$cdr['destination']);
-        $cdr['diversion'] = str_replace('+','00',$cdr['diversion']);
+        $cdr['origin'] = str_replace('+', '00', $cdr['origin']);
+        $cdr['destination'] = str_replace('+', '00', $cdr['destination']);
+        $cdr['diversion'] = str_replace('+', '00', $cdr['diversion']);
 
         $line = sprintf(
             '"%s","%s","%s","%s","%s","%s","%s","%s","%s",%s'."\n",
@@ -3419,8 +3416,11 @@ class MaxRate extends CSVWritter
             $cdr['charge_info']
         );
 
-        if (!fputs($this->fp,$line)) {
-            $log=sprintf ("CSV writter error: cannot append to file %s\n",$this->full_path_tmp);
+        if (!fputs($this->fp, $line)) {
+            $log = sprintf(
+                "CSV writter error: cannot append to file %s\n",
+                $this->full_path_tmp
+            );
             syslog(LOG_NOTICE,$log);
 
             $this->close_file();
@@ -3443,10 +3443,19 @@ class MaxRate extends CSVWritter
 
         list($username,$domain) = explode('@', $account);
 
-        $query=sprintf("select * from sip_accounts where username = '%s' and domain = '%s'",addslashes($username),addslashes($domain));
+        $query = sprintf(
+            "select * from sip_accounts where username = '%s' and domain = '%s'",
+            addslashes($username),
+            addslashes($domain)
+        );
 
         if (!$this->AccountsDB->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->AccountsDB->Error,$this->AccountsDB->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)",
+                $query,
+                $this->AccountsDB->Error,
+                $this->AccountsDB->Errno
+            );
             syslog(LOG_NOTICE,$log);
             return false;
         }

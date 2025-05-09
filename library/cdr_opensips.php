@@ -2246,7 +2246,7 @@ class CDRS_opensips extends CDRS
         return 0;
     }
 
-    public function notifyLastSessions($count='200', $account='')
+    public function notifyLastSessions($count = '200', $account = '')
     {
         // send emails with last missed and received sessions to subscribers in group $this->missed_calls_group
 
@@ -3949,6 +3949,7 @@ class SIP_trace
     public $thor_nodes  = array();
     public $hostnames   = array();
     public $proxyGroups = array();
+    private $cdr_source;
 
     public function __construct($cdr_source)
     {
@@ -4048,7 +4049,7 @@ class SIP_trace
                 return true;
             } else {
                 if (isThorNode($ip, $sip_proxy) || isThorNode($ip, $sip_proxy, 'msteams_gateway')) {
-                    $this->thor_nodes[$ip]=1;
+                    $this->thor_nodes[$ip] = 1;
                     return true;
                 } else {
                     return false;
@@ -4356,7 +4357,7 @@ class SIP_trace
 
         foreach (array_keys($this->trace_array) as $key) {
             $this->trace_array[$key]['isProxy'] = 0;
-            
+
             if ($this->trace_array[$key]['direction'] == 'in') {
                 if (is_array($this->SIPProxies)) {
                     $thisIP=explode(":", $this->trace_array[$key]['fromip']);
@@ -4364,7 +4365,7 @@ class SIP_trace
                         $this->trace_array[$key]['isProxy'] = 1;
                     }
                 }
-                
+
                 $this->trace_array[$key]['msg_possition']   = $this->column[$this->trace_array[$key]['toip']];
                 $this->trace_array[$key]['arrow_possition'] = $this->column[$this->trace_array[$key]['fromip']];
                 $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
@@ -4379,15 +4380,15 @@ class SIP_trace
                         $fi=$this->trace_array[$key]['fromip'];
                         $fp=$this->trace_array[$key]['fromport'];
                         $ti=$this->trace_array[$key]['toip'];
-                        $tp=$this->trace_array[$key]['toport']; 
+                        $tp=$this->trace_array[$key]['toport'];
 
                         if (preg_match("/^BYE (sip:|sips:)(.*)\@(.*):(\d*)(.*)$/", $bye_line, $m)) {
                             $bye_ip = $m[3];
-                            $bye_port = $m[4];  
+                            $bye_port = $m[4];
                             if ($this->column[$bye_ip]){
                                 $this->trace_array[$key]['fromip'] = $bye_ip;
                                 $this->trace_array[$key]['fromport'] = $bye_port;
-                                $this->trace_array[$key]['arrow_possition'] = $this->column[$bye_ip]; 
+                                $this->trace_array[$key]['arrow_possition'] = $this->column[$bye_ip];
                             } else {
                                 $found_bye_ip = false;
                                 foreach ($bye_lines as $_line) {
@@ -4401,16 +4402,16 @@ class SIP_trace
                                                 if ($this->column[$bye_ip]){
                                                     $this->trace_array[$key]['fromip'] = $bye_ip;
                                                     $this->trace_array[$key]['fromport'] = $bye_port;
-                                                    $this->trace_array[$key]['arrow_possition'] = $this->column[$bye_ip]; 
+                                                    $this->trace_array[$key]['arrow_possition'] = $this->column[$bye_ip];
                                                     $found_bye_ip = true;
                                                     break;
                                                 }
                                             }
                                         }
-                                        
+
                                         if ($found_bye_ip) {
                                             break;
-                                        } 
+                                        }
                                     }
                                 }
                             }
@@ -4431,9 +4432,8 @@ class SIP_trace
                 } else {
                     $arrow_direction = "left";
                 }
-                
+
                 $this->trace_array[$key]['arrow_direction'] = $arrow_direction;
-                
             } else {
                 if ($this->trace_array[$key]['fromip'] == $this->trace_array[$key]['toip']) {
                     $arrow_direction = "loop";
@@ -5114,7 +5114,6 @@ class Media_trace
                 }
                 return false;
             }
-
             $this->info = json_decode($result);
         } else {
             if (!is_object($this->db)) {
@@ -5336,7 +5335,7 @@ function getImageForUserAgent($msg)
     return "unknown.png";
 }
 
-function isThorNode($ip, $sip_proxy, $role="sip_proxy")
+function isThorNode($ip, $sip_proxy, $role = "sip_proxy")
 {
     if (!$ip || !$sip_proxy) {
         return false;
@@ -5348,7 +5347,7 @@ function isThorNode($ip, $sip_proxy, $role="sip_proxy")
         return false;
     }
 
-    $request=sprintf("is_online %s as %s", $ip, $role);
+    $request = sprintf("is_online %s as %s", $ip, $role);
 
     if (fputs($socket, "$request\r\n") !== false) {
         $ret = trim(fgets($socket, 4096));
