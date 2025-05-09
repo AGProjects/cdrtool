@@ -1124,7 +1124,7 @@ class CDRS
 
     function NormalizeCDRS($where = "", $table = "")
     {
-        $this->missing_destinations=array();
+        $this->missing_destinations = array();
 
         $b=time();
 
@@ -1340,7 +1340,7 @@ class CDRS
 
     function NormalizeNumber($Number, $type = "destination", $subscriber = "", $domain = "", $gateway = "", $CountryCode = "", $ENUMtld = "", $reseller_id = 0)
     {
-        $this->CSCODE="";
+        $this->CSCODE = "";
 
         $Number = strtolower(quoted_printable_decode($Number));
 
@@ -1359,7 +1359,7 @@ class CDRS
                 $NumberStack['username'] = substr($NumberStack['username'], $pos+1);
             }
 
-            if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)){
+            if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)) {
                 $NumberStack['domain'] = $p[1];
             }
         } elseif (preg_match("/^([a-z0-9]+:)(.*)$/i", $Number, $m)) {
@@ -1384,7 +1384,7 @@ class CDRS
             $NumberStack['domain']    = "";
         }
 
-        if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)){
+        if (preg_match("/^(.*)[=:;]/U", $NumberStack['domain'], $p)) {
             $NumberStack['domain']    = $p[1];
         }
 
@@ -1426,11 +1426,12 @@ class CDRS
         if ($type=="destination") {
             if ($NumberStack['E164']) {
                 // lookup destination id for the E164 number
-                $dst_struct                     = $this->lookupDestination(
+                $dst_struct = $this->lookupDestination(
                     $NumberStack['E164'],
                     $subscriber,
                     $domain,
-                    $gateway,$reseller_id
+                    $gateway,
+                    $reseller_id
                 );
                 $NumberStack['DestinationId']   = $dst_struct[0];
                 $NumberStack['destinationName'] = $dst_struct[1];
@@ -1438,18 +1439,17 @@ class CDRS
                 $NumberStack['NumberPrint']     = "+".$NumberStack['E164'];
 
                 if (!$ENUMtld) {
-			$NumberStack['Normalized']      = $this->intAccessCode.
-							  $NumberStack['E164'].
-							  $NumberStack['delimiter'].
-							  $NumberStack['domain'];
+                    $NumberStack['Normalized'] = $this->intAccessCode.
+                                                 $NumberStack['E164'].
+                                                 $NumberStack['delimiter'].
+                                                 $NumberStack['domain'];
                 } else {
-			$NumberStack['Normalized']      =
-							  $NumberStack['username'].
-							  $NumberStack['delimiter'].
-							  $NumberStack['domain'];
+                    $NumberStack['Normalized'] = $NumberStack['username'].
+                                                 $NumberStack['delimiter'].
+                                                 $NumberStack['domain'];
                 }
             } else {
-                $dst_struct                     = $this->lookupDestination(
+                $dst_struct = $this->lookupDestination(
                     $Number,
                     $subscriber,
                     $domain,
@@ -1468,11 +1468,11 @@ class CDRS
                                                   $NumberStack['domain'];
             }
         } else {
-                $NumberStack['NumberPrint']     = $NumberStack['username'].
-                                                  $NumberStack['delimiter'].
-                                                  $NumberStack['domain'];
+            $NumberStack['NumberPrint'] = $NumberStack['username'].
+                                          $NumberStack['delimiter'].
+                                          $NumberStack['domain'];
 
-                $NumberStack['Normalized']      = $NumberStack['NumberPrint'];
+            $NumberStack['Normalized']  = $NumberStack['NumberPrint'];
         }
 
         return $NumberStack;
@@ -1960,7 +1960,11 @@ class CDRS
 
         foreach (array_keys($accounts) as $_key) {
 
-            $query=sprintf("select id from quota_usage where datasource = '%s' and account = '%s'",addslashes($this->cdr_source),addslashes($_key));
+            $query = sprintf(
+                "select id from quota_usage where datasource = '%s' and account = '%s'",
+                addslashes($this->cdr_source),
+                addslashes($_key)
+            );
 
             if ($this->queryHasError($query)) {
                 return false;
@@ -2742,9 +2746,10 @@ class SIPonline
             $where.= sprintf("and domain in (%s)",addslashes($allowed_domains_sql)) ;
         }
 
-        $query=sprintf("select count(*) as c, domain from %s %s group by domain order by domain ASC",
-        addslashes($this->locationTable),
-        $where
+        $query = sprintf(
+            "select count(*) as c, domain from %s %s group by domain order by domain ASC",
+            addslashes($this->locationTable),
+            $where
         );
 
         $this->locationDB->query($query);
