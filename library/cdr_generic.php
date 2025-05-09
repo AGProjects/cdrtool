@@ -96,6 +96,21 @@ class CDRS
         'DestinationId'   => 'DestinationId'
     );
 
+    private function queryHasError($query)
+    {
+        if ($this->cdrtool->query($query)) {
+            return false;
+        }
+        $log = sprintf(
+            "Database error for query %s: %s (%s)",
+            $query,
+            $this->cdrtool->Error,
+            $this->cdrtool->Errno
+        );
+        errorAndPrint($log);
+        return true;
+    }
+
     function _readCDRNormalizationFieldsFromDB()
     {
         foreach (array_keys($this->CDRNormalizationFields) as $field) {
@@ -408,15 +423,7 @@ class CDRS
 
         $query = sprintf("select `value` from memcache where `key` = 'destinations'");
 
-        if (!$this->cdrtool->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->cdrtool->Error,
-                $this->cdrtool->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -439,15 +446,7 @@ class CDRS
 
             $query = sprintf("select `value` from memcache where `key` = 'destinations_sip'");
 
-            if (!$this->cdrtool->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->cdrtool->Error,
-                    $this->cdrtool->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+            if ($this->queryHasError($query)) {
                 return false;
             }
 
@@ -637,15 +636,7 @@ class CDRS
         }
 
         $query = sprintf("select `value` from memcache where `key` = 'destinations'");
-        if (!$this->cdrtool->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->cdrtool->Error,
-                $this->cdrtool->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -654,15 +645,7 @@ class CDRS
                 "update memcache set value = '%s' where `key` = 'destinations'",
                 addslashes($destinations_cache)
             );
-            if (!$this->cdrtool->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->cdrtool->Error,
-                    $this->cdrtool->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+            if ($this->queryHasError($query)) {
                 return false;
             }
 
@@ -680,15 +663,8 @@ class CDRS
                 "insert into memcache (`key`,`value`) values ('destinations','%s')",
                 addslashes($destinations_cache)
             );
-            if (!$this->cdrtool->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->cdrtool->Error,
-                    $this->cdrtool->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+
+            if ($this->queryHasError($query)) {
                 return false;
             }
 
@@ -704,15 +680,7 @@ class CDRS
         }
 
         $query = sprintf("select `value` from memcache where `key` = 'destinations_sip'");
-        if (!$this->cdrtool->query($query)) {
-            $log = sprintf(
-                "Database error for query %s: %s (%s)",
-                $query,
-                $this->cdrtool->Error,
-                $this->cdrtool->Errno
-            );
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -721,17 +689,10 @@ class CDRS
                 "update memcache set value = '%s' where `key` = 'destinations_sip'",
                 addslashes($destinations_sip_cache)
             );
-            if (!$this->cdrtool->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->cdrtool->Error,
-                    $this->cdrtool->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+            if ($this->queryHasError($query)) {
                 return false;
             }
+
             $log = sprintf("Cached %d SIP destinations", $this->destinations_sip_count);
             logger($log);
         } else {
@@ -740,17 +701,10 @@ class CDRS
                 addslashes($destinations_sip_cache)
             );
 
-            if (!$this->cdrtool->query($query)) {
-                $log = sprintf(
-                    "Database error for query %s: %s (%s)",
-                    $query,
-                    $this->cdrtool->Error,
-                    $this->cdrtool->Errno
-                );
-                print $log;
-                syslog(LOG_NOTICE, $log);
+            if ($this->queryHasError($query)) {
                 return false;
             }
+
             $log = sprintf("Updated cache for %d SIP destinations", $this->destinations_sip_count);
             logger($log);
         }
@@ -2000,10 +1954,7 @@ class CDRS
 
             $query=sprintf("select id from quota_usage where datasource = '%s' and account = '%s'",addslashes($this->cdr_source),addslashes($_key));
 
-            if (!$this->cdrtool->query($query)){
-                $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-                syslog(LOG_NOTICE, $log);
-                print($log);
+            if ($this->queryHasError($query)) {
                 return false;
             }
 
@@ -2026,8 +1977,12 @@ class CDRS
                     addslashes($_key)
                 );
 
-                if (!$this->cdrtool->query($query)){
-                    $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->cdrtool->query($query)) {
+                    $log = sprintf(
+                        "Database error: %s (%s)",
+                        $this->cdrtool->Error,
+                        $this->cdrtool->Errno
+                    );
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
                 } else {
@@ -2058,8 +2013,12 @@ class CDRS
                     addslashes($this->localDomains[$_d]['reseller'])
                 );
 
-                if (!$this->cdrtool->query($query)){
-                    $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
+                if (!$this->cdrtool->query($query)) {
+                    $log = sprintf(
+                        "Database error: %s (%s)",
+                        $this->cdrtool->Error,
+                        $this->cdrtool->Errno
+                    );
                     syslog(LOG_NOTICE, $log);
                     $failed_keys++;
                 } else {
@@ -2146,22 +2105,29 @@ class CDRS
 
         $_reset_array = $_accounts;
 
-        $log=sprintf("Next quota check will rebuild the counters for %s accounts",count($_reset_array));
-        syslog(LOG_NOTICE,$log );
+        $log = sprintf(
+            "Next quota check will rebuild the counters for %s accounts",
+            count($_reset_array)
+        );
+        logger($log);
 
-        $query=sprintf("delete from memcache where `key` in ('%s','%s')",addslashes($this->quota_init_flag),addslashes($this->quota_reset_flag));
-        if (!$this->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        $query=sprintf(
+            "delete from memcache where `key` in ('%s','%s')",
+            addslashes($this->quota_init_flag),
+            addslashes($this->quota_reset_flag)
+        );
+
+        if ($this->queryHasError($query)) {
             return false;
         }
 
-        $query=sprintf("insert into memcache (`key`,`value`) values ('%s','%s')",addslashes($this->quota_reset_flag),addslashes(json_encode($_reset_array)));
-        if (!$this->cdrtool->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)",$query,$this->cdrtool->Error,$this->cdrtool->Errno);
-            print $log;
-            syslog(LOG_NOTICE, $log);
+        $query = sprintf(
+            "insert into memcache (`key`,`value`) values ('%s','%s')",
+            addslashes($this->quota_reset_flag),
+            addslashes(json_encode($_reset_array))
+        );
+
+        if ($this->queryHasError($query)) {
             return false;
         }
 
@@ -2176,10 +2142,7 @@ class CDRS
 
         $query.=")";
 
-        if (!$this->cdrtool->query($query)) {
-            $log=sprintf ("Database error: %s (%s)",$this->cdrtool->Error,$this->cdrtool->Errno);
-            syslog(LOG_NOTICE,$log);
-            print $log;
+        if ($this->queryHasError($query)) {
             return 0;
         } else {
             return 1;
