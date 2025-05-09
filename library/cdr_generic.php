@@ -1423,48 +1423,56 @@ class CDRS
             $NumberStack['E164'] = $E164->E164Format($NumberStack['username']);
         }
 
-        if ($type=="destination" && $NumberStack['E164']) {
-            // lookup destination id for the E164 number
-            $dst_struct                     = $this->lookupDestination(
-                $NumberStack['E164'],
-                $subscriber,
-                $domain,
-                $gateway,$reseller_id
-            );
-            $NumberStack['DestinationId']   = $dst_struct[0];
-            $NumberStack['destinationName'] = $dst_struct[1];
+        if ($type=="destination") {
+            if ($NumberStack['E164']) {
+                // lookup destination id for the E164 number
+                $dst_struct                     = $this->lookupDestination(
+                    $NumberStack['E164'],
+                    $subscriber,
+                    $domain,
+                    $gateway,$reseller_id
+                );
+                $NumberStack['DestinationId']   = $dst_struct[0];
+                $NumberStack['destinationName'] = $dst_struct[1];
 
-            $NumberStack['NumberPrint']     = "+".$NumberStack['E164'];
+                $NumberStack['NumberPrint']     = "+".$NumberStack['E164'];
 
-            if (!$ENUMtld) {
-            $NumberStack['Normalized']      = $this->intAccessCode.
-                                              $NumberStack['E164'].
-                                              $NumberStack['delimiter'].
-                                              $NumberStack['domain'];
+                if (!$ENUMtld) {
+			$NumberStack['Normalized']      = $this->intAccessCode.
+							  $NumberStack['E164'].
+							  $NumberStack['delimiter'].
+							  $NumberStack['domain'];
+                } else {
+			$NumberStack['Normalized']      =
+							  $NumberStack['username'].
+							  $NumberStack['delimiter'].
+							  $NumberStack['domain'];
+                }
             } else {
-            $NumberStack['Normalized']      =
-                                              $NumberStack['username'].
-                                              $NumberStack['delimiter'].
-                                              $NumberStack['domain'];
+                $dst_struct                     = $this->lookupDestination(
+                    $Number,
+                    $subscriber,
+                    $domain,
+                    $gateway,
+                    $reseller_id
+                );
+                $NumberStack['DestinationId']   = $dst_struct[0];
+                $NumberStack['destinationName'] = $dst_struct[1];
+
+                $NumberStack['NumberPrint']     = $NumberStack['username'].
+                                                  $NumberStack['delimiter'].
+                                                  $NumberStack['domain'];
+
+                $NumberStack['Normalized']      = $NumberStack['username'].
+                                                  $NumberStack['delimiter'].
+                                                  $NumberStack['domain'];
             }
         } else {
-            $dst_struct                     = $this->lookupDestination(
-                $Number,
-                $subscriber,
-                $domain,
-                $gateway,
-                $reseller_id
-            );
-            $NumberStack['DestinationId']   = $dst_struct[0];
-            $NumberStack['destinationName'] = $dst_struct[1];
+                $NumberStack['NumberPrint']     = $NumberStack['username'].
+                                                  $NumberStack['delimiter'].
+                                                  $NumberStack['domain'];
 
-            $NumberStack['NumberPrint']     = $NumberStack['username'].
-                                              $NumberStack['delimiter'].
-                                              $NumberStack['domain'];
-
-            $NumberStack['Normalized']      = $NumberStack['username'].
-                                              $NumberStack['delimiter'].
-                                              $NumberStack['domain'];
+                $NumberStack['Normalized']      = $NumberStack['NumberPrint'];
         }
 
         return $NumberStack;
