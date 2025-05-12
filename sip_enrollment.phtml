@@ -12,7 +12,7 @@
 require '/etc/cdrtool/global.inc';
 require 'sip_settings.php';
 
-Header("Content-type: text/plain");
+header("Content-type: text/plain");
 
 $NewAccount = new Enrollment();
 $NewAccount->createAccount();

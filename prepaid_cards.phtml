@@ -30,8 +30,8 @@ if ($action != "export") {
     $layout = new pageLayoutLocal();
     $layout->showTopMenu($title);
 } else {
-    Header("Content-type: text/plain");
-    Header("Content-Disposition: inline; filename=$batch.txt");
+    header("Content-type: text/plain");
+    header("Content-Disposition: inline; filename=$batch.txt");
     header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
     header("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
     header("Pragma: no-cache");

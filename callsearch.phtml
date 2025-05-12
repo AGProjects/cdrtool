@@ -40,12 +40,12 @@ if (!$export) {
         $db->query($query);
     }
 } else {
-    Header("Content-type: text/plain");
-    Header("Content-Disposition: inline; filename=cdr.txt");
+    header("Content-type: text/plain");
+    header("Content-Disposition: inline; filename=cdr.txt");
 }
 
 if (isset($CDRTool['dataSourcesAllowed'])) {
-	foreach ($CDRTool['dataSourcesAllowed'] as $k => $v) {
+    foreach ($CDRTool['dataSourcesAllowed'] as $k => $v) {
         $cdr_source_els[] = array(
             "label" => $DATASOURCES[$v]['name'],
             "value" => $v

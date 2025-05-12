@@ -148,7 +148,7 @@ class CDRTool_Auth extends Auth
 
         if ($username) {
             $username = trim($username);
-            if (preg_match ("/\@/",$username)) {
+            if (preg_match("/\@/", $username)) {
                 $a = explode("@", $username);
                 $domainAuth = new DomainAuthLocal();
 
@@ -587,7 +587,7 @@ class SIP_Subscriber_Auth extends Auth
         $this->SipPort->setOpt('curl', CURLOPT_SSL_VERIFYHOST, 0);
         $this->SipPort->addHeader($this->SoapAuth);
 
-        $result     = $this->SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
+        $result = $this->SipPort->getAccount(array("username" =>$a[0],"domain"   =>$domain));
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -609,7 +609,7 @@ class SIP_Subscriber_Auth extends Auth
         $web_password='';
         foreach ($result->properties as $_property) {
             if ($_property->name == 'web_password') {
-                $web_password=$_property->value;
+                $web_password = $_property->value;
                 break;
             }
 
@@ -828,10 +828,12 @@ class OpenSIPS_DomainAuth
 
 class SipThor_DomainAuth
 {
+    private $userDB;
+    private $allowedDataSourcesSubscriber;
 
-    function __construct()
+    public function __construct()
     {
-        $this->userDB   = new DB_sipthor;
+        $this->userDB = new DB_sipthor;
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
