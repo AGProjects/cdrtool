@@ -1459,6 +1459,7 @@ function languageCodeFor($lang='en')
     return 'C'; // this will never be reached
 }
 
+# TODO: Check if still used -- Tijmen
 function RandomString($len=11)
 {
     $alf=array("a","b","c","d","e","f",

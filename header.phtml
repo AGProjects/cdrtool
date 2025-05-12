@@ -1,8 +1,7 @@
 <?php
-header("Cache-Control: no-cache, must-revalidate");
-header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("Expires: " . gmdate("D, d M Y H:i:s") . " GMT");
-header("ETag: ", randomstring());
+header("Cache-Control: no-store, no-cache, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
 
 global $CDRTool;
 
