@@ -111,7 +111,7 @@ class CDRS
         return true;
     }
 
-    function _readCDRNormalizationFieldsFromDB()
+    protected function _readCDRNormalizationFieldsFromDB()
     {
         foreach (array_keys($this->CDRNormalizationFields) as $field) {
             $mysqlField = $this->CDRNormalizationFields[$field];
@@ -381,7 +381,8 @@ class CDRS
         $this->initOK=1;
     }
 
-    function signalHandler($signal) {
+    public function signalHandler($signal)
+    {
         if ($signal === SIGINT) {
             echo "\nCTRL+C detected! Exiting gracefully...\n";
             $this->abort = true;
@@ -414,7 +415,6 @@ class CDRS
 
     function LoadDestinations()
     {
-
         $_destinations     = array();
         $_destinations_sip = array();
 
@@ -892,7 +892,7 @@ class CDRS
                     print "$this->rows records found";
                 }
                 if ($begin_datetime && $end_datetime) {
-                    printf(" between %s and %s",$begin_datetime,$end_datetime);
+                    printf(" between %s and %s", $begin_datetime, $end_datetime);
                 }
 
                 print "</center>
@@ -919,7 +919,7 @@ class CDRS
 
             print "Time: ";
             print "<div class=\"input-append bootstrap-timepicker\">";
-            $f->show_element("begin_time","");
+            $f->show_element("begin_time", "");
             print "<span class=\"add-on\"><i class=\"icon-time\"></i></span>
                 </div>
             </td>
@@ -975,9 +975,9 @@ class CDRS
             print "
                 <ul class=\"pager\">
             ";
-            if  ($next != 0) {
+            if ($next != 0) {
                 $show_next = $this->maxrowsperpage - $next;
-                if  ($show_next < 0)  {
+                if ($show_next < 0) {
                     $mod_show_next  =  $show_next - 2 * $show_next;
                 }
                 $url_prev = $PHP_SELF.$this->url."&action=search&next=$mod_show_next";
@@ -1044,7 +1044,7 @@ class CDRS
 
     function buildWhereForUnnormalizedSessions()
     {
-        $this->whereUnnormalized = sprintf(" %s = '0'",$this->normalizedField);
+        $this->whereUnnormalized = sprintf(" %s = '0'", $this->normalizedField);
 
         if ($this->stopTimeField) $this->whereUnnormalized .= " and $this->stopTimeField not like '0000-00-00 00:00:00%' ";
 
@@ -1350,7 +1350,7 @@ class CDRS
             if (strlen($NumberStack['username']) < 1) {
                 $NumberStack['username'] = "unknown";
             }
-            $NumberStack['domain']    = substr($Number,$pos+1);
+            $NumberStack['domain']    = substr($Number, $pos+1);
             $NumberStack['delimiter'] = "@";
 
             $pos = strpos($NumberStack['username'], ":");
@@ -1519,9 +1519,9 @@ class CDRS
 
         $ret = false;
         if ($destinations_sip[$destination]) {
-            $ret = array($destination,$destinations_sip[$destination]['name']);
+            $ret = array($destination, $destinations_sip[$destination]['name']);
         } else {
-            list($user,$domain) = explode("@", $destination);
+            list($user, $domain) = explode("@", $destination);
             if ($domain) {
                 $domain = sprintf("@%s", $domain);
                 if ($destinations_sip[$domain]) {
@@ -1785,13 +1785,13 @@ class CDRS
                 if ($query=file_get_contents($createTableFile)) {
                     $query=preg_replace("/CREATE TABLE.*/", "CREATE TABLE $destinationTableTmp (", $query);
                     if (!$this->CDRdb->query($query)) {
-                        $log = sprintf("Error creating table %s: %s, %s\n", $destinationTableTmp, $this->CDRdb->Error,$query);
+                        $log = sprintf("Error creating table %s: %s, %s\n", $destinationTableTmp, $this->CDRdb->Error, $query);
                         syslog(LOG_NOTICE, $log);
                         print $log;
                         return 0;
                     }
                 } else {
-                    $log = sprintf("Cannot read file %s\n",$createTableFile);
+                    $log = sprintf("Cannot read file %s\n", $createTableFile);
                     syslog(LOG_NOTICE, $log);
                     print $log;
                     return 0;
@@ -1816,18 +1816,18 @@ class CDRS
                     $rps=0;
                     if ($this->CDRdb->affected_rows() && $d) $rps=$this->CDRdb->affected_rows()/$d;
 
-                    $log = printf("Copied %d CDRs into table %s in %d s @ %.0f rps\n",$this->CDRdb->affected_rows(),$destinationTableTmp,$d,$rps);
-                    syslog(LOG_NOTICE,$log);
+                    $log = printf("Copied %d CDRs into table %s in %d s @ %.0f rps\n", $this->CDRdb->affected_rows(), $destinationTableTmp, $d, $rps);
+                    syslog(LOG_NOTICE, $log);
                     print $log;
 
                     $query=sprinf("rename table %s to %s", addslashes($destinationTableTmp),addslashes($destinationTableTmp));
 
                     if (!$this->CDRdb->query($query)) {
-                        printf ("Error renaming table %s to %s: %s\n",$destinationTableTmp,$destinationTable,$this->CDRdb->Error);
+                        printf ("Error renaming table %s to %s: %s\n", $destinationTableTmp, $destinationTable, $this->CDRdb->Error);
                         return 0;
                     }
                 } else {
-                    printf ("Error copying records in table %s: %s\n",$destinationTable,$this->CDRdb->Error);
+                    printf ("Error copying records in table %s: %s\n", $destinationTable, $this->CDRdb->Error);
                     return 0;
                 }
             }
@@ -1917,8 +1917,8 @@ class CDRS
             if ($this->CDRdb->query($query)) {
                 $deleted=$deleted+$this->CDRdb->affected_rows();
             } else {
-                $log=sprintf("Error: %s (%s)",$this->CDRdb->Error,$this->CDRdb->Errno);
-                syslog(LOG_NOTICE,$log);
+                $log=sprintf("Error: %s (%s)", $this->CDRdb->Error, $this->CDRdb->Errno);
+                syslog(LOG_NOTICE, $log);
                 print $log;
                 return 0;
             }
@@ -1945,8 +1945,8 @@ class CDRS
 
         if ($deleted && $duration) $rps=$deleted/$duration;
 
-        $log=sprintf("%s CDRs of month %s deleted from %s in %d s @ %.0f rps\n",$deleted,$month,$sourceTable,$duration,$rps);
-        syslog(LOG_NOTICE,$log);
+        $log=sprintf("%s CDRs of month %s deleted from %s in %d s @ %.0f rps\n", $deleted, $month, $sourceTable, $duration, $rps);
+        syslog(LOG_NOTICE, $log);
         print $log;
         return 1;
     }
@@ -2061,7 +2061,7 @@ class CDRS
 
          unset($this->lock_connection_id);
 
-        register_shutdown_function("unLockNormalization",$locker,$lockname);
+        register_shutdown_function("unLockNormalization", $locker, $lockname);
 
         $query=sprintf("SELECT GET_LOCK('%s',0)",addslashes($lockname));
 
@@ -2178,7 +2178,7 @@ class E164
     // to consider the session a PSTN destination and rate it according
     // to the PSTN rating plan
 
-    public function __construct($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="") {
+    public function __construct($intAccessCode='00', $natAccessCode='0', $CountryCode='', $ENUMtldRegexp="") {
         $this->regexp_international = "/^".$intAccessCode."([0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
@@ -2194,14 +2194,14 @@ class E164
 
         // If nothing is returned by this function the session is considered an Internet destination
 
-        if (preg_match($this->regexp_international,$Number,$m)) {
+        if (preg_match($this->regexp_international, $Number, $m)) {
             return $m[1];
-        } elseif (preg_match($this->regexp_national,$Number,$m)) {
+        } elseif (preg_match($this->regexp_national, $Number, $m)) {
             // Add default country code
             return $this->CountryCode.$m[1];
         } elseif (strlen($this->ENUMtldRegexp)) {
             $_regexp="/^".$this->ENUMtldRegexp."\$/";
-            if (preg_match($_regexp,$Number,$m)) {
+            if (preg_match($_regexp, $Number, $m)) {
                 return $m[1];
             }
         }
@@ -2210,7 +2210,7 @@ class E164
 }
 
 class E164_Europe extends E164 {
-    public function __construct($intAccessCode='00', $natAccessCode='0',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
+    public function __construct($intAccessCode='00', $natAccessCode='0', $CountryCode='', $ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([1-9][0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
@@ -2219,7 +2219,7 @@ class E164_Europe extends E164 {
 }
 
 class E164_US extends E164 {
-    public function __construct($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}',$CountryCode='',$ENUMtldRegexp="([1-9][0-9]{7,})") {
+    public function __construct($intAccessCode='011', $natAccessCode='[1-9][0-9]{2}', $CountryCode='', $ENUMtldRegexp="([1-9][0-9]{7,})") {
         $this->regexp_international = "/^".$intAccessCode."([1-9][0-9]{5,})\$/";
         $this->regexp_national      = "/^".$natAccessCode."([0-9]{3,})\$/";
         $this->CountryCode          = trim($CountryCode);
@@ -2503,7 +2503,7 @@ class CDR
                     } else {
                         if (preg_match("/^(\w+)(\d{4})(\d{2})$/", $table, $m)) {
                             $previousTable=$m[1].date('Ym', mktime(0, 0, 0, $m[3]-1, "01", $m[2]));
-                            $query2 = sprintf("update %s set %s where %s = '%s'",addslashes($previousTable),$query,addslashes($this->idField),addslashes($this->id));
+                            $query2 = sprintf("update %s set %s where %s = '%s'",addslashes($previousTable), $query,addslashes($this->idField),addslashes($this->id));
 
                             if ($this->CDRS->CDRdb1->query($query2)) {
                                 if ($this->CDRS->CDRdb1->affected_rows()) {
@@ -2633,7 +2633,7 @@ class CDR
                     break;
                 }
 
-                if (preg_match("/^\n/",$line) || preg_match("/^END/",$line)) {
+                if (preg_match("/^\n/", $line) || preg_match("/^END/", $line)) {
                     break;
                 }
 
@@ -2660,7 +2660,7 @@ class CDR
     }
 }
 
-function getLocalTime($timezone,$timestamp)
+function getLocalTime($timezone, $timestamp)
 {
     global $CDRTool;
 
@@ -2712,6 +2712,9 @@ function unLockNormalization($dbid, $lockname)
 
 class SIPonline
 {
+    public $domain;
+    public $allowedDomains;
+
     public function __construct($datasource = '', $database = 'db', $table = 'location')
     {
         global $CDRTool;
@@ -2724,7 +2727,7 @@ class SIPonline
         $this->datasource = $datasource;
 
         if (strlen($CDRTool['filter']['domain'])) {
-            $this->allowedDomains=explode(" ",$CDRTool['filter']['domain']);
+            $this->allowedDomains = explode(" ", $CDRTool['filter']['domain']);
             $allowed_domains_sql="";
             $j=0;
             foreach ($this->allowedDomains as $_domain) {
@@ -2876,8 +2879,7 @@ class SIPonline
 
         $this->locationDB->query($query);
 
-         while ($this->locationDB->next_record()) {
-
+        while ($this->locationDB->next_record()) {
             $found++;
 
             $username   = $this->locationDB->f('username');
@@ -2895,7 +2897,7 @@ class SIPonline
 
             $transport="UDP";
 
-            if ($c_els[1] && preg_match("/transport=(tcp|tls)/i",$c_els[1],$m)) {
+            if ($c_els[1] && preg_match("/transport=(tcp|tls)/i", $c_els[1], $m)) {
                 $transport=strtoupper($m[1]);
             }
 
@@ -2916,7 +2918,7 @@ class SIPonline
 
             $seen[$username]++;
             $seen[$domain]++;
-        }
+       }
     }
 
     function showUAdistribution()
@@ -2959,16 +2961,29 @@ class PrepaidHistory
     function purge($days = 7)
     {
         $beforeDate=Date("Y-m-d", time()-$days*3600*24);
-        $query=sprintf("delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",addslashes($beforeDate),'%');
+        $query = sprintf(
+            "delete from prepaid_history where date < '%s' and action like 'Debit balance%s'",
+            addslashes($beforeDate),
+            '%'
+        );
 
         if (!$this->db->query($query)) {
-            $log=sprintf ("Database error for query %s: %s (%s)\n",$query,$this->db->Error,$this->db->Errno);
+            $log = sprintf(
+                "Database error for query %s: %s (%s)\n",
+                $query,
+                $this->db->Error,
+                $this->db->Errno
+            );
             print $log;
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
         } else {
-            $log=sprintf ("Purged %d records from prepaid history before %s\n",$this->db->affected_rows(),$beforeDate);
+            $log = sprintf(
+                "Purged %d records from prepaid history before %s\n",
+                $this->db->affected_rows(),
+                $beforeDate
+            );
             print $log;
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
         }
     }
 }
@@ -2982,7 +2997,7 @@ class CSVWritter
     var $cdr_type           = array();
     var $lines              = 0;
 
-    public function __construct($cdr_source = '',$csv_directory = '') {
+    public function __construct($cdr_source = '', $csv_directory = '') {
         if ($cdr_source) {
             $this->cdr_source = $cdr_source;
         } else {
@@ -2993,8 +3008,8 @@ class CSVWritter
             if (is_dir($csv_directory)) {
                 $this->csv_directory = $csv_directory;
             } else {
-                $log=sprintf ("CSV writter error: %s is not a directory\n",$csv_directory);
-                syslog(LOG_NOTICE,$log);
+                $log=sprintf ("CSV writter error: %s is not a directory\n", $csv_directory);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
         }
@@ -3003,8 +3018,8 @@ class CSVWritter
 
         if (!is_dir($this->directory)) {
             if (!mkdir($this->directory)) {
-                $log=sprintf ("CSV writter error: cannot create directory %s\n",$this->directory);
-                syslog(LOG_NOTICE,$log);
+                $log=sprintf ("CSV writter error: cannot create directory %s\n", $this->directory);
+                syslog(LOG_NOTICE, $log);
                 return false;
             }
             chmod($this->directory, 0775);
@@ -3021,7 +3036,7 @@ class CSVWritter
 
         if (!$filename_suffix) {
             $log=sprintf ("CSV writter error: no filename suffix provided\n");
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -3032,8 +3047,8 @@ class CSVWritter
         $this->full_path_tmp=$this->full_path.'.tmp';
 
         if (!$this->fp = fopen($this->full_path_tmp, 'w')) {
-            $log=sprintf ("CSV writter error: cannot open %s for writing\n",$this->full_path_tmp);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("CSV writter error: cannot open %s for writing\n", $this->full_path_tmp);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 
@@ -3048,11 +3063,11 @@ class CSVWritter
         fclose($this->fp);
 
         if (!rename($this->full_path_tmp, $this->full_path)) {
-            $log=sprintf ("CSV writter error: cannot rename %s to %s\n",$this->full_path_tmp,$this->full_path);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("CSV writter error: cannot rename %s to %s\n", $this->full_path_tmp, $this->full_path);
+            syslog(LOG_NOTICE, $log);
         } else {
-            $log=sprintf ("%d normalized CDRs written to %s\n",$this->lines, $this->full_path);
-            syslog(LOG_NOTICE,$log);
+            $log=sprintf ("%d normalized CDRs written to %s\n", $this->lines, $this->full_path);
+            syslog(LOG_NOTICE, $log);
         }
     }
 
@@ -3149,18 +3164,18 @@ class MaxRate extends CSVWritter
             $cdr['destination'] = $CDR->CanonicalURI;
         }
 
-        list($canonical_username, $canonical_domain)=explode("@",$cdr['destination']);
+        list($canonical_username, $canonical_domain)=explode("@", $cdr['destination']);
 
         # skip domains
-        if ($canonical_domain && in_array($canonical_domain,$this->skip_domains)) return true;
+        if ($canonical_domain && in_array($canonical_domain, $this->skip_domains)) return true;
 
         # skip numbers
-        if ($canonical_username && in_array($canonical_username,$this->skip_numbers)) return true;
+        if ($canonical_username && in_array($canonical_username, $this->skip_numbers)) return true;
 
         # skip prefixes
         if ($canonical_username && count($this->skip_prefixes)) {
             foreach ($this->skip_prefixes as $prefix) {
-                if (preg_match("/^$prefix/",$canonical_username)) return true;
+                if (preg_match("/^$prefix/", $canonical_username)) return true;
             }
         }
 
@@ -3175,28 +3190,28 @@ class MaxRate extends CSVWritter
             $cdr['origin']      = '0031'.ltrim($CallerRPID,'0');
         } else {
             # normalize caller id numbers from PSTN gateway to 00format
-            if (preg_match("/^\+?0([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            if (preg_match("/^\+?0([1-9][0-9]+)@(.*)$/", $CDR->aNumberPrint, $m)) {
                 $cdr['origin'] = "0031".$m[1];
-            } elseif (preg_match("/^\+?00([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^\+?00([1-9][0-9]+)@(.*)$/", $CDR->aNumberPrint, $m)) {
                 $cdr['origin'] = "00".$m[1];
-            } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/", $CDR->aNumberPrint, $m)) {
                 $cdr['origin'] = "0031".$m[1];
-            } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->aNumberPrint,$m)) {
+            } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/", $CDR->aNumberPrint, $m)) {
                 $cdr['origin'] = "00".$m[1];
-            } elseif (preg_match("/^anonymous@(.*)$/",$CDR->aNumberPrint) && $CDR->SipRPID) {
-                if (preg_match("/^\+?0([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
+            } elseif (preg_match("/^anonymous@(.*)$/", $CDR->aNumberPrint) && $CDR->SipRPID) {
+                if (preg_match("/^\+?0([1-9][0-9]+)$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = "0031".$m[1];
-                } elseif (preg_match("/^\+?00([1-9][0-9]+)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+?00([1-9][0-9]+)$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = "00".$m[1];
-                } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^([1-9][0-9]+)@(.*)$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = $m[1];
-                } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+([1-9][0-9]+)@(.*)$/", $CDR->SipRPID, $m)) {
                    $cdr['origin'] = "00".$m[1];
-                } elseif (preg_match("/^\+?0[0-9]?+@?(.*)?$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^\+?0[0-9]?+@?(.*)?$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = "0031123456789";
-                } elseif (preg_match("/^.*[a-zA-Z].*$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^.*[a-zA-Z].*$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = "0031123456789";
-                } elseif (preg_match("/^ims.imscore.net.*$/",$CDR->SipRPID,$m)) {
+                } elseif (preg_match("/^ims.imscore.net.*$/", $CDR->SipRPID, $m)) {
                     $cdr['origin'] = "0031123456789";
                 } else {
                     $cdr['origin'] = $CDR->SipRPID;
@@ -3256,7 +3271,7 @@ class MaxRate extends CSVWritter
 
         list($cdr['username'], $cdr['domain'])= explode('@', $CDR->username);
 
-        $cdr['charge_info'] = sprintf('"%s","%s","%s"', $CDR->price,$cdr['profile'], $CDR->destinationName);
+        $cdr['charge_info'] = sprintf('"%s","%s","%s"', $CDR->price, $cdr['profile'], $CDR->destinationName);
 
         if ($CDR->flow == 'on-net') {
             # RFP 4.2.1
@@ -3397,7 +3412,7 @@ class MaxRate extends CSVWritter
                 "CSV writter error: cannot append to file %s\n",
                 $this->full_path_tmp
             );
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
 
             $this->close_file();
             $this->ready = false;
@@ -3417,7 +3432,7 @@ class MaxRate extends CSVWritter
             return $this->rpid_cache[$account];
         }
 
-        list($username,$domain) = explode('@', $account);
+        list($username, $domain) = explode('@', $account);
 
         $query = sprintf(
             "select * from sip_accounts where username = '%s' and domain = '%s'",
@@ -3432,7 +3447,7 @@ class MaxRate extends CSVWritter
                 $this->AccountsDB->Error,
                 $this->AccountsDB->Errno
             );
-            syslog(LOG_NOTICE,$log);
+            syslog(LOG_NOTICE, $log);
             return false;
         }
 

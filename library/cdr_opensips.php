@@ -4385,7 +4385,7 @@ class SIP_trace
                         if (preg_match("/^BYE (sip:|sips:)(.*)\@(.*):(\d*)(.*)$/", $bye_line, $m)) {
                             $bye_ip = $m[3];
                             $bye_port = $m[4];
-                            if ($this->column[$bye_ip]){
+                            if ($this->column[$bye_ip]) {
                                 $this->trace_array[$key]['fromip'] = $bye_ip;
                                 $this->trace_array[$key]['fromport'] = $bye_port;
                                 $this->trace_array[$key]['arrow_possition'] = $this->column[$bye_ip];
