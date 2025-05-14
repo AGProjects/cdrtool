@@ -47,14 +47,15 @@ class CDRTool_Auth extends Auth
         $password    = isset($_POST["password"]) ? $_POST["password"] : '';
         $response    = isset($_POST["response"]) ? $_POST["response"] : '';
 
-        $max_login_attempts=5;
+        $max_login_attempts = 5;
 
         $sess->register("challenge");
         if (!$challenge) {
             $challenge = md5(uniqid($this->magic));
         }
 
-        $query=sprintf("select * from spam where ip = '%s'", addslashes($_SERVER['REMOTE_ADDR']));
+        $query = sprintf("select * from spam where ip = '%s'", addslashes($_SERVER['REMOTE_ADDR']));
+
         $this->db->query($query);
 
         if ($this->db->num_rows()) {
@@ -63,14 +64,14 @@ class CDRTool_Auth extends Auth
             $spam_login_ip      = $this->db->f('ip');
             $spam_login_tries   = $this->db->f('tries');
             $spam_login_stamp   = $this->db->f('stamp');
-            $next_try           = $spam_login_stamp+120;
+            $next_try           = $spam_login_stamp + 120;
             $remains            = $next_try-time();
             $next_try           = Date("Y-m-d H:i:s", $next_try);
             $now                = Date("Y-m-d H:i:s", time());
         }
 
         if ($remains < 0) {
-            $query=sprintf("delete from spam where ip = '%s'", addslashes($spam_login_ip));
+            $query = sprintf("delete from spam where ip = '%s'", addslashes($spam_login_ip));
             if ($this->db->query($query)) {
                 unset($spam_login_tries);
             }
@@ -102,8 +103,8 @@ class CDRTool_Auth extends Auth
                 $this->db->query($log_query);
             }
 
-            $new_stamp=time();
-            $query=sprintf(
+            $new_stamp = time();
+            $query = sprintf(
                 "update spam set tries = tries + 1 where ip =  '%s' ",
                 addslashes($_SERVER['REMOTE_ADDR'])
             );
@@ -141,7 +142,7 @@ class CDRTool_Auth extends Auth
         require_once 'PEAR.php';
 
         if ($username) {
-            $this->auth["uname"]=$username;        ## This provides access for "loginform.ihtml"
+            $this->auth["uname"] = $username;        ## This provides access for "loginform.ihtml"
         }
 
         $uid = false;
@@ -406,13 +407,13 @@ class CDRTool_Auth extends Auth
                 }
 
                 $expected_response = md5("$username:$pass_md5:$challenge");
-                $expect_otp=md5("$username:$otp_passwd_md5:$challenge");
+                $expect_otp = md5("$username:$otp_passwd_md5:$challenge");
 
                 //print_r($result);
                 ## True when JS is disabled
                 if ($response == "") {
                     if ($CDRTool['provider']['clear_text_passwords']!= 1) {
-                        $password=md5($password);
+                        $password = md5($password);
                     }
                     if ($password == $pass
                         || ($password == $otp_passwd && $timestamp_otp > $timestamp_now)
@@ -513,7 +514,6 @@ class SIP_Subscriber_Auth extends Auth
 
     function auth_loginform()
     {
-
         global $sess;
         global $max_login_attempts;
         global $challenge;
@@ -797,8 +797,10 @@ function checkSipAccount($account)
 
 class OpenSIPS_DomainAuth
 {
+    private $userDB;
+    private $allowedDataSourcesSubscriber;
 
-    function __construct()
+    public function __construct()
     {
         $this->userDB   = new DB_opensips;
         $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
@@ -903,8 +905,7 @@ class SipThor_DomainAuth
 
 class pageLayout
 {
-
-    function showLoginForm(&$parentAuth)
+    public function showLoginForm(&$parentAuth)
     {
         global $username, $otp_error, $CDRTool, $challenge;
         $auth = $parentAuth;
@@ -1270,7 +1271,7 @@ class pageLayout
         //";
     }
 
-    function showTopMenuSubscriber($title = "")
+    public function showTopMenuSubscriber($title = "")
     {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
 
@@ -1504,35 +1505,35 @@ function microtime_float()
 function sec2hms($duration)
 {
     // return seconds in HH:MM:SS format
-    $sum1=$duration;
-    $duration_print="";
+    $sum1 = $duration;
+    $duration_print = "";
 
-    $duration_hour=floor($sum1/3600);
+    $duration_hour = floor($sum1 / 3600);
 
     if ($duration_hour > 0) {
-        $sum1=$sum1-($duration_hour*3600);
-        $duration_print="$duration_hour:";
+        $sum1 = $sum1 - ($duration_hour * 3600);
+        $duration_print = "$duration_hour:";
     }
 
-    $duration_min=floor($sum1/60);
+    $duration_min = floor($sum1 / 60);
 
     if ($duration_min > 0) {
-        $sum1=$sum1-($duration_min*60);
+        $sum1 = $sum1 - ($duration_min * 60);
         if ($duration_min < 10) {
-            $duration_min="0"."$duration_min";
+            $duration_min = "0"."$duration_min";
         }
-        $duration_print="$duration_print"."$duration_min:";
+        $duration_print = "$duration_print"."$duration_min:";
     } else {
-        $duration_print="$duration_print"."00:";
+        $duration_print = "$duration_print"."00:";
     }
 
     if ($sum1< 10) {
-        $duration_sec="0"."$sum1";
+        $duration_sec = "0"."$sum1";
     } else {
-        $duration_sec=$sum1;
+        $duration_sec = $sum1;
     }
 
-    $duration_print="$duration_print"."$duration_sec";
+    $duration_print = "$duration_print"."$duration_sec";
     return $duration_print;
 }
 
@@ -1555,7 +1556,7 @@ function get_location($ip)
     return json_encode($geo_location);
 }
 
-function startsWith($haystack, $needle, $case=true)
+function startsWith($haystack, $needle, $case = true)
 {
     if ($case) {
         return strpos($haystack, $needle, 0) === 0;
