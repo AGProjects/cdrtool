@@ -153,19 +153,19 @@ class CDRTool_Auth extends Auth
                 $a = explode("@", $username);
                 $domainAuth = new DomainAuthLocal();
 
-                $ret=$domainAuth->validate($a[0], $a[1], $password, $response_ha1, $otp_yubikey);
+                $ret = $domainAuth->validate($a[0], $a[1], $password, $response, $response_ha1);
                 //dprint("here");
                 //dprint_r($ret);
                 if ($ret[0]) {
                     foreach ($ret[2] as $allowedDS) {
-                        $CDRTool[dataSourcesAllowed][]=$allowedDS;
+                        $CDRTool['dataSourcesAllowed'][] = $allowedDS;
                     }
 
                     if ($ret[1] == "subscriber") {
-                        $CDRTool[filter][aNumber] = $username;
+                        $CDRTool['filter']['aNumber'] = $username;
                         $this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
                     } else {
-                        $CDRTool[filter][domain]  = $a[1];
+                        $CDRTool['filter']['domain']  = $a[1];
                         $this->auth["perm"] = "callsearch,statistics,showPrice,showCallerId";
                     }
                 }
@@ -619,9 +619,13 @@ class SIP_Subscriber_Auth extends Auth
             }
         }
 
-        if (!$web_password) $web_password = $result->password;
+        if (!$web_password) {
+            $web_password = $result->password;
+        } else {
+            $response_ha1 = null;
+        }
 
-        $pass_md5  	   = md5($web_password);
+        $pass_md5 = md5($web_password);
         $expected_response = md5("$username:$pass_md5:$challenge");
 
         $SIP['customer'] = $result->customer;
@@ -806,25 +810,41 @@ class OpenSIPS_DomainAuth
         $this->allowedDataSourcesSubscriber = array('opensips_radius','sip_trace','media_trace');
     }
 
-    function validate($user, $domain, $password)
+    public function validate($user, $domain, $password, $response, $response_ha1)
     {
-        $ha1 = md5($user. ':' . $domain . ':' . $password);
+        global $challenge;
 
+        $ha1 = md5($user. ':' . $domain . ':' . $password);
         $query = sprintf(
-            "SELECT * FROM subscriber WHERE username = '%s' AND domain = '%s' AND (password = '%s' or ha1 = '%s') ",
+            "SELECT * FROM subscriber WHERE username = '%s' AND domain = '%s'",
             addslashes($user),
-            addslashes($domain),
-            addslashes($password),
-            addslashes($ha1)
+            addslashes($domain)
         );
 
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
+
             $uid = $this->userDB->f('username');
-            if ($uid) {
-                return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
+            if (!$uid) return null;
+
+            $check_password = $this->userDB->f('password');
+            $check_password_ha1 = $this->userDB->f('ha1');
+            $expected_response = md5("$user@$domain:".md5($check_password).":$challenge");
+
+            if ($check_password_ha1 && $check_password_ha1 == $response_ha1) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
+            }
+
+            if ($check_password && $response == $expected_response) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
+            }
+
+            // JS disabled
+            if ($check_password && ($check_password == $password || $ha1 == $check_password_ha1)) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
             }
         }
+        return null;
     }
 }
 
@@ -839,67 +859,57 @@ class SipThor_DomainAuth
         $this->allowedDataSourcesSubscriber = array('sipthor','sip_trace_thor','media_trace_thor');
     }
 
-    function validate($user, $domain, $password, $response, $otp_yubikey)
+    public function validate($user, $domain, $password, $response, $response_ha1)
     {
+        global $challenge;
+
+        $ha1 = md5($user. ':' . $domain . ':' . $password);
         $query = sprintf(
             "SELECT * FROM sip_accounts WHERE username = '%s' AND domain = '%s'",
             addslashes($user),
             addslashes($domain)
         );
 
-        require_once 'PEAR.php';
-
         if ($this->userDB->query($query)) {
             $this->userDB->next_record();
 
             $profile = json_decode($this->userDB->f('profile'), 'true');
 
-            $check_password = $profile['password'];
+            $$uid = $this->userDB->f('username');
+            if (!$uid) return null;
 
-            $check_password_ha1=$profile['ha1'];
+            $check_password = $profile['password'];
+            $check_password_ha1 = $profile['ha1'];
 
             if ($profile['properties']['web_password']) {
-                $web_pass=$profile['properties']['web_password'];
+                $web_pass = $profile['properties']['web_password'];
                 if (strstr($web_pass, ":")) {
                     $split = explode(":", $web_pass);
-                    //if (preg_match('/^[a-f0-9]{32}$/', split[0])) {
-                        $check_web_password=$split[0];
-                    //}
+                    $check_password_ha1 = $split[0];
                 } else {
-                    $check_web_password = $profile['properties']['web_password'];
+                    $check_password_ha1 = null;
+                    $check_password = $profile['properties']['web_password'];
                 }
             }
 
-            $check_password_md5 = md5("$check_password");
+            $expected_response = md5("$user@$domain:".md5($check_password).":$challenge");
 
-            $expected_response_pass = md5("$user:$domain:$check_password");
-            $expected_response_pass_ha1 = md5("$user:$domain:$check_password_ha1");
-            $expected_response_web = $check_password;
+            // JS enabled
+            // Used encrypted pass
+            if ($check_password_ha1 && $check_password_ha1 == $response_ha1) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
+            }
 
-            //dprint($expected_response_pass_ha1);
+            if ($check_password && $response == $expected_response) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
+            }
 
-            if ($expected_response_pass == $response) {
-                $uid = $this->userDB->f('username');
-                if ($uid) {
-                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
-                }
-            } else if ($check_password == $password) {
-                $uid = $this->userDB->f('username');
-                if ($uid) {
-                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
-                }
-            } else if ($expected_response_web == $response) {
-                $uid = $this->userDB->f('username');
-                if ($uid) {
-                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
-                }
-            } else if ($expected_response_pass_ha1 == $response) {
-                $uid = $this->userDB->f('username');
-                if ($uid) {
-                    return array($uid, "subscriber", $this->allowedDataSourcesSubscriber);
-                }
+            // JS disabled
+            if ($check_password && ($check_password == $password || $check_password_ha1 == $ha1)) {
+                return [$uid, "subscriber", $this->allowedDataSourcesSubscriber];
             }
         }
+        return null;
     }
 }
 
@@ -933,10 +943,10 @@ class pageLayout
             str = username + \":\" + domain + \":\" + document.login.password.value;
 
             document.login.response_ha1.value = MD5(str);
+            document.login.password.value = \"\";
             //var pass= document.login.password.value;
             return false ;
             //document.login.submit();
-            //document.login.password.value = \"\";
           }
 
         </script>
@@ -1275,10 +1285,10 @@ class pageLayout
     {
         global $DATASOURCES, $CDRTool, $cdr_source, $perm;
 
-        $version=trim(file_get_contents(version));
+        $version = trim(file_get_contents('version'));
 
-        $now_print=Date("Y-m-d H:i:s", time());
-        $tz=getenv('TZ');
+        $now_print = Date("Y-m-d H:i:s", time());
+        $tz = getenv('TZ');
 
         print '
         <div class="navbar navbar-fixed-top">
