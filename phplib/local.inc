@@ -40,11 +40,11 @@ class CDRTool_Auth extends Auth
         global $_PHPLIB;
         global $max_login_attempts;
         global $CDRTool;
+        global $challenge;
 
         $username    = isset($_POST["username"]) ? $_POST["username"] : '';
         $sendotp     = isset($_POST["sendotp"]) ? $_POST["sendotp"] : '';
         $password    = isset($_POST["password"]) ? $_POST["password"] : '';
-        $challenge   = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
         $response    = isset($_POST["response"]) ? $_POST["response"] : '';
 
         $max_login_attempts=5;
@@ -129,11 +129,11 @@ class CDRTool_Auth extends Auth
         global $otp_error, $otpasswd;
         global $verbose;
         global $DATASOURCES;
+        global $challenge;
 
         $username     = isset($_POST["username"]) ? $_POST["username"] : '';
         $sendotp      = isset($_POST["sendotp"]) ? $_POST["sendotp"] : '';
         $password     = isset($_POST["password"]) ? $_POST["password"] : '';
-        $challenge    = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
         $response     = isset($_POST["response"]) ? $_POST["response"] : '';
         $response_ha1 = isset($_POST["response_ha1"]) ? $_POST["response_ha1"] : '';
         $REMOTE_ADDR  = $_SERVER["REMOTE_ADDR"];
@@ -516,10 +516,10 @@ class SIP_Subscriber_Auth extends Auth
 
         global $sess;
         global $max_login_attempts;
+        global $challenge;
 
         $username    = $_POST["username"];
         $password    = $_POST["password"];
-        $challenge   = $_POST["challenge"];
         $step        = $_POST["step"];
         $REMOTE_ADDR = $_SERVER["REMOTE_ADDR"];
         $yubikey_p   = $_POST['yubikey'];
@@ -536,10 +536,10 @@ class SIP_Subscriber_Auth extends Auth
     function auth_validatelogin()
     {
         global $SIP;
+        global $challenge;
 
         $username    = isset($_POST["username"]) ? $_POST["username"] : '';
         $password    = isset($_POST["password"]) ? $_POST["password"] : '';
-        $challenge   = isset($_POST["challenge"]) ? $_POST["challenge"] : '';
         $response    = isset($_POST["response"]) ? $_POST["response"] : '';
         $response_ha1= isset($_POST["response_ha1"]) ? $_POST["response_ha1"] : '';
 
@@ -906,7 +906,7 @@ class pageLayout
 
     function showLoginForm(&$parentAuth)
     {
-        global $username, $otp_error, $CDRTool;
+        global $username, $otp_error, $CDRTool, $challenge;
         $auth = $parentAuth;
 
         $username = $auth->auth["uname"];

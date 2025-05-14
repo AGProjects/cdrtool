@@ -38,7 +38,7 @@ class Auth {
 
   var $auth = array();            ## Data array
   var $in;
-  var $db;
+  public $db;
 
   ##
   ## Initialization
