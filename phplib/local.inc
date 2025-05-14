@@ -875,7 +875,7 @@ class SipThor_DomainAuth
 
             $profile = json_decode($this->userDB->f('profile'), 'true');
 
-            $$uid = $this->userDB->f('username');
+            $uid = $this->userDB->f('username');
             if (!$uid) return null;
 
             $check_password = $profile['password'];
