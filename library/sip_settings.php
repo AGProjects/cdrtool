@@ -246,9 +246,9 @@ class SipSettings
             if (!$this->isEmbedded()) {
                 $this->url.="?account=$this->account";
             } else {
-                $this->url.=sprintf("?1=1&realm=%s",urlencode($_REQUEST['realm']));
+                $this->url.=sprintf("?1=1&realm=%s", urlencode($_REQUEST['realm']));
                 if ($_REQUEST['user_agent']) {
-                    $this->url.=sprintf("&user_agent=%s",urlencode($_REQUEST['user_agent']));
+                    $this->url.=sprintf("&user_agent=%s", urlencode($_REQUEST['user_agent']));
                 }
             }
 
@@ -2580,12 +2580,12 @@ class SipSettings
                     <tr>
                     <td>";
                     print _("X.509 Format");
-                    printf("
-                    </td>
-                    <td><a href=%s&action=get_crt>Certificate</a>
-                    </td>
-                    </tr>
-                    ",$this->url);
+                    printf(
+                        "</td>
+                        <td><a href=%s&action=get_crt>Certificate</a></td>
+                        </tr>",
+                        $this->url
+                    );
 
                     /*
                     print "
@@ -2749,7 +2749,7 @@ class SipSettings
             ";
         }
 
-		if ($prefixes = $did_processor->getPrefixes()) {
+        if ($prefixes = $did_processor->getPrefixes()) {
             if ($_REQUEST['ddi_action'] == 'register' && $_REQUEST['prefix'] && $_REQUEST['period']) {
 
                 $chapter=sprintf(_("Register New Number"));
@@ -2842,7 +2842,7 @@ class SipSettings
                             'did_number'    => $_REQUEST['number']
                             );
 
-            	$did_processor->cancelOrder($data);
+                $did_processor->cancelOrder($data);
 
                 print "
                 </td>
@@ -2865,8 +2865,7 @@ class SipSettings
                 print "<select name=prefix>";
 
                 foreach (array_keys($prefixes) as $prefix) {
-
-                	if (!$found_country && $this->owner_information['country'] == $prefixes[$prefix]['country_iso']) {
+                    if (!$found_country && $this->owner_information['country'] == $prefixes[$prefix]['country_iso']) {
                         $selected='selected';
                         $found_country=true;
                     } else {
@@ -3437,79 +3436,82 @@ class SipSettings
                 }
 
                 if ($this->login_type == 'admin' || $this->login_type == 'reseller') {
-
                     if ($this->customer != $this->reseller || $selected_blocked_by['customer']) {
-                        printf("
-                        <select name=%s>
-                        <option value=''>Active
-                        <option value='customer' %s> %s (%d)
-                        <option value='reseller' %s> %s (%d)
-                        </select>
-                        ",
-                        $key,
-                        $selected_blocked_by['customer'],
-                        _("Blocked by Customer"),
-                        $this->customer,
-                        $selected_blocked_by['reseller'],
-                        _("Blocked by Reseller"),
-                        $this->reseller
+                        printf(
+                            "
+                            <select name=%s>
+                            <option value=''>Active
+                            <option value='customer' %s> %s (%d)
+                            <option value='reseller' %s> %s (%d)
+                            </select>
+                            ",
+                            $key,
+                            $selected_blocked_by['customer'],
+                            _("Blocked by Customer"),
+                            $this->customer,
+                            $selected_blocked_by['reseller'],
+                            _("Blocked by Reseller"),
+                            $this->reseller
                         );
                     } elseif ($this->reseller) {
-                        printf("
-                        <select name=%s>
-                        <option value=''>%s
-                        <option value='reseller' %s> %s (%d)
-                        </select>
-                        ",
-                        $key,
-                        _("Active"),
-                        $selected_blocked_by['reseller'],
-                        _("Blocked by Reseller"),
-                        $this->reseller
+                        printf(
+                            "
+                            <select name=%s>
+                            <option value=''>%s
+                            <option value='reseller' %s> %s (%d)
+                            </select>
+                            ",
+                            $key,
+                            _("Active"),
+                            $selected_blocked_by['reseller'],
+                            _("Blocked by Reseller"),
+                            $this->reseller
                         );
                     } else {
-                        printf("
-                        <select name=%s>
-                        <option value=''>%s
-                        <option value='reseller' %s> %s
-                        </select>
-                        ",
-                        $key,
-                        _("Active"),
-                        $selected_blocked_by['reseller'],
-                        _("Blocked")
+                        printf(
+                            "
+                            <select name=%s>
+                            <option value=''>%s
+                            <option value='reseller' %s> %s
+                            </select>
+                            ",
+                            $key,
+                            _("Active"),
+                            $selected_blocked_by['reseller'],
+                            _("Blocked")
                         );
                     }
                 } elseif ($this->login_type == 'customer') {
-
                     if (in_array($key, $this->groups)) {
                        if ($this->Preferences['blocked_by'] != 'reseller') {
-                           printf("
-                           <select name=%s>
-                           <option value=''>%s
-                           <option value='customer' %s> %s
-                           </select>
-                           ",
-                           $key,
-                           _("Active"),
-                           $selected_blocked_by['customer'],
-                           _("Blocked")
-                           );
+                            printf(
+                                "
+                                <select name=%s>
+                                <option value=''>%s
+                                <option value='customer' %s> %s
+                                </select>
+                                ",
+                                $key,
+                                _("Active"),
+                                $selected_blocked_by['customer'],
+                                _("Blocked")
+                            );
                        } else {
                            print _("Blocked by Reseller");
                        }
                    } else {
-                       printf("
-                       <select name=%s>
-                       <option value=''>%s
-                       <option value='customer' %s> %s
-                       </select>
-                       ",
-                       $key,
-                       _("Active"),
-                       $selected_blocked_by['customer'],
-                       _("Blocked")
-                       );
+                        printf(
+                            "
+                            <select name=%s>
+                            <option value=''>%s
+                            <option value='customer' %s> %s
+                            </select>
+                            ",
+                            $key,
+                            _("Active"),
+                            $selected_blocked_by['customer'],
+                            _("Blocked")
+                        );
                    }
                 } else {
                        if (in_array($key, $this->groups)) {
@@ -3519,7 +3521,6 @@ class SipSettings
                     }
                 }
             } elseif ($key=="free-pstn") {
-
                 if ($this->pstn_changes_allowed) {
                     print "<label class='checkbox inline' style=\"padding-top: 1px; line-height:14px\">
                         <input type='checkbox' value=1 class='inline' name=$key $checked_box[$key] $disabled_box>
@@ -4046,11 +4047,12 @@ class SipSettings
 
         $this->properties=$result->properties;
 
-        $this->availableGroups['voicemail']=array("Group"=>"voicemail",
-                                    "WEBName" =>sprintf(_("Voice Mailbox")),
-                                    "SubscriberMayEditIt"=>"1",
-                                    "SubscriberMaySeeIt"=>0
-                                    );
+        $this->availableGroups['voicemail'] = array(
+            "Group" => "voicemail",
+            "WEBName" => sprintf(_("Voice Mailbox")),
+            "SubscriberMayEditIt" => "1",
+            "SubscriberMaySeeIt" => 0
+        );
 
         if (!$this->voicemail['Account'] && $voicemail) {
             if ($this->addVoicemail()) {
@@ -11128,7 +11130,7 @@ function getSipAccountFromHTTPDigest()
     $valid_response = md5($A1.':'.$data['nonce'].':'.$data['nc'].':'.$data['cnonce'].':'.$data['qop'].':'.$A2);
 
     if ($data['response'] != $valid_response) {
-    	header('HTTP/1.1 401 Unauthorized');
+        header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
@@ -11138,10 +11140,10 @@ function getSipAccountFromHTTPDigest()
     }
     // check nonce
 
-	$client_nonce_els=explode(":", base64_decode($data['nonce']));
+    $client_nonce_els=explode(":", base64_decode($data['nonce']));
 
-	if (md5($client_nonce_els[0].":".$_key) != $client_nonce_els[1]) {
-    	header('HTTP/1.1 401 Unauthorized');
+    if (md5($client_nonce_els[0].":".$_key) != $client_nonce_els[1]) {
+        header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
                '",qop="auth",nonce="'.$nonce.'",opaque="'.md5($realm).'"');
 
@@ -11151,7 +11153,7 @@ function getSipAccountFromHTTPDigest()
     }
 
 
-	if (microtime(true) > $client_nonce_els[0]) {
+    if (microtime(true) > $client_nonce_els[0]) {
         // nonce is stale
         header('HTTP/1.1 401 Unauthorized');
         header('WWW-Authenticate: Digest realm="'.$realm.
