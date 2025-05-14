@@ -11881,7 +11881,7 @@ class Enrollment
                 $lastName  = 'Blink';
             }
 
-            $this->log_action("Create owner account ($firstname $lastname) ");
+            $this->log_action("Create owner account ($firstName $lastName)");
 
             $timezone=$_REQUEST['tzinfo'];
 
@@ -11910,7 +11910,7 @@ class Enrollment
             if ($location['country_code'] == 'NL') {
                 $customer['tel'] = '+31999999999';
             } elseif ($location['country_code'] == 'US') {
-                $customer['tel'] = sprintf("+1%s9999999",$location['area_code']);
+                $customer['tel'] = sprintf("+1%s9999999", $location['area_code']);
             } else {
                 $customer['tel'] = '+19999999999';
             }
@@ -11922,7 +11922,7 @@ class Enrollment
             while ($j < 3) {
                 $username.=RandomString(4);
 
-                $customer['username']=$username;
+                $customer['username'] = $username;
 
                 if (!$result = $this->customerRecords->addRecord($customer)) {
                     if ($this->customerRecords->SoapEngine->exception->errorcode != "5001") {
@@ -12022,7 +12022,7 @@ class Enrollment
                             'properties'=> $sip_properties
                             );
 
-        $this->log_action("Create SIP account ($sip_addres)");
+        $this->log_action("Create SIP account ($sip_address)");
 
         if (!$result = $this->sipRecords->addRecord($sipAccount)) {
             if ($this->sipRecords->SoapEngine->exception->errorstring) {
