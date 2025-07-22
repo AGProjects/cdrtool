@@ -29,7 +29,8 @@ class Actions
         if ($_loc['country_name']) {
             $location = $_loc['country_name'];
         }
-        $log = sprintf("CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
+        $log = sprintf(
+            "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
             $this->login_credentials['username'],
             $this->login_credentials['login_type'],
             $CDRTool['impersonate'],
@@ -39,7 +40,7 @@ class Actions
             $action,
             $_SERVER['PHP_SELF']
         );
-        syslog(LOG_NOTICE, $log);
+        logger($log);
     }
 
     protected function checkLogSoapError($result, $syslog = false)
@@ -58,7 +59,7 @@ class Actions
                 $error_fault->detail->exception->errorcode,
                 $error_fault->detail->exception->errorstring
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
         } else {
             printf(
                 "<font color=red>Error: %s (%s): %s</font>",
