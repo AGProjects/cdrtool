@@ -751,18 +751,30 @@ class Records
         if ($_loc['country_name']) {
             $location = $_loc['country_name'];
         }
-        $log = sprintf(
-            "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
-            $this->login_credentials['username'],
-            $this->login_credentials['login_type'],
-            $CDRTool['impersonate'],
-            $_SERVER['REMOTE_ADDR'],
-            $location,
-            $this->SoapEngine->port,
-            $action,
-            $_SERVER['PHP_SELF']
-        );
-        syslog(LOG_NOTICE, $log);
+        global $logger;
+        if ($logger->getName() == 'Enrollment') {
+            $log = sprintf(
+                "reseller=%s, engine=%s, location=%s, action=%s, script=%s",
+                $this->login_credentials['reseller'],
+                $this->login_credentials['sip_engine'],
+                $location,
+                $action,
+                $_SERVER['PHP_SELF']
+            );
+        } else {
+            $log = sprintf(
+                "CDRTool login username=%s, type=%s, impersonate=%s, IP=%s, location=%s, action=%s:%s, script=%s",
+                $this->login_credentials['username'],
+                $this->login_credentials['login_type'],
+                $CDRTool['impersonate'],
+                $_SERVER['REMOTE_ADDR'],
+                $location,
+                $this->SoapEngine->port,
+                $action,
+                $_SERVER['PHP_SELF']
+            );
+        }
+        logger(LOG_NOTICE, $log);
     }
 
     public function soapHasError($result)

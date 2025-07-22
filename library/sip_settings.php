@@ -11703,9 +11703,9 @@ class Enrollment
             $location = $_loc['country_name'];
         }
         $log = sprintf(
-            "username=%s, IP=%s, location=%s, action=%s, script=%s",
-            $auth->auth["uname"],
-            $_SERVER['REMOTE_ADDR'],
+            "reseller=%s, engine=%s, location=%s, action=%s, script=%s",
+            $this->sipLoginCredentials['reseller'],
+            $this->sipLoginCredentials['sip_engine'],
             $location,
             $action,
             $_SERVER['PHP_SELF']
@@ -11796,11 +11796,11 @@ class Enrollment
             return false;
         }
 
-		$this->sipLoginCredentials = array(
-                                           'reseller'       => intval($this->reseller),
-                                           'sip_engine'     => $this->sipEngine,
-                                           'login_type'     => 'admin'
-                                           );
+        $this->sipLoginCredentials = array(
+            'reseller'       => intval($this->reseller),
+            'sip_engine'     => $this->sipEngine,
+            'login_type'     => 'admin'
+        );
 
         $this->init=true;
     }
@@ -11868,7 +11868,7 @@ class Enrollment
             $this->customerRecords    = new $_customer_class($this->CustomerSoapEngine);
             $this->customerRecords->html=false;
 
-            $properties=$this->customerRecords->setInitialCredits(
+            $properties = $this->customerRecords->setInitialCredits(
                 array(
                     'sip_credit'         => 1,
                     'sip_alias_credit'   => 1,
@@ -11975,12 +11975,13 @@ class Enrollment
         } elseif (is_numeric($_REQUEST['owner']) && $_REQUEST['owner'] != 0 ) {
             $owner=intval($_REQUEST['owner']);
         } else {
-                $return=array('success'       => false,
-                              'error'         => 'internal_error',
-                              'error_message' => 'no owner information provided'
-                              );
-                print (json_encode($return));
-                return false;
+            $return = array(
+                'success'       => false,
+                'error'         => 'internal_error',
+                'error_message' => 'no owner information provided'
+            );
+            print (json_encode($return));
+            return false;
         }
 
         // create SIP Account
