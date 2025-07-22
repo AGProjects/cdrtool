@@ -875,48 +875,48 @@ class Records
 
         printf("<select class=span3 name='service' onChange=\"jumpMenu('this.form')\">\n");
 
-	$j = 1;
-	foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
-	    if ($this->SoapEngine->skip[$_engine]) continue;
-	    if ($j > 1) printf ("<option value=''>--------\n");
-	    foreach (array_keys($this->SoapEngine->ports) as $_port) {
-		$idx = $_port.'@'.$_engine;
-		if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port, $this->SoapEngine->skip_ports[$_engine])) continue;
+        $j = 1;
+        foreach (array_keys($this->SoapEngine->soapEngines) as $_engine) {
+            if ($this->SoapEngine->skip[$_engine]) continue;
+            if ($j > 1) printf ("<option value=''>--------\n");
+            foreach (array_keys($this->SoapEngine->ports) as $_port) {
+                $idx = $_port.'@'.$_engine;
+                if (is_array($this->SoapEngine->skip_ports[$_engine]) && in_array($_port, $this->SoapEngine->skip_ports[$_engine])) continue;
 
-		if ($this->login_credentials['login_type'] !='admin') {
-		    if (!$pstn_access && (preg_match("/^pstn_/", $_port))) continue;
-		}
-		if ((isset($this->SoapEngine->allowedPorts[$_engine]) ? count($this->SoapEngine->allowedPorts[$_engine]) : 0 )> 0 && !in_array($_port, $this->SoapEngine->allowedPorts[$_engine])) continue;
+                if ($this->login_credentials['login_type'] !='admin') {
+                    if (!$pstn_access && (preg_match("/^pstn_/", $_port))) continue;
+                }
+                if ((isset($this->SoapEngine->allowedPorts[$_engine]) ? count($this->SoapEngine->allowedPorts[$_engine]) : 0 )> 0 && !in_array($_port, $this->SoapEngine->allowedPorts[$_engine])) continue;
 
-		// disable some version dependent ports
+                // disable some version dependent ports
 
-		if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] < 2) continue;
+                if ($_port == 'customers' && $this->SoapEngine->soapEngines[$_engine]['version'] < 2) continue;
 
-		if ($this->SoapEngine->ports[$_port]['resellers_only']) {
-		    if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive) {
-			printf(
-			    "<option value=\"%s@%s\"%s>%s@%s\n",
-			    $_port,
-			    $_engine,
-			    $selected_soapEngine[$idx],
-			    $this->SoapEngine->ports[$_port]['name'],
-			    $this->SoapEngine->soapEngines[$_engine]['name']
-			);
-		    }
-		} else {
-		    printf(
-			"<option value=\"%s@%s\"%s>%s@%s\n",
-			$_port,
-			$_engine,
-			$selected_soapEngine[$idx],
-			$this->SoapEngine->ports[$_port]['name'],
-			$this->SoapEngine->soapEngines[$_engine]['name']
-		    );
-		}
-	    }
+                if ($this->SoapEngine->ports[$_port]['resellers_only']) {
+                    if ($this->login_credentials['login_type']=='admin' || $this->loginAccount->resellerActive) {
+                        printf(
+                            "<option value=\"%s@%s\"%s>%s@%s\n",
+                            $_port,
+                            $_engine,
+                            $selected_soapEngine[$idx],
+                            $this->SoapEngine->ports[$_port]['name'],
+                            $this->SoapEngine->soapEngines[$_engine]['name']
+                        );
+                    }
+                } else {
+                    printf(
+                        "<option value=\"%s@%s\"%s>%s@%s\n",
+                        $_port,
+                        $_engine,
+                        $selected_soapEngine[$idx],
+                        $this->SoapEngine->ports[$_port]['name'],
+                        $this->SoapEngine->soapEngines[$_engine]['name']
+                    );
+                }
+            }
 
-	    $j++;
-	}
+            $j++;
+        }
         print("</select>");
         printf(
             "<script type=\"text/JavaScript\">
@@ -1142,15 +1142,15 @@ class Records
         }
 
         if (is_array($this->SoapEngine->extraFormElements)) {
-	    foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
-		if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
-		printf(
-		    "<input type=hidden name=%s value='%s'>\n",
-		    $element,
-		    $this->SoapEngine->extraFormElements[$element]
-		);
-	    }
-	}
+            foreach (array_keys($this->SoapEngine->extraFormElements) as $element) {
+                if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
+                printf(
+                    "<input type=hidden name=%s value='%s'>\n",
+                    $element,
+                    $this->SoapEngine->extraFormElements[$element]
+                );
+            }
+        }
     }
 
     function getAllowedDomains()
@@ -1776,9 +1776,9 @@ class Records
 
     function getCustomerProperty($name = '')
     {
-	if (empty($this->loginProperties)) {
-	    return false;
-	}
+        if (empty($this->loginProperties)) {
+            return false;
+        }
 
         foreach ($this->loginProperties as $_property) {
             if ($_property->name == $name) {
@@ -1791,9 +1791,9 @@ class Records
 
     function getResellerProperty($name = '')
     {
-	if (empty($this->resellerProperties)) {
-	    return false;
-	}
+        if (empty($this->resellerProperties)) {
+            return false;
+        }
 
         foreach ($this->resellerProperties as $_property) {
             if ($_property->name == $name) {
