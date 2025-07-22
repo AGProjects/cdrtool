@@ -316,7 +316,11 @@ class PrepaidCards
     {
         if (!$batch) return false;
 
-        $query = sprintf("update prepaid_cards set blocked = '1' where batch = '%s' and %s", addslashes($batch), $this->whereResellerFilter);
+        $query = sprintf(
+            "update prepaid_cards set blocked = '1' where batch = '%s' and %s",
+            addslashes($batch),
+            $this->whereResellerFilter
+        );
         $this->db->query($query);
     }
 
@@ -324,7 +328,11 @@ class PrepaidCards
     {
         if (!$batch) return false;
 
-        $query = sprintf("update prepaid_cards set blocked = '0' where batch = '%s' and %s", addslashes($batch), $this->whereResellerFilter);
+        $query = sprintf(
+            "update prepaid_cards set blocked = '0' where batch = '%s' and %s",
+            addslashes($batch),
+            $this->whereResellerFilter
+        );
         $this->db->query($query);
     }
 

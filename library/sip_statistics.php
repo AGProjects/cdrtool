@@ -18,7 +18,7 @@ class NetworkStatistics
     private $soapclient;
     public $roles;
     public $hostnames;
-    
+
     public $statistics        = array();
     public $status            = array();
     public $sip_summary       = array();
@@ -170,7 +170,7 @@ class NetworkStatistics
         if (!isset($array[$key])) {
             $array[$key] = 0;
         }
-	$array[$key]++;
+        $array[$key]++;
     }
 
     public function getStatus()
@@ -202,7 +202,7 @@ class NetworkStatistics
                 }
                 if ($_role == 'voicemail_server') {
                     $this->addToArray($this->voicemail_servers, $ip);
-		}
+                }
 
                 $this->roles[$_role][$ip]=array(
                     'ip'      => $ip,
