@@ -2271,11 +2271,11 @@ class CDR
         return $causePrint;
     }
 
-    function traceOut()
+    public function traceOut()
     {
     }
 
-    function traceIn()
+    public function traceIn()
     {
     }
 

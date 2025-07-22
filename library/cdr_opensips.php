@@ -3516,7 +3516,7 @@ class CDR_opensips extends CDR
         ";
     }
 
-    function traceIn()
+    public function traceIn()
     {
         $datasource=$this->CDRS->traceInURL[$this->SourceIP];
         global $DATASOURCES;
@@ -3545,7 +3545,7 @@ class CDR_opensips extends CDR
             "</a>";
     }
 
-    function traceOut()
+    public function traceOut()
     {
         $datasource = $this->CDRS->traceOutURL[$this->remoteGateway];
         global $DATASOURCES;
