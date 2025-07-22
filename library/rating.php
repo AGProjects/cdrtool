@@ -7948,7 +7948,7 @@ class RatingEngine
         logger($log);
     }
 
-    function processNetworkInput($tinput, $ip='0.0.0.0')
+    function processNetworkInput($tinput, $ip = '0.0.0.0')
     {
 
         // Read key=value pairs from input
@@ -8098,7 +8098,8 @@ class RatingEngine
 
             if (!$this->db->num_rows()) {
                 $log = sprintf(
-                    "MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",
+                    "[%s] result: MaxSessionTime=unlimited Type=postpaid CallId=%s BillingParty=%s",
+                    $ip,
                     $NetFields['callid'],
                     $CDR->BillingPartyId
                 );
@@ -8172,7 +8173,8 @@ class RatingEngine
                 }
             } else {
                 $log = sprintf(
-                    "MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",
+                    "[%s] result: MaxSessionTime=unlimited Type=prepaid CallId=%s BillingParty=%s DestId=None",
+                    $ip,
                     $NetFields['callid'],
                     $CDR->BillingPartyId
                 );
@@ -8228,7 +8230,8 @@ class RatingEngine
                 $_maxduration = round($Rate->MaxSessionTime($RateDictionary));
 
                 $log = sprintf(
-                    "Maximum duration for new session %s of %s to destination %s having balance=%s is %s",
+                    "[%s] result: Maximum duration for new session %s of %s to destination %s having balance=%s is %s",
+                    $ip,
                     $CDR->callId,
                     $CDR->BillingPartyId,
                     $CDR->DestinationId,
@@ -8333,7 +8336,8 @@ class RatingEngine
             }
 
             $log = sprintf(
-                "MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d Counter=%d->%d",
+                "[%s] result: MaxSessionTime=%s Type=prepaid CallId=%s BillingParty=%s DestId=%s Balance=%s Spans=%d Counter=%d->%d",
+                $ip,
                 $maxduration,
                 $NetFields['callid'],
                 $CDR->BillingPartyId,
