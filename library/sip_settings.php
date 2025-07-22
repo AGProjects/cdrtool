@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2007-2022 AG Projects
+ * Copyright (c) 2007-2025 AG Projects
  * https://ag-projects.com
  * Author Adrian Georgescu
  *
