@@ -83,18 +83,16 @@ class Actions
             "<form class=form-inline method=post name=actionform action=%s>",
             $_SERVER['PHP_SELF']
         );
-        print "
-        <div class='well well-small'>
-        ";
+
+        print "<div class='well well-small'>";
 
         print "
         <input class='btn btn-warning' type=submit value='Perform this action on the selection:'>
         <input type=hidden name=action value=PerformActions>
         ";
+
         if ($this->adminonly) {
-            print "
-            <input type=hidden name=adminonly value=$this->adminonly>
-            ";
+            print "<input type=hidden name=adminonly value=$this->adminonly>";
         }
 
 
@@ -117,12 +115,7 @@ class Actions
                 $this->sub_action_parameter_size
             );
         }
-        print "
-        <p class=pull-right>
-        ";
-        print " Maximum of 500 records
-        </p>
-        ";
+        print "<p class=pull-right>Maximum of 500 records</p>";
 
         foreach (array_keys($filters) as $_filter) {
             printf(
@@ -146,8 +139,6 @@ class Actions
             if (!strlen($this->SoapEngine->extraFormElements[$element])) continue;
             printf("<input type=hidden name=%s value='%s'>\n", $element, $this->SoapEngine->extraFormElements[$element]);
         }
-        print "</div>
-            </form>
-        ";
+        print "</div></form>";
     }
 }
