@@ -774,7 +774,7 @@ class Records
                 $_SERVER['PHP_SELF']
             );
         }
-        logger(LOG_NOTICE, $log);
+        logger($log);
     }
 
     public function soapHasError($result)
