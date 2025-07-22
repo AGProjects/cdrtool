@@ -75,7 +75,7 @@ class Actions
     {
     }
 
-    protected function showActionsForm($filters, $sorting, $hideParameter = false)
+    public function showActionsForm($filters, $sorting, $hideParameter = false)
     {
         if (!count($this->actions)) return;
 
