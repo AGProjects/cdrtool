@@ -7,6 +7,8 @@ class MediaSessions
     public $summary           = array();
     public $domain_statistics = array();
     public $timeout           = 3;
+    public $allowedDomains;
+    public $filters;
 
     public function __construct($dispatcher = '', $allowedDomains = array(), $filters = array())
     {

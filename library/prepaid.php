@@ -2,8 +2,13 @@
 class PrepaidCards
 {
     private $whereResellerFilter= " (1=1) ";
+    private $loginname;
+    private $CDRTool;
+    private $db;
+    private $db1;
+    private $PHP_SELF;
 
-    public function PrepaidCards()
+    public function __construct()
     {
         global $auth;
         global $CDRTool;

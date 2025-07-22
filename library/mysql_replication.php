@@ -20,27 +20,29 @@ class MySQLReplicationStatus {
     private $slave_status_query = "show slave status";
     private $master_status_query = "show master status";
 
+    public $slave_master         = '';
+    public $slave_user           = '';
+    public $slave_master_port    = '';
+    public $slave_log_file       = '';
+    public $slave_position       = '';
+    public $slave_sql_running    = '';
+    public $slave_io_running     = '';
+    public $slave_last_errno     = '';
+    public $slave_last_error     = '';
+    public $slave_seconds_behind = '';
+    public $using_gtid           = '';
+    public $gtid_io_pos          = '';
+    public $replicate_wild_table = '';
+
+    public $master_position = '';
+    public $master_log_file = '';
+    public $slave_of = '';
+    public $color = '';
+
     public function __construct($host, $clusters)
     {
-
         $db = new DBx($clusters[$host]['user'], $clusters[$host]['password'], $clusters[$host]['ip']);
 
-        $this->slave_master         = '';
-        $this->slave_user           = '';
-        $this->slave_master_port    = '';
-        $this->slave_log_file       = '';
-        $this->slave_position       = '';
-        $this->slave_sql_running    = '';
-        $this->slave_io_running     = '';
-        $this->slave_last_errno     = '';
-        $this->slave_last_error     = '';
-        $this->slave_seconds_behind = '';
-        $this->using_gtid           = '';
-        $this->gtid_io_pos          = '';
-        $this->replicate_wild_table = '';
-
-        $this->master_position = '';
-        $this->master_log_file = '';
         $this->slave_of = $clusters[$host]['slave_of'];
         $this->color = $clusters[$host]['color'];
 
