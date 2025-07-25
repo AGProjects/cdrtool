@@ -4994,6 +4994,15 @@ class Media_trace
     public $enableThor  = false;
     public $table       = 'media_sessions';
 
+    private $soapEngineId;
+    private $cdr_source;
+    private $SOAPlogin;
+    private $SOAPurl;
+    private $SoapAuth;
+    private $soapclient;
+    private $info;
+    private $db;
+
     public function __construct($cdr_source)
     {
         global $DATASOURCES;
@@ -5001,7 +5010,6 @@ class Media_trace
         require_once 'errors.php';
 
         $this->cdr_source = $cdr_source;
-        $this->cdrtool  = new DB_CDRTool();
 
         if (!is_array($DATASOURCES[$this->cdr_source])) {
             $log = sprintf("Error: datasource '%s' is not defined", $this->cdr_source);
@@ -5027,7 +5035,7 @@ class Media_trace
                     "admin"       => true
                 );
 
-                $this->SOAPurl=$soapEngines[$this->soapEngineId]['url'];
+                $this->SOAPurl = $soapEngines[$this->soapEngineId]['url'];
 
                 $this->SoapAuth = array('auth', $this->SOAPlogin , 'urn:AGProjects:NGNPro', 0, '');
 
@@ -5151,7 +5159,6 @@ class Media_trace
 
     public function show($proxyIP, $callid, $fromtag, $totag)
     {
-
         if ($_SERVER['HTTPS'] == "on") {
             $protocolURL = "https://";
         } else {
@@ -5185,7 +5192,8 @@ class Media_trace
         print "<div class='container-fluid'><div id=trace class='main'>";
         $sessionId = rtrim(base64_encode(hash('md5', $callid, true)), "=");
         print "<h1 class=page-header>CDRTool Media Trace<br/><small>Call ID: $callid</small><br /><small>Media Session ID: $sessionId</small></h1>";
-
+        
+        $seen_stamp = [];
         foreach (array_values($this->info->streams) as $_val) {
             $_diff = $_val->end_time - $_val->timeout_wait;
             $seen_stamp[$_val->start_time]++;
@@ -5310,8 +5318,14 @@ class Media_trace
 
         print "<br><strong>Legend</strong>";
         print "<p><table border=0>
-        <tr><td width=50><div class='progress progress-striped progress-success'><div class='bar' style='width:100%'></div></div></td><td>Session data</td></tr>
-        <tr><td><div class='progress progress-striped progress-danger'><div class='bar' style='width:100%'></div></div></td><td>Timeout period</td></tr>
+        <tr>
+        <td width=50><div class='progress progress-striped progress-success'><div class='bar' style='width:100%'></div></div></td>
+        <td>Session data</td>
+        </tr>
+        <tr>
+        <td><div class='progress progress-striped progress-danger'><div class='bar' style='width:100%'></div></div></td>
+        <td>Timeout period</td>
+        </tr>
         </table></p></div></div>
         ";
     }
