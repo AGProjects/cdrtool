@@ -6,7 +6,7 @@ require 'cdr_generic.php';
 require 'errors.php';
 
 try {
-    $SipTrace = new SIP_trace("sip_trace");
+    $SipTrace = new SIPTrace("sip_trace");
     $SipTrace->purgeRecords();
 } catch (DataSourceUndefinedError $e) {
     return;

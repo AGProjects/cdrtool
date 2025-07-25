@@ -47,7 +47,7 @@ include 'header.phtml';
 require 'cdr_generic.php';
 
 if (!$authorize || in_array($cdr_source, $CDRTool['dataSourcesAllowed'])) {
-    $sipTrace = new SIP_trace($cdr_source);
+    $sipTrace = new SIPTrace($cdr_source);
     if ($format == 'html') {
         $sipTrace->show($proxyIP, $callid, $fromtag, $totag);
     } elseif ($format == 'text') {
