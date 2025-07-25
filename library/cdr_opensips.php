@@ -821,13 +821,15 @@ class CDRS_opensips extends CDRS
                 "extrahtml"=>"id='begin_date' data-date-format=\"yyyy-mm-dd\" class=\"span2\""
             )
         );
-        $this->f->add_element(array(
-                    "name"=>"end_date",
-                    "size"=>"1",
-                    "type"=>"text",
-                    "value"=>"$end_year-$end_month-$end_day",
-                    "extrahtml"=>"id='end_date' data-date-format=\"yyyy-mm-dd\" class=\"span2\""
-                    ));
+        $this->f->add_element(
+            array(
+                "name"=>"end_date",
+                "size"=>"1",
+                "type"=>"text",
+                "value"=>"$end_year-$end_month-$end_day",
+                "extrahtml"=>"id='end_date' data-date-format=\"yyyy-mm-dd\" class=\"span2\""
+            )
+        );
     }
 
     public function searchForm()
@@ -4550,7 +4552,7 @@ class SIP_trace
                     $status_color = "blue";
                     if ($method == "ACK") {
                         $status_color = 'cyan';
-                    } else if ($method == "CANCEL") {
+                    } elseif ($method == "CANCEL") {
                         $status_color = 'magenta';
                     }
                     break;

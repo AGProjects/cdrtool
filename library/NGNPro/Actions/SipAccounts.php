@@ -477,7 +477,8 @@ class SipAccountsActions extends Actions
                             'name'       => 'updateAccount',
                             'parameters' => array($result),
                             'logs'       => array(
-                                'success' => sprintf('SIP account %s@%s has owner set to %s ',
+                                'success' => sprintf(
+                                    'SIP account %s@%s has owner set to %s ',
                                     $key['username'],
                                     $key['domain'],
                                     $result->owner

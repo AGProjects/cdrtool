@@ -223,12 +223,11 @@ function wrapFormElement($label, $element)
         $element = implode('', $element);
     }
 
-    printf('
+    printf(
+        '
         <div class="control-group">
             <label class="control-label">%s</label>
-            <div class="controls">
-            %s
-            </div>
+            <div class="controls">%s</div>
         </div>',
         $label,
         $element
@@ -438,15 +437,12 @@ function showForm($id = "")
         ";
     }
 
-    print "
-    </div>";
+    print "</div>";
 
-    print "<div class=span6>
-    ";
+    print "<div class=span6>";
 
-    print "
-     <h3>Permissions</h3>
-     <div class='row-fluid'>";
+    print "<h3>Permissions</h3><div class='row-fluid'>";
+
     if ($perm->have_perm("admin")) {
         print "<div class='span6'>
         <p><b>Functions</b></p>";
@@ -456,8 +452,7 @@ function showForm($id = "")
 
     print "<div class='span6'><p><strong>Data sources</strong></p>";
     $f->show_element("sources", "");
-    print "
-     </div></div>";
+    print "</div></div>";
 
     print "
       <hr noshade size=1>

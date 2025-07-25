@@ -22,7 +22,7 @@ class SipSettings
     var $soapClassVoicemailPort    = 'WebService_NGNPro_VoicemailPort';
     var $soapClassCustomerPort     = 'WebService_NGNPro_CustomerPort';
     var $showSoapConnectionInfo    = false;
-    var $store_clear_text_passwords=true;
+    var $store_clear_text_passwords= true;
 
     // these variables can be overwritten per soap engine
     // and subsequently by reseller properties
@@ -33,7 +33,7 @@ class SipSettings
     public $cdrtool_address           = "https://cdrtool.example.com/CDRTool";
     public $support_web               = "https://www.example.com/help";
     public $support_email             = "Support <support@example.com>";
-    var $billing_email             = "Billing <billing@example.com>";
+    var $billing_email                = "Billing <billing@example.com>";
     public $sip_settings_page         = "https://cdrtool.example.com/sip_settings.phtml";
     public $xcap_root                 = "https://cdrtool.example.com/xcap-root";
     var $pstn_access               = false;
@@ -11847,7 +11847,7 @@ class Enrollment
             return false;
         }
 
-        $username=strtolower(trim($_REQUEST['username']));
+        $username = strtolower(trim($_REQUEST['username']));
 
         if (!preg_match("/^[1-9a-z][0-9a-z_.-]{2,64}[0-9a-z]$/", $username)) {
             $return=array('success'       => false,
@@ -11858,7 +11858,7 @@ class Enrollment
             return false;
         }
 
-        $sip_address=$username.'@'.$this->sipDomain;
+        $sip_address = $username.'@'.$this->sipDomain;
 
         if ($this->create_customer && !$_REQUEST['owner']) {
             // create owner id
@@ -11885,15 +11885,15 @@ class Enrollment
 
             $this->log_action("Create owner account ($firstName $lastName)");
 
-            $timezone=$_REQUEST['tzinfo'];
+            $timezone = $_REQUEST['tzinfo'];
 
             if (!in_array($timezone, $this->timezones)) {
-            	$timezone=$this->default_timezone;
+            	$timezone = $this->default_timezone;
             }
 
             $location = lookupGeoLocation($_SERVER['REMOTE_ADDR']);
 
-            $customer=array(
+            $customer = array(
                 'firstName'  => $firstName,
                 'lastName'   => $lastName,
                 'timezone'   => $timezone,
@@ -11996,7 +11996,7 @@ class Enrollment
         $sip_properties[]=array('name'=> 'ip',                 'value' => $_SERVER['REMOTE_ADDR']);
         $sip_properties[]=array('name'=> 'registration_email', 'value' => $_REQUEST['email']);
 
-        $languages=array("en","ro","nl","es","de");
+        $languages = array("en","ro","nl","es","de");
 
         if (isset($_REQUEST['lang'])) {
             if (in_array($_REQUEST['lang'], $languages)) {

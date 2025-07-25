@@ -879,7 +879,7 @@ class Records
         $this->support_web     = $this->SoapEngine->support_web;
     }
 
-    function showEngineSelection()
+    public function showEngineSelection()
     {
         $selected_soapEngine[$this->SoapEngine->service] =' selected';
 
