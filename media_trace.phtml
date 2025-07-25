@@ -22,7 +22,7 @@ $cdr_source = $_REQUEST['cdr_source'];
 
     require 'cdr_generic.php';
 
-    $mediaTrace = new Media_trace($cdr_source);
+    $mediaTrace = new MediaTrace($cdr_source);
     $mediaTrace->show($proxyIP, $callid, $fromtag, $totag);
 #} else {
 #    printf("Error: Invalid datasource '%s' for user '%s'", $cdr_source, $auth->auth["uname"]);
