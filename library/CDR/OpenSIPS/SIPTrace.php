@@ -10,7 +10,22 @@ class SIPTrace
     public $thor_nodes  = array();
     public $hostnames   = array();
     public $proxyGroups = array();
+    public $table       = '';
+    public $isAuthorized;
+
     private $cdr_source;
+    private $cdrtool;
+    private $soapEngineId;
+    private $SOAPlogin;
+    private $SOAPurl;
+    private $SoapAuth;
+    private $soapclient;
+    private $db;
+    private $rows;
+    private $purgeRecordsAfter;
+    private $column      = [];
+    private $column_port = [];
+    private $mediaTraceLink;
 
     public function __construct($cdr_source)
     {
@@ -42,7 +57,9 @@ class SIPTrace
         if ($this->enableThor) {
             require '/etc/cdrtool/ngnpro_engines.inc';
             require_once 'ngnpro_soap_library.php';
-            if ($DATASOURCES[$this->cdr_source]['soapEngineId'] && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))) {
+            if ($DATASOURCES[$this->cdr_source]['soapEngineId']
+                && in_array($DATASOURCES[$this->cdr_source]['soapEngineId'], array_keys($soapEngines))
+            ) {
                 $this->soapEngineId=$DATASOURCES[$this->cdr_source]['soapEngineId'];
 
                 $this->SOAPlogin = array(
@@ -415,6 +432,8 @@ class SIPTrace
             </div>
         </div>
         ";
+
+        $arrow_direction = '';
 
         foreach (array_keys($this->trace_array) as $key) {
             $this->trace_array[$key]['isProxy'] = 0;
@@ -886,6 +905,7 @@ class SIPTrace
 
         printf("SIP trace on proxy %s for session %s\n--\n\n", $proxyIP, $callid);
 
+        $i = 0;
         foreach (array_keys($this->trace_array) as $key) {
             $i++;
             printf(
@@ -990,6 +1010,7 @@ class SIPTrace
 
         print "$rows2delete traces to delete between $min and $max\n";
 
+        $progress = 0;
         while ($i<=$max) {
             $found=$found+$interval;
 
@@ -998,7 +1019,7 @@ class SIPTrace
             } else {
                 $top=$max;
             }
-            $query=sprintf(
+            $query = sprintf(
                 "delete low_priority from %s where id >= '%d' and id <='%d'",
                 addslashes($this->table),
                 addslashes($min),
@@ -1011,7 +1032,6 @@ class SIPTrace
                 syslog(LOG_NOTICE, $log);
                 return false;
             }
-
             if ($found > $progress * $rows2delete / 100) {
                 $progress++;
                 if ($progress % 10 == 0) {
