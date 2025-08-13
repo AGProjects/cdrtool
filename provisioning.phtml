@@ -111,7 +111,7 @@ $login_credentials['reseller_filters'] = $resellerFilters;
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
 if (isset($_REQUEST['generatorId'])) {
-    $generator  = new recordGenerator($_REQUEST['generatorId'], $recordGenerators, $soapEngines, $login_credentials);
+    $generator  = new RecordGenerator($_REQUEST['generatorId'], $recordGenerators, $soapEngines, $login_credentials);
     if ($action == 'Generate') {
         $generator->generateRecords();
         $generator->showGeneratorForm();
