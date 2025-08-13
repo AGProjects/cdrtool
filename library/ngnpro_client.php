@@ -801,7 +801,7 @@ class Records
                 $error_fault->detail->exception->errorcode,
                 $error_fault->detail->exception->errorstring
             );
-            syslog(LOG_NOTICE, $log);
+            logger($log);
             if ($print) {
                 printf("<p><font color=red>Error: $log</font>");
             }
@@ -1237,20 +1237,9 @@ class Records
         $this->log_action('getCustomers');
 
         // Call function
-        $result     = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
+        $result = $this->SoapEngine->soapclientCustomers->getCustomers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             if ($result->total > $range['count']) return;
@@ -1305,20 +1294,9 @@ class Records
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
         $this->log_action('getResellers');
         // Call function
-        $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
+        $result = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             //if ($result->total > $range['count']) return;
@@ -1375,18 +1353,7 @@ class Records
         // Call function
         $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log = sprintf(
-                "SOAP request error from %s: %s (%s): %s",
-                $this->SoapEngine->SOAPurl,
-                $error_msg,
-                $error_fault->detail->exception->errorcode,
-                $error_fault->detail->exception->errorstring
-            );
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             $this->loginAccount = $result->accounts[0];
@@ -1416,18 +1383,7 @@ class Records
             // Call function
             $result     = $this->SoapEngine->soapclientCustomers->getResellers($Query);
 
-            if ((new PEAR)->isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                $log = sprintf(
-                    "SOAP request error from %s: %s (%s): %s",
-                    $this->SoapEngine->SOAPurl,
-                    $error_msg,
-                    $error_fault->detail->exception->errorcode,
-                    $error_fault->detail->exception->errorstring
-                );
-                syslog(LOG_NOTICE, $log);
+            if ($this->checkLogSoapError($result, true)) {
                 return false;
             } else {
                 $this->resellerProperties=$result->accounts[0]->properties;
@@ -1595,14 +1551,9 @@ class Records
 
         $this->SoapEngine->soapclient->addHeader($this->SoapEngine->SoapAuth);
         $this->log_action('getCarriers');
-        $result     = $this->SoapEngine->soapclient->getCarriers($Query);
+        $result = $this->SoapEngine->soapclient->getCarriers($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach ($result->carriers as $_carrier) {
@@ -1629,12 +1580,7 @@ class Records
         $this->log_action('getGateways');
         $result = $this->SoapEngine->soapclient->getGateways($Query);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             foreach ($result->gateways as $_gateway) {
@@ -1736,12 +1682,8 @@ class Records
         $this->SoapEngine->soapclientCustomers->addHeader($this->SoapEngine->SoapAuthCustomers);
         $this->log_action('getProperties');
         $result     = $this->SoapEngine->soapclientCustomers->getProperties(intval($customer));
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         } else {
             $this->loginProperties=$result;
@@ -1774,12 +1716,7 @@ class Records
         $this->log_action('setProperties');
         $result = $this->SoapEngine->soapclientCustomers->setProperties(intval($customer), $properties);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $log=sprintf("SOAP request error from %s: %s (%s): %s",$this->SoapEngine->SOAPurl, $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            syslog(LOG_NOTICE, $log);
+        if ($this->checkLogSoapError($result, true)) {
             return false;
         }
         return true;
