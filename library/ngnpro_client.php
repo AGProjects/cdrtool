@@ -1443,7 +1443,7 @@ class Records
         } else {
             if (count($this->customers)) {
                 $select_customer[$this->filters['customer']]='selected';
-                printf("<select class=span2 name=%s>",$name);
+                printf("<select class=span2 name=%s>", $name);
                 print("<option>");
                 foreach (array_keys($this->customers) as $_res) {
                     printf(
@@ -1503,11 +1503,11 @@ class Records
     function addFiltersToURL()
     {
         $url = '';
-        $j=0;
-        foreach(array_keys($this->filters) as $filter) {
+        $j = 0;
+        foreach (array_keys($this->filters) as $filter) {
             if (strlen(trim($this->filters[$filter]))) {
                 if ($j) $url .='&';
-                $url .= sprintf('%s_filter=%s',$filter,urlencode(trim($this->filters[$filter])));
+                $url .= sprintf('%s_filter=%s', $filter,urlencode(trim($this->filters[$filter])));
             }
             $j++;
         }
@@ -1517,9 +1517,9 @@ class Records
 
     function printFiltersToForm()
     {
-        foreach(array_keys($this->filters) as $filter) {
+        foreach (array_keys($this->filters) as $filter) {
             if (strlen(trim($this->filters[$filter]))) {
-                printf("<input type=hidden name=%s_filter value='%s'>",$filter,trim($this->filters[$filter]));
+                printf("<input type=hidden name=%s_filter value='%s'>", $filter,trim($this->filters[$filter]));
             }
         }
     }
@@ -1720,7 +1720,7 @@ class Records
     {
         if (!$customer) $customer=$this->customer;
 
-        $log=sprintf("getCustomerProperties(%s,engine=%s)",$customer, $this->SoapEngine->customer_engine);
+        $log=sprintf("getCustomerProperties(%s,engine=%s)", $customer, $this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1760,7 +1760,7 @@ class Records
     {
         if (!$customer) $customer=$this->customer;
 
-        $log=sprintf("setCustomerProperties(%s,engine=%s)",$customer, $this->SoapEngine->customer_engine);
+        $log=sprintf("setCustomerProperties(%s,engine=%s)", $customer, $this->SoapEngine->customer_engine);
         dprint($log);
 
         if (!$this->SoapEngine->customer_engine) {
@@ -1782,7 +1782,6 @@ class Records
             syslog(LOG_NOTICE, $log);
             return false;
         }
-
         return true;
     }
 
@@ -1824,7 +1823,7 @@ class Records
     function showWelcomeMessage()
     {
         if (!strlen($this->SoapEngine->welcome_message)) return ;
-        printf ("%s",$this->SoapEngine->welcome_message);
+        printf ("%s", $this->SoapEngine->welcome_message);
     }
 
     function print_w($obj)
@@ -1873,7 +1872,8 @@ class recordGenerator extends SoapEngine {
     var $default_ip_access_list = '';
     var $default_call_limit = '';
 
-    function recordGenerator($generatorId,$record_generators,$soapEngines,$login_credentials=array()) {
+    function recordGenerator($generatorId, $record_generators, $soapEngines, $login_credentials = array())
+    {
         $this->record_generators = $record_generators;
         $this->generatorId       = $generatorId;
         $this->login_credentials = $login_credentials;
@@ -1887,19 +1887,19 @@ class recordGenerator extends SoapEngine {
         }
 
         if (strlen($this->login_credentials['soap_filter'])) {
-            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines,$this->login_credentials['soap_filter']);
+            $this->soapEngines = $this->getSoapEngineAllowed($soapEngines, $this->login_credentials['soap_filter']);
         } else {
             $this->soapEngines = $soapEngines;
         }
 
         if (in_array($this->record_generators[$generatorId]['sip_engine'],array_keys($this->soapEngines))) {
             // sip zones
-            if (count($this->allowedPorts[$this->record_generators[$generatorId]['sip_engine']]) > 1 && !in_array('sip_accounts',$this->allowedPorts[$this->record_generators[$generatorId]['sip_engine']])) {
+            if (count($this->allowedPorts[$this->record_generators[$generatorId]['sip_engine']]) > 1 && !in_array('sip_accounts', $this->allowedPorts[$this->record_generators[$generatorId]['sip_engine']])) {
                 // sip port not available
                 dprint("sip port not avaliable");
             } else {
                 $sip_engine           = 'sip_accounts@'.$this->record_generators[$generatorId]['sip_engine'];
-                $this->SipSoapEngine = new SoapEngine($sip_engine,$soapEngines,$login_credentials);
+                $this->SipSoapEngine = new SoapEngine($sip_engine, $soapEngines, $login_credentials);
                 $_sip_class          = $this->SipSoapEngine->records_class;
                 $this->sipRecords    = new $_sip_class($this->SipSoapEngine);
 
@@ -1913,43 +1913,44 @@ class recordGenerator extends SoapEngine {
                 }
             }
         } else {
-            printf ("<font color=red>Error: sip_engine %s does not exist</font>",$this->record_generators[$generatorId]['sip_engine']);
+            printf("<font color=red>Error: sip_engine %s does not exist</font>", $this->record_generators[$generatorId]['sip_engine']);
         }
 
         if (in_array($this->record_generators[$generatorId]['enum_engine'],array_keys($this->soapEngines))) {
-            if (count($this->allowedPorts[$this->record_generators[$generatorId]['enum_engine']]) > 1 && !in_array('enum_numbers',$this->allowedPorts[$this->record_generators[$generatorId]['enum_engine']])) {
+            if (count($this->allowedPorts[$this->record_generators[$generatorId]['enum_engine']]) > 1 && !in_array('enum_numbers', $this->allowedPorts[$this->record_generators[$generatorId]['enum_engine']])) {
                 dprint("enum port not avaliable");
                 // enum port not available
             } else {
                 // enum mappings
                 $enum_engine          = 'enum_numbers@'.$this->record_generators[$generatorId]['enum_engine'];
-                $this->EnumSoapEngine = new SoapEngine($enum_engine,$soapEngines,$login_credentials);
+                $this->EnumSoapEngine = new SoapEngine($enum_engine, $soapEngines, $login_credentials);
                 $_enum_class          = $this->EnumSoapEngine->records_class;
                 $this->enumRecords    = new $_enum_class($this->EnumSoapEngine);
             }
 
         } else {
-            printf ("<font color=red>Error: enum_engine %s does not exist</font>",$this->record_generators[$generatorId]['enum_engine']);
+            printf("<font color=red>Error: enum_engine %s does not exist</font>", $this->record_generators[$generatorId]['enum_engine']);
         }
 
         if (in_array($this->record_generators[$generatorId]['customer_engine'],array_keys($this->soapEngines))) {
-            if (count($this->allowedPorts[$this->record_generators[$generatorId]['customer_engine']]) > 1 && !in_array('customers',$this->allowedPorts[$this->record_generators[$generatorId]['customer_engine']])) {
+            if (count($this->allowedPorts[$this->record_generators[$generatorId]['customer_engine']]) > 1 && !in_array('customers', $this->allowedPorts[$this->record_generators[$generatorId]['customer_engine']])) {
                 dprint("customer port not avaliable");
             } else {
                 $customer_engine          = 'customers@'.$this->record_generators[$generatorId]['customer_engine'];
-                $this->CustomerSoapEngine = new SoapEngine($customer_engine,$soapEngines,$login_credentials);
+                $this->CustomerSoapEngine = new SoapEngine($customer_engine, $soapEngines, $login_credentials);
                 $_customer_class          = $this->CustomerSoapEngine->records_class;
                 $this->customerRecords    = new $_customer_class($this->CustomerSoapEngine);
             }
         } else {
-            printf ("<font color=red>Error: customer_engine %s does not exist</font>",$this->record_generators[$generatorId]['customer_engine']);
+            printf("<font color=red>Error: customer_engine %s does not exist</font>", $this->record_generators[$generatorId]['customer_engine']);
         }
 
         if ($_REQUEST['reseller_filter']) $this->template['reseller']=intval($_REQUEST['reseller_filter']);
         if ($_REQUEST['customer_filter']) $this->template['customer']=intval($_REQUEST['customer_filter']);
     }
 
-    function showGeneratorForm() {
+    function showGeneratorForm()
+    {
 
         print "
         <form method=post>
@@ -1996,14 +1997,14 @@ class recordGenerator extends SoapEngine {
             print "<select name=range>";
             foreach ($this->enumRecords->ranges as $_range) {
                 $rangeId=$_range['prefix'].'@'.$_range['tld'];
-                printf ("<option value='%s' %s>+%s under %s",$rangeId,$selected_range[$rangeId],$_range['prefix'],$_range['tld']);
+                printf ("<option value='%s' %s>+%s under %s", $rangeId, $selected_range[$rangeId], $_range['prefix'], $_range['tld']);
             }
             print "</select>";
         }
         */
 
-        list($_range['prefix'],$_range['tld'])=explode("@",$_REQUEST['range']);
-        printf ("<input type=hidden name=range value='%s'>+%s under %s",$_REQUEST['range'],$_range['prefix'],$_range['tld']);
+        list($_range['prefix'], $_range['tld'])=explode("@", $_REQUEST['range']);
+        printf("<input type=hidden name=range value='%s'>+%s under %s", $_REQUEST['range'], $_range['prefix'], $_range['tld']);
 
 
         print "<td>
@@ -2032,14 +2033,14 @@ class recordGenerator extends SoapEngine {
         <tr>
         <td>";
         print _("Add prefix after range:");
-        printf ("
+        printf("
         <td align=right>
         <input type=text name=add_prefix size=10 maxsize=15 value='%s'>
         </td>
         <td>
         </td>
         </tr>
-        ",$add_prefix);
+        ", $add_prefix);
 
         if ($_REQUEST['number_length']) {
             $number_length=$_REQUEST['number_length'];
@@ -2051,12 +2052,15 @@ class recordGenerator extends SoapEngine {
         <tr>
         <td>";
         print _("Number length:");
-        printf ("
-        <td align=right>
-        <input type=text name=number_length size=10 maxsize=15 value='%s'>
-        <tr>
-        <td>
-        ",$number_length);
+        printf(
+            "
+            <td align=right>
+                <input type=text name=number_length size=10 maxsize=15 value='%s'>
+            <tr>
+            <td>
+            ",
+            $number_length
+        );
 
         print _("SIP domain:");
         print "
@@ -2066,7 +2070,7 @@ class recordGenerator extends SoapEngine {
         if (count($this->sipRecords->allowedDomains) > 0) {
             if ($_REQUEST['domain']) {
                 $selected_domain[$_REQUEST['domain']]='selected';
-            } else if ($_last_domain=$this->sipRecords->getCustomerProperty('enum_generator_sip_domain')) {
+            } elseif ($_last_domain=$this->sipRecords->getCustomerProperty('enum_generator_sip_domain')) {
                 $selected_domain[$_last_domain] = 'selected';
             }
 
@@ -2075,7 +2079,7 @@ class recordGenerator extends SoapEngine {
             ";
 
             foreach ($this->sipRecords->allowedDomains as $domain) {
-                printf ("<option value='%s' %s>%s",$domain,$selected_domain[$domain],$domain);
+                printf("<option value='%s' %s>%s", $domain, $selected_domain[$domain], $domain);
             }
 
             print "</select>  ";
@@ -2102,19 +2106,19 @@ class recordGenerator extends SoapEngine {
         <tr>
         <td>";
         print _("Strip digits:");
-        printf ("
+        printf("
         <td align=right>
         <input type=text size=10 name=strip_digits value='%s'>
         </td>
         </tr>
-        ",$strip_digits);
+        ", $strip_digits);
         print "
         <tr>
         <td>";
         print _("Owner:");
-        printf ("
+        printf("
         <td align=right><input type=text size=7 name=owner value='%s'>
-        <td>",$_REQUEST['owner']);
+        <td>", $_REQUEST['owner']);
         print "
         </td>
         </tr>";
@@ -2123,9 +2127,9 @@ class recordGenerator extends SoapEngine {
         <tr>
         <td>";
         print _("Info:");
-        printf ("
+        printf("
         <td align=right><input type=text size=10 name=info value='%s'>
-        <td>",$_REQUEST['info']);
+        <td>", $_REQUEST['info']);
         print "
         </td>
         </tr>";
@@ -2162,7 +2166,7 @@ class recordGenerator extends SoapEngine {
             <td align=right><input class=checkbox type=checkbox name=create_sip value=1 %s>
             </td>
             </tr>
-            ",$checked_create_sip);
+            ", $checked_create_sip);
 
             if ($_REQUEST['pstn']) {
                 $checked_pstn='checked';
@@ -2174,11 +2178,11 @@ class recordGenerator extends SoapEngine {
             <tr>
             <td>";
             print _("PSTN access");
-            printf ("
+            printf("
             <td align=right><input class=checkbox type=checkbox name=pstn value=1 %s>
             </td>
             </tr>
-            ",$checked_pstn);
+            ", $checked_pstn);
 
             if ($_REQUEST['prepaid']) {
                 $checked_prepaid='checked';
@@ -2190,15 +2194,15 @@ class recordGenerator extends SoapEngine {
             <tr>
             <td>";
             print _("Prepaid");
-            printf ("
+            printf("
             <td align=right><input type=checkbox name=prepaid value=1 %s>
             </td>
             </tr>
-            ",$checked_prepaid);
+            ", $checked_prepaid);
 
             if ($_REQUEST['rpid_strip_digits']) {
                 $rpid_strip_digits=$_REQUEST['rpid_strip_digits'];
-            } else if ($rpid_strip_digits = $this->sipRecords->getCustomerProperty('enum_generator_rpid_strip_digits')) {
+            } elseif ($rpid_strip_digits = $this->sipRecords->getCustomerProperty('enum_generator_rpid_strip_digits')) {
             } else {
                 $rpid_strip_digits=0;
             }
@@ -2207,31 +2211,31 @@ class recordGenerator extends SoapEngine {
             <tr>
             <td>";
             print _("Strip digits from Caller-ID");
-            printf ("
+            printf("
             <td align=right><input type=text size=10 name=rpid_strip_digits value='%s'>
             </td>
             </tr>
-            ",$rpid_strip_digits);
+            ", $rpid_strip_digits);
 
             print "
             <tr>
             <td>";
             print _("Quota");
-            printf ("
+            printf("
             <td align=right><input type=text size=10 name=quota value='%s'>
             </td>
             </tr>
-            ",$_REQUEST['quota']);
+            ", $_REQUEST['quota']);
 
             print "
             <tr>
             <td>";
             print _("Password");
-            printf ("
+            printf("
             <td align=right><input type=text size=10 name=password value='%s'>
             </td>
             </tr>
-            ",$_REQUEST['password']);
+            ", $_REQUEST['password']);
 
             if (isset($_REQUEST['call_limit'])) {
                 $call_limit=$_REQUEST['call_limit'];
@@ -2247,11 +2251,11 @@ class recordGenerator extends SoapEngine {
             <tr>
             <td>";
             print _("PSTN call limit");
-            printf ("
+            printf("
             <td align=right><input type=text size=10 name=call_limit value='%s'>
             </td>
             </tr>
-            ",$call_limit);
+            ", $call_limit);
 
             if (isset($_REQUEST['ip_access_list'])) {
                 $ip_access_list=$_REQUEST['ip_access_list'];
@@ -2266,11 +2270,11 @@ class recordGenerator extends SoapEngine {
             <tr>
             <td>";
             print _("IP access list");
-            printf ("
+            printf("
             <td align=right><input type=text size=40 name=ip_access_list value='%s'>
             </td>
             </tr>
-            ",$ip_access_list);
+            ", $ip_access_list);
 
         }
 
@@ -2294,9 +2298,9 @@ class recordGenerator extends SoapEngine {
 
         print "<input type=hidden value=Generate>";
         print "<input type=submit value=Generate>";
-        printf ("<td align=right>
+        printf("<td align=right>
         Number of records:<input type=text size=10 name=nr_records value='%s'>
-        ",$nr_records);
+        ", $nr_records);
         print "<td>";
         print "
         </tr>
@@ -2324,21 +2328,21 @@ class recordGenerator extends SoapEngine {
         ";
     }
 
-
-    function checkGenerateRequest() {
+    function checkGenerateRequest()
+    {
         // check number of records
         $this->template['create_sip']=trim($_REQUEST['create_sip']);
 
         $ip_access_list = preg_replace("/\s+/"," ", $_REQUEST['ip_access_list']);
         if (strlen($ip_access_list) and !check_ip_access_list(trim($ip_access_list), true)) {
-            printf ("<font color=red>Error: IP access lists must be a space separated list of IP network/mask, example: 10.0.20.40/24</font>");
+            print "<font color=red>Error: IP access lists must be a space separated list of IP network/mask, example: 10.0.20.40/24</font>";
             return false;
         }
 
         $this->template['ip_access_list'] = trim($ip_access_list);
 
         if (strlen($_REQUEST['call_limit']) && !is_numeric($_REQUEST['call_limit'])) {
-            printf ("<font color=red>Error: PSTN call limit must be numeric</font>");
+            print "<font color=red>Error: PSTN call limit must be numeric</font>";
             return false;
         }
 
@@ -2351,7 +2355,7 @@ class recordGenerator extends SoapEngine {
         $nr_records=trim($_REQUEST['nr_records']);
 
         if (!is_numeric($nr_records) || $nr_records < 1 || $nr_records > $this->maxRecords) {
-            printf ("<font color=red>Error: number of records must be a number between 1 and %d</font>",$this->maxRecords);
+            printf("<font color=red>Error: number of records must be a number between 1 and %d</font>", $this->maxRecords);
             return false;
         }
 
@@ -2360,7 +2364,11 @@ class recordGenerator extends SoapEngine {
         $number_length=trim($_REQUEST['number_length']);
 
         if (!is_numeric($number_length) || $number_length < $this->minimum_number_length || $number_length > $this->maximum_number_length) {
-            printf ("<font color=red>Error: number length must be a number between 4 and 15</font>",$this->minimum_number_length,$this->maximum_number_length);
+            printf(
+                "<font color=red>Error: number length must be a number between 4 and 15</font>",
+                $this->minimum_number_length,
+                $this->maximum_number_length
+            );
             return false;
         }
 
@@ -2368,7 +2376,7 @@ class recordGenerator extends SoapEngine {
 
         $strip_digits=trim($_REQUEST['strip_digits']);
         if (!is_numeric($strip_digits) || $strip_digits < 0 || $number_length < $strip_digits + 3) {
-            printf ("<font color=red>Error: strip digits + 3 must be smaller then %d</font>",$number_length);
+            printf("<font color=red>Error: strip digits + 3 must be smaller then %d</font>", $number_length);
             return false;
         }
 
@@ -2397,7 +2405,7 @@ class recordGenerator extends SoapEngine {
         }
 
         // check ENUM TLD
-        list($rangePrefix,$tld)=explode('@',trim($_REQUEST['range']));
+        list($rangePrefix, $tld)=explode('@',trim($_REQUEST['range']));
 
         $this->template['range']    = trim($_REQUEST['range']);
         $this->template['rangePrefix'] = $rangePrefix;
@@ -2424,15 +2432,19 @@ class recordGenerator extends SoapEngine {
             $this->template['maxNumbers']  = $this->template['lastNumber'] - $this->template['firstNumber'] + 1;
 
         } else {
-            $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start,$this->template['digitsAfterRange'],'0');
-            $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix'])) - 1);
-            $this->template['maxNumbers']  = pow(10,$this->template['digitsAfterRange']-strlen($this->template['add_prefix']));
+            $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start, $this->template['digitsAfterRange'],'0');
+            $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10, $this->template['digitsAfterRange']-strlen($this->template['add_prefix'])) - 1);
+            $this->template['maxNumbers']  = pow(10, $this->template['digitsAfterRange']-strlen($this->template['add_prefix']));
         }
 
         dprint_r($this->template);
 
         if ($this->template['maxNumbers'] < $this->template['nr_records']) {
-            printf ("<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",$this->template['nr_records'],$this->template['maxNumbers']);
+            printf(
+                "<font color=red>Error: Insufficient numbers in range, requested = %d, available = %d</font>",
+                $this->template['nr_records'],
+                $this->template['maxNumbers']
+            );
             return false;
         }
 
@@ -2502,7 +2514,10 @@ class recordGenerator extends SoapEngine {
                     $this->template['info'] = $customer->firstName.' '.$customer->lastName;
                 }
             } else {
-                printf ("<font color=red>Error: cannot retrieve customer information for owner %d</font>",$this->template['owner']);
+                printf(
+                    "<font color=red>Error: cannot retrieve customer information for owner %d</font>",
+                    $this->template['owner']
+                );
             }
         }
 
@@ -2512,11 +2527,11 @@ class recordGenerator extends SoapEngine {
         while ($i < $this->template['nr_records']) {
 
             $number   = sprintf("%.0f", $this->template['firstNumber'] + $i);
-            $username = substr($number,$this->template['strip_digits']);
+            $username = substr($number, $this->template['strip_digits']);
             $mapto    = 'sip:'.$username.'@'.$this->template['domain'];
 
             print "<li>";
-            printf ('Generating number +%s with mapping %s ',$number,$mapto);
+            printf ('Generating number +%s with mapping %s ', $number, $mapto);
             flush();
 
             $enumMapping = array('tld'      => $this->template['tld'],
@@ -2528,14 +2543,14 @@ class recordGenerator extends SoapEngine {
                                 );
 
             if ($this->template['create_sip']) {
-                if (preg_match("/^0/",$username)) {
-                    printf ('SIP accounts starting with 0 are not generated (%s@%s)',$username,$this->template['domain']);
+                if (preg_match("/^0/", $username)) {
+                    printf ('SIP accounts starting with 0 are not generated (%s@%s)', $username, $this->template['domain']);
                     continue;
                 }
 
                 $groups=array();
 
-                printf ('and sip account %s@%s ',$username,$this->template['domain']);
+                printf ('and sip account %s@%s ', $username, $this->template['domain']);
 
                 $ip_access_list = check_ip_access_list($this->template['ip_access_list']);
 
@@ -2560,13 +2575,12 @@ class recordGenerator extends SoapEngine {
 
 
                 if ($this->template['pstn']) {
+                    $strip_rpid = intval($this->template['rpid_strip_digits']);
 
-                    $strip_rpid=intval($this->template['rpid_strip_digits']);
-
-                	if ($strip_rpid && strlen($number) > $strip_rpid) {
-                    	$sipAccount['rpid']=substr($number,intval($this->template['rpid_strip_digits']));
+                    if ($strip_rpid && strlen($number) > $strip_rpid) {
+                        $sipAccount['rpid'] = substr($number, intval($this->template['rpid_strip_digits']));
                     } else {
-                		$sipAccount['rpid']=$number;
+                        $sipAccount['rpid']=$number;
                     }
                 }
             } else {
@@ -2585,44 +2599,45 @@ class recordGenerator extends SoapEngine {
         return true;
     }
 
-    function printHiddenFormElements () {
-        printf("<input type=hidden name=generatorId value='%s'>",$this->generatorId);
+    function printHiddenFormElements()
+    {
+        printf("<input type=hidden name=generatorId value='%s'>", $this->generatorId);
 
         if ($this->adminonly) {
-            printf("<input type=hidden name=adminonly value='%s'>",$this->adminonly);
+            printf("<input type=hidden name=adminonly value='%s'>", $this->adminonly);
         }
 
         if ($this->template['customer']) {
-            printf("<input type=hidden name=customer_filter value='%s'>",$this->template['customer']);
+            printf("<input type=hidden name=customer_filter value='%s'>", $this->template['customer']);
         }
 
         if ($this->template['reseller']) {
-            printf("<input type=hidden name=reseller_filter value='%s'>",$this->template['reseller']);
+            printf("<input type=hidden name=reseller_filter value='%s'>", $this->template['reseller']);
         }
 
         foreach (array_keys($this->EnumSoapEngine->extraFormElements) as $element) {
             if (!strlen($this->EnumSoapEngine->extraFormElements[$element])) continue;
-            printf ("<input type=hidden name=%s value='%s'>\n",$element,$this->EnumSoapEngine->extraFormElements[$element]);
+            printf("<input type=hidden name=%s value='%s'>\n", $element, $this->EnumSoapEngine->extraFormElements[$element]);
         }
     }
 
-    function getSoapEngineAllowed($soapEngines,$filter) {
-
+    function getSoapEngineAllowed($soapEngines, $filter)
+    {
         // filter syntax:
         // $filter="engine1:port1,port2,port3 engine2 engine3";
         // where engine is a connection from ngnpro_engines.inc and
         // port is valid port from that engine like sip_accounts or enum_numbers
 
-        $_filter_els=explode(" ",trim($filter));
-        foreach(array_keys($soapEngines) as $_engine) {
+        $_filter_els = explode(" ", trim($filter));
+        foreach (array_keys($soapEngines) as $_engine) {
             foreach ($_filter_els as $_filter) {
                 unset($_allowed_engine);
-                $_allowed_ports=array();
+                $_allowed_ports = array();
 
-                list($_allowed_engine,$_allowed_ports_els) = explode(":",$_filter);
+                list($_allowed_engine, $_allowed_ports_els) = explode(":", $_filter);
 
                 if ($_allowed_ports_els) {
-                    $_allowed_ports = explode(",",$_allowed_ports_els);
+                    $_allowed_ports = explode(",", $_allowed_ports_els);
                 }
 
                 if ($_engine == $_allowed_engine) {
@@ -2635,7 +2650,6 @@ class recordGenerator extends SoapEngine {
 
         return $soapEngines_checked;
     }
-
 }
 
 require_once 'NGNPro/Actions.php';
@@ -2646,12 +2660,13 @@ require_once 'NGNPro/Actions/DnsRecords.php';
 require_once 'NGNPro/Actions/DnsZones.php';
 require_once 'NGNPro/Actions/Customers.php';
 
-function check_ip_access_list($acl_string, $check=false) {
-    $list=explode(" ",$acl_string);
+function check_ip_access_list($acl_string, $check = false)
+{
+    $list = explode(" ", $acl_string);
     $ip_access_list = array();
 
     foreach ($list as $el) {
-        $els = explode("/",$el);
+        $els = explode("/", $el);
         if (count($els) != 2) {
             if ($check) {
                 return false;
@@ -2659,7 +2674,7 @@ function check_ip_access_list($acl_string, $check=false) {
                 continue;
             }
         }
-        list($ip,$mask) = $els;
+        list($ip, $mask) = $els;
         if ($mask <0 or $mask > 32) {
             if ($check) {
                 return false;
@@ -2667,7 +2682,7 @@ function check_ip_access_list($acl_string, $check=false) {
                 continue;
             }
         }
-        if (!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/",$ip)) {
+        if (!preg_match("/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/", $ip)) {
             if ($check) {
                 return false;
             } else {
@@ -2684,7 +2699,8 @@ function check_ip_access_list($acl_string, $check=false) {
     }
 }
 
-function objectToArray($d) {
+function objectToArray($d)
+{
     if (is_object($d)) {
         // Gets the properties of the given object
         // with get_object_vars function
