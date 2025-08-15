@@ -11715,8 +11715,8 @@ class Enrollment
 
     public function __construct()
     {
-        require($this->configuration_file);
-        require("/etc/cdrtool/ngnpro_engines.inc");
+        require $this->configuration_file;
+        require "/etc/cdrtool/ngnpro_engines.inc";
         changeloggerchannel('Enrollment');
 
     	$this->soapEngines  = $soapEngines;
@@ -11773,6 +11773,7 @@ class Enrollment
         $this->ldap_hostname     = $this->enrollment['ldap_hostname'];
         $this->ldap_dn           = $this->enrollment['ldap_dn'];
         $this->conference_server = $this->enrollment['conference_server'];
+        $this->default_email     = $this->enrollment['default_email'];
 
         if ($this->enrollment['sip_class']) {
             $this->sipClass = $this->enrollment['sip_class'];
@@ -11807,7 +11808,6 @@ class Enrollment
 
     function createAccount()
     {
-
         if (!$this->init) return false;
 
 
@@ -11888,7 +11888,7 @@ class Enrollment
             $timezone = $_REQUEST['tzinfo'];
 
             if (!in_array($timezone, $this->timezones)) {
-            	$timezone = $this->default_timezone;
+                $timezone = $this->default_timezone;
             }
 
             $location = lookupGeoLocation($_SERVER['REMOTE_ADDR']);
@@ -12029,7 +12029,6 @@ class Enrollment
 
         if (!$result = $this->sipRecords->addRecord($sipAccount)) {
             if ($this->sipRecords->SoapEngine->exception->errorstring) {
-
                 if ($this->sipRecords->SoapEngine->exception->errorcode == 1011) {
                     $return=array('success'       => false,
                                   'error'         => 'user_exists',
@@ -12087,6 +12086,9 @@ class Enrollment
                         $SipSettings->setVoicemailDiversions();
                     }
                     if ($this->send_email_notification) {
+                        if ($this->default_email) {
+                            $SipSettings->support_email = $this->default_email;
+                        }
                         // Sent account settings by email
                         $SipSettings->sendEmail('hideHtml');
                     }
