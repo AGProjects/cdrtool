@@ -3943,7 +3943,7 @@ class CDR_opensips extends CDR
 
 require_once "CDR/OpenSIPS/SIPTrace.php";
 require_once "CDR/OpenSIPS/MediaTrace.php";
-
+    
 include_once "phone_images.php";
 
 function getImageForUserAgent($msg)

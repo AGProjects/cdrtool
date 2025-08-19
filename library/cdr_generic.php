@@ -1831,7 +1831,7 @@ class CDRS
                         return 0;
                     }
                 } else {
-                    printf ("Error copying records in table %s: %s\n", $destinationTable, $this->CDRdb->Error);
+                    printf("Error copying records in table %s: %s\n", $destinationTable, $this->CDRdb->Error);
                     return 0;
                 }
             }
@@ -2152,7 +2152,7 @@ class CDRS
         $t=0;
         foreach ($_reset_array as $_el) {
             if ($t) $query.=",";
-            $query.= sprintf("'%s'",addslashes($_el));
+            $query.= sprintf("'%s'", addslashes($_el));
             $t++;
         }
 
@@ -2314,7 +2314,7 @@ class CDR
             if ($this->CDRS->BillingPartyIdField && $this->BillingPartyId) {
                 if ($updatedFields) $query .= ", ";
                 $updatedFields++;
-                $query.=sprintf(" %s = '%s' ",addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
+                $query.=sprintf(" %s = '%s' ", addslashes($this->CDRS->BillingPartyIdField),addslashes($this->BillingPartyId));
             }
 
             if (isset($this->durationNormalized) && strlen($this->durationNormalized) && $this->durationNormalized != $this->duration) {
@@ -2625,12 +2625,12 @@ class CDR
         $this->pricePrint  = "";
         $this->rateInfo    = "";
 
-        if (fputs($fp,"$cmd\n") !== false) {
+        if (fputs($fp, "$cmd\n") !== false) {
             $i=0;
             while ($i < 100) {
                 $i++;
 
-                $line = fgets($fp,1024);
+                $line = fgets($fp, 1024);
 
                 if (!$line) {
                     syslog(LOG_NOTICE, "Error: lookupRateFromNetwork(): connection to network socket died");
@@ -2994,14 +2994,18 @@ class PrepaidHistory
 
 class CSVWritter
 {
-    var $csv_directory      = '/var/spool/cdrtool/normalize';
-    var $filename_extension = '.csv';
+    public $csv_directory      = '/var/spool/cdrtool/normalize';
+    public $filename_extension = '.csv';
     var $fields             = array();
     var $ready              = false;
     var $cdr_type           = array();
     var $lines              = 0;
+    private $cdr_source;
+    private $directory;
+    private $directory_ready;
 
-    public function __construct($cdr_source = '', $csv_directory = '') {
+    public function __construct($cdr_source = '', $csv_directory = '')
+    {
         if ($cdr_source) {
             $this->cdr_source = $cdr_source;
         } else {
@@ -3018,7 +3022,7 @@ class CSVWritter
             }
         }
 
-        $this->directory=$this->csv_directory."/".date("Ymd");
+        $this->directory = $this->csv_directory."/".date("Ymd");
 
         if (!is_dir($this->directory)) {
             if (!mkdir($this->directory)) {
@@ -3046,7 +3050,7 @@ class CSVWritter
 
         $this->filename_prefix = strtolower($this->cdr_source).'-'.date('YmdHi');
 
-        $this->full_path=rtrim($this->directory,'/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
+        $this->full_path=rtrim($this->directory, '/').'/'.$this->filename_prefix.'-'.$filename_suffix.$this->filename_extension;
 
         $this->full_path_tmp=$this->full_path.'.tmp';
 
