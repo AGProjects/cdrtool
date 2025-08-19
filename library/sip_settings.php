@@ -2089,40 +2089,41 @@ class SipSettings
                 $content=fread($fp, $_FILES['tmpfile']['size']);
                 fclose($fp);
 
-                $query=sprintf("insert into subscriber_docs (
-                `name`,
-                `username`,
-                `domain`,
-                `document`,
-                `file_content`,
-                `file_name`,
-                `file_size`,
-                `file_type`,
-                `file_date`,
-                `last_digits`,
-                `mobile_number`
-                ) values (
-                '%s',
-                '%s',
-                '%s',
-                'identity',
-                '%s',
-                '%s',
-                '%s',
-                '%s',
-                NOW(),
-                '%s',
-                '%s'
-                )",
-                addslashes($_REQUEST['name']),
-                addslashes($this->username),
-                addslashes($this->domain),
-                addslashes($content),
-                addslashes($_FILES['tmpfile']['name']),
-                addslashes($_FILES['tmpfile']['size']),
-                addslashes($_FILES['tmpfile']['type']),
-                addslashes($_REQUEST['last_digits']),
-                addslashes($_REQUEST['mobile_number'])
+                $query = sprintf(
+                    "insert into subscriber_docs (
+                    `name`,
+                    `username`,
+                    `domain`,
+                    `document`,
+                    `file_content`,
+                    `file_name`,
+                    `file_size`,
+                    `file_type`,
+                    `file_date`,
+                    `last_digits`,
+                    `mobile_number`
+                    ) values (
+                    '%s',
+                    '%s',
+                    '%s',
+                    'identity',
+                    '%s',
+                    '%s',
+                    '%s',
+                    '%s',
+                    NOW(),
+                    '%s',
+                    '%s'
+                    )",
+                    addslashes($_REQUEST['name']),
+                    addslashes($this->username),
+                    addslashes($this->domain),
+                    addslashes($content),
+                    addslashes($_FILES['tmpfile']['name']),
+                    addslashes($_FILES['tmpfile']['size']),
+                    addslashes($_FILES['tmpfile']['type']),
+                    addslashes($_REQUEST['last_digits']),
+                    addslashes($_REQUEST['mobile_number'])
                 );
 
                 if (!$this->db->query($query)) {
@@ -2160,12 +2161,13 @@ class SipSettings
         }
 
         if ($this->login_type != 'subscriber' && $_REQUEST['task'] == 'delete_identity_proof' && $_REQUEST['confirm']) {
-            $query=sprintf("delete from subscriber_docs
-            where username = '%s'
-            and domain = '%s'
-            and document = 'identity'",
-            addslashes($this->username),
-            addslashes($this->domain)
+            $query = sprintf(
+                "delete from subscriber_docs
+                where username = '%s'
+                and domain = '%s'
+                and document = 'identity'",
+                addslashes($this->username),
+                addslashes($this->domain)
             );
 
             if (!$this->db->query($query)) {
@@ -2175,12 +2177,13 @@ class SipSettings
             }
         }
 
-    	$query=sprintf("select * from subscriber_docs
-        where username = '%s'
-        and domain = '%s'
-        and document = 'identity'",
-        addslashes($this->username),
-        addslashes($this->domain)
+        $query = sprintf(
+            "select * from subscriber_docs
+            where username = '%s'
+            and domain = '%s'
+            and document = 'identity'",
+            addslashes($this->username),
+            addslashes($this->domain)
         );
 
         if (!$this->db->query($query)) {
@@ -2357,12 +2360,13 @@ class SipSettings
     {
         $this->db = new DB_CDRTool();
 
-        $query = sprintf("select * from subscriber_docs
-        where username = '%s'
-        and domain = '%s'
-        and document = 'identity'",
-        addslashes($this->username),
-        addslashes($this->domain)
+        $query = sprintf(
+            "select * from subscriber_docs
+            where username = '%s'
+            and domain = '%s'
+            and document = 'identity'",
+            addslashes($this->username),
+            addslashes($this->domain)
         );
 
         if (!$this->db->query($query)) {
@@ -2374,7 +2378,7 @@ class SipSettings
         if ($this->db->num_rows()) {
             $this->db->next_record();
 
-			$h=sprintf("Content-type: %s", $this->db->f('file_type'));
+            $h=sprintf("Content-type: %s", $this->db->f('file_type'));
             Header($h);
 
             $h=sprintf("Content-Disposition: attachment; filename=%s", $this->db->f('file_name'));
@@ -2472,104 +2476,103 @@ class SipSettings
             ";
 
 
-        $t=0;
-        foreach($this->enums as $e)  {
-            $t++;
+            $t=0;
+            foreach($this->enums as $e)  {
+                $t++;
 
-            $rr=floor($t/2);
-            $mod=$t-$rr*2;
+                $rr=floor($t/2);
+                $mod=$t-$rr*2;
 
-            if ($mod ==0) {
-                $_class='odd';
-            } else {
-                $_class='even';
-            }
+                if ($mod ==0) {
+                    $_class='odd';
+                } else {
+                    $_class='even';
+                }
 
-            print "
+                print "
                 <tr>
                 <td>";
-            print _("Phone Number");
-            print "</td>
-              <td>$e</td>
-            </tr>
-            ";
+                print _("Phone Number");
+                print "</td>
+                <td>$e</td>
+                </tr>
+                ";
+            }
+
+            print "</table></div></div>";
         }
-
-        print "</table></div></div>";
-	}
         if (!in_array("trunking", $this->groups)) {
-        $chapter=sprintf(_("Aliases"));
-        $this->showChapter($chapter);
+            $chapter=sprintf(_("Aliases"));
+            $this->showChapter($chapter);
 
-        print "
-        <div class=row-fluid>
-        <div class=span12>";
-        printf(_("You may create new aliases for incoming calls"));
-        printf("
-            </div>
-            </div>
-        ");
+            print "
+            <div class=row-fluid>
+            <div class=span12>";
+            printf(_("You may create new aliases for incoming calls"));
+            printf("
+                </div>
+                </div>
+                ");
 
-        $t=0;
+            $t=0;
 
-        print "
-        <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
-        ";
+            print "
+            <form class=form-horizontal method=post name=sipsettings onSubmit=\"return checkForm(this)\">
+            ";
 
-        foreach($this->aliases as $a)  {
-            $t++;
+            foreach($this->aliases as $a)  {
+                $t++;
 
-            $rr=floor($t/2);
-            $mod=$t-$rr*2;
+                $rr=floor($t/2);
+                $mod=$t-$rr*2;
 
-            if ($mod ==0) {
-                $_class='even';
-            } else {
-                $_class='odd';
+                if ($mod ==0) {
+                    $_class='even';
+                } else {
+                    $_class='odd';
+                }
+
+                print "
+                <div class='control-group $_class'>
+
+                  <label for=aliases[] class=control-label>";
+                    print _("SIP Alias");
+                    print "
+                  </label>
+                  <div class='controls'><input type=text size=35 name=aliases[] value=\"$a\">
+                  </div>
+                </div>
+                ";
             }
 
             print "
-            <div class='control-group $_class'>
-
+            <div class='control-ground $_class'>
               <label for=aliases[] class=control-label>";
-                print _("SIP Alias");
+                print _("New SIP Alias");
                 print "
-              </label>
-              <div class='controls'><input type=text size=35 name=aliases[] value=\"$a\">
-              </div>
-            </div>
+              </label>";
+                print "
+              <div class=controls>
+                <input type=hidden name=action value=\"set aliases\">
+            ";
+             print '
+                 <input name=aliases[] size="35" type="text">
+                 </div><div class=form-actions>
+                 <input class="btn" type="submit" value="';
+            print _("Save aliases");
+            print '" onClick=saveHandler(this)>
+                  </div>
+                </div>
+               ';
+
+            print $this->hiddenElements;
+
+            print "
+            </form>
             ";
         }
 
-        print "
-        <div class='control-ground $_class'>
-          <label for=aliases[] class=control-label>";
-            print _("New SIP Alias");
-            print "
-          </label>";
-            print "
-          <div class=controls>
-            <input type=hidden name=action value=\"set aliases\">
-        ";
-         print '
-             <input name=aliases[] size="35" type="text">
-             </div><div class=form-actions>
-             <input class="btn" type="submit" value="';
-        print _("Save aliases");
-        print '" onClick=saveHandler(this)>
-              </div>
-            </div>
-           ';
-
-        print $this->hiddenElements;
-
-        print "
-        </form>
-        ";
-
-        }
         if (!$this->isEmbedded() && $this->show_tls_section) {
-
             if ($this->enrollment_url) {
                 include($this->enrollment_configuration);
 
@@ -12173,35 +12176,35 @@ class Enrollment
             return false;
         }
 
-    	$config = array(
-    		'config'           => $this->enrollment['ca_conf'],
-    		'digest_alg'       => 'md5',
-    		'private_key_bits' => 1024,
-    		'private_key_type' => OPENSSL_KEYTYPE_RSA,
-    		'encrypt_key'      => false,
-    	);
+        $config = array(
+            'config'           => $this->enrollment['ca_conf'],
+            'digest_alg'       => 'md5',
+            'private_key_bits' => 1024,
+            'private_key_type' => OPENSSL_KEYTYPE_RSA,
+            'encrypt_key'      => false,
+        );
 
-		$dn = array(
-    		"countryName"            => $this->enrollment['countryName'],
-	    	"stateOrProvinceName"    => $this->enrollment['stateOrProvinceName'],
-    		"localityName"           => $this->enrollment['localityName'],
-    		"organizationName"       => $this->enrollment['organizationName'],
-    		"organizationalUnitName" => $this->enrollment['organizationalUnitName'],
-    		"commonName"             => $sip_address,
-    		"emailAddress"           => $email
-		);
+        $dn = array(
+            "countryName"            => $this->enrollment['countryName'],
+            "stateOrProvinceName"    => $this->enrollment['stateOrProvinceName'],
+            "localityName"           => $this->enrollment['localityName'],
+            "organizationName"       => $this->enrollment['organizationName'],
+            "organizationalUnitName" => $this->enrollment['organizationalUnitName'],
+            "commonName"             => $sip_address,
+            "emailAddress"           => $email
+        );
 
-		$this->key = openssl_pkey_new($config);
-		$this->csr = openssl_csr_new($dn, $this->key);
+        $this->key = openssl_pkey_new($config);
+        $this->csr = openssl_csr_new($dn, $this->key);
 
         openssl_csr_export($this->csr, $this->csr_out);
         openssl_pkey_export($this->key, $this->key_out, $password, $config);
 
-		$ca="file://".$this->enrollment['ca_crt'];
+        $ca="file://".$this->enrollment['ca_crt'];
 
         $this->crt = openssl_csr_sign($this->csr, $ca, $this->enrollment['ca_key'], 3650, $config);
 
-		if ($this->crt==FALSE) {
+        if ($this->crt == false) {
             while (($e = openssl_error_string()) !== false) {
                 echo $e . "\n";
                 print "<br><br>";
@@ -12209,22 +12212,22 @@ class Enrollment
             return false;
         }
 
-        openssl_x509_export   ($this->crt, $this->crt_out);
-        openssl_pkcs12_export ($this->crt, $this->pk12_out, $this->key, $password);
+        openssl_x509_export($this->crt, $this->crt_out);
+        openssl_pkcs12_export($this->crt, $this->pk12_out, $this->key, $password);
 
         return array(
-                     'crt'  => $this->crt_out,
-                     'key'  => $this->key_out,
-                     'pk12' => $this->pk12_out,
-                     'ca'   => file_get_contents($this->enrollment['ca_crt'])
-                     );
+            'crt'  => $this->crt_out,
+            'key'  => $this->key_out,
+            'pk12' => $this->pk12_out,
+            'ca'   => file_get_contents($this->enrollment['ca_crt'])
+        );
     }
 
     function checkEmail($email)
     {
-        dprint ("checkEmail($email)");
+        dprint("checkEmail($email)");
         $regexp = "/^([a-z0-9][a-z0-9_.-]*)@([a-z0-9][a-z0-9-]*\.)+([a-z]{2,})$/i";
-        if (stristr($email,"-.") ||
+        if (stristr($email, "-.") ||
             !preg_match($regexp, $email)) {
             return false;
         }
@@ -12251,8 +12254,8 @@ class PaypalProcessor
     private $account;
 
     var $deny_countries      = array();
-	var $allow_countries     = array();
-	var $deny_ips            = array();
+    var $allow_countries     = array();
+    var $deny_ips            = array();
     var $make_credit_checks  = true;
     var $transaction_results = array('success' => false);
     var $vat                 = 0;
@@ -12412,11 +12415,12 @@ class PaypalProcessor
                     $e=time();
                     $d=$e-$b;
 
-                    $log=sprintf("CC transaction for %s failed with error: %s (%s) after %d seconds",
-                    $this->account->account,
-                    $pay_process_results['error']['short_message'],
-                    $pay_process_results['error']['error_code'],
-                    $d
+                    $log = sprintf(
+                        "CC transaction for %s failed with error: %s (%s) after %d seconds",
+                        $this->account->account,
+                        $pay_process_results['error']['short_message'],
+                        $pay_process_results['error']['error_code'],
+                        $d
                     );
 
                     syslog(LOG_NOTICE, $log);
@@ -12426,10 +12430,11 @@ class PaypalProcessor
                     $e=time();
                     $d=$e-$b;
 
-                    $log=sprintf("CC transaction %s for %s completed succesfully in %d seconds",
-                    $pay_process_results['success']['desc']->TransactionID,
-                    $this->account->account,
-                    $d
+                    $log = sprintf(
+                        "CC transaction %s for %s completed succesfully in %d seconds",
+                        $pay_process_results['success']['desc']->TransactionID,
+                        $this->account->account,
+                        $d
                     );
                     syslog(LOG_NOTICE, $log);
 
@@ -12536,7 +12541,7 @@ class PaypalProcessor
             </td>
             </tr>
             ";
-    	}
+        }
     }
 
     function fraudDetected()
@@ -12613,20 +12618,19 @@ class DIDProcessor
             return false;
         }
 
-		if ($enrollment['did_environment'] == 'production') {
-        	$this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port();
+        if ($enrollment['did_environment'] == 'production') {
+            $this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port();
             $this->auth_string = sha1($enrollment['did_username'].$enrollment['did_key']);
             $this->environment='production';
         } else {
             print "<h2>Testing DID environment</h2>";
             flush();
-        	$this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port_Testing();
+            $this->did_engine = new WebService_DID_World_Wide__DID_World_Wide_Port_Testing();
             $this->auth_string = sha1($enrollment['did_username'].$enrollment['did_key'].'sandbox');
             $this->environment='testing';
         }
 
         $this->did_engine->_options['timeout'] = 30;
-
     }
 
     function getPrefixesFromRemote()
@@ -12671,10 +12675,10 @@ class DIDProcessor
         if (!$this->db->query($query)) return false;
 
         if ($this->db->num_rows()) {
-        	$this->db->next_record();
+            $this->db->next_record();
             $prefixes = json_decode($this->db->f('cache'), true);
             if (!is_array($prefixes)) {
-            	$prefixes = $this->cachePrefixes();
+                $prefixes = $this->cachePrefixes();
             }
         } else {
             $prefixes=$this->cachePrefixes();
@@ -12703,7 +12707,7 @@ class DIDProcessor
 
         if (!$this->auth_string) return false;
 
-    	$result = $this->did_engine->didww_getdidwwapidetails($this->auth_string);
+        $result = $this->did_engine->didww_getdidwwapidetails($this->auth_string);
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -12727,15 +12731,16 @@ class DIDProcessor
         print_r($data);
         print "</pre>";
 
-        $result = $this->did_engine->didww_ordercreate($this->auth_string,
-                                                       $data['customer_id'],
-                                                       $data['country_iso'],
-                                                       $data['city_prefix'],
-                                                       $data['period'],
-                                                       $data['map_data'],
-                                                       $data['prepaid_funds'],
-                                                       $data['uniq_hash']
-                                                       );
+        $result = $this->did_engine->didww_ordercreate(
+            $this->auth_string,
+            $data['customer_id'],
+            $data['country_iso'],
+            $data['city_prefix'],
+            $data['period'],
+            $data['map_data'],
+            $data['prepaid_funds'],
+            $data['uniq_hash']
+        );
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -12745,58 +12750,59 @@ class DIDProcessor
             printf("<p><font color=red>Error: %s (%s): %s</font>", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             return false;
         } else {
-            $query=sprintf("insert into ddi_numbers (
-                                         `customer_id`,
-                                         `country_name`,
-                                         `city_name`,
-                                         `did_number`,
-                                         `did_status`,
-                                         `did_timeleft`,
-                                         `did_expire_date_gmt`,
-                                         `order_id`,
-                                         `order_status`,
-                                         `sip_address`,
-                                         `did_setup`,
-                                         `did_monthly`,
-                                         `did_period`,
-                                         `prepaid_balance`,
-                                         `environment`
-                                         )
-                                       values
-                                        (
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s',
-                                         '%s'
-                                         )
-                                        ",
-                                        addslashes($data['customer_id']),
-                                        addslashes($result->country_name),
-                                        addslashes($result->city_name),
-                                        addslashes($result->did_number),
-                                        addslashes($result->did_status),
-                                        addslashes($result->did_timeleft),
-                                        addslashes($result->did_expire_date_gmt),
-                                        addslashes($result->order_id),
-                                        addslashes($result->order_status),
-                                        addslashes($data['map_data']['map_detail']),
-                                        addslashes($result->did_setup),
-                                        addslashes($result->did_monthly),
-                                        addslashes($result->did_period),
-                                        addslashes($result->prepaid_balance),
-                                        addslashes($this->environment)
-                                        );
+            $query = sprintf(
+                "insert into ddi_numbers (
+                `customer_id`,
+                `country_name`,
+                `city_name`,
+                `did_number`,
+                `did_status`,
+                `did_timeleft`,
+                `did_expire_date_gmt`,
+                `order_id`,
+                `order_status`,
+                `sip_address`,
+                `did_setup`,
+                `did_monthly`,
+                `did_period`,
+                `prepaid_balance`,
+                `environment`
+                )
+                values
+                (
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s',
+                '%s'
+                )
+                ",
+                addslashes($data['customer_id']),
+                addslashes($result->country_name),
+                addslashes($result->city_name),
+                addslashes($result->did_number),
+                addslashes($result->did_status),
+                addslashes($result->did_timeleft),
+                addslashes($result->did_expire_date_gmt),
+                addslashes($result->order_id),
+                addslashes($result->order_status),
+                addslashes($data['map_data']['map_detail']),
+                addslashes($result->did_setup),
+                addslashes($result->did_monthly),
+                addslashes($result->did_period),
+                addslashes($result->prepaid_balance),
+                addslashes($this->environment)
+            );
 
             if (!$this->db->query($query)) {
                 $log=sprintf("Database error for DID createOrder: %s (%s)", $this->db->Error, $this->db->Errno);
@@ -12814,12 +12820,13 @@ class DIDProcessor
         print_r($data);
         print "</pre>";
 
-        $result = $this->did_engine->didww_orderautorenew($this->auth_string,
-                                                          $data['customer_id'],
-                                                          $data['number'],
-                                                          $data['period'],
-                                                          $data['uniq_hash']
-                                                          );
+        $result = $this->did_engine->didww_orderautorenew(
+            $this->auth_string,
+            $data['customer_id'],
+            $data['number'],
+            $data['period'],
+            $data['uniq_hash']
+        );
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -12829,17 +12836,17 @@ class DIDProcessor
             printf("<p><font color=red>Error: %s (%s): %s</font>", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
             return false;
         } else {
-            $query=sprintf("update ddi_numbers set did_timeleft = '%s' and did_expire_date_gmt = '%s' where did_number = '%s'
-                                        ",
-                                        addslashes($result->did_timeleft),
-                                        addslashes($result->did_expire_date_gmt),
-                                        addslashes($result->did_number)
-                                        );
+            $query = sprintf(
+                "update ddi_numbers set did_timeleft = '%s' and did_expire_date_gmt = '%s' where did_number = '%s'",
+                addslashes($result->did_timeleft),
+                addslashes($result->did_expire_date_gmt),
+                addslashes($result->did_number)
+            );
 
             if (!$this->db->query($query)) {
                 $log=sprintf("Database error for DID renewOrder: %s (%s)", $this->db->Error, $this->db->Errno);
                 print $log;
-        		syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
             }
 
             print $query;
@@ -12854,10 +12861,11 @@ class DIDProcessor
         print_r($data);
         print "</pre>";
 
-        $result = $this->did_engine->didww_ordercancel($this->auth_string,
-                                                          $data['customer_id'],
-                                                          $data['number']
-                                                          );
+        $result = $this->did_engine->didww_ordercancel(
+            $this->auth_string,
+            $data['customer_id'],
+            $data['number']
+        );
 
         if ((new PEAR)->isError($result)) {
             $error_msg  = $result->getMessage();
@@ -12872,7 +12880,7 @@ class DIDProcessor
             if (!$this->db->query($query)) {
                 $log=sprintf("Database error for DID cancelOrder: %s (%s)", $this->db->Error, $this->db->Errno);
                 print $log;
-        		syslog(LOG_NOTICE, $log);
+                syslog(LOG_NOTICE, $log);
             }
 
             print $query;
@@ -12891,17 +12899,18 @@ class DIDProcessor
             syslog(LOG_NOTICE, $log);
         } else {
             while ($this->db->next_record()) {
-                $orders[$this->db->f('did_number')]=array('country_name' => $this->db->f('country_name'),
-                                                           'city_name' => $this->db->f('city_name'),
-                                                           'did_status' => $this->db->f('did_status'),
-                                                           'did_timeleft' => $this->db->f('did_timeleft'),
-                                                           'did_expire_date_gmt' => $this->db->f('did_expire_date_gmt'),
-                                                           'order_id' => $this->db->f('order_id'),
-                                                           'order_status' => $this->db->f('order_status'),
-                                                           'sip_address' => $this->db->f('sip_address'),
-                                                           'did_setup' => $this->db->f('did_setup'),
-                                                           'did_monthly' => $this->db->f('did_monthly')
-                                                           );
+                $orders[$this->db->f('did_number')] = array(
+                    'country_name' => $this->db->f('country_name'),
+                    'city_name' => $this->db->f('city_name'),
+                    'did_status' => $this->db->f('did_status'),
+                    'did_timeleft' => $this->db->f('did_timeleft'),
+                    'did_expire_date_gmt' => $this->db->f('did_expire_date_gmt'),
+                    'order_id' => $this->db->f('order_id'),
+                    'order_status' => $this->db->f('order_status'),
+                    'sip_address' => $this->db->f('sip_address'),
+                    'did_setup' => $this->db->f('did_setup'),
+                    'did_monthly' => $this->db->f('did_monthly')
+                );
             }
         }
 
