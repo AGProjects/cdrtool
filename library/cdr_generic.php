@@ -1820,7 +1820,11 @@ class CDRS
                     syslog(LOG_NOTICE, $log);
                     print $log;
 
-                    $query=sprinf("rename table %s to %s", addslashes($destinationTableTmp),addslashes($destinationTableTmp));
+                    $query = sprintf(
+                        "rename table %s to %s",
+                        addslashes($destinationTableTmp),
+                        addslashes($destinationTableTmp)
+                    );
 
                     if (!$this->CDRdb->query($query)) {
                         printf ("Error renaming table %s to %s: %s\n", $destinationTableTmp, $destinationTable, $this->CDRdb->Error);
@@ -2289,7 +2293,7 @@ class CDR
 
         if ($this->CDRS->CSCODE && $CarrierInfo = $this->CDRS->CDRTool['normalize']['CS_CODES'][$this->CDRS->CSCODE]) {
             // We found a carrier so we set the BillingId
-            $this->BillingId          = $CarrierInfo[BillingPartyId];
+            $this->BillingId          = $CarrierInfo['BillingPartyId'];
         }
 
         if ($save) {
