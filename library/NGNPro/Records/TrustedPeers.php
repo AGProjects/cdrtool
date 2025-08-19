@@ -104,8 +104,8 @@ class TrustedPeers extends Records
                 $this->showActionsForm();
             }
 
-if (intval($this->filters['msteams'])) {
-            print <<< END
+            if (intval($this->filters['msteams'])) {
+                print <<< END
 <div class="alert alert-success"><center>$this->rows records found</center></div>
     <table class='table table-striped table-condensed' width=100%>
     <thead>
@@ -131,8 +131,8 @@ if (intval($this->filters['msteams'])) {
     </tr>
     </thead>
 END;
-} else {
-            print <<< END
+            } else {
+                print <<< END
 <div class="alert alert-success"><center>$this->rows records found</center></div>
     <table class='table table-striped table-condensed' width=100%>
     <thead>
@@ -157,7 +157,7 @@ END;
     </tr>
     </thead>
 END;
-}
+            }
 
             if (!$this->next)  $this->next=0;
 
@@ -237,93 +237,93 @@ END;
 
                     if (intval($this->filters['msteams'])) {
                         printf(
-                        "
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>
-                        ",
-                        $index,
-                        $_customer_url,
-                        $peer->reseller,
-                        $update_url,
-                        $peer->ip,
-                        $peer->description,
-                        $peer->tags,
-                        $peer->billingId,
-                        $peer->blocked,
-                        $prepaid,
-                        $enumLookup,
-                        $transit,
-                        $peer->callLimit,
-                        $peer->tenant,
-                        $peer->carrierName,
-                        $peer->originator,
-                        $peer->strip,
-                        $peer->prefix,
-                        $peer->changeDate,
-                        $delete_url,
-                        $actionText
+                            "
+                            <tr>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            <td><a href=%s>%s</a></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>
+                            ",
+                            $index,
+                            $_customer_url,
+                            $peer->reseller,
+                            $update_url,
+                            $peer->ip,
+                            $peer->description,
+                            $peer->tags,
+                            $peer->billingId,
+                            $peer->blocked,
+                            $prepaid,
+                            $enumLookup,
+                            $transit,
+                            $peer->callLimit,
+                            $peer->tenant,
+                            $peer->carrierName,
+                            $peer->originator,
+                            $peer->strip,
+                            $peer->prefix,
+                            $peer->changeDate,
+                            $delete_url,
+                            $actionText
                         );
                     } else {
                         printf(
-                        "
-                        <tr>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        <td><a href=%s>%s</a></td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td>%s</td>
-                        <td><a href=%s>%s</a></td>
-                        </tr>
-                        ",
-                        $index,
-                        $_customer_url,
-                        $peer->reseller,
-                        $update_url,
-                        $peer->ip,
-                        $peer->description,
-                        $peer->tags,
-                        $peer->billingId,
-                        $peer->blocked,
-                        $prepaid,
-                        $enumLookup,
-                        $transit,
-                        $peer->callLimit,
-                        $peer->carrierName,
-                        $peer->originator,
-                        $peer->strip,
-                        $peer->prefix,
-                        $peer->changeDate,
-                        $delete_url,
-                        $actionText
+                            "
+                            <tr>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            <td><a href=%s>%s</a></td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td>%s</td>
+                            <td><a href=%s>%s</a></td>
+                            </tr>
+                            ",
+                            $index,
+                            $_customer_url,
+                            $peer->reseller,
+                            $update_url,
+                            $peer->ip,
+                            $peer->description,
+                            $peer->tags,
+                            $peer->billingId,
+                            $peer->blocked,
+                            $prepaid,
+                            $enumLookup,
+                            $transit,
+                            $peer->callLimit,
+                            $peer->carrierName,
+                            $peer->originator,
+                            $peer->strip,
+                            $peer->prefix,
+                            $peer->changeDate,
+                            $delete_url,
+                            $actionText
                         );
                     }
 
@@ -417,7 +417,7 @@ END;
 
         foreach (array_keys($this->Fields) as $item) {
             if ($item  == 'authToken' and !$peer->msteams) {
-               continue;
+                continue;
             }
 
             if ($this->Fields[$item]['name']) {
