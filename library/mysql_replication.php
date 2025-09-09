@@ -92,6 +92,10 @@ class MySQLReplicationStatus {
 
 class ReplicationOverview {
     private $status = array();
+    private $cluster;
+    private $repair = [];
+
+    protected $clusters = [];
 
     public function __construct($clusters = array())
     {
@@ -180,7 +184,12 @@ class ReplicationOverview {
         );
 
         foreach (array_keys($this->clusters[$this->cluster]) as $key) {
-            printf("<th style='padding-top:5px' align='left'><span class=\"label\">%s</span> (%s)", $key, $this->clusters[$this->cluster][$key]['ip']);
+            printf(
+                '<th style="padding-top:5px" align="left"><span class="label" style="background-color: %s">%s</span> (%s)',
+                $this->status[$key]->color,
+                $key,
+                $this->clusters[$this->cluster][$key]['ip']
+            );
             if ($this->repair['server_to_repair'] != $key) {
                 printf("<br><a href=%s?server=%s&cluster=%s>How to repair me</a></th>", $_SERVER['PHP_SELF'], urlencode($key), urlencode($this->cluster));
             } else {
