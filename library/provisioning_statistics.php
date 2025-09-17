@@ -5,7 +5,8 @@
  * Author Tijmen de Mes
 */
 
-class ProvisioningStatistics {
+class ProvisioningStatistics
+{
     // Obtain statistics from database for NGNPro
 
     private function queryHasError($db, $query)

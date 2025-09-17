@@ -125,7 +125,7 @@ class SipSettings
                                            'callLimit'
                                            );
 
-	public $disable_extra_groups=true;
+    public $disable_extra_groups=true;
 
     var $prepaid             = 0;
     var $emergency_regions   = array();
@@ -172,7 +172,6 @@ class SipSettings
 
     public function __construct($account, $loginCredentials = array(), $soapEngines = array())
     {
-
         //define_syslog_variables();
 
         $this->platform_call_limit = _('unlimited');
@@ -1814,9 +1813,11 @@ class SipSettings
             $value="<voice-mailbox>";
         }
 
-        return array("name"  => sprintf(_("Voice Mailbox")),
-                   "value" => $value,
-                   "description"  => "Voicemail");
+        return array(
+            "name"  => sprintf(_("Voice Mailbox")),
+            "value" => $value,
+            "description"  => "Voicemail"
+        );
     }
 
     public function showAboveTabs()
@@ -1826,10 +1827,7 @@ class SipSettings
         <div class='span12'>
         ";
 
-        print "
-        </div>
-        </div>
-        ";
+        print "</div></div>";
     }
 
     function showTabs()
@@ -2054,7 +2052,6 @@ class SipSettings
 
     function showIdentityProof()
     {
-
         $max_file_size=1024000;
 
         $this->db = new DB_CDRTool();
@@ -3381,7 +3378,6 @@ class SipSettings
         }
 
         foreach (array_keys($this->availableGroups) as $key) {
-
             unset($disabled_box);
 
             if ($this->login_type == 'subscriber' && !$this->availableGroups[$key]['SubscriberMaySeeIt']) {
@@ -3486,7 +3482,7 @@ class SipSettings
                     }
                 } elseif ($this->login_type == 'customer') {
                     if (in_array($key, $this->groups)) {
-                       if ($this->Preferences['blocked_by'] != 'reseller') {
+                        if ($this->Preferences['blocked_by'] != 'reseller') {
                             printf(
                                 "
                                 <select name=%s>
@@ -3499,10 +3495,10 @@ class SipSettings
                                 $selected_blocked_by['customer'],
                                 _("Blocked")
                             );
-                       } else {
-                           print _("Blocked by Reseller");
-                       }
-                   } else {
+                        } else {
+                            print _("Blocked by Reseller");
+                        }
+                    } else {
                         printf(
                             "
                             <select name=%s>
@@ -3515,12 +3511,12 @@ class SipSettings
                             $selected_blocked_by['customer'],
                             _("Blocked")
                         );
-                   }
+                    }
                 } else {
-                       if (in_array($key, $this->groups)) {
-                           print _("Blocked");
+                    if (in_array($key, $this->groups)) {
+                        print _("Blocked");
                     } else {
-                           print _("Active");
+                        print _("Active");
                     }
                 }
             } elseif ($key=="free-pstn") {
@@ -3644,10 +3640,9 @@ class SipSettings
         print "
         </form>
         ";
-
     }
 
-    function showDiversionsTab()
+    public function showDiversionsTab()
     {
         if (in_array("trunking", $this->groups)) {
             return false;
@@ -4231,7 +4226,7 @@ class SipSettings
             }
         }
 
-	$foundGroupInAvailableGroups=array();
+        $foundGroupInAvailableGroups=array();
 
         $extra_groups=explode(' ', $_REQUEST['extra_groups']);
 
@@ -5033,8 +5028,8 @@ class SipSettings
             unset($this->prepaidAccount);
             return false;
         } else {
-        	$this->prepaidAccount=$result[0];
-        	return true;
+            $this->prepaidAccount=$result[0];
+            return true;
         }
     }
 
@@ -5064,7 +5059,7 @@ class SipSettings
         if ($this->checkPrintSoapError($result)) {
             return false;
         } else {
-        	return $result;
+            return $result;
         }
     }
 
@@ -5238,20 +5233,20 @@ class SipSettings
             print "
             <tr class=$_class>";
 
-            printf("
-            <td>%d</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td>%s</td>
-            <td align=right>%s</td>
-            <td align=right>%s</td>
-            </tr>
-            ", $found,
-            $_line->date,
-            $_line->action,
-            $description,
-            number_format($value,4),
-            number_format($_line->balance,4)
+            printf(
+                "<td>%d</td>
+                <td>%s</td>
+                <td>%s</td>
+                <td>%s</td>
+                <td align=right>%s</td>
+                <td align=right>%s</td>
+                </tr>",
+                $found,
+                $_line->date,
+                $_line->action,
+                $description,
+                number_format($value, 4),
+                number_format($_line->balance, 4)
             );
         }
 
@@ -5322,8 +5317,8 @@ class SipSettings
     function exportBalanceHistory()
     {
         Header("Content-type: text/csv");
-    	$h=sprintf("Content-Disposition: inline; filename=%s-prepaid-history.csv", $this->account);
-    	Header($h);
+        $h = sprintf("Content-Disposition: inline; filename=%s-prepaid-history.csv", $this->account);
+        Header($h);
 
         print _("Id");
         print ",";
@@ -5340,17 +5335,20 @@ class SipSettings
         print _("Final Balance");
         print ("\n");
 
+        $found = 0;
         foreach ($this->balance_history as $_line) {
-			if (strstr($_line->description,'Session') && !$_line->value) continue;
+            if (strstr($_line->description,'Session') && !$_line->value) continue;
             $found++;
-            printf("%s,%s,%s,%s,%s,%s,%s\n",
-            $found,
-            $this->account,
-            $_line->date,
-            $_line->action,
-            $_line->description,
-            $_line->value,
-            $_line->balance);
+            printf(
+                "%s,%s,%s,%s,%s,%s,%s\n",
+                $found,
+                $this->account,
+                $_line->date,
+                $_line->action,
+                $_line->description,
+                $_line->value,
+                $_line->balance
+            );
         }
     }
 
@@ -7273,8 +7271,18 @@ END;
                 $class_nobody = "note";
             }
 
-            printf("<td style='vertical-align: middle;' class='note'><input style='vertical-align: top;' type=radio name=%s value=0 %s> %s</td>", $_name, $_checked_everybody, _("Everybody"));
-            printf("<td style='vertical-align: middle;' class='$class_nobody'><input style='vertical-align: top;' type=radio name=%s value=1 %s> %s</td>", $_name, $_checked_nobody, _("Nobody"));
+            printf(
+                "<td style='vertical-align: middle;' class='note'><input style='vertical-align: top;' type=radio name=%s value=0 %s> %s</td>",
+                $_name,
+                $_checked_everybody,
+                _("Everybody")
+            );
+            printf(
+                "<td style='vertical-align: middle;' class='$class_nobody'><input style='vertical-align: top;' type=radio name=%s value=1 %s> %s</td>",
+                $_name,
+                $_checked_nobody,
+                _("Nobody")
+            );
 
             $c=count($this->acceptRules['groups']);
 
@@ -8307,7 +8315,7 @@ END;
         "emailAddress"           => $this->email
         );
 
-	$this->key = openssl_pkey_new($config);
+        $this->key = openssl_pkey_new($config);
         if ($this->key==FALSE) {
             while (($e = openssl_error_string()) !== false) {
                     echo $e . "\n";
@@ -8358,7 +8366,7 @@ END;
         if (!$this->owner) return;
         Header("Content-type: application/x-crt");
         $header=sprintf("Content-Disposition: inline; filename=sipthor-owner-certificate-%s.crt", $this->owner);
-	Header($header);
+        Header($header);
         $cert=$this->generateCertificate();
         $crt=$cert['crt'].$cert['key'];
         print $crt;
@@ -8370,14 +8378,14 @@ END;
         $cert=$this->generateCertificate();
         Header("Content-type: application/x-p12");
         $header=sprintf("Content-Disposition: inline; filename=sipthor-owner-certificate-%s.p12", $this->owner);
-	Header($header);
+        Header($header);
         print $cert['p12'];
     }
 
     function isEmbedded()
     {
         // return true if page was loaded from non-session based web session
-	if ($_SERVER['SSL_CLIENT_CERT'] || $_SERVER['PHP_AUTH_DIGEST']) {
+        if ($_SERVER['SSL_CLIENT_CERT'] || $_SERVER['PHP_AUTH_DIGEST']) {
             return true;
         }
         return false;
@@ -8405,7 +8413,7 @@ END;
             default  : return ($lang . '_' . strtoupper($lang));
         }
         return 'C'; // this will never be reached
-	}
+    }
 
     function showDirectorySearchForm()
     {
@@ -8569,25 +8577,26 @@ END;
 
                 if ($this->isEmbedded()) {
                     //$add_contact_url=sprintf("<a href=\"javascript:blink.addContact_withDisplayName_('%s', '%s');\">%s</a>", $sip_account, $name, $this->plus_sign_img);
-                    printf("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
-                    $_class,
-                    $index,
-                    $name,
-                    $sip_account,
-                    $account->timezone,
-                    $this->PhoneDialURL($sip_account),
-                    $add_contact_url
+                    printf(
+                        "<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                        $_class,
+                        $index,
+                        $name,
+                        $sip_account,
+                        $account->timezone,
+                        $this->PhoneDialURL($sip_account),
+                        $add_contact_url
                     );
                 } else {
-
-                    printf("<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
-                    $_class,
-                    $index,
-                    $name,
-                    $sip_account,
-                    $account->timezone,
-                    $this->PhoneDialURL($sip_account),
-                    $contacts_url
+                    printf(
+                        "<tr class=%s><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s %s</td>",
+                        $_class,
+                        $index,
+                        $name,
+                        $sip_account,
+                        $account->timezone,
+                        $this->PhoneDialURL($sip_account),
+                        $contacts_url
                     );
                 }
             }
@@ -8603,12 +8612,13 @@ END;
     function showPagination($maxrows)
     {
 
-        $url = sprintf("%s&tab=%s&firstname=%s&lastname%s",
-               $this->url,
-               $this->tab,
-               urlencode($_REQUEST['firstname']),
-               urlencode($_REQUEST['lastname'])
-               );
+        $url = sprintf(
+            "%s&tab=%s&firstname=%s&lastname%s",
+            $this->url,
+            $this->tab,
+            urlencode($_REQUEST['firstname']),
+            urlencode($_REQUEST['lastname'])
+        );
 
         print "
         <p>
@@ -10869,7 +10879,7 @@ function getLocalTime($timezone, $timestamp)
     return $LocalTime;
 }
 
-function getSipThorHomeNode ($account, $sip_proxy)
+function getSipThorHomeNode($account, $sip_proxy)
 {
     if (!$account || !$sip_proxy) return false;
     $socket = fsockopen($sip_proxy, 9500, $errno, $errstr, 1);
@@ -10879,8 +10889,8 @@ function getSipThorHomeNode ($account, $sip_proxy)
 
     $request=sprintf("lookup sip_proxy for %s", $account);
 
-    if (fputs($socket,"$request\r\n") !== false) {
-        $ret = fgets($socket,4096);
+    if (fputs($socket, "$request\r\n") !== false) {
+        $ret = fgets($socket, 4096);
     }
     fclose($socket);
     return $ret;
@@ -11684,7 +11694,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
 
 class Enrollment
 {
-    var $init                       = false;
+    protected $init                 = false;
     var $create_voicemail           = false;
     var $send_email_notification    = true;
     var $create_email_alias         = false;
@@ -11697,6 +11707,15 @@ class Enrollment
     var $prepaid                    = 1;
     var $create_certificate         = 0;
     var $customer_belongs_to_reseller = false;
+
+    protected $soapEngines;
+    protected $enrollment;
+    protected $sipDomain;
+    protected $sipEngine;
+    protected $customerEngine;
+    protected $CustomerSoapEngine;
+    protected $SipSoapEngine;
+    protected $EmailSoapEngine;
 
     function log_action($action) {
         global $auth;
@@ -11722,23 +11741,25 @@ class Enrollment
         require "/etc/cdrtool/ngnpro_engines.inc";
         changeloggerchannel('Enrollment');
 
-    	$this->soapEngines  = $soapEngines;
+        $this->soapEngines  = $soapEngines;
         $this->enrollment   = $enrollment;
 
         $this->loadTimezones();
 
         if (!is_array($this->soapEngines)) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing soap engines configuration'
-                          );
+            $return = array(
+                'success'       => false,
+                'error_message' => 'Error: Missing soap engines configuration'
+            );
             print (json_encode($return));
             return false;
         }
 
         if (!is_array($this->enrollment)) {
-            $return=array('success'       => false,
-                          'error_message' => 'Error: Missing enrollment configuration'
-                          );
+            $return = array(
+                'success'       => false,
+                'error_message' => 'Error: Missing enrollment configuration'
+            );
             print (json_encode($return));
             return false;
         }
@@ -11785,17 +11806,19 @@ class Enrollment
         }
 
         if (!$this->sipEngine) {
-            $return=array('success'       => false,
-                          'error_message' => 'Missing sip engine'
-                          );
+            $return = array(
+                'success'       => false,
+                'error_message' => 'Missing sip engine'
+            );
             print (json_encode($return));
             return false;
         }
 
         if (!$this->sipDomain) {
-            $return=array('success'       => false,
-                          'error_message' => 'Missing sip domain'
-                          );
+            $return = array(
+                'success'       => false,
+                'error_message' => 'Missing sip domain'
+            );
             print (json_encode($return));
             return false;
         }
@@ -12599,6 +12622,7 @@ class PaypalProcessor
 
 class DIDProcessor
 {
+    private $db;
 
     public function __construct()
     {
@@ -12690,7 +12714,6 @@ class DIDProcessor
     function cachePrefixes()
     {
         if ($prefixes = $this->getPrefixesFromRemote()) {
-
             $query=sprintf("delete from ddi_cache where environment = '%s'", addslashes($this->environment));
             $this->db->query($query);
 

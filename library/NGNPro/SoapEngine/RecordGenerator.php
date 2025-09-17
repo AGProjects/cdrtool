@@ -570,7 +570,6 @@ class RecordGenerator extends SoapEngine
             $this->template['firstNumber'] = $this->template['rangePrefix'].$this->template['add_prefix'];
             $this->template['lastNumber']  = substr($this->template['firstNumber'],0,-1).'9';
             $this->template['maxNumbers']  = $this->template['lastNumber'] - $this->template['firstNumber'] + 1;
-
         } else {
             $this->template['firstNumber'] = $this->template['rangePrefix'].str_pad($start, $this->template['digitsAfterRange'],'0');
             $this->template['lastNumber']  = sprintf("%.0f", $this->template['firstNumber'] + pow(10, $this->template['digitsAfterRange']-strlen($this->template['add_prefix'])) - 1);
