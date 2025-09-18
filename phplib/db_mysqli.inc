@@ -39,6 +39,7 @@ class DB_Sql
     /* private: link and query handles */
     private $Link_ID  = 0;
     private $Query_ID = 0;
+    private $Stmt_ID = null;
 
 
     public $type_mappings = array(
@@ -300,6 +301,74 @@ class DB_Sql
         }
 
         return 1;
+    }
+
+    public function prepare($query)
+    {
+        if (!$this->Link_ID) {
+            $this->connect();  // Ensure connection is established
+        }
+
+        $this->Stmt_ID = mysqli_prepare($this->Link_ID, $query);
+
+        if (!$this->Stmt_ID) {
+            $this->halt("Prepare failed: " . mysqli_error($this->Link_ID));
+            return false;
+        }
+
+        return true;
+    }
+
+    public function execute($params = array())
+    {
+        if (!$this->Stmt_ID) {
+            $this->halt("Execute called without a prepared statement.");
+            return false;
+        }
+
+        if (!empty($params)) {
+            // Build type string and array of references
+            $types = '';
+            $refs = [];
+
+            foreach ($params as $key => $value) {
+                if (is_int($value)) {
+                    $types .= 'i';
+                } elseif (is_float($value)) {
+                    $types .= 'd';
+                } elseif (is_string($value)) {
+                    $types .= 's';
+                } else {
+                    $types .= 'b'; // Default to blob
+                }
+
+                $refs[$key] = &$params[$key]; // Create reference
+            }
+
+            array_unshift($refs, $types);
+            call_user_func_array(array($this->Stmt_ID, 'bind_param'), $refs);
+        }
+
+        if (!mysqli_stmt_execute($this->Stmt_ID)) {
+            $this->halt("Execute failed: " . mysqli_stmt_error($this->Stmt_ID));
+            return false;
+        }
+
+        // Save result if it's a SELECT
+        $result = mysqli_stmt_get_result($this->Stmt_ID);
+        if ($result !== false) {
+            $this->Query_ID = $result;
+        }
+
+        return true;
+    }
+
+    public function closeStmt()
+    {
+        if ($this->Stmt_ID) {
+            mysqli_stmt_close($this->Stmt_ID);
+            $this->Stmt_ID = null;
+        }
     }
 
     /* public: table locking */
