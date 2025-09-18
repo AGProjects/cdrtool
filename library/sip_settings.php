@@ -11204,6 +11204,30 @@ function http_digest_parse($txt)
     return $needed_parts ? false : $data;
 }
 
+function checkForSoapError($result, $print = false)
+{
+    if (!(new PEAR)->isError($result)) {
+        return false;
+    }
+    if ($print) {
+        $error_msg  = $result->getMessage();
+        $error_fault= $result->getFault();
+        $error_code = $result->getCode();
+        $log = sprintf(
+            "Error (SipPort): %s (%s): %s",
+            $error_msg,
+            $error_fault->detail->exception->errorcode,
+            $error_fault->detail->exception->errorstring
+        );
+        $return = array(
+            'success'       => false,
+            'error_message' => $log
+        );
+        echo json_encode($return);
+    }
+    return true;
+}
+
 function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines)
 {
     // Generic code for all sip settings pages
@@ -11284,14 +11308,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
 
-            if ((new PEAR)->isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-                $return=array('success'       => false,
-                            'error_message' => $_msg
-                            );
+            if (checkSoapError($result)) {
                 return false;
             } else {
                 printf("<p>The account %s has been removed</p>", $SipSettings->account);
@@ -11389,23 +11406,16 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result = $SipSettings->SipPort->addBalanceFromVoucher($SipSettings->sipId, $card);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $return=array('success'       => false,
-                          'error_message' => $_msg
-                          );
-            print (json_encode($return));
+        if (checkForSoapError($result, true)) {
             return false;
-        } else {
-            $return=array('success'       => true,
-                          'error_message' => 'Added balance succeeded'
-                          );
-            print (json_encode($return));
-            return true;
         }
+
+        $return = array(
+            'success'       => true,
+            'error_message' => 'Added balance succeeded'
+        );
+        print (json_encode($return));
+        return true;
     } elseif ($_REQUEST['action'] == 'get_identity') {
         $account=array('sip_address'       => $SipSettings->account,
                        'email'             => $SipSettings->email,
@@ -11423,34 +11433,26 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getSipDeviceLocations(array($SipSettings->sipId));
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-            $return=array('success'       => $_ret,
-                          'error_message' => $_msg
-                          );
-            print (json_encode($return));
+        if (checkForSoapError($result, true)) {
             return false;
-        } else {
-            foreach ($result[0]->locations as $locationStructure) {
-                $contact=$locationStructure->address.":".$locationStructure->port;
-                if ($locationStructure->publicAddress) {
-                    $publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
-                } else {
-                    $publicContact=$contact;
-                }
-                $devices[]=array("contact"       => $contact,
-                                         "publicContact" => $publicContact,
-                                         "expires"       => $locationStructure->expires,
-                                         "user_agent"    => $locationStructure->userAgent,
-                                         "transport"     => $locationStructure->transport
-                                     );
-            }
         }
 
+        foreach ($result[0]->locations as $locationStructure) {
+            $contact=$locationStructure->address.":".$locationStructure->port;
+            if ($locationStructure->publicAddress) {
+                $publicContact=$locationStructure->publicAddress.":".$locationStructure->publicPort;
+            } else {
+                $publicContact=$contact;
+            }
+            $devices[]=array(
+                "contact"       => $contact,
+                "publicContact" => $publicContact,
+                "expires"       => $locationStructure->expires,
+                "user_agent"    => $locationStructure->userAgent,
+                "transport"     => $locationStructure->transport
+            );
+        }
+        
         print (json_encode($devices));
         return true;
     } elseif ($_REQUEST['action'] == 'set_dnd_on') {
@@ -11461,24 +11463,20 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId, $SipSettings->acceptRules);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-        } else {
-            $_ret=true;
-            if (intval($_REQUEST['duration'] > 0)) {
-                $_msg=sprintf(_('Do not disturb has been enabled for %d minutes'), intval($_REQUEST['duration']));
-            } else {
-                $_msg=sprintf(_('Do not disturb has been enabled'));
-            }
+        if (checkForSoapError($result, true)) {
+            return false;
         }
 
-        $return=array('success'       => $_ret,
-                      'error_message' => $_msg
-                      );
+        if (intval($_REQUEST['duration'] > 0)) {
+            $_msg=sprintf(_('Do not disturb has been enabled for %d minutes'), intval($_REQUEST['duration']));
+        } else {
+            $_msg=sprintf(_('Do not disturb has been enabled'));
+        }
+
+        $return = array(
+            'success'       => true,
+            'error_message' => $_msg
+        );
         print (json_encode($return));
         return true;
     } elseif ($_REQUEST['action'] == 'set_dnd_off') {
@@ -11489,40 +11487,30 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->setAcceptRules($SipSettings->sipId, $SipSettings->acceptRules);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-        } else {
-            $_ret=true;
-            $_msg=sprintf(_('Do not disturb has been disabled'));
+        if (checkForSoapError($result, true)) {
+            return false;
         }
 
-        $return=array('success'       => $_ret,
-                      'error_message' => $_msg
-                      );
+        $_msg = sprintf(_('Do not disturb has been disabled'));
+        $return = array(
+            'success'       => true,
+            'error_message' => $_msg
+        );
         print (json_encode($return));
         return true;
     } elseif ($_REQUEST['action'] == 'set_privacy_on') {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->addToGroup(array("username" => $SipSettings->username,"domain"=> $SipSettings->domain),"anonymous");
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-        } else {
-            $_ret=true;
-            $_msg=sprintf(_('Caller-ID is now hidden for outgoing calls'));
+        if (checkForSoapError($result, true)) {
+            return false;
         }
 
-        $return=array('success'       => $_ret,
-                      'error_message' => $_msg
-                      );
+        $_msg = sprintf(_('Caller-ID is now hidden for outgoing calls'));
+        $return = array(
+            'success'       => true,
+            'error_message' => $_msg
+        );
         print (json_encode($return));
         return true;
     } elseif ($_REQUEST['action'] == 'set_privacy_off') {
@@ -11573,37 +11561,23 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
 
         $result     = $SipSettings->SipPort->addAlias($_aliasObject);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-        } else {
-            $_ret=true;
-            $_msg=sprintf(_('Added alias %s'), strtolower($username));
+        if (checkForSoapError($result, true)) {
+            return false;
         }
-
-        $return=array('success'       => $_ret,
-                      'error_message' => $_msg
-                      );
+        
+        $_msg = sprintf(_('Added alias %s'), strtolower($username));
+        $return=array(
+            'success'       => true,
+            'error_message' => $_msg
+        );
         print (json_encode($return));
         return true;
     } elseif ($_REQUEST['action'] == 'set_call_forwarding') {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
         $result     = $SipSettings->SipPort->getCallDiversions($SipSettings->sipId);
 
-        if ((new PEAR)->isError($result)) {
-            $error_msg  = $result->getMessage();
-            $error_fault= $result->getFault();
-            $error_code = $result->getCode();
-            $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-            $_ret=false;
-            $return=array('success'       => $_ret,
-                          'error_message' => $_msg
-                          );
-            print (json_encode($return));
-            return true;
+        if (checkForSoapError($result, true)) {
+            return false;
         }
 
         $SipSettings->getVoicemail();
@@ -11612,7 +11586,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             $old_diversions[$condition]=$result->$condition;
         }
 
-        $_log='';
+        $_log = '';
         foreach(array_keys($old_diversions) as $key) {
             if (isset($_REQUEST[$key])) {
                 printf("Key $key changed %s", $_REQUEST[$key]);
@@ -11651,20 +11625,15 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result     = $SipSettings->SipPort->setCallDiversions($SipSettings->sipId, $new_diversions);
 
-            if ((new PEAR)->isError($result)) {
-                $error_msg  = $result->getMessage();
-                $error_fault= $result->getFault();
-                $error_code = $result->getCode();
-                $_msg=sprintf("Error (SipPort): %s (%s): %s", $error_msg, $error_fault->detail->exception->errorcode, $error_fault->detail->exception->errorstring);
-                $_ret=false;
-            } else {
-                $_ret=true;
-                $_msg=sprintf(_('Changed diversions %s'), $_log);
+            if (checkForSoapError($result, true)) {
+                return false;
             }
 
-            $return=array('success'       => $_ret,
-                          'error_message' => $_msg
-                          );
+            $_msg = sprintf(_('Changed diversions %s'), $_log);
+            $return = array(
+                'success'       => true,
+                'error_message' => $_msg
+            );
             print (json_encode($return));
             return true;
         } else {
