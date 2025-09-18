@@ -109,45 +109,40 @@ class CT_Sql {
 
   public function ac_get_value($id, $name)
   {
-    $query = "SELECT val FROM " . $this->database_table . " WHERE sid = ? AND name = ?";
-    if (!$this->prepare($query)) return "";
-    if (!$this->execute([$id, $name])) return "";
-
-    $str = "";
-    if ($this->Query_ID && $row = mysqli_fetch_assoc($this->Query_ID)) {
-      $str = $row['val'];
-    }
-    mysqli_free_result($this->Query_ID);
-    $this->Query_ID = 0;
-    $this->closeStmt();
-
-    if ($str === "") {
-      return "";
-    }
-
-    $str2 = base64_decode($str);
-
-    if (preg_match("/^$name:.*/", $str2)) {
-      $str = preg_replace("/^$name:/", "", $str2);
-    } else {
-      $str3 = stripslashes($str);
-
-      if (preg_match("/^$name:.*/", $str3)) {
-        $str = preg_replace("/^$name:/", "", $str3);
-      } else {
-        switch ($this->encoding_mode) {
-          case "slashes":
-            $str = stripslashes($str);
-            break;
-          case "base64":
-          default:
-            $str = base64_decode($str);
-            break;
-        }
+      $query = "SELECT val FROM " . $this->database_table . " WHERE sid = ? AND name = ?";
+      if (!$this->db->prepare($query)) {
+          return "";
       }
-    }
+      if (!$this->db->execute([$id, $name])) {
+          return "";
+      }
+      if ($this->db->next_record()) {
+          $str  = $this->db->f("val");
+          $str2 = base64_decode($str);
 
-    return $str;
+          if (preg_match("/^$name:.*/", $str2)) {
+              $str = preg_replace("/^$name:/", "", $str2);
+          } else {
+              $str3 = stripslashes($str);
+
+              if (preg_match("/^$name:.*/", $str3)) {
+                  $str = preg_replace("/^$name:/", "", $str3);
+              } else {
+                  switch ($this->encoding_mode) {
+                      case "slashes":
+                          $str = stripslashes($str);
+                          break;
+
+                      case "base64":
+                      default:
+                          $str = base64_decode($str);
+                          break;
+                  }
+              }
+          }
+          return $str;
+      }
+      return "";
   }
 
   function ac_newid($str, $name) {
