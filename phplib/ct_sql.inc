@@ -51,11 +51,10 @@ class CT_Sql {
   function ac_gc($gc_time, $name) {
     $timeout = time();
     $sqldate = date("YmdHis", $timeout - ($gc_time * 60));
-    $this->db->query(sprintf("DELETE FROM %s WHERE changed < '%s' AND name = '%s'",
-                    $this->database_table, 
-                    $sqldate,
-                    addslashes($name)));
-    }
+    $this->db->prepare(sprintf("DELETE FROM %s WHERE changed < ? AND name = ?", $this->database_table)); 
+    $this->db->execute($sqldate, $name);
+    $this->db->closeStmt();
+  }
 
   function ac_store($id, $name, $str) {
     $ret = true;
@@ -103,45 +102,52 @@ class CT_Sql {
   }
 
   function ac_delete($id, $name) {
-    $this->db->query(sprintf("delete from %s where name = '%s' and sid = '%s'",
-      $this->database_table,
-      addslashes($name),
-      addslashes($id)));
+    $this->db->prepare(sprintf("delete from %s where name = ? and sid = ?", $this->database_table));
+    $this->db->execute($name, $id);
+    $this->db->closeStmt();
   }
 
-  function ac_get_value($id, $name) {
-    $this->db->query(sprintf("select val from %s where sid  = '%s' and name = '%s'",
-      $this->database_table,
-      addslashes($id),
-      addslashes($name)));
-    if ($this->db->next_record()) {
-      $str  = $this->db->f("val");
-      $str2 = base64_decode( $str );
+  public function ac_get_value($id, $name)
+  {
+    $query = "SELECT val FROM " . $this->database_table . " WHERE sid = ? AND name = ?";
+    if (!$this->prepare($query)) return "";
+    if (!$this->execute([$id, $name])) return "";
 
-      if ( preg_match("/^$name:.*/", $str2) ) {
-         $str = preg_replace("/^$name:/", "", $str2 );
+    $str = "";
+    if ($this->Query_ID && $row = mysqli_fetch_assoc($this->Query_ID)) {
+      $str = $row['val'];
+    }
+    mysqli_free_result($this->Query_ID);
+    $this->Query_ID = 0;
+    $this->closeStmt();
+
+    if ($str === "") {
+      return "";
+    }
+
+    $str2 = base64_decode($str);
+
+    if (preg_match("/^$name:.*/", $str2)) {
+      $str = preg_replace("/^$name:/", "", $str2);
+    } else {
+      $str3 = stripslashes($str);
+
+      if (preg_match("/^$name:.*/", $str3)) {
+        $str = preg_replace("/^$name:/", "", $str3);
       } else {
-
-        $str3 = stripslashes( $str );
-
-        if ( preg_match("/^$name:.*/", $str3) ) {
-          $str = preg_replace("/^$name:/", "", $str3 );
-        } else {
-
-          switch ( $this->encoding_mode ) {
-            case "slashes":
-              $str = stripslashes($str);
+        switch ($this->encoding_mode) {
+          case "slashes":
+            $str = stripslashes($str);
             break;
-
-            case "base64":
-            default:
-              $str = base64_decode($str);
-          }
+          case "base64":
+          default:
+            $str = base64_decode($str);
+            break;
         }
-      };
-      return $str;
-    };
-    return "";
+      }
+    }
+
+    return $str;
   }
 
   function ac_newid($str, $name) {
