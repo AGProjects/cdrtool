@@ -11224,12 +11224,12 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
     }
     logger($log);
 
-    if (!strstr($_REQUEST['action'],'get_') &&
-        !strstr($_REQUEST['action'],'set_') &&
-        !strstr($_REQUEST['action'],'put_') &&
-        !strstr($_REQUEST['action'],'delete_') &&
-        !strstr($_REQUEST['action'],'export_') &&
-        !strstr($_REQUEST['action'],'add_')) {
+    if (!strstr($_REQUEST['action'], 'get_') &&
+        !strstr($_REQUEST['action'], 'set_') &&
+        !strstr($_REQUEST['action'], 'put_') &&
+        !strstr($_REQUEST['action'], 'delete_') &&
+        !strstr($_REQUEST['action'], 'export_') &&
+        !strstr($_REQUEST['action'], 'add_')) {
         $title  = "$account";
 
         if (array_key_exists($SipSettings->tab, $SipSettings->tabs)) {
@@ -12940,6 +12940,8 @@ class DIDProcessor
         return $orders;
     }
 }
+require_once "SIP/PaypalProcessor.php";
+require_once "SIP/DIDProcessor.php";
 
 function RandomIdentifier($length = 30)
 {
