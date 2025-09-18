@@ -109,40 +109,42 @@ class CT_Sql {
 
   public function ac_get_value($id, $name)
   {
-      $query = "SELECT val FROM " . $this->database_table . " WHERE sid = ? AND name = ?";
-      if (!$this->db->prepare($query)) {
-          return "";
-      }
-      if (!$this->db->execute([$id, $name])) {
-          return "";
-      }
-      if ($this->db->next_record()) {
-          $str  = $this->db->f("val");
-          $str2 = base64_decode($str);
-
-          if (preg_match("/^$name:.*/", $str2)) {
-              $str = preg_replace("/^$name:/", "", $str2);
-          } else {
-              $str3 = stripslashes($str);
-
-              if (preg_match("/^$name:.*/", $str3)) {
-                  $str = preg_replace("/^$name:/", "", $str3);
-              } else {
-                  switch ($this->encoding_mode) {
-                      case "slashes":
-                          $str = stripslashes($str);
-                          break;
-
-                      case "base64":
-                      default:
-                          $str = base64_decode($str);
-                          break;
-                  }
-              }
-          }
-          return $str;
-      }
+    $query = "SELECT val FROM " . $this->database_table . " WHERE sid = ? AND name = ?";
+    if (!$this->db->prepare($query)) {
       return "";
+    }
+    if (!$this->db->execute([$id, $name])) {
+      return "";
+    }
+    if ($this->db->next_record()) {
+      $str  = $this->db->f("val");
+      $str2 = base64_decode($str);
+
+      if (preg_match("/^$name:.*/", $str2)) {
+        $str = preg_replace("/^$name:/", "", $str2);
+      } else {
+        $str3 = stripslashes($str);
+
+        if (preg_match("/^$name:.*/", $str3)) {
+          $str = preg_replace("/^$name:/", "", $str3);
+        } else {
+          switch ($this->encoding_mode) {
+            case "slashes":
+              $str = stripslashes($str);
+              break;
+
+            case "base64":
+            default:
+              $str = base64_decode($str);
+              break;
+          }
+        }
+      }
+      $this->db->closeStmt();
+      return $str;
+    }
+    $this->db->closeStmt();
+    return "";
   }
 
   function ac_newid($str, $name) {
