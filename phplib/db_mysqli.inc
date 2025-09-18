@@ -619,7 +619,7 @@ class DB_Sql
     }
 
     /* private: error handling */
-    private function halt($msg)
+    public function halt($msg)
     {
         if (!mysqli_connect_errno()) {
             $this->Error = @mysqli_error($this->Link_ID);
