@@ -52,7 +52,7 @@ class CT_Sql {
     $timeout = time();
     $sqldate = date("YmdHis", $timeout - ($gc_time * 60));
     $this->db->prepare(sprintf("DELETE FROM %s WHERE changed < ? AND name = ?", $this->database_table)); 
-    $this->db->execute($sqldate, $name);
+    $this->db->execute([$sqldate, $name]);
     $this->db->closeStmt();
   }
 
@@ -103,7 +103,7 @@ class CT_Sql {
 
   function ac_delete($id, $name) {
     $this->db->prepare(sprintf("delete from %s where name = ? and sid = ?", $this->database_table));
-    $this->db->execute($name, $id);
+    $this->db->execute([$name, $id]);
     $this->db->closeStmt();
   }
 
