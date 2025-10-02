@@ -10,7 +10,13 @@
  */
 
 require_once('SOAP/Client.php');
-class SOAP_Client_Custom extends SOAP_Client {
+
+class SOAP_Client_Custom extends SOAP_Client
+{
+    public function __construct($path = 'https://mdns.sipthor.net/ngnpro/')
+    {
+        parent::__construct($path, false);
+    }
 
     function _serializeValue(&$value, $name = '', $type = false, $elNamespace = NULL, $typeNamespace=NULL, $options=array(), $attributes = array(), $artype='')
     {
@@ -78,7 +84,7 @@ class SOAP_Client_Custom extends SOAP_Client {
 
                 // serialize each array element
                 $ar_size = count($value);
-		foreach ($value as $array_val) {
+                foreach ($value as $array_val) {
                     if ($this->_isSoapValue($array_val)) {
                         $array_type = $array_val->type;
                         $array_types[$array_type] = 1;
@@ -124,13 +130,13 @@ class SOAP_Client_Custom extends SOAP_Client {
                 }
             }
             $xmlout_arrayType .= "[$ar_size]\"";
-        } else if ($this->_isSoapValue($value)) {
+        } elseif ($this->_isSoapValue($value)) {
             $xmlout_value =& $value->serialize($this);
-        } else if ($type == 'string') {
+        } elseif ($type == 'string') {
             $xmlout_value = htmlspecialchars($value);
-        } else if ($type == 'rawstring') {
+        } elseif ($type == 'rawstring') {
             $xmlout_value =& $value;
-        } else if ($type == 'boolean') {
+        } elseif ($type == 'boolean') {
             $xmlout_value = $value?'true':'false';
         } else {
             $xmlout_value =& $value;
@@ -147,7 +153,7 @@ class SOAP_Client_Custom extends SOAP_Client {
         if ($typeNamespace) {
             $typePrefix = $this->_getNamespacePrefix($typeNamespace);
             $xmlout_type = "$typePrefix:$type";
-        } else if ($type && array_key_exists($type, $this->_typemap[$this->_XMLSchemaVersion])) {
+        } elseif ($type && array_key_exists($type, $this->_typemap[$this->_XMLSchemaVersion])) {
             $typePrefix = $this->_namespaces[$this->_XMLSchemaVersion];
             $xmlout_type = "$typePrefix:$type";
         }
@@ -185,13 +191,11 @@ class SOAP_Client_Custom extends SOAP_Client {
         return $xml;
     }
 
-
-
-
-	function addHeader($soap_value) {
+    function addHeader($soap_value) 
+    {
         // add a new header to the SOAP message if not already exists
 
-		if (is_array($soap_value) && is_array($this->headersOut)) {
+        if (is_array($soap_value) && is_array($this->headersOut)) {
             foreach ($this->headersOut as $_header) {
                 if ($_header->name == $soap_value[0]) {
                     return true;
@@ -201,7 +205,7 @@ class SOAP_Client_Custom extends SOAP_Client {
 
         if (is_a($soap_value,'soap_header')) {
             $this->headersOut[] =& $soap_value;
-        } else if (gettype($soap_value) == 'array') {
+        } elseif (gettype($soap_value) == 'array') {
             // name, value, namespace, mustunderstand, actor
             $this->headersOut[] =new SOAP_Header($soap_value[0], NULL, $soap_value[1], $soap_value[2], $soap_value[3]);;
         } else {
@@ -212,10 +216,6 @@ class SOAP_Client_Custom extends SOAP_Client {
 
 class WebService_NGNPro_SipPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_SipPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &addGateway($gateway)
     {
         // gateway is a ComplexType Gateway,
@@ -1007,12 +1007,9 @@ class WebService_NGNPro_SipPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_VoicemailPort($path = 'https://mdns.sipthor.net/ngnpro/voicemail/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &addAccount($account)
     {
         // account is a ComplexType VoicemailAccount,
@@ -1079,12 +1076,9 @@ class WebService_NGNPro_VoicemailPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_EnumPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &addRange($range)
     {
         // range is a ComplexType EnumRange,
@@ -1205,10 +1199,6 @@ class WebService_NGNPro_EnumPort extends SOAP_Client_Custom
 }
 class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_DnsPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &addZone($zone)
     {
         // zone is a ComplexType DnsZone,
@@ -1387,12 +1377,9 @@ class WebService_NGNPro_DnsPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_NGNPro_RatingPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_RatingPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &setEntityProfiles($profiles)
     {
         // profiles is a ComplexType RatingEntityProfiles,
@@ -1427,12 +1414,9 @@ class WebService_NGNPro_RatingPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_CustomerPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &addAccount($account)
     {
         // account is a ComplexType CustomerAccount,
@@ -1529,12 +1513,9 @@ class WebService_NGNPro_CustomerPort extends SOAP_Client_Custom
         return $result;
     }
 }
+
 class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
 {
-    function WebService_NGNPro_NetworkPort($path = 'https://mdns.sipthor.net/ngnpro/')
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &getStatistics()
     {
         $result = $this->call('getStatistics',
@@ -1559,10 +1540,6 @@ class WebService_NGNPro_NetworkPort extends SOAP_Client_Custom
 
 class WebService_SoapSIMPLEProxy_PresencePort extends SOAP_Client_Custom
 {
-    function WebService_SoapSIMPLEProxy_PresencePort($path)
-    {
-        $this->SOAP_Client($path, 0);
-    }
     function &setPresenceInformation($sipId, $password, $information)
     {
         // sipId is a ComplexType SipId,
