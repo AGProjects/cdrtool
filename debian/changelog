@@ -1,8 +1,24 @@
 cdrtool (10.0.0) unstable; urgency=medium
 
   * Formatted code and compatibility fixes for PHP > 8.1
+  * Split code and modernized syntax
   * Added new attributes for trusted peers
   * Added new attributes for sip domains
+  * Fixed SQL injection possibility in session
+  * Added support for sql prepared statements
+  * Added attributes and node color to replication overview
+  * Added option to override from email in enrollment
+  * Fixed subscriber login to CDRTool and make web password override sip password
+  * Use login challenge from session
+  * Fixed lookup destination on aNumber
+  * Added media type to streams table
+  * Save normalization statistics to /var/log/cdrtool/normalize.txt
+  * Added signal handler for normalization script
+  * Save oldest and newest timestamp dureing normalization
+  * Added signal handler to stop normalization gracefully
+  * Added script to analize normalization data
+  * Fixed matching radacct table names
+  * Don't ask for credentials for media_trace page
   * Allow customer delete if no support order is set
   * Fixed syntax and use unbuffered query in quota deblocking
   * Added option to allow unbuffered mysql queries
@@ -13,10 +29,11 @@ cdrtool (10.0.0) unstable; urgency=medium
   * Only rate a minimum duration if call was connected
   * Added sip_trace lookup for SIP proxies with multiple interfaces
   * Propagate PAI Header into Mysql procedure
+  * Changed logging methods and lines
   * Update crontab and added systemd timers
-  * Added extra query to fix wrong duration on dst transitions
   * Lower downtime of mysql replication repair advise
   * Fixed empty password in hashed ha1 on password change
+  * Added script to fix dst issues in radius
   * Added possibility to translate proxy ip in trace links
   * Remove stale/remaining unauthorized field based on new showCallerId permission
   * Apply new permission 'showCallerId' to search form
