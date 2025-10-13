@@ -44,7 +44,7 @@ cdrtool (10.0.0) unstable; urgency=medium
   * Print TLS Common Name in extra call info
   * Added TLS-CN radius attribute
 
- -- Adrian Georgescu <ag@ag-projects.com>  Thu, 28 Nov 2024 12:00:24 +0100
+ -- Tijmen de Mes <tijmen@ag-projects.com>  Mon, 13 Oct 2025 11:26:02 +0200
 
 cdrtool (9.9.0) unstable; urgency=medium
 
