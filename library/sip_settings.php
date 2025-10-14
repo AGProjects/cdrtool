@@ -11308,7 +11308,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
 
-            if (checkSoapError($result)) {
+            if (checkForSoapError($result)) {
                 return false;
             } else {
                 printf("<p>The account %s has been removed</p>", $SipSettings->account);
