@@ -4266,6 +4266,10 @@ class SipSettings
             $this->somethingChanged=1;
         }
 
+        if ($this->Preferences['account_delete_request_id']) {
+            $this->setPreference("account_delete_request_id", $this->Preferences['account_delete_request_id']);
+            $this->somethingChanged=1;
+        }
         if ($this->Preferences['account_delete_request']) {
             $this->setPreference("account_delete_request", date('m/d/Y h:i:s a', time()));
             $this->somethingChanged=1;
@@ -7437,7 +7441,7 @@ END;
         return $mail;
     }
 
-    function deleteAccount($skip_html = false)
+    public function deleteAccount($skip_html = false)
     {
         dprint("SipSettings->deleteAccount($this->account, $this->email)");
 
@@ -7458,6 +7462,7 @@ END;
         //$this->expire_date = new DateTime('now');
 
         $this->expire_date = date("Y-m-d H:i:s", strtotime("+2 days"));
+        $this->delete_id = uniqid();
         $this->ip = $_SERVER['REMOTE_ADDR'];
 
         $tpl_html = $this->getEmailDeleteTemplateHTML($this->reseller, $this->Preferences['language']);
@@ -7505,6 +7510,7 @@ END;
 
         if ($mail->send($this->email, $hdrs, $body)) {
             if (!$skip_html) {
+                $this->Preferences['account_delete_request_id'] = $this->delete_id;
                 $this->Preferences['account_delete_request'] = 1;
                 $this->saveSettings();
                 $this->getAccount($this->account);
@@ -11304,6 +11310,10 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
        // print_r($SipSettings->Preferences);
         $date1= new datetime($SipSettings->Preferences['account_delete_request']);
         $today= new datetime('now');
+        if ($SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id'] && $SipSettings->Preferences['account_delete_request_id']) {
+            printf("The delete request is not valid for this account, please logout %s and click the link again", $SipSettings->account);
+            return false;
+        }
         if ($date1->diff($today)->d <= '2' && $SipSettings->Preferences['account_delete_request']) {
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
@@ -11570,7 +11580,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
             'success'       => true,
             'error_message' => $_msg
         );
-        print (json_encode($return));
+        print(json_encode($return));
         return true;
     } elseif ($_REQUEST['action'] == 'set_call_forwarding') {
         $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
@@ -11582,12 +11592,12 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
 
         $SipSettings->getVoicemail();
 
-        foreach(array_keys($SipSettings->diversionType) as $condition) {
+        foreach (array_keys($SipSettings->diversionType) as $condition) {
             $old_diversions[$condition]=$result->$condition;
         }
 
         $_log = '';
-        foreach(array_keys($old_diversions) as $key) {
+        foreach (array_keys($old_diversions) as $key) {
             if (isset($_REQUEST[$key])) {
                 printf("Key $key changed %s", $_REQUEST[$key]);
                 $textboxURI=$_REQUEST[$key];

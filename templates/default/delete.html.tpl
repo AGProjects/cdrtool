@@ -86,7 +86,7 @@
                                 <strong>The possibility to delete the account will be active for 2 days until {$client->expire_date}</strong>
                                 </p>
                                 <p>
-                                    Click <a href="{$client->sip_settings_page}/?action=delete_account&username={$client->account}">this</a> link to remove the account.                                    
+                                    Click <a href="{$client->sip_settings_page}/?action=delete_account&username={$client->account}&delete_id={$client->delete_id}">this</a> link to remove the account.                                    
                                 </p>
                             </td>
                         </tr>
