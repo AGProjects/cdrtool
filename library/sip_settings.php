@@ -11310,8 +11310,11 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
        // print_r($SipSettings->Preferences);
         $date1= new datetime($SipSettings->Preferences['account_delete_request']);
         $today= new datetime('now');
-        if ($SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id'] && $SipSettings->Preferences['account_delete_request_id']) {
-            printf("The delete request is not valid for this account, please logout %s and click the link again", $SipSettings->account);
+        if (
+            empty($SipSettings->Preferences['account_delete_request_id']) ||
+            $SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id']
+        ) {
+            printf("The delete request is not valid for this account, please logout %s and click the link in the email again", $SipSettings->account);
             return false;
         }
         if ($date1->diff($today)->d <= '2' && $SipSettings->Preferences['account_delete_request']) {
