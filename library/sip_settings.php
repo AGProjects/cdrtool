@@ -11323,7 +11323,7 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
        // print "<pre>";
         // print_r($SipSettings->Preferences);
         if (
-            empty($SipSettings->Preferences['account_delete_request'])) {
+            empty($SipSettings->Preferences['account_delete_request']) ||
             empty($SipSettings->Preferences['account_delete_request_id']) ||
             $SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id']
         ) {
