@@ -11234,6 +11234,20 @@ function checkForSoapError($result, $print = false)
     return true;
 }
 
+function printErrorMessage($message = '')
+{
+    printf(
+        "
+        <div class=row-fluid>
+            <div class=span12>
+                <span class='alert alert-error'>%s</span>
+            </div>
+        </div>
+        ",
+        $message
+    );
+}
+
 function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines)
 {
     // Generic code for all sip settings pages
@@ -11307,17 +11321,27 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->deleteAccount();
     } elseif ($_REQUEST['action']=="delete_account") {
        // print "<pre>";
-       // print_r($SipSettings->Preferences);
-        $date1= new datetime($SipSettings->Preferences['account_delete_request']);
-        $today= new datetime('now');
+        // print_r($SipSettings->Preferences);
         if (
+            empty($SipSettings->Preferences['account_delete_request'])) {
             empty($SipSettings->Preferences['account_delete_request_id']) ||
             $SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id']
         ) {
-            printf("The delete request is not valid for this account, please logout %s and click the link in the email again", $SipSettings->account);
+            $message = sprintf("The delete request is not valid for this account, please logout %s and click the link in the email again", $SipSettings->account);
+            printErrorMessage($message);
             return false;
         }
-        if ($date1->diff($today)->d <= '2' && $SipSettings->Preferences['account_delete_request']) {
+
+        try {
+            $date1= new datetime($SipSettings->Preferences['account_delete_request']);
+        } catch (Exception $e) {
+            $message = sprintf("Invalid or missing account delete request timestamp: %s", $e->getMessage());
+            printErrorMessage($message);
+            return false;
+        }
+
+        $today= new datetime('now');
+        if ($date1->diff($today)->d <= '2') {
             $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
             $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
 
@@ -11335,7 +11359,8 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
                 return true;
             }
         } else {
-            printf("The delete request for account %s has expired or is not valid", $SipSettings->account);
+            $message = sprintf("The delete request for account %s has expired or is not valid", $SipSettings->account);
+            printErrorMessage($message);
             return false;
         }
         return true ;
