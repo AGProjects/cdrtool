@@ -101,8 +101,8 @@ if ($action == "edit" && $id) {
 
             showForm($id);
         } else {
-            $perms = implode(",", $perms);
-            $sources = implode(",", $sources);
+            $perms_text = implode(",", $perms);
+            $sources_text = implode(",", $sources);
 
             if ($delete && $perm->have_perm("admin")) {
                 $query = "delete from auth_user";
