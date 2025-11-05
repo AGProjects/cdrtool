@@ -1153,7 +1153,7 @@ END;
                             if (!$value) {
                                 $value = $this->getCustomerProperty('sip_proxy');
                             }
-                            if (!value) {
+                            if (!$value) {
                                 $value = $this->SoapEngine->default_sip_proxy;
                             }
                             $save_new_value = false;
@@ -1219,7 +1219,7 @@ END;
 
                 $result = $this->SoapEngine->execute($function, $this->html);
 
-                return (bool)$result;
+                //return (bool)$result;
             }
         } else {
             if ($this->html) {
