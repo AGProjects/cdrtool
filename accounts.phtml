@@ -61,8 +61,8 @@ $afterDateFilter = isset($_REQUEST['afterDateFilter']) ? $_REQUEST['afterDateFil
 $aclFilter       = isset($_REQUEST['aclFilter']) ? $_REQUEST['aclFilter'] : '';
 $impersonate     = isset($_REQUEST['impersonate']) ? $_REQUEST['impersonate'] : '';
 
-$perms           = isset($_REQUEST['perms']) ? $_REQUEST['perms'] : '';
-$sources         = isset($_REQUEST['sources']) ? $_REQUEST['sources'] : '';
+$perms           = isset($_REQUEST['perms']) ? $_REQUEST['perms'] : [];
+$sources         = isset($_REQUEST['sources']) ? $_REQUEST['sources'] : [];
 $delete          = isset($_REQUEST['delete']) ? $_REQUEST['delete'] : '';
 
 $id              = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
@@ -96,13 +96,13 @@ if ($action == "edit" && $id) {
             print "<div class=\"alert alert-error\">
             $err
             </div>";
-            $perms = implode($perms, ",");
-            $sources = implode($sources, ",");
+            $perms = implode(",", $perms);
+            $sources = implode(",", $sources);
 
             showForm($id);
         } else {
-            $perms_text      = implode($perms, ",");
-            $sources_text    = implode($sources, ",");
+            $perms = implode(",", $perms);
+            $sources = implode(",", $sources);
 
             if ($delete && $perm->have_perm("admin")) {
                 $query = "delete from auth_user";
@@ -262,8 +262,8 @@ if ($action == "edit" && $id) {
     if (!$password) $password = random_passwd_gen();
 
     if ($check) {
-        if ($perms) $perms   = implode($perms,",");
-        if ($sources) $sources = implode($sources,",");
+        if ($perms) $perms = implode(",", $perms);
+        if ($sources) $sources = implode(",", $sources);
 
         if (strlen($impersonate)) {
             if (!preg_match("/^[0-9]*\.[0-9]*$/", $impersonate)) {
