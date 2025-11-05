@@ -834,9 +834,9 @@ END;
             $var_name = $item.'_form';
             //printf("<br>%s=%s", $var_name,$_REQUEST[$var_name]);
             if ($this->Fields[$item]['type'] == 'integer') {
-                $domain->$item = intval($_REQUEST[$var_name] == 1);
-            } elseif ($this->Fields[$item]['type'] == 'boolean') {
                 $domain->$item = intval($_REQUEST[$var_name]);
+            } elseif ($this->Fields[$item]['type'] == 'boolean') {
+                $domain->$item = intval($_REQUEST[$var_name] == 1);
             } else {
                 $domain->$item = trim($_REQUEST[$var_name]);
             }
