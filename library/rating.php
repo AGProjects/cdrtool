@@ -730,15 +730,11 @@ class Rate
             $this->db->next_record();
 
             if ($this->db->Record['subscriber']) {
-                if ($this->db->Record['subscriber'] == $trusted_peer_account) {
-                    $this->CustomerProfile = sprintf("remote_account=%s", $this->db->Record['subscriber']);
-                } else {
-                    $this->CustomerProfile = sprintf("local_account=%s", $this->db->Record['subscriber']);
-                }
+                $this->CustomerProfile = sprintf("subscriber=%s", $this->db->Record['subscriber']);
             } elseif ($this->db->Record['domain']) {
                 $this->CustomerProfile = sprintf("domain=%s", $this->db->Record['domain']);
             } elseif ($this->db->Record['gateway']) {
-                $this->CustomerProfile = sprintf("trusted_peer=%s", $this->db->Record['gateway']);
+                $this->CustomerProfile = sprintf("gateway=%s", $this->db->Record['gateway']);
             } else {
                 $this->CustomerProfile = "default";
             }
