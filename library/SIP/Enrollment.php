@@ -252,12 +252,46 @@ class Enrollment
                 $customer['reseller'] =intval($this->reseller);
             }
 
-            if ($location['country_code'] == 'NL') {
-                $customer['tel'] = '+31999999999';
-            } elseif ($location['country_code'] == 'US') {
-                $customer['tel'] = sprintf("+1%s9999999", $location['area_code']);
-            } else {
-                $customer['tel'] = '+19999999999';
+            // Normalize and validate phone number if provided
+            if (!empty($_REQUEST['phoneNumber'])) {
+
+                $raw = trim($_REQUEST['phoneNumber']);
+
+                // keep only digits, +, -
+                $filtered = preg_replace('/[^0-9+\-]/', '', $raw);
+
+                // Convert leading 00 → +
+                if (strpos($filtered, '00') === 0) {
+                    $filtered = '+' . substr($filtered, 2);
+                }
+
+                // Remove dashes
+                $filtered = str_replace('-', '', $filtered);
+
+                // If it doesn’t start with + now, reject it
+                if ($filtered !== '' && $filtered[0] !== '+') {
+                    $filtered = '';  // invalid
+                }
+
+                // enforce max length 15
+                if (strlen($filtered) > 15) {
+                    $filtered = '';
+                }
+
+                // If valid, assign it
+                if (!empty($filtered)) {
+                    $customer['tel'] = $filtered;
+                }
+            }
+
+            if (empty($customer['tel'])) {
+                if ($location['country_code'] == 'NL') {
+                    $customer['tel'] = '+31999999999';
+                } elseif ($location['country_code'] == 'US') {
+                    $customer['tel'] = sprintf("+1%s9999999", $location['area_code']);
+                } else {
+                    $customer['tel'] = '+19999999999';
+                }
             }
 
             $_customer_created=false;
@@ -274,7 +308,7 @@ class Enrollment
                         $return = array(
                             'success'       => false,
                             'error'         => 'internal_error',
-                            'error_message' => 'failed to create non-duplicate customer entry'
+                            'error_message' => 'failed to create owner: ' . (string) $this->customerRecords->SoapEngine->exception->errorcode
                         );
                         print (json_encode($return));
                         return false;
@@ -360,6 +394,7 @@ class Enrollment
                             'fullname'  => $_REQUEST['display_name'],
                             'email'     => $_REQUEST['email'],
                             'password'  => $_REQUEST['password'],
+                            'rpid'      => $customer['tel'],
                             'timezone'  => $timezone,
                             'prepaid'   => $this->prepaid,
                             'pstn'      => $this->allow_pstn,
