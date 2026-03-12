@@ -226,7 +226,6 @@ class Enrollment
                 $lastName  = $this->sipDomain;
             }
 
-            $this->log_action("Create owner account ($firstName $lastName)");
 
             $timezone = $_REQUEST['tzinfo'];
 
@@ -293,6 +292,8 @@ class Enrollment
                     $customer['tel'] = '+19999999999';
                 }
             }
+
+            $this->log_action("Create owner account ($firstName $lastName " . $customer['email'] . " " . $customer['tel'] . ")");
 
             $_customer_created=false;
 
