@@ -223,7 +223,7 @@ class Enrollment
                 $lastName  = $m[2];
             } else {
                 $firstName = $_REQUEST['display_name'];
-                $lastName  = 'Blink';
+                $lastName  = $this->sipDomain;
             }
 
             $this->log_action("Create owner account ($firstName $lastName)");
