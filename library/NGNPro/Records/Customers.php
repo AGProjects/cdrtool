@@ -74,6 +74,11 @@ class Customers extends Records
             'category'   => 'sip',
             'permission' => 'admin'
         ),
+        'auth_token'        => array(
+            'name'      => 'DNS API authentication token',
+            'category'   => 'dns',
+            'permission' => 'customer',
+        ),
         'voicemail_server'      => array(
             'name'       => 'Voicemail Server Address',
             'category'   => 'sip',
