@@ -6129,7 +6129,7 @@ class SipSettings
         );
     }
 
-    private function getCallStatistics()
+    public function getCallStatistics()
     {
         dprint("getCallStatistics()");
 

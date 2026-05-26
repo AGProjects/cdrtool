@@ -8,28 +8,28 @@
  *
  * Usage from a client that has the user's SIP account/password:
  *
- *   GET  /sylk_account_settings.phtml?realm=user@domain
+ *   GET  /sylk_settings.phtml?realm=domain
  *        -> {"account":"...", "email":"...",
  *            "pstn": {"caller_id":"...", "balance":..., "currency":"...",
  *                     "prepaid":true|false, "enabled":true|false,
  *                     "today":{"debit":..., "credit":...}}}
  *
- *   POST /sylk_account_settings.phtml?realm=user@domain
+ *   POST /sylk_settings.phtml?realm=domain
  *        Body (application/x-www-form-urlencoded or JSON):
  *            action=set_caller_id&caller_id=%2B31...
  *        -> {"ok":true,"caller_id":"+31..."}
  *
- *   POST /sylk_account_settings.phtml?realm=user@domain
+ *   POST /sylk_settings.phtml?realm=domain
  *        Body:
  *            action=set_email&email=foo%40bar.com
  *        -> {"ok":true,"email":"foo@bar.com"} on success.
  *
- *   POST /sylk_account_settings.phtml?realm=user@domain
+ *   POST /sylk_settings.phtml?realm=domain
  *        Body:
  *            action=set_password&new_password=...
  *        -> {"ok":true} on success, {"error":"..."} on failure.
  *
- *   POST /sylk_account_settings.phtml?realm=user@domain
+ *   POST /sylk_settings.phtml?realm=domain
  *        Body:
  *            action=request_delete_account
  *        -> {"ok":true,"email":"foo@bar.com"} on success — the
@@ -91,6 +91,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PUT
     }
 }
 
+// Realm normalization (sylk wire API):
+//   • Accepted on the wire as ?realm=<domain> ONLY.
+//   • Backward-compat: ?realm=domain is still split and the
+//     domain part is used (the legacy library helper does this).
+//   • Default when missing: "sylk.link". The legacy
+//     sip_settings_digest.phtml path defaulted to "SIP_settings"
+//     (web-password flow); we intentionally diverge here so the
+//     mobile client doesn't have to know the realm at all in the
+//     common case.
+if (empty($_REQUEST['realm'])) {
+    $_REQUEST['realm'] = 'sylk.link';
+}
+
 // Authenticate. getSipAccountFromHTTPDigest() handles 401 / WWW-Authenticate
 // internally and die()s on failure, so on return we are authenticated.
 $credentials = getSipAccountFromHTTPDigest();
@@ -112,7 +125,7 @@ $login_credentials = array(
 );
 
 // Construct settings object — this populates the in-memory copies of
-// mobile_number (exposed on the wire as pstn.caller_id), currency, etc.
+// rpid (exposed on the wire as pstn.caller_id), currency, etc.
 $SipSettings = new $SipSettings_class(
     $credentials['account'],
     $login_credentials,
@@ -124,33 +137,39 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 if ($action === 'set_caller_id') {
     $raw = isset($_REQUEST['caller_id']) ? (string) $_REQUEST['caller_id'] : '';
 
-    // Strip everything except digits and a leading '+'. Mobile clients
-    // apply pstnRules.replacePlus before sending (e.g. "+40..." becomes
-    // "0040..." when the rule is "00"), so we accept BOTH the canonical
-    // "+<E.164>" form and the "00<E.164>" wire form. Internally we
-    // store the "+" form so existing consumers (sip_settings.phtml UI,
-    // SOAP getAccount callers, dial-time rewrites) keep working — the
-    // pstnRules.replacePlus rewrite happens only when the number is
-    // dialled on PSTN, not when it sits in the preferences table.
+    // The SIP proxy's PSTN caller-Id field is the account's `rpid`
+    // (Remote Party ID) — same field sip_settings.phtml writes when
+    // the user edits the PSTN tab's CLI input. The `mobile_number`
+    // Preference is a SEPARATE field (used for ENUM / payment
+    // receipts) and we do NOT touch it here.
+    //
+    // Storage convention on the SIP proxy is the "00<digits>" form
+    // (e.g. "0031237100917" for NL), matching what the legacy web
+    // UI writes. Mobile clients may send EITHER "+E.164" or
+    // "00<digits>"; we apply the pstn-rules "+ → 00" rewrite here
+    // server-side so that whatever shape arrives gets stored in
+    // the canonical "00" form. This mirrors the dial-time rewrite
+    // sylk-mobile already does via pstnRules.replacePlus, just on
+    // the receive side instead of the send side.
     $caller_id = preg_replace('/[^\+0-9]/', '', $raw);
-    if ($caller_id !== '' && strpos($caller_id, '00') === 0 && strpos($caller_id, '+') !== 0) {
-        $caller_id = '+' . substr($caller_id, 2);
-    } elseif ($caller_id !== '' && strpos($caller_id, '+') !== 0) {
-        $caller_id = '+' . $caller_id;
+    if ($caller_id !== '' && strpos($caller_id, '+') === 0) {
+        // "+E.164" → "00<digits>"
+        $caller_id = '00' . substr($caller_id, 1);
+    } elseif ($caller_id !== '' && strpos($caller_id, '00') !== 0) {
+        // bare digits → assume international, prepend "00"
+        $caller_id = '00' . $caller_id;
     }
 
-    // Empty value clears the preference. Otherwise enforce E.164 shape.
-    if ($caller_id !== '' && !preg_match('/^\+[1-9][0-9]{7,14}$/', $caller_id)) {
+    // Empty value clears the field. Otherwise enforce "00" + 7-15
+    // digits (E.164 length, sans the international prefix).
+    if ($caller_id !== '' && !preg_match('/^00[1-9][0-9]{6,14}$/', $caller_id)) {
         json_die(array(
             'error'   => 'invalid_caller_id',
-            'message' => 'Expected international format starting with + or 00, followed by 8-15 digits',
+            'message' => 'Expected international format starting with + or 00, followed by 7-15 digits',
         ), 400);
     }
 
-    $current = isset($SipSettings->Preferences['mobile_number'])
-        ? $SipSettings->Preferences['mobile_number']
-        : '';
-
+    $current = isset($SipSettings->rpid) ? (string) $SipSettings->rpid : '';
     if ($current === $caller_id) {
         json_die(array(
             'ok'        => true,
@@ -159,16 +178,11 @@ if ($action === 'set_caller_id') {
         ));
     }
 
-    // Stage the change in the in-memory properties bag. Note the
-    // backend property is still named `mobile_number` — that's the
-    // canonical NGNPro field; we're only renaming the wire API.
-    $SipSettings->setPreference(
-        'mobile_number',
-        $caller_id === '' ? 'remove' : $caller_id
-    );
-
-    // Push to the NGNPro SOAP backend (same call saveSettings uses, lines 4406-4424).
+    // Push the new rpid through the NGNPro updateAccount SOAP call —
+    // same path library/sip_settings.php:4083-4087 uses on the
+    // saveSettings form submit.
     $soap_result = $SipSettings->result;
+    $soap_result->rpid = $caller_id;
     if (!is_array($soap_result->properties)) {
         $soap_result->properties = array();
     }
@@ -191,7 +205,7 @@ if ($action === 'set_caller_id') {
         ), 502);
     }
 
-    logger(sprintf('sylk_account_settings.phtml: %s set caller_id to %s',
+    logger(sprintf('sylk_settings.phtml: %s set caller_id to %s',
                    $credentials['account'], $caller_id));
 
     json_die(array(
@@ -242,7 +256,7 @@ if ($action === 'set_email') {
         ), 502);
     }
 
-    logger(sprintf('sylk_account_settings.phtml: %s set email to %s',
+    logger(sprintf('sylk_settings.phtml: %s set email to %s',
                    $credentials['account'], $raw));
 
     json_die(array(
@@ -317,7 +331,7 @@ if ($action === 'set_password') {
         ), 502);
     }
 
-    logger(sprintf('sylk_account_settings.phtml: %s changed SIP password',
+    logger(sprintf('sylk_settings.phtml: %s changed SIP password',
                    $credentials['account']));
 
     json_die(array(
@@ -381,7 +395,7 @@ if ($action === 'request_delete_account') {
         ), 502);
     }
 
-    logger(sprintf('sylk_account_settings.phtml: %s requested account deletion (email sent to %s)',
+    logger(sprintf('sylk_settings.phtml: %s requested account deletion (email sent to %s)',
                    $credentials['account'], $SipSettings->email));
 
     json_die(array(
@@ -391,9 +405,30 @@ if ($action === 'request_delete_account') {
 }
 
 // Default: return the account snapshot.
-$SipSettings->getPrepaidStatus();
+//
+// getPrepaidStatus() raises a SOAP fault "Not a prepaid account
+// (1051)" for postpaid accounts, and the library's
+// checkPrintSoapError helper prints the fault as HTML to the
+// response — leaking a <div class="alert alert-error">…</div>
+// before the JSON body. Two defences:
+//   1. Only call getPrepaidStatus() when the account IS prepaid
+//      ($SipSettings->prepaid is populated from the SOAP account
+//      record well before this point).
+//   2. Buffer + discard any output during the balance fetches
+//      anyway, so any future helper that prints stays out of the
+//      JSON stream.
+ob_start();
+if (!empty($SipSettings->prepaid)) {
+    $SipSettings->getPrepaidStatus();
+}
+// Postpaid path: we report the monthly quota from
+// $SipSettings->quota (populated in the constructor from the SOAP
+// account record at library/sip_settings.php:825). No separate
+// SOAP call needed — getCallStatistics was previously invoked to
+// gather quota_usage / quota_calls, both dropped from the wire API.
 $SipSettings->getBalanceHistory();
 $today = $SipSettings->getTodayBalanceSummary();
+ob_end_clean();
 
 // allow_delete advertises that this API version SUPPORTS the in-app
 // delete-on-server flow (action=request_delete_account). It is a
@@ -440,6 +475,15 @@ json_die(array(
     // (server wins), so include it in every snapshot — even when
     // empty — so a clear on the server propagates to the device.
     'email'   => (string) $SipSettings->email,
+    // Owner's mobile number — the user's personal SIM / contact
+    // number from the NGNPro owner_information.mobile record (the
+    // "Mobile" field on the customer record). Distinct from
+    // pstn.caller_id (the rpid presented on outgoing PSTN calls)
+    // and from the mobile_number Preference (used for ENUM /
+    // receipts). Exposed at top level so the mobile UI can render
+    // it as a separate "contact" detail.
+    'owner_mobile' => isset($SipSettings->owner_information['mobile'])
+        ? (string) $SipSettings->owner_information['mobile'] : '',
     // True when the in-app delete-on-server flow is allowed (email
     // set, clean balance, not in deny-account-delete group). When
     // false the client should fall back to opening the legacy
@@ -460,8 +504,9 @@ json_die(array(
     // All PSTN-related fields live under a single object so the
     // client can pass the whole bag around without enumerating keys.
     //   caller_id          — number presented as From: on outgoing
-    //     PSTN calls. Stored under the legacy `mobile_number`
-    //     preference key on the SIP server (the wire API renames it).
+    //     PSTN calls. Stored as the account's `rpid` field on the
+    //     SIP server (same field sip_settings.phtml's PSTN tab
+    //     edits as "CLI").
     //   balance / currency — current prepaid balance (null when not
     //     a prepaid account).
     //   prepaid            — true when this is a prepaid account.
@@ -471,7 +516,16 @@ json_die(array(
     //   today              — sum of today's debits and credits, for
     //     the at-a-glance line on the My Account modal.
     'pstn'    => array(
-        'caller_id' => (string) $SipSettings->mobile_number,
+        // PSTN caller-Id ("Remote Party ID" in SIP terms — rpid on
+        // the SOAP account record). This is what the SIP proxy
+        // presents as the From: number on outgoing PSTN calls and
+        // what sip_settings.phtml exposes under the PSTN tab as the
+        // "CLI" / caller-Id field. Not the same as the
+        // `mobile_number` Preference (used for ENUM / receipts).
+        'caller_id' => (string) $SipSettings->rpid,
+        // balance is the prepaid remaining credit. Null on postpaid
+        // accounts — see quota / quota_usage below for the postpaid
+        // equivalent.
         'balance'   => $balance,
         'currency'  => (string) $SipSettings->currency,
         'prepaid'   => $is_prepaid,
@@ -479,6 +533,11 @@ json_die(array(
         // is in the "free-pstn" group. The mobile UI should hide
         // dialer / contact-call affordances when this is false.
         'enabled'   => $pstn_enabled,
+        // Postpaid-only — the user's monthly call quota in
+        // `currency`. Null on prepaid accounts (where `balance` is
+        // the relevant field).
+        'quota'       => (!$is_prepaid && isset($SipSettings->quota))
+            ? floatval($SipSettings->quota) : null,
         'today'     => array(
             'debit'  => isset($today['debit'])  ? floatval($today['debit'])  : 0,
             'credit' => isset($today['credit']) ? floatval($today['credit']) : 0,
