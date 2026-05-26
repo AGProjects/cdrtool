@@ -1,0 +1,487 @@
+<?php
+/**
+ * Copyright (c) 2026 AG Projects
+ * https://ag-projects.com
+ *
+ * JSON account-info endpoint authenticated via HTTP Digest using the
+ * same credentials as sip_settings_digest.phtml.
+ *
+ * Usage from a client that has the user's SIP account/password:
+ *
+ *   GET  /sylk_account_settings.phtml?realm=user@domain
+ *        -> {"account":"...", "email":"...",
+ *            "pstn": {"caller_id":"...", "balance":..., "currency":"...",
+ *                     "prepaid":true|false, "enabled":true|false,
+ *                     "today":{"debit":..., "credit":...}}}
+ *
+ *   POST /sylk_account_settings.phtml?realm=user@domain
+ *        Body (application/x-www-form-urlencoded or JSON):
+ *            action=set_caller_id&caller_id=%2B31...
+ *        -> {"ok":true,"caller_id":"+31..."}
+ *
+ *   POST /sylk_account_settings.phtml?realm=user@domain
+ *        Body:
+ *            action=set_email&email=foo%40bar.com
+ *        -> {"ok":true,"email":"foo@bar.com"} on success.
+ *
+ *   POST /sylk_account_settings.phtml?realm=user@domain
+ *        Body:
+ *            action=set_password&new_password=...
+ *        -> {"ok":true} on success, {"error":"..."} on failure.
+ *
+ *   POST /sylk_account_settings.phtml?realm=user@domain
+ *        Body:
+ *            action=request_delete_account
+ *        -> {"ok":true,"email":"foo@bar.com"} on success — the
+ *           server has sent a confirmation email containing a link
+ *           the user must click within 2 days to finalize deletion.
+ *           Requires an email address on file and (for prepaid
+ *           accounts) a clean balance history. Mirrors the
+ *           "Identity" tab → "Delete account" flow in sip_settings.phtml.
+ *
+ *        Mirrors sip_settings.phtml's password-change path: respects
+ *        the "deny-password-change" group, hashes via the same
+ *        md5(user:domain:pw):md5(user@domain:domain:pw) scheme unless
+ *        the engine stores cleartext, and pushes the change through
+ *        the same NGNPro updateAccount SOAP call. After a successful
+ *        change the client MUST re-register with the new credentials.
+ *
+ * The `realm` query parameter is required so that the WWW-Authenticate
+ * challenge uses the SIP domain (e.g. "sylk.link") and the user's normal
+ * SIP password works directly via the ha1 stored on the SIP server.
+ */
+
+require '/etc/cdrtool/global.inc';
+require '/etc/cdrtool/ngnpro_engines.inc';
+require 'sip_settings.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+function json_die($payload, $status = 200)
+{
+    http_response_code($status);
+    // Pretty-print so the response is readable when the endpoint is
+    // hit directly from a browser. JSON_UNESCAPED_SLASHES keeps URLs
+    // legible; JSON_UNESCAPED_UNICODE avoids "é" style escapes
+    // in display names / emails. Adds a trailing newline so curl
+    // output doesn't run into the next shell prompt.
+    echo json_encode(
+        $payload,
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    ) . "\n";
+    exit;
+}
+
+// Accept JSON bodies in addition to form-encoded ones.
+$body = array();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PUT') {
+    $ctype = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+    if (stripos($ctype, 'application/json') !== false) {
+        $raw = file_get_contents('php://input');
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $body = $decoded;
+            // make params reachable from getSipAccountFromHTTPDigest() which reads $_REQUEST
+            foreach ($body as $k => $v) {
+                if (!isset($_REQUEST[$k])) $_REQUEST[$k] = $v;
+            }
+        }
+    } else {
+        $body = $_POST;
+    }
+}
+
+// Authenticate. getSipAccountFromHTTPDigest() handles 401 / WWW-Authenticate
+// internally and die()s on failure, so on return we are authenticated.
+$credentials = getSipAccountFromHTTPDigest();
+if (!$credentials) {
+    json_die(array('error' => 'auth_failed'), 401);
+}
+
+// Pick subscriber SipSettings class (same logic as sip_settings_digest.phtml).
+$_class = !empty($CDRTool['sip_settings_class']) ? $CDRTool['sip_settings_class'] : 'SipSettings';
+$_reseller_class = $_class . $credentials['reseller'];
+$SipSettings_class = class_exists($_reseller_class) ? $_reseller_class : $_class;
+
+$login_credentials = array(
+    'reseller'       => $credentials['reseller'],
+    'customer'       => $credentials['customer'],
+    'login_type'     => 'subscriber',
+    'sip_engine'     => $credentials['engine'],
+    'templates_path' => './templates',
+);
+
+// Construct settings object — this populates the in-memory copies of
+// mobile_number (exposed on the wire as pstn.caller_id), currency, etc.
+$SipSettings = new $SipSettings_class(
+    $credentials['account'],
+    $login_credentials,
+    $soapEngines
+);
+
+$action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
+
+if ($action === 'set_caller_id') {
+    $raw = isset($_REQUEST['caller_id']) ? (string) $_REQUEST['caller_id'] : '';
+
+    // Strip everything except digits and a leading '+'. Mobile clients
+    // apply pstnRules.replacePlus before sending (e.g. "+40..." becomes
+    // "0040..." when the rule is "00"), so we accept BOTH the canonical
+    // "+<E.164>" form and the "00<E.164>" wire form. Internally we
+    // store the "+" form so existing consumers (sip_settings.phtml UI,
+    // SOAP getAccount callers, dial-time rewrites) keep working — the
+    // pstnRules.replacePlus rewrite happens only when the number is
+    // dialled on PSTN, not when it sits in the preferences table.
+    $caller_id = preg_replace('/[^\+0-9]/', '', $raw);
+    if ($caller_id !== '' && strpos($caller_id, '00') === 0 && strpos($caller_id, '+') !== 0) {
+        $caller_id = '+' . substr($caller_id, 2);
+    } elseif ($caller_id !== '' && strpos($caller_id, '+') !== 0) {
+        $caller_id = '+' . $caller_id;
+    }
+
+    // Empty value clears the preference. Otherwise enforce E.164 shape.
+    if ($caller_id !== '' && !preg_match('/^\+[1-9][0-9]{7,14}$/', $caller_id)) {
+        json_die(array(
+            'error'   => 'invalid_caller_id',
+            'message' => 'Expected international format starting with + or 00, followed by 8-15 digits',
+        ), 400);
+    }
+
+    $current = isset($SipSettings->Preferences['mobile_number'])
+        ? $SipSettings->Preferences['mobile_number']
+        : '';
+
+    if ($current === $caller_id) {
+        json_die(array(
+            'ok'        => true,
+            'changed'   => false,
+            'caller_id' => $caller_id,
+        ));
+    }
+
+    // Stage the change in the in-memory properties bag. Note the
+    // backend property is still named `mobile_number` — that's the
+    // canonical NGNPro field; we're only renaming the wire API.
+    $SipSettings->setPreference(
+        'mobile_number',
+        $caller_id === '' ? 'remove' : $caller_id
+    );
+
+    // Push to the NGNPro SOAP backend (same call saveSettings uses, lines 4406-4424).
+    $soap_result = $SipSettings->result;
+    if (!is_array($soap_result->properties)) {
+        $soap_result->properties = array();
+    }
+    $soap_result->properties = $SipSettings->properties;
+    if (!$soap_result->quota) {
+        $soap_result->quota = 0;
+    }
+
+    $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+    $update = $SipSettings->SipPort->updateAccount($soap_result);
+
+    if ((new PEAR)->isError($update)) {
+        $fault = $update->getFault();
+        json_die(array(
+            'error'   => 'update_failed',
+            'code'    => $update->getCode(),
+            'message' => $update->getMessage(),
+            'detail'  => isset($fault->detail->exception->errorstring)
+                ? $fault->detail->exception->errorstring : null,
+        ), 502);
+    }
+
+    logger(sprintf('sylk_account_settings.phtml: %s set caller_id to %s',
+                   $credentials['account'], $caller_id));
+
+    json_die(array(
+        'ok'        => true,
+        'changed'   => true,
+        'caller_id' => $caller_id,
+    ));
+}
+
+if ($action === 'set_email') {
+    $raw = isset($_REQUEST['email']) ? trim((string) $_REQUEST['email']) : '';
+
+    // Empty value clears the field on the SIP account. Otherwise
+    // enforce a minimal RFC-5322-ish shape — full validation is the
+    // server / mail relay's problem, this is just to keep junk out.
+    if ($raw !== '' && !filter_var($raw, FILTER_VALIDATE_EMAIL)) {
+        json_die(array(
+            'error'   => 'invalid_email',
+            'message' => 'Invalid email address',
+        ), 400);
+    }
+
+    if ($raw === (string) $SipSettings->email) {
+        json_die(array(
+            'ok'      => true,
+            'changed' => false,
+            'email'   => $raw,
+        ));
+    }
+
+    $soap_result = $SipSettings->result;
+    $soap_result->email = $raw;
+    if (!$soap_result->quota) {
+        $soap_result->quota = 0;
+    }
+
+    $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+    $update = $SipSettings->SipPort->updateAccount($soap_result);
+
+    if ((new PEAR)->isError($update)) {
+        $fault = $update->getFault();
+        json_die(array(
+            'error'   => 'update_failed',
+            'code'    => $update->getCode(),
+            'message' => $update->getMessage(),
+            'detail'  => isset($fault->detail->exception->errorstring)
+                ? $fault->detail->exception->errorstring : null,
+        ), 502);
+    }
+
+    logger(sprintf('sylk_account_settings.phtml: %s set email to %s',
+                   $credentials['account'], $raw));
+
+    json_die(array(
+        'ok'      => true,
+        'changed' => true,
+        'email'   => $raw,
+    ));
+}
+
+if ($action === 'set_password') {
+    $new_password = isset($_REQUEST['new_password']) ? (string) $_REQUEST['new_password'] : '';
+
+    // Strength check — mirrored by validateSipPassword on the
+    // mobile side (app/accountInfo.js). The proxy doesn't enforce
+    // any strength rule of its own, so we are the authoritative
+    // gate. Reject any password that fails:
+    //   • length ≥ 6
+    //   • at least one lowercase letter
+    //   • at least one uppercase letter
+    //   • at least one digit
+    if (strlen($new_password) < 6
+        || !preg_match('/[a-z]/', $new_password)
+        || !preg_match('/[A-Z]/', $new_password)
+        || !preg_match('/\d/',    $new_password)) {
+        json_die(array(
+            'error'   => 'weak_password',
+            'message' => 'Password must be at least 6 characters, with upper case, lower case, and a number.',
+        ), 400);
+    }
+
+    // Honour the "deny-password-change" group on the SIP account, the
+    // same gate sip_settings.phtml uses (library/sip_settings.php:4278).
+    $groups = is_array($SipSettings->groups) ? $SipSettings->groups : array();
+    if (in_array('deny-password-change', $groups, true)) {
+        json_die(array(
+            'error'   => 'change_denied',
+            'message' => 'Password change is disabled for this account',
+        ), 403);
+    }
+
+    $soap_result = $SipSettings->result;
+
+    // Same hashing as sip_settings.php:4279-4290. The cleartext branch
+    // only fires when the SOAP engine declares it stores plaintext;
+    // otherwise we send the pair of HA1 digests the SIP database
+    // expects (one for bare username, one for full AOR username).
+    if (!empty($SipSettings->store_clear_text_passwords)) {
+        $soap_result->password = $new_password;
+    } else {
+        $u  = strtolower($SipSettings->username);
+        $d  = strtolower($SipSettings->domain);
+        $h1 = md5($u . ':' . $d . ':' . $new_password);
+        $h2 = md5($u . '@' . $d . ':' . $d . ':' . $new_password);
+        $soap_result->password = $h1 . ':' . $h2;
+    }
+
+    if (!$soap_result->quota) {
+        $soap_result->quota = 0;
+    }
+
+    $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+    $update = $SipSettings->SipPort->updateAccount($soap_result);
+
+    if ((new PEAR)->isError($update)) {
+        $fault = $update->getFault();
+        json_die(array(
+            'error'   => 'update_failed',
+            'code'    => $update->getCode(),
+            'message' => $update->getMessage(),
+            'detail'  => isset($fault->detail->exception->errorstring)
+                ? $fault->detail->exception->errorstring : null,
+        ), 502);
+    }
+
+    logger(sprintf('sylk_account_settings.phtml: %s changed SIP password',
+                   $credentials['account']));
+
+    json_die(array(
+        'ok'      => true,
+        'changed' => true,
+    ));
+}
+
+if ($action === 'request_delete_account') {
+    // Mirror of the "Identity" tab → "Delete account" button in
+    // sip_settings.phtml: triggers SipSettings::deleteAccount() with
+    // skip_html=true so it returns 1 on success instead of writing
+    // HTML to the response. The server-side method:
+    //   • Refuses if there's any balance history for a subscriber
+    //     (refund must be processed first).
+    //   • Refuses if no email address is on file.
+    //   • Generates a one-time delete_id valid for 2 days, persists
+    //     it under the account_delete_request_id preference, and
+    //     emails a confirmation link to the user. The actual
+    //     account removal happens when the user clicks that link
+    //     (handled in renderUI at sip_settings.php:11322).
+    // Pre-flight checks here so we can return precise error envelopes
+    // instead of an opaque 502 when deleteAccount() returns false.
+    if (empty($SipSettings->email)) {
+        json_die(array(
+            'error'   => 'email_required',
+            'message' => 'Set an email address on your account before requesting deletion.',
+        ), 400);
+    }
+
+    $SipSettings->getBalanceHistory();
+    if (is_array($SipSettings->balance_history)
+        && count($SipSettings->balance_history) > 0) {
+        json_die(array(
+            'error'   => 'balance_history_present',
+            'message' => 'Contact support: balance history must be reconciled before this account can be deleted.',
+        ), 409);
+    }
+
+    // Honour the "deny-account-delete" pattern used elsewhere
+    // (subscriber-only flag, set by reseller). The SOAP method
+    // itself doesn't enforce it, so we mirror the sip_settings
+    // group check.
+    $delete_groups = is_array($SipSettings->groups) ? $SipSettings->groups : array();
+    if (in_array('deny-account-delete', $delete_groups, true)) {
+        json_die(array(
+            'error'   => 'delete_denied',
+            'message' => 'Account deletion is disabled for this account.',
+        ), 403);
+    }
+
+    $ok = $SipSettings->deleteAccount(true);
+    if (!$ok) {
+        // deleteAccount returns false for the no-email / no-template
+        // / SOAP-error paths. The pre-flight above already handled
+        // the no-email case so this branch usually means the email
+        // template was missing or the mail relay refused the send.
+        json_die(array(
+            'error'   => 'delete_request_failed',
+            'message' => 'Could not send the confirmation email. Try again later.',
+        ), 502);
+    }
+
+    logger(sprintf('sylk_account_settings.phtml: %s requested account deletion (email sent to %s)',
+                   $credentials['account'], $SipSettings->email));
+
+    json_die(array(
+        'ok'    => true,
+        'email' => (string) $SipSettings->email,
+    ));
+}
+
+// Default: return the account snapshot.
+$SipSettings->getPrepaidStatus();
+$SipSettings->getBalanceHistory();
+$today = $SipSettings->getTodayBalanceSummary();
+
+// allow_delete advertises that this API version SUPPORTS the in-app
+// delete-on-server flow (action=request_delete_account). It is a
+// capability flag of the endpoint, not a per-account permission
+// check — older deployments without this script just won't have the
+// flag, so the mobile client treats its absence (or false) as
+// "fall back to deleteAccountUrl". Per-account gating (email on
+// file, balance history, deny-account-delete group) happens at
+// request time inside the action handler above; the mobile UI
+// learns the precise reason from the server's error envelope and
+// surfaces it to the user.
+$allow_delete = true;
+
+// PSTN-related flags. `pstn_access` is the proxy / reseller-level flag
+// that says "this account may dial PSTN at all" (library/sip_settings.php
+// uses the same field to decide whether to render the PSTN tab and the
+// "Pay-as-you-go" UI). `account_type` distinguishes prepaid (top-up
+// debits drawn from a balance) from postpaid (billed after the fact);
+// the underlying $SipSettings->prepaid is an int — 1 for prepaid, 0
+// for postpaid. We expose both an int-ish boolean and the string label
+// so the mobile UI doesn't have to know the encoding.
+$has_prepaid_account = !empty($SipSettings->prepaidAccount);
+$balance = $has_prepaid_account && isset($SipSettings->prepaidAccount->balance)
+    ? floatval($SipSettings->prepaidAccount->balance)
+    : null;
+$is_prepaid  = !empty($SipSettings->prepaid);
+// PSTN dialling is allowed only when BOTH:
+//   1. The engine/reseller has PSTN configured at all
+//      ($SipSettings->pstn_access — populated from
+//      soapEngines[...]['pstn_access'] / resellerProperties).
+//   2. The subscriber is a member of the "free-pstn" group on the
+//      SIP account. This is what the "PSTN access" checkbox on the
+//      sip_settings.phtml UI toggles — checked = add to free-pstn,
+//      unchecked = removeFromGroup(...,"free-pstn"). Without it the
+//      proxy refuses outbound PSTN regardless of credit / quota.
+// We need both true for the mobile app to safely show the PSTN UI.
+$pstn_groups = is_array($SipSettings->groups) ? $SipSettings->groups : array();
+$pstn_enabled = !empty($SipSettings->pstn_access)
+                && in_array('free-pstn', $pstn_groups, true);
+
+json_die(array(
+    'account' => $credentials['account'],
+    // Server-stored email. The client treats this as authoritative
+    // (server wins), so include it in every snapshot — even when
+    // empty — so a clear on the server propagates to the device.
+    'email'   => (string) $SipSettings->email,
+    // True when the in-app delete-on-server flow is allowed (email
+    // set, clean balance, not in deny-account-delete group). When
+    // false the client should fall back to opening the legacy
+    // deleteAccountUrl in an external browser, or hide the action.
+    'allow_delete' => $allow_delete,
+    // Full SIP-account group membership. Surfaced as an array so the
+    // mobile client can check any membership directly (free-pstn,
+    // deny-password-change, trunking, blocked, quota, payments, …)
+    // without us minting a new boolean for each one. pstn.enabled
+    // below is derived from this list AND the engine-level
+    // pstn_access flag. NGNPro sometimes returns empty strings in
+    // the groups list (placeholder rows / trailing slot); we filter
+    // those out so the client doesn't have to.
+    'groups'  => array_values(array_filter(
+        $pstn_groups,
+        function ($g) { return is_string($g) && trim($g) !== ''; }
+    )),
+    // All PSTN-related fields live under a single object so the
+    // client can pass the whole bag around without enumerating keys.
+    //   caller_id          — number presented as From: on outgoing
+    //     PSTN calls. Stored under the legacy `mobile_number`
+    //     preference key on the SIP server (the wire API renames it).
+    //   balance / currency — current prepaid balance (null when not
+    //     a prepaid account).
+    //   prepaid            — true when this is a prepaid account.
+    //   enabled            — whether PSTN dialling is allowed at all
+    //     (the reseller / proxy gate; false hides dial UI regardless
+    //     of balance).
+    //   today              — sum of today's debits and credits, for
+    //     the at-a-glance line on the My Account modal.
+    'pstn'    => array(
+        'caller_id' => (string) $SipSettings->mobile_number,
+        'balance'   => $balance,
+        'currency'  => (string) $SipSettings->currency,
+        'prepaid'   => $is_prepaid,
+        // True only when the engine permits PSTN AND the subscriber
+        // is in the "free-pstn" group. The mobile UI should hide
+        // dialer / contact-call affordances when this is false.
+        'enabled'   => $pstn_enabled,
+        'today'     => array(
+            'debit'  => isset($today['debit'])  ? floatval($today['debit'])  : 0,
+            'credit' => isset($today['credit']) ? floatval($today['credit']) : 0,
+        ),
+    ),
+));
