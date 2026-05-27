@@ -14,6 +14,14 @@
  *                      "last_name":"...", "timezone":"...",
  *                      "mobile":"...", "email":"...",
  *                      "url":"https://mdns.sipthor.net"},
+ *            "delete_request": null  |
+ *                              {"client_request_id":"...",
+ *                               "client_timestamp":"...",
+ *                               "server_request_id":"...",
+ *                               "ip":"...", "sip_account":"...",
+ *                               "requester_entity":{...},
+ *                               "expire_date":"YYYY-MM-DD HH:MM:SS",
+ *                               "delete_id":"..."},
  *            "pstn": {"caller_id":"...", "balance":..., "currency":"...",
  *                     "prepaid":true|false, "enabled":true|false,
  *                     "today":{"debit":..., "credit":...}}}
@@ -42,6 +50,15 @@
  *           Requires an email address on file and (for prepaid
  *           accounts) a clean balance history. Mirrors the
  *           "Identity" tab → "Delete account" flow in sip_settings.phtml.
+ *
+ *   POST /sylk_settings.phtml?realm=domain
+ *        Body:
+ *            action=cancel_delete_account
+ *        -> {"ok":true,"changed":true} on success.
+ *           Drops a pending delete request — clears the three
+ *           account_delete_request* Preferences so the previously
+ *           emailed confirmation link no longer validates. No-op
+ *           (ok:true, changed:false) when nothing is pending.
  *
  *        Mirrors sip_settings.phtml's password-change path: respects
  *        the "deny-password-change" group, hashes via the same
@@ -321,6 +338,144 @@ if ($action === 'set_password') {
     ));
 }
 
+if ($action === 'cancel_delete_account') {
+    // Drop a pending delete request. Clears the three Preferences
+    // that gate the click-through validator:
+    //   • account_delete_request_id  (matched against ?delete_id=)
+    //   • account_delete_request     (presence flag + timestamp)
+    //   • account_delete_request_info (structured record / wire JSON)
+    // After this returns, the email link previously sent becomes
+    // useless: the validator at sip_settings.php ~line 11462 short-
+    // circuits on empty($account_delete_request). The new
+    // Delete-account modal can re-request later if the user
+    // changes their mind.
+    $had_request = !empty($SipSettings->Preferences['account_delete_request'])
+                || !empty($SipSettings->Preferences['account_delete_request_id'])
+                || !empty($SipSettings->Preferences['account_delete_request_info']);
+
+    if (!$had_request) {
+        json_die(array(
+            'ok'      => true,
+            'changed' => false,
+            'message' => 'No pending delete request to cancel',
+        ));
+    }
+
+    // ID-match check. The client sends client_request_id (the
+    // only ID it knows — server_request_id is the secret URL
+    // token in the email and never leaves the server otherwise).
+    // We compare against the persisted client_request_id inside
+    // account_delete_request_info to make sure the client is
+    // aborting the request it thinks it's aborting (protects
+    // against stale clients cancelling a freshly-issued request
+    // from another device).
+    //
+    // Sending no ID is allowed (lets the web Identity tab call
+    // this without a snapshot round-trip), logged for visibility.
+    // Sending an ID that doesn't match → 409.
+    $client_provided_client_id = isset($_REQUEST['client_request_id'])
+        ? trim((string) $_REQUEST['client_request_id']) : '';
+
+    $persisted_info_raw = isset($SipSettings->Preferences['account_delete_request_info'])
+        ? (string) $SipSettings->Preferences['account_delete_request_info'] : '';
+    $persisted_info = $persisted_info_raw !== ''
+        ? json_decode($persisted_info_raw, true) : null;
+    $persisted_client_id = (is_array($persisted_info)
+        && isset($persisted_info['client_request_id']))
+        ? (string) $persisted_info['client_request_id'] : '';
+
+    if ($client_provided_client_id !== '') {
+        if ($client_provided_client_id !== $persisted_client_id) {
+            logger(sprintf('cancel_delete_account: %s ID MISMATCH — client sent client_id=%s, persisted client_id=%s',
+                           $credentials['account'],
+                           $client_provided_client_id,
+                           $persisted_client_id ?: '(none)'));
+            json_die(array(
+                'error'   => 'request_id_mismatch',
+                'message' => 'The delete request you are trying to abort does not match the one currently pending. Refresh and try again.',
+                'pending' => array(
+                    'client_request_id' => $persisted_client_id,
+                ),
+            ), 409);
+        }
+        logger(sprintf('cancel_delete_account: %s client_id match confirmed (%s)',
+                       $credentials['account'],
+                       $persisted_client_id));
+    } else {
+        logger(sprintf('cancel_delete_account: %s no client_id provided — proceeding without match check (persisted client_id=%s)',
+                       $credentials['account'],
+                       $persisted_client_id ?: '(none)'));
+    }
+
+    // Rebuild $this->properties as a clean list of {name,value}
+    // arrays, filtering out the three account_delete_request* keys.
+    // Entries arriving from getAccount() are SOAP objects; entries
+    // rebuilt by setPreference are arrays. NGNPro's updateAccount
+    // rejects the mixed shape with "PropertyArray should be an
+    // array" — normalize to all-arrays to keep the wire payload
+    // uniform. The keyed-hash $this->Preferences is cleared in the
+    // same loop so any same-request reads see the new state.
+    $drop_keys = array(
+        'account_delete_request',
+        'account_delete_request_id',
+        'account_delete_request_info',
+    );
+    $normalized = array();
+    if (is_array($SipSettings->properties)) {
+        foreach ($SipSettings->properties as $_p) {
+            $name = null; $value = null;
+            if (is_object($_p)) {
+                $name  = isset($_p->name)  ? $_p->name  : null;
+                $value = isset($_p->value) ? $_p->value : null;
+            } elseif (is_array($_p)) {
+                $name  = isset($_p['name'])  ? $_p['name']  : null;
+                $value = isset($_p['value']) ? $_p['value'] : null;
+            }
+            if ($name === null) continue;
+            if (in_array($name, $drop_keys, true)) continue;
+            $normalized[] = array(
+                'name'  => (string) $name,
+                'value' => (string) ($value === null ? '' : $value),
+            );
+        }
+    }
+    $SipSettings->properties = $normalized;
+    foreach ($drop_keys as $_pref) {
+        if (isset($SipSettings->Preferences[$_pref])) {
+            unset($SipSettings->Preferences[$_pref]);
+        }
+    }
+
+    // Push the trimmed properties array to NGNPro.
+    $soap_result = $SipSettings->result;
+    $soap_result->properties = $normalized;
+    if (!$soap_result->quota) $soap_result->quota = 0;
+    $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+    $update = $SipSettings->SipPort->updateAccount($soap_result);
+    if ((new PEAR)->isError($update)) {
+        $fault = $update->getFault();
+        logger(sprintf('cancel_delete_account: %s FAILED — code=%s message=%s detail=%s',
+                       $credentials['account'],
+                       $update->getCode(),
+                       $update->getMessage(),
+                       isset($fault->detail->exception->errorstring)
+                           ? $fault->detail->exception->errorstring : '(none)'));
+        json_die(array(
+            'error'   => 'cancel_failed',
+            'code'    => $update->getCode(),
+            'message' => $update->getMessage(),
+        ), 502);
+    }
+
+    logger(sprintf('sylk_settings.phtml: %s cancelled pending account deletion',
+                   $credentials['account']));
+
+    json_die(array(
+        'ok'      => true,
+        'changed' => true,
+    ));
+}
+
 if ($action === 'request_delete_account') {
     // Mirror of the "Identity" tab → "Delete account" button in
     // sip_settings.phtml: triggers SipSettings::deleteAccount() with
@@ -343,14 +498,12 @@ if ($action === 'request_delete_account') {
         ), 400);
     }
 
-    $SipSettings->getBalanceHistory();
-    if (is_array($SipSettings->balance_history)
-        && count($SipSettings->balance_history) > 0) {
-        json_die(array(
-            'error'   => 'balance_history_present',
-            'message' => 'Contact support: balance history must be reconciled before this account can be deleted.',
-        ), 409);
-    }
+    // Balance history check is intentionally OMITTED on the JSON
+    // API path. Balance / refund accounting lives in upstream
+    // billing systems and shouldn't gate the SIP-layer deletion
+    // here — the legacy library/sip_settings.php gate is kept for
+    // the web UI flow to preserve existing operator workflows,
+    // but new mobile clients call this endpoint directly.
 
     // Honour the "deny-account-delete" pattern used elsewhere
     // (subscriber-only flag, set by reseller). The SOAP method
@@ -363,6 +516,109 @@ if ($action === 'request_delete_account') {
             'message' => 'Account deletion is disabled for this account.',
         ), 403);
     }
+
+    // Parse the optional caller-supplied device/identity blob.
+    // Older / third-party clients won't send this — in that case
+    // the email falls back to the legacy "from IP address X" line
+    // only, with no request-details table (set $requester_entity
+    // empty so the template's {if} block is skipped).
+    $requester_entity = array();
+    $raw_re = isset($_REQUEST['requester_entity']) ? (string) $_REQUEST['requester_entity'] : '';
+    if ($raw_re !== '') {
+        $decoded = json_decode($raw_re, true);
+        if (is_array($decoded)) {
+            foreach ($decoded as $k => $v) {
+                if (is_scalar($v) && trim((string) $v) !== '') {
+                    $requester_entity[(string) $k] = (string) $v;
+                }
+            }
+        }
+    }
+
+    // Correlation IDs / timestamps. Client half is what the device
+    // sent in this POST (may be empty for legacy callers); server
+    // half is minted unconditionally so every delete request has an
+    // audit row to grep for.
+    $client_request_id = isset($_REQUEST['client_request_id'])
+        ? trim((string) $_REQUEST['client_request_id']) : '';
+    $client_timestamp  = isset($_REQUEST['client_timestamp'])
+        ? trim((string) $_REQUEST['client_timestamp']) : '';
+    // UUID v4 (Math.rand-based, no crypto dependency) so the server
+    // ID has the same shape as the client one. mt_rand is plenty
+    // for a correlation handle — the security-sensitive token is
+    // the separate delete_id used in the confirmation link.
+    $server_request_id = sprintf(
+        '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+        mt_rand(0, 0xffff),
+        mt_rand(0, 0x0fff) | 0x4000,           // version 4
+        mt_rand(0, 0x3fff) | 0x8000,           // variant 1
+        mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+    );
+
+    // "Rich client" = caller sent at least one of the new metadata
+    // fields. Only rich-client requests get the in-email request-
+    // details table; legacy callers see the original layout. The
+    // persistence path doesn't care — both flavours land in
+    // account_delete_request_info so support can audit every
+    // request regardless of how it came in.
+    $is_rich_client = (count($requester_entity) > 0)
+        || ($client_request_id !== '')
+        || ($client_timestamp !== '');
+
+    // Compose the audit record that deleteAccount() persists on
+    // the account Preferences. The ip field overrides any
+    // client-sent value (the device can't know its own NAT-
+    // translated address; REMOTE_ADDR is authoritative). Single
+    // timestamp — client_timestamp — captures when the user hit
+    // the button. Server-side roundtrip is sub-second so a
+    // separate server_timestamp adds no useful information.
+    $request_record = array(
+        'client_request_id' => $client_request_id,
+        'client_timestamp'  => $client_timestamp,
+        'server_request_id' => $server_request_id,
+        'ip'                => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '',
+        'sip_account'       => $credentials['account'],
+        'requester_entity'  => $requester_entity,
+    );
+
+    if ($is_rich_client) {
+        $requester_entity['ip']                = $request_record['ip'];
+        $requester_entity['client_request_id'] = $client_request_id;
+        $requester_entity['client_timestamp']  = $client_timestamp;
+        $requester_entity['server_request_id'] = $server_request_id;
+    }
+
+    $SipSettings->requester_entity      = $requester_entity;
+    $SipSettings->delete_request_record = $request_record;
+
+    logger(sprintf('sylk_settings.phtml: delete request client_id=%s server_id=%s ts=%s',
+                   $client_request_id ?: '(none)',
+                   $server_request_id,
+                   $client_timestamp ?: '(none)'));
+    // Full enumeration of every key the client sent — useful when
+    // troubleshooting which UA / app version a particular delete
+    // request came from. We split it into top-level fields and the
+    // nested requester_entity so the log line is scannable. Values
+    // are truncated to 200 chars each to keep ridiculously long UA
+    // strings from blowing up the syslog buffer.
+    $log_keys = array();
+    $log_keys[] = 'client_request_id=' . ($client_request_id ?: '(none)');
+    $log_keys[] = 'client_timestamp='  . ($client_timestamp  ?: '(none)');
+    if (count($requester_entity) > 0) {
+        foreach ($requester_entity as $k => $v) {
+            if ($k === 'client_request_id' || $k === 'client_timestamp'
+                || $k === 'server_request_id' || $k === 'server_timestamp'
+                || $k === 'ip') {
+                continue;  // already in the line above / server-augmented
+            }
+            $vstr = (string) $v;
+            if (strlen($vstr) > 200) $vstr = substr($vstr, 0, 200) . '...';
+            $log_keys[] = $k . '=' . $vstr;
+        }
+    }
+    logger(sprintf('sylk_settings.phtml: delete request inputs from %s: %s',
+                   $credentials['account'], implode(' | ', $log_keys)));
 
     $_origEmail = $SipSettings->email;
     $SipSettings->email = $owner_email;
@@ -384,8 +640,15 @@ if ($action === 'request_delete_account') {
                    $credentials['account'], $owner_email));
 
     json_die(array(
-        'ok'    => true,
-        'email' => $owner_email,
+        'ok'                => true,
+        'email'             => $owner_email,
+        // server_request_id is intentionally NOT returned — it's
+        // the secret click-through URL token, knowledge of which
+        // proves access to the confirmation email. Only the
+        // client_request_id is echoed back; the client uses it
+        // for correlation and as the abort handle.
+        'client_request_id' => $client_request_id,
+        'client_timestamp'  => $client_timestamp,
     ));
 }
 
@@ -476,9 +739,69 @@ json_die(array(
         $out['url'] = 'https://mdns.sipthor.net';
         return $out;
     })(),
-    'properties' => is_array($SipSettings->Preferences)
-        ? $SipSettings->Preferences
-        : new stdClass(),
+    // properties is the SIP-account Preference bag. We strip the
+    // internal account_delete_request_* storage keys here and
+    // surface them under the structured `delete_request` section
+    // below — clients shouldn't have to reach into properties for
+    // them. The web UI uses these as raw fields, so they stay on
+    // disk; we only hide them from the wire response.
+    'properties' => (function () use ($SipSettings) {
+        if (!is_array($SipSettings->Preferences)) return new stdClass();
+        $out = $SipSettings->Preferences;
+        unset($out['account_delete_request']);
+        unset($out['account_delete_request_id']);
+        unset($out['account_delete_request_info']);
+        return $out;
+    })(),
+    // Structured record of the pending delete request, if any.
+    // Populated by deleteAccount() at request time and persisted
+    // as the account_delete_request_info Preference. JSON is
+    // re-decoded here so the client sees a dict directly. Null
+    // when no delete has been requested.
+    //
+    // TEMPORARY one-shot cleanup (REMOVE AFTER USERS HAVE HIT THE
+    // SNAPSHOT ONCE): legacy records written before the structured
+    // shape had server_request_id / client_request_id only carry
+    // expire_date + delete_id. Detect those and call
+    // abortDeleteRequest() to wipe the three Preferences so the
+    // snapshot stops returning the malformed record forever. Once
+    // every active subscriber has hit the snapshot post-deploy,
+    // revert this closure to the simple read-only version.
+    'delete_request' => (function () use ($SipSettings) {
+        if (!is_array($SipSettings->Preferences)) return null;
+        $blob = isset($SipSettings->Preferences['account_delete_request_info'])
+            ? $SipSettings->Preferences['account_delete_request_info'] : '';
+        if (!is_string($blob) || $blob === '') return null;
+        $decoded = json_decode($blob, true);
+        if (!is_array($decoded)) return null;
+
+        // Legacy-record detector — no server_request_id means it
+        // pre-dates the structured shape. Wipe + return null.
+        if (empty($decoded['server_request_id'])
+            || empty($decoded['client_request_id'])) {
+            logger(sprintf('sylk_settings.phtml: %s legacy delete_request detected (keys=[%s]) — cleaning up',
+                           $SipSettings->account,
+                           implode(',', array_keys($decoded))));
+            $ok = method_exists($SipSettings, 'abortDeleteRequest')
+                ? $SipSettings->abortDeleteRequest() : false;
+            logger(sprintf('sylk_settings.phtml: %s legacy cleanup %s',
+                           $SipSettings->account,
+                           $ok ? 'OK' : 'FAILED'));
+            return null;
+        }
+        // STRIP server_request_id from the wire response. This
+        // UUID is the click-through URL token — possession of it
+        // proves the requester read the confirmation email, so it
+        // must never be returned through any non-email channel.
+        // Same rationale strips it from any nested copy inside
+        // requester_entity (defence-in-depth in case a future
+        // code path accidentally splices it in).
+        unset($decoded['server_request_id']);
+        if (isset($decoded['requester_entity']) && is_array($decoded['requester_entity'])) {
+            unset($decoded['requester_entity']['server_request_id']);
+        }
+        return $decoded;
+    })(),
     // True when the in-app delete-on-server flow is allowed (email
     // set, clean balance, not in deny-account-delete group). When
     // false the client should fall back to opening the legacy

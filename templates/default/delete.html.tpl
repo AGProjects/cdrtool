@@ -80,8 +80,86 @@
                                     </h3>
 
                                 <p>
-                                    A delete request for SIP account {$client->account} has been requested from IP address {$client->ip}. If it was not you who made the request, or you don't want to remove your account, you can safely ignore this email.
+                                    A delete request for SIP account <strong>{$client->account}</strong> has been issued. If it was not you who made the request, or you don't want to remove your account, you can safely ignore this email.
                                 </p>
+
+                                {* Structured request details. Same template
+                                   handles both web-page and mobile-device
+                                   requests — deleteAccount() server-side
+                                   always builds the full record now, so the
+                                   shape is uniform. Device-only fields
+                                   (device_brand, device_model, os_version,
+                                   app_version) are wrapped in {if isset}
+                                   guards so they collapse out for web
+                                   requests rather than rendering empty rows. *}
+                                <p style='margin-bottom: 6px;'><strong>Request details:</strong></p>
+                                <table style='border-collapse: collapse; margin-bottom: 14px; font-size: 10pt; width: 100%;' cellpadding='4'>
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555; width: 35%;'>Server request ID</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.server_request_id|escape:'html'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>Client request ID</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.client_request_id|escape:'html'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>Timestamp</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.client_timestamp|escape:'html'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>IP address</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.ip|escape:'html'}</td>
+                                    </tr>
+                                </table>
+
+                                {* Requester device sub-section — keys present
+                                   on every request (platform, user_agent) +
+                                   mobile-only details when available. The
+                                   {if} guards keep the row out when the
+                                   value is missing or empty, so a web
+                                   request renders just Platform + User
+                                   agent without empty device-fingerprint
+                                   rows. *}
+                                <p style='margin-bottom: 6px;'><strong>Requester device:</strong></p>
+                                <table style='border-collapse: collapse; margin-bottom: 14px; font-size: 10pt; width: 100%;' cellpadding='4'>
+                                    {if isset($requester_entity.platform) && $requester_entity.platform neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555; width: 35%;'>Platform</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.platform|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                    {if isset($requester_entity.user_agent) && $requester_entity.user_agent neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>User agent</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace; word-break: break-all;'>{$requester_entity.user_agent|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                    {if isset($requester_entity.os_version) && $requester_entity.os_version neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>OS version</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.os_version|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                    {if isset($requester_entity.device_brand) && $requester_entity.device_brand neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>Device brand</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.device_brand|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                    {if isset($requester_entity.device_model) && $requester_entity.device_model neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>Device model</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.device_model|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                    {if isset($requester_entity.app_version) && $requester_entity.app_version neq ''}
+                                    <tr>
+                                        <td style='border: 1px solid #DDDDDD; background-color: #F5F5F5; padding: 4px 10px; text-align: right; color: #555555;'>App version</td>
+                                        <td style='border: 1px solid #DDDDDD; padding: 4px 10px; font-family: Menlo, Consolas, monospace;'>{$requester_entity.app_version|escape:'html'}</td>
+                                    </tr>
+                                    {/if}
+                                </table>
+
                                 <p class='alert' style='padding: 8px 35px 8px 14px; margin-bottom: 14px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); background-color: #fcf8e3; border: 1px solid #fbeed5; -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; color: #c09853;'>
                                 <strong>The possibility to delete the account will be active for 2 days until {$client->expire_date}</strong>
                                 </p>

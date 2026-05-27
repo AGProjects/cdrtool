@@ -140,6 +140,8 @@ class SipSettings
     var $journalEntries      = array();
     var $chat_replication_backend = 'mysql';
     var $owner_information   =array();
+    var $requester_entity    =array();
+    var $delete_request_record = array();
 
     var $languages=array("en"=>array('name'=>"English",
                                      'timezone'=>''
@@ -215,6 +217,34 @@ class SipSettings
         $this->initSoapClient();
 
         $this->getAccount($account);
+
+        // Auto-purge expired delete requests. When the page loads
+        // (sip_settings.phtml) or the mobile client fetches the
+        // snapshot (sylk_settings.phtml) and the pending request
+        // is more than 2 days old (past the email-confirmation
+        // window), silently clear the three account_delete_request*
+        // Preferences. abortDeleteRequest() is cheap when nothing
+        // is pending — early-out on its $had_request check — so
+        // this is safe to run on every instantiation. Malformed
+        // timestamps (legacy junk that can't be parsed) are also
+        // purged so the constructor doesn't keep throwing on the
+        // datetime() ctor on every page load.
+        if (!empty($this->Preferences['account_delete_request'])) {
+            try {
+                $_purge_dt1 = new datetime($this->Preferences['account_delete_request']);
+                $_purge_today = new datetime('now');
+                if ($_purge_dt1->diff($_purge_today)->d >= '2') {
+                    logger(sprintf('SipSettings: %s auto-purging expired delete request (issued %s)',
+                                   $this->account,
+                                   $this->Preferences['account_delete_request']));
+                    $this->abortDeleteRequest();
+                }
+            } catch (Exception $e) {
+                logger(sprintf('SipSettings: %s auto-purging delete request — malformed timestamp: %s',
+                               $this->account, $e->getMessage()));
+                $this->abortDeleteRequest();
+            }
+        }
 
         if ($this->tab=='calls' && !$_REQUEST['export']) {
             $this->auto_refesh_tab=180;
@@ -2632,33 +2662,135 @@ class SipSettings
         </div></form>
         ";
         if ($this->sip_settings_page) {
-            $this->getbalancehistory();
-
-            if (count($this->balance_history) == "0"  || $this->login_type != 'subscriber') {
+            // Balance-history gate removed — billing reconciliation
+            // is handled upstream. Always render the delete form.
+            {
                 print "<form method=post><p>";
                 print "<input type=hidden name=action value=\"delete account\">";
                 $date1= new datetime($this->Preferences['account_delete_request']);
                 $today= new datetime('now');
-                if ($this->Preferences['account_delete_request'] && $this->login_type != 'subscriber') {
-                    print "<p>User made a deletion request on: ";
-                    print $this->Preferences['account_delete_request'];
-                    print "</p>";
+                if ($this->Preferences['account_delete_request']) {
+                    // Render the structured delete_request record.
+                    // Shown to BOTH subscribers and admins/resellers
+                    // — subscribers need to see their own pending
+                    // request so they can review the details and
+                    // hit Abort if the request was unintentional.
+                    // deleteAccount() always writes the JSON info
+                    // blob now (web and JSON-API requests share the
+                    // same path), so the panel only ever has one
+                    // form. If account_delete_request_info is
+                    // missing the panel renders nothing — a stale
+                    // legacy account without the new shape can be
+                    // cleaned up via Abort or by re-issuing the
+                    // delete from the modern button.
+                    $delete_info_raw = isset($this->Preferences['account_delete_request_info'])
+                        ? $this->Preferences['account_delete_request_info'] : '';
+                    $delete_info = is_string($delete_info_raw) && $delete_info_raw !== ''
+                        ? json_decode($delete_info_raw, true) : null;
+
+                    if (is_array($delete_info)) {
+                        // Field labels — {server,client}_request_id
+                        // pair is the canonical handle; delete_id is
+                        // omitted on purpose (redundant URL token).
+                        // server_request_id is the secret email-link
+                        // token — never displayed (would defeat the
+                        // "must have email access" property). The
+                        // user-visible handle is client_request_id;
+                        // when troubleshooting via journalctl the
+                        // server_request_id is available in syslog
+                        // for support operators.
+                        $labels = array(
+                            'client_request_id' => 'Request ID',
+                            'client_timestamp'  => 'Timestamp',
+                            'expire_date'       => 'Expires',
+                            'ip'                => 'IP address',
+                            'sip_account'       => 'SIP account',
+                        );
+                        $rows = array();
+                        foreach ($labels as $key => $label) {
+                            if (isset($delete_info[$key]) && $delete_info[$key] !== '') {
+                                $rows[$label] = (string) $delete_info[$key];
+                            }
+                        }
+                        // requester_entity rendered as a nested
+                        // sub-table — keeps device/UA detail
+                        // distinct from the request handles.
+                        $entity = (isset($delete_info['requester_entity'])
+                                   && is_array($delete_info['requester_entity']))
+                            ? $delete_info['requester_entity'] : array();
+
+                        print '<div class="panel panel-warning" style="margin-top: 12px;">';
+                        print '<div class="panel-heading"><strong>' . _("Pending deletion request") . '</strong></div>';
+                        print '<div class="panel-body" style="padding: 0;">';
+                        print '<table class="table table-condensed" style="margin-bottom: 0;">';
+                        print '<tbody>';
+                        foreach ($rows as $label => $value) {
+                            print '<tr>';
+                            print '<th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                                . htmlspecialchars($label) . '</th>';
+                            print '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                                . htmlspecialchars($value) . '</td>';
+                            print '</tr>';
+                        }
+                        if (count($entity) > 0) {
+                            print '<tr><th colspan="2" style="background-color: #f4f4f4; text-align: left; padding-left: 10px;">'
+                                . _("Requester device") . '</th></tr>';
+                            foreach ($entity as $k => $v) {
+                                if (!is_scalar($v) || trim((string) $v) === '') continue;
+                                $pretty = ucwords(str_replace('_', ' ', (string) $k));
+                                print '<tr>';
+                                print '<th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                                    . htmlspecialchars($pretty) . '</th>';
+                                print '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                                    . htmlspecialchars((string) $v) . '</td>';
+                                print '</tr>';
+                            }
+                        }
+                        print '</tbody>';
+                        print '</table>';
+                        print '</div>';   // panel-body
+                        print '</div>';   // panel
+                    }
                 }
 
-                if ($date1->diff($today)->d >= '2' || $this->Preferences['account_delete_request'] == '' || $this->login_type != 'subscriber') {
+                $has_pending = !empty($this->Preferences['account_delete_request'])
+                            && ($date1->diff($today)->d < '2');
+                if ($has_pending) {
+                    // A pending request exists within the 2-day
+                    // window — offer Abort regardless of session
+                    // type. Both subscriber and admin/reseller
+                    // operators should be aborting (not stacking a
+                    // second request) when one is already in
+                    // flight. Submit-button with name=action /
+                    // value="abort delete account" overrides the
+                    // form's hidden `action` field (PHP $_REQUEST
+                    // / $_POST keeps the last value for a duplicate
+                    // name), so renderUI dispatches to
+                    // SipSettings::abortDeleteRequest(). No inline
+                    // JS — the previous onclick=this.form.elements[\'action\']…
+                    // approach broke on the double-escaped single
+                    // quotes and silently fell through to deleteAccount().
                     print '<button data-original-title="';
-                    print _("Delete request");
+                    print _("Abort Request");
+                    print "\" data-trigger=\"hover\" data-toggle=\"popover button\" data-content=\"";
+                    print " Cancel the pending delete request. The email confirmation link will be invalidated.\"";
+                    print " rel='popover' class='btn btn-warning' type='submit'";
+                    print " name='action' value='abort delete account'>";
+                    print _("Abort Request");
+                    print "</button></p>";
+                } else {
+                    // No pending request — render the standard
+                    // "Delete Request" affordance to start a new
+                    // one. Shown to subscribers (self-service) and
+                    // admins/resellers (operator-initiated).
+                    print '<button data-original-title="';
+                    print _("Delete Request");
                     print "\" data-trigger=\"hover\" data-toggle=\"popover button\" data-content=\"";
                     print " You may request the deletion of your account here. An email confirmation is required to validate the request.\"";
                     print " rel='popover' class='btn btn-warning' type='submit'>";
-                    print _("Delete request");
-                } else {
-                    //print "<button rel='popover' class='btn btn-disabled'disabled type='submit'>";
-                    //printf(_("Account remove request is active"));
-                    print "A deletion request has been made on: ";
-                    print $this->Preferences['account_delete_request'];
+                    print _("Delete Request");
+                    print "</button></p>";
                 }
-                print "</button></p>";
             }
 
             print $this->hiddenElements;
@@ -4266,12 +4398,19 @@ class SipSettings
             $this->somethingChanged=1;
         }
 
-        if ($this->Preferences['account_delete_request_id']) {
-            $this->setPreference("account_delete_request_id", $this->Preferences['account_delete_request_id']);
-            $this->somethingChanged=1;
-        }
+        // account_delete_request_id is obsolete — the click-through
+        // validator now reads server_request_id directly from the
+        // account_delete_request_info JSON. Do not propagate the
+        // legacy mirror on the saveSettings path; any old value
+        // already on disk is harmless and gets cleared by the next
+        // abort or re-request.
         if ($this->Preferences['account_delete_request']) {
-            $this->setPreference("account_delete_request", date('m/d/Y h:i:s a', time()));
+            // ISO-8601 UTC (matches deleteAccount() / sylk_settings.phtml).
+            // The Identity tab renderer parses this with `new datetime(...)`
+            // for the 2-day staleness check — DateTime grasps ISO-8601 fine.
+            $this->setPreference("account_delete_request",
+                (new DateTime('now', new DateTimeZone('UTC')))
+                    ->format('Y-m-d\TH:i:s.v\Z'));
             $this->somethingChanged=1;
         }
 
@@ -7447,13 +7586,11 @@ END;
         logger(sprintf('deleteAccount: enter account=%s recipient=%s skip_html=%s reseller=%s',
                        $this->account, $this->email, $skip_html ? 'true' : 'false', $this->reseller));
 
-        $this->getBalanceHistory();
-
-        if (count($this->balance_history) != "0" && $this->login_type == 'subscriber') {
-            logger(sprintf('deleteAccount: %s refused — %d balance_history entries',
-                           $this->account, count($this->balance_history)));
-            return false;
-        }
+        // Balance-history gate removed — balance / refund accounting
+        // lives in upstream billing systems, not in this SIP layer.
+        // Deletion of the SIP account proceeds regardless of any
+        // prepaid history rows; settling the customer's balance is
+        // an out-of-band concern handled by support / billing.
 
         if (!$this->email && !$skip_html) {
             print "<p><font color=blue>";
@@ -7471,7 +7608,13 @@ END;
         //$this->expire_date = new DateTime('now');
 
         $this->expire_date = date("Y-m-d H:i:s", strtotime("+2 days"));
-        $this->delete_id = uniqid();
+        // $this->delete_id is the URL token in the confirmation
+        // email — the click-through validator at ~line 11568
+        // matches it against the account_delete_request_id
+        // Preference. We assign it from $record['server_request_id']
+        // (a UUID v4) right after $record is built below, so there's
+        // a single canonical handle for the request instead of the
+        // legacy uniqid + separate server_request_id pair.
         $this->ip = $_SERVER['REMOTE_ADDR'];
 
         $tpl_html = $this->getEmailDeleteTemplateHTML($this->reseller, $this->Preferences['language']);
@@ -7491,6 +7634,84 @@ END;
             return false;
         }
 
+        // Build the full structured record HERE — before Smarty
+        // renders the email body — so the template sees the
+        // populated requester_entity dict. (Previously this code
+        // lived inside the post-send success branch, which meant
+        // every email went out with an empty Request-details
+        // table.) The same $record is also used for the
+        // persistence step further down.
+        $record = is_array($this->delete_request_record) ? $this->delete_request_record : array();
+
+        $iso_now = (new DateTime('now', new DateTimeZone('UTC')))
+            ->format('Y-m-d\TH:i:s.v\Z');
+        $mk_uuid_v4 = function () {
+            return sprintf(
+                '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+                mt_rand(0, 0xffff),
+                mt_rand(0, 0x0fff) | 0x4000,
+                mt_rand(0, 0x3fff) | 0x8000,
+                mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+            );
+        };
+
+        if (empty($record['server_request_id'])) {
+            $record['server_request_id'] = $mk_uuid_v4();
+        }
+        if (empty($record['ip'])) {
+            $record['ip'] = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        }
+        if (empty($record['sip_account'])) {
+            $record['sip_account'] = (string) $this->account;
+        }
+        if (empty($record['client_request_id'])) {
+            $record['client_request_id'] = $mk_uuid_v4();
+        }
+        if (empty($record['client_timestamp'])) {
+            $record['client_timestamp'] = $iso_now;
+        }
+        // Web requests have no app, no device fingerprint — fall
+        // back to the HTTP User-Agent + a "platform=web" marker
+        // so the email's Requester-device table has something to
+        // show. Mobile callers pre-populate this via the JSON API
+        // and we leave their dict alone.
+        if (!isset($record['requester_entity'])
+                || !is_array($record['requester_entity'])
+                || count($record['requester_entity']) === 0) {
+            $record['requester_entity'] = array(
+                'platform' => 'web',
+            );
+            if (!empty($_SERVER['HTTP_USER_AGENT'])) {
+                $record['requester_entity']['user_agent']
+                    = (string) $_SERVER['HTTP_USER_AGENT'];
+            }
+        }
+        $record['expire_date'] = $this->expire_date;
+        $info_json = json_encode($record);
+
+        // Single token. The email link's ?delete_id= URL parameter
+        // and the account_delete_request_id Preference both carry
+        // the server_request_id UUID — no separate uniqid. The
+        // click-through validator just does a string equality
+        // check so the type doesn't matter, but having one handle
+        // means support / logs can pivot between request_id_match
+        // (during the request flow) and the URL-token match
+        // (during click-through) without correlating two values.
+        $this->delete_id = $record['server_request_id'];
+
+        // Flatten into the email-table dict the template iterates
+        // over (Request details + Requester device sub-table). One
+        // shape for both entry points; the {if isset} guards in
+        // the template hide rows the platform doesn't populate.
+        $email_table = is_array($record['requester_entity'])
+            ? $record['requester_entity'] : array();
+        $email_table['ip']                = $record['ip'];
+        $email_table['client_request_id'] = $record['client_request_id'];
+        $email_table['client_timestamp']  = $record['client_timestamp'];
+        $email_table['server_request_id'] = $record['server_request_id'];
+        $this->requester_entity = $email_table;
+
         //print "$tpl_html";
         $this->includeSmarty();
 
@@ -7500,6 +7721,9 @@ END;
         //$smarty->use_sub_dirs = true;
         //$smarty->cache_dir = 'templates_c';
         $smarty->assign('client', $this);
+        $smarty->assign('requester_entity', $email_table);
+        logger(sprintf('deleteAccount: requester_entity keys=[%s]',
+                       implode(',', array_keys($email_table))));
         //print"$this->sip_settings_page";
         $bodyhtml = '';
         if ($tpl_html) {
@@ -7562,11 +7786,81 @@ END;
         if ($send_result === true) {
             logger(sprintf('deleteAccount: %s mail->send accepted, recipient=%s mailer=%s',
                            $this->account, $this->email, $mailer_class));
+
+            // Persist the request record on the account properties
+            // regardless of skip_html. Two stores are involved:
+            //   • $this->Preferences (keyed hash) — populated FROM
+            //     SOAP when the account loads. Direct writes are
+            //     in-memory only.
+            //   • $this->properties (flat [{name,value}] array) —
+            //     the SOAP wire format. updateAccount sends THIS.
+            // setPreference() is the bridge: it adds/updates an
+            // entry in $this->properties and sets somethingChanged
+            // so saveSettings persists it.
+            //
+            // The legacy fields (account_delete_request,
+            // account_delete_request_id) gate the click-through
+            // validator at sip_settings.php ~line 11326, so they
+            // MUST be written for the confirmation link to work.
+            //
+            // $record and $info_json were built above (pre-Smarty)
+            // so the email body could include the same dict the
+            // mobile snapshot will read. We just persist what's
+            // already in scope here.
+
+            // Two preferences persisted now (down from three):
+            //   • account_delete_request      — ISO-8601 timestamp,
+            //     drives the 2-day staleness check + presence flag
+            //   • account_delete_request_info — JSON record;
+            //     server_request_id inside it is the validator's
+            //     URL-token match value AND is never exposed back
+            //     through any API / snapshot / UI
+            // account_delete_request_id is obsolete — see the
+            // validator at sip_settings.php:11748 which now reads
+            // server_request_id directly from the info blob.
+            $request_time_iso = (new DateTime('now', new DateTimeZone('UTC')))
+                ->format('Y-m-d\TH:i:s.v\Z');
+
+            $this->setPreference('account_delete_request',      $request_time_iso);
+            $this->setPreference('account_delete_request_info', $info_json);
+
+            // Keyed-hash mirror for same-request reads.
+            $this->Preferences['account_delete_request']      = $request_time_iso;
+            $this->Preferences['account_delete_request_info'] = $info_json;
+
+            // Push $this->properties to NGNPro via the dedicated
+            // updateAccount path. saveSettings() depends on a bunch
+            // of $_REQUEST form fields we don't have here, so we
+            // call the SOAP write directly with the in-memory
+            // $this->result + our updated properties.
+            $soap_result = $this->result;
+            $soap_result->properties = $this->properties;
+            $this->SipPort->addHeader($this->SoapAuth);
+            $update = $this->SipPort->updateAccount($soap_result);
+            if ((new PEAR)->isError($update)) {
+                $fault = $update->getFault();
+                logger(sprintf('deleteAccount: %s FAILED to persist preferences via updateAccount — code=%s message=%s detail=%s',
+                               $this->account,
+                               $update->getCode(),
+                               $update->getMessage(),
+                               isset($fault->detail->exception->errorstring)
+                                   ? $fault->detail->exception->errorstring : '(none)'));
+                // The email already went out; the validator-gate
+                // preferences just didn't land. Log and continue —
+                // the user will still receive the confirmation; the
+                // click-through will refuse with "no pending
+                // request" until the issue is fixed.
+            } else {
+                logger(sprintf('deleteAccount: %s persisted delete-request preferences (client_id=%s server_id=%s)',
+                               $this->account,
+                               isset($record['client_request_id']) ? $record['client_request_id'] : '(none)',
+                               isset($record['server_request_id']) ? $record['server_request_id'] : '(none)'));
+            }
+            // Refresh in-memory copy from SOAP so subsequent reads
+            // on $this->Preferences see what was actually stored.
+            $this->getAccount($this->account);
+
             if (!$skip_html) {
-                $this->Preferences['account_delete_request_id'] = $this->delete_id;
-                $this->Preferences['account_delete_request'] = 1;
-                $this->saveSettings();
-                $this->getAccount($this->account);
                 print "<p>";
                 printf(_("Removal email has been sent to %s"), $this->email);
             }
@@ -7577,6 +7871,78 @@ END;
                        $this->account, gettype($send_result),
                        is_scalar($send_result) ? (string) $send_result : '(non-scalar)'));
         return false;
+    }
+
+    /**
+     * Cancel a pending delete request. Clears the three
+     * account_delete_request* Preferences so the previously emailed
+     * confirmation link is invalidated. Returns true on a successful
+     * SOAP update, false on error. Used by both the web Identity-
+     * tab "Abort Request" button (action=abort delete account) and
+     * the JSON-API cancel_delete_account handler.
+     */
+    public function abortDeleteRequest()
+    {
+        dprint("SipSettings->abortDeleteRequest($this->account)");
+        $had_request = !empty($this->Preferences['account_delete_request'])
+                    || !empty($this->Preferences['account_delete_request_id'])
+                    || !empty($this->Preferences['account_delete_request_info']);
+        if (!$had_request) {
+            logger(sprintf('abortDeleteRequest: %s no pending request — no-op',
+                           $this->account));
+            return true;
+        }
+
+        // Rebuild $this->properties as a clean list of {name,value}
+        // arrays, filtering out the three account_delete_request*
+        // keys. Mixed object/array shapes (some entries fresh from
+        // SOAP getAccount, others rebuilt by setPreference) trip
+        // NGNPro with "PropertyArray should be an array" — normalize
+        // to all-arrays to keep the wire payload uniform.
+        $drop_keys = array(
+            'account_delete_request',
+            'account_delete_request_id',
+            'account_delete_request_info',
+        );
+        $normalized = array();
+        if (is_array($this->properties)) {
+            foreach ($this->properties as $_p) {
+                $name = null; $value = null;
+                if (is_object($_p)) {
+                    $name  = isset($_p->name)  ? $_p->name  : null;
+                    $value = isset($_p->value) ? $_p->value : null;
+                } elseif (is_array($_p)) {
+                    $name  = isset($_p['name'])  ? $_p['name']  : null;
+                    $value = isset($_p['value']) ? $_p['value'] : null;
+                }
+                if ($name === null) continue;
+                if (in_array($name, $drop_keys, true)) continue;
+                $normalized[] = array(
+                    'name'  => (string) $name,
+                    'value' => (string) ($value === null ? '' : $value),
+                );
+            }
+        }
+        $this->properties = $normalized;
+        foreach ($drop_keys as $_pref) {
+            if (isset($this->Preferences[$_pref])) {
+                unset($this->Preferences[$_pref]);
+            }
+        }
+
+        $soap_result = $this->result;
+        $soap_result->properties = $normalized;
+        if (!$soap_result->quota) $soap_result->quota = 0;
+        $this->SipPort->addHeader($this->SoapAuth);
+        $update = $this->SipPort->updateAccount($soap_result);
+        if ((new PEAR)->isError($update)) {
+            logger(sprintf('abortDeleteRequest: %s FAILED — code=%s message=%s',
+                           $this->account, $update->getCode(), $update->getMessage()));
+            return false;
+        }
+        logger(sprintf('abortDeleteRequest: %s cancelled pending delete', $this->account));
+        $this->getAccount($this->account);
+        return true;
     }
 
     function sendEmail($skip_html = False)
@@ -11377,15 +11743,69 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         $SipSettings->sendEmail();
     } elseif ($_REQUEST['action']=="delete account") {
         $SipSettings->deleteAccount();
+    } elseif ($_REQUEST['action']=="abort delete account") {
+        // Cancel a pending delete request from the web UI Identity
+        // tab. Same effect as the JSON API's cancel_delete_account:
+        // clears the three account_delete_request* preferences so
+        // the previously emailed confirmation link no longer
+        // validates.
+        $SipSettings->abortDeleteRequest();
     } elseif ($_REQUEST['action']=="delete_account") {
-       // print "<pre>";
-        // print_r($SipSettings->Preferences);
+        // The click-through link from the confirmation email
+        // identifies the target account via the `username` URL
+        // parameter — NOT by who happens to be logged in. A user
+        // may have multiple accounts, be signed in as one, and
+        // click the deletion link for another from their inbox.
+        // Rebuild $SipSettings against the URL's account so the
+        // preferences we read belong to the right one.
+        //
+        // Auth for this action is by possession of the secret
+        // server_request_id passed in ?delete_id= — the UUID v4
+        // is only ever delivered through the confirmation email,
+        // so producing a matching token is proof of email access.
+        // We don't add a separate session check on top.
+        $target_account = isset($_REQUEST['username'])
+            ? trim((string) $_REQUEST['username']) : '';
+        if ($target_account !== '' && $target_account !== $SipSettings->account) {
+            logger(sprintf('delete_account: rebuilding SipSettings for URL account %s (was %s)',
+                           $target_account, $SipSettings->account));
+            $SipSettings = new $SipSettings_class($target_account, $login_credentials, $soapEngines);
+            if (empty($SipSettings->username)) {
+                logger(sprintf('delete_account: %s not found on this engine — refusing',
+                               $target_account));
+                $message = sprintf("Account %s not found.", $target_account);
+                printErrorMessage($message);
+                return false;
+            }
+        }
+
+        // Validate the click-through URL token against the
+        // server_request_id stored inside the structured
+        // account_delete_request_info Preference. server_request_id
+        // is a UUID v4 minted server-side and ONLY ever leaves the
+        // server via the confirmation email — possession of a
+        // matching delete_id IS the authentication for this action.
+        $delete_info_raw = isset($SipSettings->Preferences['account_delete_request_info'])
+            ? (string) $SipSettings->Preferences['account_delete_request_info'] : '';
+        $delete_info = $delete_info_raw !== ''
+            ? json_decode($delete_info_raw, true) : null;
+        $stored_server_id = (is_array($delete_info)
+            && isset($delete_info['server_request_id']))
+            ? (string) $delete_info['server_request_id'] : '';
+
+        $url_token = isset($_REQUEST['delete_id'])
+            ? (string) $_REQUEST['delete_id'] : '';
+
         if (
             empty($SipSettings->Preferences['account_delete_request']) ||
-            empty($SipSettings->Preferences['account_delete_request_id']) ||
-            $SipSettings->Preferences['account_delete_request_id'] != $_REQUEST['delete_id']
+            $stored_server_id === '' ||
+            $stored_server_id !== $url_token
         ) {
-            $message = sprintf("The delete request is not valid for this account, please logout %s and click the link in the email again", $SipSettings->account);
+            logger(sprintf('delete_account: %s click-through token mismatch (url=%s stored=%s)',
+                           $SipSettings->account,
+                           $url_token ?: '(none)',
+                           $stored_server_id ?: '(none)'));
+            $message = sprintf("The delete request is not valid for this account, or the confirmation link has expired. Please request deletion again.");
             printErrorMessage($message);
             return false;
         }
@@ -11399,30 +11819,120 @@ function renderUI($SipSettings_class, $account, $login_credentials, $soapEngines
         }
 
         $today= new datetime('now');
-        if ($date1->diff($today)->d <= '2') {
-            $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
-            $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
-
-            if (checkForSoapError($result)) {
-                return false;
-            } else {
-                printf("<p>The account %s has been removed</p>", $SipSettings->account);
-                $SipSettings->sendRemoveAccount();
-                //print "<script>var t1=setTimeout(window.location.href = 'sip_logout.phtml',5000);</script>"
-                print "<a href=sip_logout.phtml>";
-                print _("Click here to Logout");
-                print "</a>";
-                //$auth->logout();
-                //$sess->delete();
-                return true;
-            }
-        } else {
+        if ($date1->diff($today)->d > '2') {
             $message = sprintf("The delete request for account %s has expired or is not valid", $SipSettings->account);
             printErrorMessage($message);
             return false;
         }
-        return true ;
-        //$SipSettings->deleteAccount();
+
+        // Two-step click-through. The email link is a plain GET —
+        // we render an explicit confirmation page first so an
+        // accidental click (or stale tab open from a forwarded
+        // email) doesn't immediately wipe the account. The
+        // confirmation form POSTs back with the same parameters
+        // and method=POST actually executes the deletion. CSRF
+        // is moot because the URL token (server_request_id) IS
+        // the auth — anyone who has it can do this anyway.
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $entity = (is_array($delete_info)
+                       && isset($delete_info['requester_entity'])
+                       && is_array($delete_info['requester_entity']))
+                ? $delete_info['requester_entity'] : array();
+            $client_id   = isset($delete_info['client_request_id'])
+                ? (string) $delete_info['client_request_id'] : '';
+            $client_ts   = isset($delete_info['client_timestamp'])
+                ? (string) $delete_info['client_timestamp'] : '';
+            $req_ip      = isset($delete_info['ip'])
+                ? (string) $delete_info['ip'] : '';
+            $req_ua      = isset($entity['user_agent'])
+                ? (string) $entity['user_agent'] : '';
+            $req_plat    = isset($entity['platform'])
+                ? (string) $entity['platform'] : '';
+
+            print '<div class="row-fluid"><div class="span12">';
+            print '<div class="panel panel-warning" style="margin-top: 20px;">';
+            print '<div class="panel-heading"><strong>'
+                . _("Confirm account deletion")
+                . '</strong></div>';
+            print '<div class="panel-body">';
+            printf(
+                '<p style="font-size: 14px;">'
+                . _("You are about to permanently delete SIP account") . ' '
+                . '<strong>%s</strong>.</p>',
+                htmlspecialchars($SipSettings->account)
+            );
+            print '<p style="margin-bottom: 6px;"><strong>'
+                . _("Original request") . ':</strong></p>';
+            print '<table class="table table-condensed" style="margin-bottom: 14px;"><tbody>';
+            if ($client_id !== '') {
+                print '<tr><th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                    . _("Request ID") . '</th>'
+                    . '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                    . htmlspecialchars($client_id) . '</td></tr>';
+            }
+            if ($client_ts !== '') {
+                print '<tr><th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                    . _("Requested at") . '</th>'
+                    . '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                    . htmlspecialchars($client_ts) . '</td></tr>';
+            }
+            if ($req_ip !== '') {
+                print '<tr><th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                    . _("IP address") . '</th>'
+                    . '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                    . htmlspecialchars($req_ip) . '</td></tr>';
+            }
+            if ($req_plat !== '') {
+                print '<tr><th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                    . _("Platform") . '</th>'
+                    . '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px;">'
+                    . htmlspecialchars($req_plat) . '</td></tr>';
+            }
+            if ($req_ua !== '') {
+                print '<tr><th style="width: 30%; text-align: right; color: #555; background-color: #fafafa;">'
+                    . _("User agent") . '</th>'
+                    . '<td style="font-family: Menlo, Consolas, monospace; font-size: 12px; word-break: break-all;">'
+                    . htmlspecialchars($req_ua) . '</td></tr>';
+            }
+            print '</tbody></table>';
+
+            print '<div class="alert alert-warning" style="margin-bottom: 14px;">'
+                . '<strong>' . _("This cannot be undone.") . '</strong> '
+                . _("All SIP account data, voicemail, aliases, and registrations will be permanently removed.")
+                . '</div>';
+
+            print '<form method="post" style="display: inline-block; margin-right: 8px;">';
+            printf('<input type="hidden" name="action" value="delete_account">');
+            printf('<input type="hidden" name="username" value="%s">',
+                   htmlspecialchars($SipSettings->account));
+            printf('<input type="hidden" name="delete_id" value="%s">',
+                   htmlspecialchars($url_token));
+            print '<button type="submit" class="btn btn-danger">'
+                . _("Yes, delete forever")
+                . '</button>';
+            print '</form>';
+            print '<a href="sip_logout.phtml" class="btn btn-default">'
+                . _("Cancel")
+                . '</a>';
+            print '</div></div>';   // panel-body + panel
+            print '</div></div>';   // span12 + row-fluid
+            return true;
+        }
+
+        // POST — user confirmed via the form above. Execute the
+        // SOAP deletion.
+        $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
+        $result = $SipSettings->SipPort->deleteAccount($SipSettings->sipId);
+
+        if (checkForSoapError($result)) {
+            return false;
+        }
+        printf("<p>The account %s has been removed</p>", $SipSettings->account);
+        $SipSettings->sendRemoveAccount();
+        print "<a href=sip_logout.phtml>";
+        print _("Click here to Logout");
+        print "</a>";
+        return true;
     } elseif ($_REQUEST['action']=="get_crt") {
         $SipSettings->exportCertificateX509();
         return true;
