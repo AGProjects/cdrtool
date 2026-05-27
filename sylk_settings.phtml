@@ -10,6 +10,10 @@
  *
  *   GET  /sylk_settings.phtml?realm=domain
  *        -> {"account":"...", "email":"...",
+ *            "owner": {"username":"...", "first_name":"...",
+ *                      "last_name":"...", "timezone":"...",
+ *                      "mobile":"...", "email":"...",
+ *                      "url":"https://mdns.sipthor.net"},
  *            "pstn": {"caller_id":"...", "balance":..., "currency":"...",
  *                     "prepaid":true|false, "enabled":true|false,
  *                     "today":{"debit":..., "credit":...}}}
@@ -137,15 +141,14 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 if ($action === 'set_caller_id') {
     $raw = isset($_REQUEST['caller_id']) ? (string) $_REQUEST['caller_id'] : '';
 
-    $digits = preg_replace('/[^0-9]/', '', (string) $raw);
-    if ($digits !== '' && preg_match('/^0+([1-9]\d*)$/', $digits, $m)) {
-        $digits = $m[1];
+    $caller_id = preg_replace('/[^\+0-9]/', '', (string) $raw);
+    if ($caller_id !== '' && strpos($caller_id, '+') === 0) {
+        $caller_id = '00' . substr($caller_id, 1);
+    } elseif ($caller_id !== '' && strpos($caller_id, '00') !== 0) {
+        $caller_id = '00' . $caller_id;
     }
-    $caller_id = $digits;
 
-    // Empty value clears the field. Otherwise enforce 7-15 digits
-    // (E.164 length, no prefix).
-    if ($caller_id !== '' && !preg_match('/^[1-9][0-9]{6,14}$/', $caller_id)) {
+    if ($caller_id !== '' && !preg_match('/^00[1-9][0-9]{6,14}$/', $caller_id)) {
         json_die(array(
             'error'   => 'invalid_caller_id',
             'message' => 'Expected international format starting with + or 00, followed by 7-15 digits',
@@ -163,13 +166,6 @@ if ($action === 'set_caller_id') {
 
     $soap_result = $SipSettings->result;
     $soap_result->rpid = (string) $caller_id;
-    if (!is_array($soap_result->properties)) {
-        $soap_result->properties = array();
-    }
-    $soap_result->properties = $SipSettings->properties;
-    if (!$soap_result->quota) {
-        $soap_result->quota = 0;
-    }
 
     $SipSettings->SipPort->addHeader($SipSettings->SoapAuth);
     $update = $SipSettings->SipPort->updateAccount($soap_result);
@@ -333,12 +329,12 @@ if ($action === 'request_delete_account') {
     //     emails a confirmation link to the user. The actual
     //     account removal happens when the user clicks that link
     //     (handled in renderUI at sip_settings.php:11322).
-    // Pre-flight checks here so we can return precise error envelopes
-    // instead of an opaque 502 when deleteAccount() returns false.
-    if (empty($SipSettings->email)) {
+    $owner_email = isset($SipSettings->owner_information['email'])
+        ? trim((string) $SipSettings->owner_information['email']) : '';
+    if ($owner_email === '') {
         json_die(array(
             'error'   => 'email_required',
-            'message' => 'Set an email address on your account before requesting deletion.',
+            'message' => 'Set an email address on your customer profile before requesting deletion.',
         ), 400);
     }
 
@@ -363,7 +359,11 @@ if ($action === 'request_delete_account') {
         ), 403);
     }
 
+    $_origEmail = $SipSettings->email;
+    $SipSettings->email = $owner_email;
     $ok = $SipSettings->deleteAccount(true);
+    $SipSettings->email = $_origEmail;
+
     if (!$ok) {
         // deleteAccount returns false for the no-email / no-template
         // / SOAP-error paths. The pre-flight above already handled
@@ -376,11 +376,11 @@ if ($action === 'request_delete_account') {
     }
 
     logger(sprintf('sylk_settings.phtml: %s requested account deletion (email sent to %s)',
-                   $credentials['account'], $SipSettings->email));
+                   $credentials['account'], $owner_email));
 
     json_die(array(
         'ok'    => true,
-        'email' => (string) $SipSettings->email,
+        'email' => $owner_email,
     ));
 }
 
@@ -401,13 +401,11 @@ ob_start();
 if (!empty($SipSettings->prepaid)) {
     $SipSettings->getPrepaidStatus();
 }
-// Postpaid path: we report the monthly quota from
-// $SipSettings->quota (populated in the constructor from the SOAP
-// account record at library/sip_settings.php:825). No separate
-// SOAP call needed — getCallStatistics was previously invoked to
-// gather quota_usage / quota_calls, both dropped from the wire API.
 $SipSettings->getBalanceHistory();
 $today = $SipSettings->getTodayBalanceSummary();
+// Last 2 weeks of call records, up to 50 placed + 50 received.
+// Matches the data returned by settings-webrtc.phtml ?action=get_history.
+$SipSettings->getHistory('completed');
 ob_end_clean();
 
 // allow_delete advertises that this API version SUPPORTS the in-app
@@ -455,15 +453,27 @@ json_die(array(
     // (server wins), so include it in every snapshot — even when
     // empty — so a clear on the server propagates to the device.
     'email'   => (string) $SipSettings->email,
-    // Owner's mobile number — the user's personal SIM / contact
-    // number from the NGNPro owner_information.mobile record (the
-    // "Mobile" field on the customer record). Distinct from
-    // pstn.caller_id (the rpid presented on outgoing PSTN calls)
-    // and from the mobile_number Preference (used for ENUM /
-    // receipts). Exposed at top level so the mobile UI can render
-    // it as a separate "contact" detail.
-    'owner_mobile' => isset($SipSettings->owner_information['mobile'])
-        ? (string) $SipSettings->owner_information['mobile'] : '',
+    'owner' => (function () use ($SipSettings) {
+        $oi = is_array($SipSettings->owner_information)
+            ? $SipSettings->owner_information : array();
+        $map = array(
+            'username'   => 'username',
+            'first_name' => 'firstName',
+            'last_name'  => 'lastName',
+            'timezone'   => 'timezone',
+            'mobile'     => 'mobile',
+            'email'      => 'email',
+        );
+        $out = array();
+        foreach ($map as $out_key => $src_key) {
+            $out[$out_key] = isset($oi[$src_key]) ? (string) $oi[$src_key] : '';
+        }
+        $out['url'] = 'https://mdns.sipthor.net';
+        return $out;
+    })(),
+    'properties' => is_array($SipSettings->Preferences)
+        ? $SipSettings->Preferences
+        : new stdClass(),
     // True when the in-app delete-on-server flow is allowed (email
     // set, clean balance, not in deny-account-delete group). When
     // false the client should fall back to opening the legacy
@@ -481,6 +491,24 @@ json_die(array(
         $pstn_groups,
         function ($g) { return is_string($g) && trim($g) !== ''; }
     )),
+    // Read-only server-side topology:
+    //   sip_proxy  — the SIP proxy host the account is provisioned
+    //                on (from soapEngines + reseller overrides).
+    //   thor_node  — the SipThor home node currently hosting this
+    //                account, looked up over the proxy's lookup
+    //                socket (port 9500). Null when thor isn't
+    //                enabled on this engine or when the lookup
+    //                fails (proxy down / no response).
+    'server' => array(
+        'sip_proxy' => (string) $SipSettings->sip_proxy,
+        'thor_node' => (function () use ($SipSettings) {
+            if (empty($SipSettings->enable_thor)) return null;
+            $node = @getSipThorHomeNode($SipSettings->account, $SipSettings->sip_proxy);
+            if (!is_string($node)) return null;
+            $node = trim($node);
+            return $node === '' ? null : $node;
+        })(),
+    ),
     // All PSTN-related fields live under a single object so the
     // client can pass the whole bag around without enumerating keys.
     //   caller_id          — number presented as From: on outgoing
@@ -523,4 +551,13 @@ json_die(array(
             'credit' => isset($today['credit']) ? floatval($today['credit']) : 0,
         ),
     ),
+    // Recent SIP call history (placed + received). Last in the
+    // payload because each entry is bulky — the small scalar
+    // identity / pstn fields above stay near the top where they
+    // read at a glance. Last 2 weeks, up to 50 per direction,
+    // completed only. Same shape returned by
+    // settings-webrtc.phtml?action=get_history.
+    'call_history' => is_array($SipSettings->call_history)
+        ? $SipSettings->call_history
+        : array('placed' => array(), 'received' => array()),
 ));
