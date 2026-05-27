@@ -137,32 +137,15 @@ $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 if ($action === 'set_caller_id') {
     $raw = isset($_REQUEST['caller_id']) ? (string) $_REQUEST['caller_id'] : '';
 
-    // The SIP proxy's PSTN caller-Id field is the account's `rpid`
-    // (Remote Party ID) — same field sip_settings.phtml writes when
-    // the user edits the PSTN tab's CLI input. The `mobile_number`
-    // Preference is a SEPARATE field (used for ENUM / payment
-    // receipts) and we do NOT touch it here.
-    //
-    // Storage convention on the SIP proxy is the "00<digits>" form
-    // (e.g. "0031237100917" for NL), matching what the legacy web
-    // UI writes. Mobile clients may send EITHER "+E.164" or
-    // "00<digits>"; we apply the pstn-rules "+ → 00" rewrite here
-    // server-side so that whatever shape arrives gets stored in
-    // the canonical "00" form. This mirrors the dial-time rewrite
-    // sylk-mobile already does via pstnRules.replacePlus, just on
-    // the receive side instead of the send side.
-    $caller_id = preg_replace('/[^\+0-9]/', '', $raw);
-    if ($caller_id !== '' && strpos($caller_id, '+') === 0) {
-        // "+E.164" → "00<digits>"
-        $caller_id = '00' . substr($caller_id, 1);
-    } elseif ($caller_id !== '' && strpos($caller_id, '00') !== 0) {
-        // bare digits → assume international, prepend "00"
-        $caller_id = '00' . $caller_id;
+    $digits = preg_replace('/[^0-9]/', '', (string) $raw);
+    if ($digits !== '' && preg_match('/^0+([1-9]\d*)$/', $digits, $m)) {
+        $digits = $m[1];
     }
+    $caller_id = $digits;
 
-    // Empty value clears the field. Otherwise enforce "00" + 7-15
-    // digits (E.164 length, sans the international prefix).
-    if ($caller_id !== '' && !preg_match('/^00[1-9][0-9]{6,14}$/', $caller_id)) {
+    // Empty value clears the field. Otherwise enforce 7-15 digits
+    // (E.164 length, no prefix).
+    if ($caller_id !== '' && !preg_match('/^[1-9][0-9]{6,14}$/', $caller_id)) {
         json_die(array(
             'error'   => 'invalid_caller_id',
             'message' => 'Expected international format starting with + or 00, followed by 7-15 digits',
@@ -178,11 +161,8 @@ if ($action === 'set_caller_id') {
         ));
     }
 
-    // Push the new rpid through the NGNPro updateAccount SOAP call —
-    // same path library/sip_settings.php:4083-4087 uses on the
-    // saveSettings form submit.
     $soap_result = $SipSettings->result;
-    $soap_result->rpid = $caller_id;
+    $soap_result->rpid = (string) $caller_id;
     if (!is_array($soap_result->properties)) {
         $soap_result->properties = array();
     }
