@@ -7444,10 +7444,14 @@ END;
     public function deleteAccount($skip_html = false)
     {
         dprint("SipSettings->deleteAccount($this->account, $this->email)");
+        logger(sprintf('deleteAccount: enter account=%s recipient=%s skip_html=%s reseller=%s',
+                       $this->account, $this->email, $skip_html ? 'true' : 'false', $this->reseller));
 
         $this->getBalanceHistory();
 
         if (count($this->balance_history) != "0" && $this->login_type == 'subscriber') {
+            logger(sprintf('deleteAccount: %s refused — %d balance_history entries',
+                           $this->account, count($this->balance_history)));
             return false;
         }
 
@@ -7455,6 +7459,11 @@ END;
             print "<p><font color=blue>";
             print _("Please fill in the e-mail address. ");
             print "</font>";
+            logger(sprintf('deleteAccount: %s refused — no email on account', $this->account));
+            return false;
+        }
+        if (!$this->email && $skip_html) {
+            logger(sprintf('deleteAccount: %s ABORT — no email on account (skip_html path)', $this->account));
             return false;
         }
 
@@ -7466,11 +7475,19 @@ END;
         $this->ip = $_SERVER['REMOTE_ADDR'];
 
         $tpl_html = $this->getEmailDeleteTemplateHTML($this->reseller, $this->Preferences['language']);
-        //dprint("$tpl_html");
+        logger(sprintf('deleteAccount: template lookup reseller=%s lang=%s -> %s',
+                       $this->reseller,
+                       $this->Preferences['language'] ?: '(none)',
+                       $tpl_html ?: '(NOT FOUND)'));
         if (!$tpl_html && !$skip_html) {
             print "<p><font color=red>";
             print _("Error: no HTML email template found");
             print "</font>";
+            return false;
+        }
+        if (!$tpl_html && $skip_html) {
+            logger(sprintf('deleteAccount: %s ABORT — no HTML template (skip_html path); would have sent an empty body',
+                           $this->account));
             return false;
         }
 
@@ -7484,9 +7501,12 @@ END;
         //$smarty->cache_dir = 'templates_c';
         $smarty->assign('client', $this);
         //print"$this->sip_settings_page";
+        $bodyhtml = '';
         if ($tpl_html) {
             $bodyhtml = $smarty->fetch($tpl_html);
         }
+        logger(sprintf('deleteAccount: rendered HTML body length=%d bytes', strlen($bodyhtml)));
+
         include_once 'Mail.php';
         include_once 'Mail/mime.php' ;
 
@@ -7507,8 +7527,41 @@ END;
         $hdrs = $mime->headers($hdrs);
 
         $mail = $this->getMailer();
+        $mailer_class = is_object($mail) ? get_class($mail) : '(null)';
+        logger(sprintf('deleteAccount: getMailer -> %s | From=%s | Subject="%s" | body=%d bytes',
+                       $mailer_class,
+                       $this->support_email ?: '(EMPTY!)',
+                       $subject,
+                       strlen($body)));
 
-        if ($mail->send($this->email, $hdrs, $body)) {
+        if (!is_object($mail)) {
+            logger(sprintf('deleteAccount: %s ABORT — getMailer returned non-object (%s)',
+                           $this->account, gettype($mail)));
+            return false;
+        }
+        if (empty($this->support_email)) {
+            logger(sprintf('deleteAccount: %s WARNING — From: address empty, MTA may reject',
+                           $this->account));
+        }
+
+        $send_result = $mail->send($this->email, $hdrs, $body);
+
+        // PEAR Mail::send returns true on success OR a PEAR_Error
+        // object on failure. The previous "if ($result)" check
+        // treated the error object as truthy and returned success —
+        // hiding every relay rejection. Inspect explicitly.
+        if (class_exists('PEAR') && PEAR::isError($send_result)) {
+            logger(sprintf('deleteAccount: %s MAIL FAILED — code=%s message=%s userinfo=%s',
+                           $this->account,
+                           method_exists($send_result, 'getCode')    ? $send_result->getCode()    : '?',
+                           method_exists($send_result, 'getMessage') ? $send_result->getMessage() : '?',
+                           method_exists($send_result, 'getUserInfo') ? $send_result->getUserInfo() : '?'));
+            return false;
+        }
+
+        if ($send_result === true) {
+            logger(sprintf('deleteAccount: %s mail->send accepted, recipient=%s mailer=%s',
+                           $this->account, $this->email, $mailer_class));
             if (!$skip_html) {
                 $this->Preferences['account_delete_request_id'] = $this->delete_id;
                 $this->Preferences['account_delete_request'] = 1;
@@ -7519,6 +7572,11 @@ END;
             }
             return 1;
         }
+
+        logger(sprintf('deleteAccount: %s UNEXPECTED mail->send result type=%s value=%s',
+                       $this->account, gettype($send_result),
+                       is_scalar($send_result) ? (string) $send_result : '(non-scalar)'));
+        return false;
     }
 
     function sendEmail($skip_html = False)

@@ -138,6 +138,11 @@ $SipSettings = new $SipSettings_class(
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
+logger(sprintf('sylk_settings.phtml: %s %s action=%s',
+               $_SERVER['REQUEST_METHOD'],
+               $credentials['account'],
+               $action === '' ? '(snapshot)' : $action));
+
 if ($action === 'set_caller_id') {
     $raw = isset($_REQUEST['caller_id']) ? (string) $_REQUEST['caller_id'] : '';
 
@@ -232,7 +237,7 @@ if ($action === 'set_email') {
         ), 502);
     }
 
-    logger(sprintf('sylk_settings.phtml: %s set email to %s',
+    logger(sprintf('sylk_settings.phtml: %s set SIP account email to %s',
                    $credentials['account'], $raw));
 
     json_die(array(
